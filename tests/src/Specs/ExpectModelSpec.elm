@@ -1,23 +1,31 @@
 module Specs.ExpectModelSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (Spec(..))
+import Spec.Program as Program
 import Observer
 import Runner
 
 
 failingSpec : Spec Model Msg
 failingSpec =
-  Spec.given { count = 99 } testUpdate
-    |> Spec.expectModel (\model -> 
-      Observer.isEqual 17 model.count
-    )
+  Spec.given
+    << Program.fragment testUpdate
+    << Program.withModel (\_ -> { count = 99 })
+  |> Spec.begin
+  |> Spec.expectModel (\model ->
+    Observer.isEqual 17 model.count
+  )
+
 
 passingSpec : Spec Model Msg
 passingSpec =
-  Spec.given { count = 99 } testUpdate
-    |> Spec.expectModel (\model -> 
-      Observer.isEqual 99 model.count
-    )
+  Spec.given
+    << Program.fragment testUpdate
+    << Program.withModel (\_ -> { count = 99 })
+  |> Spec.begin
+  |> Spec.expectModel (\model ->
+    Observer.isEqual 99 model.count
+  )
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

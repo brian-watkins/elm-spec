@@ -4,6 +4,7 @@ module Spec exposing
   , Model
   , Config
   , given
+  , begin
   , expectModel
   , update
   , init
@@ -12,6 +13,7 @@ module Spec exposing
 
 import Observer exposing (Observer, Verdict)
 import Spec.Message exposing (Message)
+import Spec.Program exposing (SpecProgram)
 import Task
 
 
@@ -23,19 +25,38 @@ type Spec model msg =
     }
 
 
-given : model -> (msg -> model -> ( model, Cmd msg )) -> Spec model msg
-given programModel programUpdate =
-  Spec
-    { model = programModel
-    , update = programUpdate
-    , steps = []
-    }
+given : SpecProgram model msg -> Spec model msg
+given program =
+  let
+    ( initialModel, initialCommand ) = program.init ()
+  in
+    Spec
+      { model = initialModel
+      , update = program.update
+      , steps =
+          if initialCommand == Cmd.none then
+            []
+          else
+            [ \_ -> Cmd.map ProgramMsg initialCommand ]
+      }
+
+
+begin : (() -> Spec model msg) -> Spec model msg
+begin thunk =
+  thunk ()
 
 
 expectModel : Observer model -> Spec model msg -> Spec model msg
-expectModel matcher (Spec spec) =
+expectModel observer (Spec spec) =
   Spec
-    { spec | steps = spec.steps ++ [ \(Spec s) -> Task.succeed (matcher s.model) |> Task.perform ObservationComplete ] }
+    { spec | steps = spec.steps ++ [ expectModelStep observer ] }
+
+
+expectModelStep : Observer model -> Spec model msg -> Cmd (Msg msg)
+expectModelStep observer (Spec spec) =
+  observer spec.model
+    |> Task.succeed
+    |> Task.perform ObservationComplete
 
 
 
@@ -51,6 +72,7 @@ type Msg msg
   = ProgramMsg msg
   | ObservationComplete Verdict
   | ReceivedMessage Message
+  | NextStep
 
 
 type alias Model model msg =
@@ -65,21 +87,28 @@ messageTagger =
 
 update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
+  let
+    (Spec spec) = model.spec
+  in
   case msg of
     ReceivedMessage specMessage ->
-      let
-        (Spec spec) = model.spec
-      in
-        case spec.steps of
-          [] ->
-            (model, Cmd.none)
-          nextStep :: remainingSteps ->
-            let
-                updatedSpec = Spec { spec | steps = remainingSteps }
-            in
-              ( { model | spec = updatedSpec }, nextStep updatedSpec )
+      ( model, Task.succeed never |> Task.perform (always NextStep) )
+    NextStep ->
+      case spec.steps of
+        [] ->
+          (model, Cmd.none)
+        nextStep :: remainingSteps ->
+          let
+              updatedSpec = Spec { spec | steps = remainingSteps }
+          in
+            ( { model | spec = updatedSpec }, nextStep updatedSpec )
     ProgramMsg programMsg ->
-      ( model, Cmd.none )
+      let
+        ( updatedModel, _ ) = spec.update programMsg spec.model
+      in
+        ( { model | spec = Spec { spec | model = updatedModel } }
+        , Task.succeed never |> Task.perform (always NextStep)
+        )
     ObservationComplete verdict ->
       ( model, config.out <| Spec.Message.observation verdict )
 
