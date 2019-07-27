@@ -4,17 +4,21 @@ module Spec.Program exposing
   , withModel
   , worker
   , withInit
+  , withSubscriptions
   )
 
 
 type alias SpecProgram model msg =
   { update: msg -> model -> ( model, Cmd msg )
   , init: () -> ( model, Cmd msg )
+  , subscriptions: model -> Sub msg
   }
 
 
 type alias SpecInit model msg =
-  () -> ( model, Cmd msg )
+  { init: () -> ( model, Cmd msg )
+  , subscriptions: model -> Sub msg
+  }
 
 
 type alias SpecState model =
@@ -25,19 +29,28 @@ fragment : (msg -> model -> ( model, Cmd msg )) -> SpecState model -> SpecProgra
 fragment fragmentUpdate specState =
   { update = fragmentUpdate
   , init = \_ -> ( specState (), Cmd.none )
+  , subscriptions = \_ -> Sub.none
   }
 
 
 worker : (msg -> model -> ( model, Cmd msg )) -> SpecInit model msg -> SpecProgram model msg
 worker programUpdate specInit =
   { update = programUpdate
-  , init = specInit
+  , init = specInit.init
+  , subscriptions = specInit.subscriptions
   }
+
+
+withSubscriptions : (model -> Sub msg) -> SpecInit model msg -> SpecInit model msg
+withSubscriptions programSubscriptions specInit =
+  { specInit | subscriptions = programSubscriptions }
 
 
 withInit : (() -> ( model, Cmd msg )) -> () -> SpecInit model msg
 withInit initGenerator _ =
-  initGenerator
+  { init = initGenerator
+  , subscriptions = \_ -> Sub.none
+  }
 
 
 withModel : (() -> model) -> () -> SpecState model

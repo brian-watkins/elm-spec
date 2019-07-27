@@ -11,7 +11,8 @@ failingSpec =
   Spec.given
     << Program.fragment testUpdate
     << Program.withModel (\_ -> { count = 99 })
-  |> Spec.begin
+  |> Spec.when
+    << Spec.nothing
   |> Spec.expectModel (\model ->
     Observer.isEqual 17 model.count
   )
@@ -22,7 +23,8 @@ passingSpec =
   Spec.given
     << Program.fragment testUpdate
     << Program.withModel (\_ -> { count = 99 })
-  |> Spec.begin
+  |> Spec.when
+    << Spec.nothing
   |> Spec.expectModel (\model ->
     Observer.isEqual 99 model.count
   )

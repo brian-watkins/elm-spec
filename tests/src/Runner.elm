@@ -39,9 +39,17 @@ update msg model =
         |> Tuple.mapFirst (\updated -> { model | specModel = updated })
         |> Tuple.mapSecond (Cmd.map SpecMsg)
 
+
+subscriptions : Model model msg -> Sub (Msg msg)
+subscriptions model =
+  Spec.subscriptions model.specModel
+    |> Sub.map SpecMsg
+
+
 type alias Flags =
   { specName: String
   }
+
 
 init : (String -> Spec model msg) -> Flags -> ( Model model msg, Cmd (Msg msg) )
 init specLocator flags =
@@ -56,5 +64,5 @@ program specLocator =
   Platform.worker
     { init = init specLocator
     , update = update
-    , subscriptions = \_ -> Sub.none
+    , subscriptions = subscriptions
     }

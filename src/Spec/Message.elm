@@ -2,6 +2,7 @@ module Spec.Message exposing
   ( Message
   , observation
   , startSpec
+  , sendSubscription
   )
 
 import Observer exposing (Verdict(..))
@@ -31,3 +32,10 @@ observation verdict =
       { home = "spec-observation"
       , body = Encode.object [ ("summary", Encode.string "REJECT"), ("message", Encode.string message) ]
       }
+
+
+sendSubscription : String -> Value -> Message
+sendSubscription name value =
+  { home = "spec-send"
+  , body = Encode.object [ ("sub", Encode.string name), ("value", value) ]
+  }

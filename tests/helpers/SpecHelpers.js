@@ -28,10 +28,14 @@ const runSpec = (specProgram, specName, matcher, done) => {
 
   app.ports.sendOut.subscribe((specMessage) => {
     try {
-      expect(specMessage.home).to.equal("spec-observation")
-      const observation = specMessage.body
-      matcher(observation)
-      done()  
+      if (specMessage.home === "spec-send") {
+        const subscription = specMessage.body
+        app.ports[subscription.sub].send(subscription.value)
+      } else if (specMessage.home === "spec-observation") {
+        const observation = specMessage.body
+        matcher(observation)
+        done()
+      }
     } catch (err) {
       done(err)
     }

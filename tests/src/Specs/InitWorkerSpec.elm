@@ -12,7 +12,7 @@ usesModelFromInitSpec =
   Spec.given
     << Program.worker testUpdate 
     << Program.withInit (\_ -> testInit)
-  |> Spec.begin
+  |> Spec.when
   |> Spec.expectModel (\model ->
     Observer.isEqual 41 model.count
   )
@@ -23,7 +23,8 @@ usesCommandFromInitSpec =
   Spec.given
     << Program.worker testUpdate
     << Program.withInit (\_ -> testInitWithCommand 33)
-  |> Spec.begin
+  |> Spec.when
+    << Spec.nothing
   |> Spec.expectModel (\model ->
     Observer.isEqual 33 model.count
   )
