@@ -1,7 +1,7 @@
 module Specs.InitWorkerSpec exposing (..)
 
 import Spec exposing (Spec)
-import Spec.Program as Program
+import Spec.Subject as Subject
 import Observer
 import Runner
 import Task
@@ -10,8 +10,8 @@ import Task
 usesModelFromInitSpec : Spec Model Msg
 usesModelFromInitSpec =
   Spec.given
-    << Program.worker testUpdate 
-    << Program.withInit (\_ -> testInit)
+    << Subject.worker testUpdate
+    << Subject.withInit (\_ -> testInit)
   |> Spec.when
   |> Spec.expectModel (\model ->
     Observer.isEqual 41 model.count
@@ -21,8 +21,8 @@ usesModelFromInitSpec =
 usesCommandFromInitSpec : Spec Model Msg
 usesCommandFromInitSpec =
   Spec.given
-    << Program.worker testUpdate
-    << Program.withInit (\_ -> testInitWithCommand 33)
+    << Subject.worker testUpdate
+    << Subject.withInit (\_ -> testInitWithCommand 33)
   |> Spec.when
     << Spec.nothing
   |> Spec.expectModel (\model ->

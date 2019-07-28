@@ -1,7 +1,7 @@
 module Specs.ExpectModelSpec exposing (..)
 
 import Spec exposing (Spec(..))
-import Spec.Program as Program
+import Spec.Subject as Subject
 import Observer
 import Runner
 
@@ -9,8 +9,8 @@ import Runner
 failingSpec : Spec Model Msg
 failingSpec =
   Spec.given
-    << Program.fragment testUpdate
-    << Program.withModel (\_ -> { count = 99 })
+    << Subject.fragment testUpdate
+    << Subject.withModel (\_ -> { count = 99 })
   |> Spec.when
     << Spec.nothing
   |> Spec.expectModel (\model ->
@@ -21,8 +21,8 @@ failingSpec =
 passingSpec : Spec Model Msg
 passingSpec =
   Spec.given
-    << Program.fragment testUpdate
-    << Program.withModel (\_ -> { count = 99 })
+    << Subject.fragment testUpdate
+    << Subject.withModel (\_ -> { count = 99 })
   |> Spec.when
     << Spec.nothing
   |> Spec.expectModel (\model ->

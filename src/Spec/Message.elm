@@ -2,11 +2,12 @@ module Spec.Message exposing
   ( Message
   , observation
   , startSpec
-  , sendSubscription
+  , stepComplete
   )
 
 import Observer exposing (Verdict(..))
 import Json.Encode as Encode exposing (Value)
+
 
 type alias Message =
   { home: String
@@ -21,6 +22,13 @@ startSpec =
   }
 
 
+stepComplete : Message
+stepComplete =
+  { home = "spec"
+  , body = Encode.string "STEP_COMPLETE"
+  }
+
+
 observation : Verdict -> Message
 observation verdict =
   case verdict of
@@ -32,10 +40,3 @@ observation verdict =
       { home = "spec-observation"
       , body = Encode.object [ ("summary", Encode.string "REJECT"), ("message", Encode.string message) ]
       }
-
-
-sendSubscription : String -> Value -> Message
-sendSubscription name value =
-  { home = "spec-send"
-  , body = Encode.object [ ("sub", Encode.string name), ("value", value) ]
-  }

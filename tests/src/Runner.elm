@@ -3,47 +3,33 @@ port module Runner exposing
   )
 
 import Spec exposing (Spec)
+import Spec.Types as Types
 import Spec.Message exposing (Message)
 import Task
 
 
 port sendOut : Message -> Cmd msg
+port sendIn : (Message -> msg) -> Sub msg
 
 
-type Msg msg
-  = SpecMsg (Spec.Msg msg)
-
-
-type alias Model model msg =
-  { specModel: Spec.Model model msg
-  }
-
-
-testConfig : Spec.Config (Spec.Msg msg)
+testConfig : Spec.Config (Types.Msg msg)
 testConfig =
   { out = sendOut
   }
 
 
-sendSpecMessage : Message -> Cmd (Spec.Msg msg)
+sendSpecMessage : Message -> Cmd (Types.Msg msg)
 sendSpecMessage message =
   Task.succeed message
     |> Task.perform Spec.messageTagger
 
 
-update : Msg msg -> Model model msg -> (Model model msg, Cmd (Msg msg))
-update msg model =
-  case msg of
-    SpecMsg specMsg ->
-      Spec.update testConfig specMsg model.specModel
-        |> Tuple.mapFirst (\updated -> { model | specModel = updated })
-        |> Tuple.mapSecond (Cmd.map SpecMsg)
-
-
-subscriptions : Model model msg -> Sub (Msg msg)
+subscriptions : Spec.Model model msg -> Sub (Types.Msg msg)
 subscriptions model =
-  Spec.subscriptions model.specModel
-    |> Sub.map SpecMsg
+  Sub.batch
+  [ Spec.subscriptions model
+  , sendIn Spec.messageTagger
+  ]
 
 
 type alias Flags =
@@ -51,18 +37,16 @@ type alias Flags =
   }
 
 
-init : (String -> Spec model msg) -> Flags -> ( Model model msg, Cmd (Msg msg) )
+init : (String -> Spec model msg) -> Flags -> (Spec.Model model msg, Cmd (Types.Msg msg) )
 init specLocator flags =
   Spec.init (specLocator flags.specName) ()
-    |> Tuple.mapFirst (\model -> { specModel = model })
     |> Tuple.mapSecond (\_ -> sendSpecMessage Spec.Message.startSpec)
-    |> Tuple.mapSecond (Cmd.map SpecMsg)
 
 
-program : (String -> Spec model msg) -> Program Flags (Model model msg) (Msg msg)
+program : (String -> Spec model msg) -> Program Flags (Spec.Model model msg) (Types.Msg msg)
 program specLocator =
   Platform.worker
     { init = init specLocator
-    , update = update
+    , update = Spec.update testConfig
     , subscriptions = subscriptions
     }

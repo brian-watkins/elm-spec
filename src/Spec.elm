@@ -1,11 +1,14 @@
 module Spec exposing
   ( Spec
-  , Msg(..)
   , Model
   , Config
   , given
   , when
-  , send
+  , sendMessage
+  , recordObservation
+  , addStep
+  , doStep
+  , effects
   , nothing
   , expectModel
   , update
@@ -16,7 +19,8 @@ module Spec exposing
 
 import Observer exposing (Observer, Verdict)
 import Spec.Message as Message exposing (Message)
-import Spec.Program exposing (SpecProgram)
+import Spec.Subject exposing (Subject)
+import Spec.Types exposing (..)
 import Task
 import Json.Encode exposing (Value)
 
@@ -27,10 +31,11 @@ type Spec model msg =
     , update: msg -> model -> ( model, Cmd msg )
     , subscriptions: model -> Sub msg
     , steps: List (Spec model msg -> Cmd (Msg msg))
+    , effects: List Message
     }
 
 
-given : SpecProgram model msg -> Spec model msg
+given : Subject model msg -> Spec model msg
 given program =
   let
     ( initialModel, initialCommand ) = program.init ()
@@ -40,10 +45,23 @@ given program =
       , update = program.update
       , subscriptions = program.subscriptions
       , steps =
+          let
+            configCommand =
+              if program.configureEnvironment == Cmd.none then
+                next
+              else
+                Cmd.batch
+                [ program.configureEnvironment
+                , sendMessage Message.stepComplete
+                ]
+          in
           if initialCommand == Cmd.none then
-            []
+            [ \_ -> configCommand ]
           else
-            [ \_ -> Cmd.map ProgramMsg initialCommand ]
+            [ \_ -> configCommand
+            , \_ -> Cmd.map ProgramMsg initialCommand
+            ]
+      , effects = []
       }
 
 
@@ -52,19 +70,23 @@ when specGenerator =
   specGenerator ()
 
 
-send : String -> Value -> (() -> Spec model msg) -> (() -> Spec model msg)
-send name value specGenerator =
+doStep : (Spec model msg -> Cmd (Msg msg)) -> (() -> Spec model msg) -> (() -> Spec model msg)
+doStep stepper specGenerator =
   \_ ->
     let
       (Spec spec) = specGenerator ()
     in
-      Spec { spec | steps = (sendSubscriptionStep name value) :: spec.steps }
-  
+      Spec { spec | steps = stepper :: spec.steps }
 
-sendSubscriptionStep : String -> Value -> Spec model msg -> Cmd (Msg msg)
-sendSubscriptionStep name value _ =
-  Message.sendSubscription name value
-    |> Task.succeed 
+
+effects : Spec model msg -> List Message
+effects (Spec spec) =
+  spec.effects
+
+
+sendMessage : Message -> Cmd (Msg msg)
+sendMessage message =
+  Task.succeed message
     |> Task.perform SendMessage
 
 
@@ -74,16 +96,28 @@ nothing =
 
 
 expectModel : Observer model -> Spec model msg -> Spec model msg
-expectModel observer (Spec spec) =
-  Spec
-    { spec | steps = spec.steps ++ [ expectModelStep observer ] }
+expectModel observer =
+  addStep <| \(Spec spec) ->
+    observer spec.model
+      |> recordObservation
+  
 
-
-expectModelStep : Observer model -> Spec model msg -> Cmd (Msg msg)
-expectModelStep observer (Spec spec) =
-  observer spec.model
-    |> Task.succeed
+recordObservation : Verdict -> Cmd (Msg msg)
+recordObservation verdict =
+  Task.succeed verdict
     |> Task.perform ObservationComplete
+
+
+addStep : (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
+addStep step (Spec spec) =
+  Spec
+    { spec | steps = spec.steps ++ [ step ] }
+
+
+next : Cmd (Msg msg)
+next =
+  Task.succeed never
+    |> Task.perform (always NextStep)
 
 
 
@@ -93,14 +127,6 @@ expectModelStep observer (Spec spec) =
 type alias Config msg =
   { out: Message -> Cmd msg
   }
-
-
-type Msg msg
-  = ProgramMsg msg
-  | ObservationComplete Verdict
-  | ReceivedMessage Message
-  | SendMessage Message 
-  | NextStep
 
 
 type alias Model model msg =
@@ -120,7 +146,13 @@ update config msg model =
   in
   case msg of
     ReceivedMessage specMessage ->
-      ( model, Task.succeed never |> Task.perform (always NextStep) )
+      case specMessage.home of
+        "spec" ->
+          ( model, next )
+        _ ->
+          ( { model | spec = Spec { spec | effects = specMessage :: spec.effects } }
+          , sendMessage Message.stepComplete
+          )
     NextStep ->
       case spec.steps of
         [] ->
@@ -135,7 +167,7 @@ update config msg model =
         ( updatedModel, _ ) = spec.update programMsg spec.model
       in
         ( { model | spec = Spec { spec | model = updatedModel } }
-        , Task.succeed never |> Task.perform (always NextStep)
+        , next
         )
     ObservationComplete verdict ->
       ( model, config.out <| Message.observation verdict )

@@ -1,7 +1,8 @@
 port module Specs.SubscriptionSpec exposing (..)
 
 import Spec exposing (Spec)
-import Spec.Program as Program
+import Spec.Subject as Subject
+import Spec.Port as Port
 import Observer
 import Runner
 import Task
@@ -11,12 +12,12 @@ import Json.Encode as Encode
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
   Spec.given
-    << Program.worker testUpdate
-    << Program.withSubscriptions testSubscriptions
-    << Program.withInit (\_ -> ({count = 0}, Cmd.none))
+    << Subject.worker testUpdate
+    << Subject.withSubscriptions testSubscriptions
+    << Subject.withInit (\_ -> ({count = 0}, Cmd.none))
   |> Spec.when
-    << Spec.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
-    << Spec.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+    << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
+    << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
   |> Spec.expectModel (\model ->
     Observer.isEqual 78 model.count
   )
