@@ -18,8 +18,10 @@ sendsSubscriptionSpec =
   |> Spec.when
     << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
     << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
-  |> Spec.expectModel (\model ->
-    Observer.isEqual 78 model.count
+  |> Spec.it "updates the model" (
+    Spec.expectModel <|
+      \model ->
+        Observer.isEqual 78 model.count
   )
 
 

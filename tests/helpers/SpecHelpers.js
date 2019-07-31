@@ -1,23 +1,28 @@
 const chai = require('chai')
 const expect = chai.expect
 
-exports.expectFailingSpec = (specProgram, specName, matcher, done) => {
+exports.expectFailingSpec = (specProgram, specName, done, matcher) => {
   runSpec(specProgram, specName, (observation) => {
     if (observation.summary === "ACCEPT") {
       expect.fail("\n\n\tExpected the spec to fail but it passed\n")
     }
     expect(observation.summary).to.equal("REJECT")
-    matcher(observation.message)
+    if (matcher) {
+      matcher(observation)
+    }
   }, done)
 }
 
-exports.expectPassingSpec = (specProgram, specName, done) => {
+exports.expectPassingSpec = (specProgram, specName, done, matcher) => {
   runSpec(specProgram, specName, (observation) => {
     if (observation.summary === "REJECT") {
       expect.fail("\n\n\tExpected the spec to pass but got this failure message:\n\n\t" + observation.message + "\n")
     }
     expect(observation.summary).to.equal("ACCEPT")
     expect(observation.message).to.be.null
+    if (matcher) {
+      matcher(observation)
+    }
   }, done)
 }
 

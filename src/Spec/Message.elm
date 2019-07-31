@@ -29,14 +29,22 @@ stepComplete =
   }
 
 
-observation : Verdict -> Message
-observation verdict =
+observation : (String, Verdict) -> Message
+observation (description, verdict) =
   case verdict of
     Accept ->
       { home = "spec-observation"
-      , body = Encode.object [ ("summary", Encode.string "ACCEPT"), ("message", Encode.null) ]
+      , body = Encode.object 
+        [ ("summary", Encode.string "ACCEPT")
+        , ("description", Encode.string description)
+        , ("message", Encode.null)
+        ]
       }
     Reject message ->
       { home = "spec-observation"
-      , body = Encode.object [ ("summary", Encode.string "REJECT"), ("message", Encode.string message) ]
+      , body = Encode.object 
+        [ ("summary", Encode.string "REJECT")
+        , ("description", Encode.string description)
+        , ("message", Encode.string message)
+        ]
       }

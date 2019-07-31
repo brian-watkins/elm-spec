@@ -4,8 +4,8 @@ module Spec exposing
   , Config
   , given
   , when
+  , it
   , sendMessage
-  , recordObservation
   , addStep
   , doStep
   , effects
@@ -32,7 +32,14 @@ type Spec model msg =
     , subscriptions: model -> Sub msg
     , steps: List (Spec model msg -> Cmd (Msg msg))
     , effects: List Message
+    , observations: List (Observation model msg)
     }
+
+
+type alias Observation model msg =
+  { description: String
+  , observer: Observer (Spec model msg)
+  }
 
 
 given : Subject model msg -> Spec model msg
@@ -62,12 +69,24 @@ given program =
             , \_ -> Cmd.map ProgramMsg initialCommand
             ]
       , effects = []
+      , observations = []
       }
 
 
 when : (() -> Spec model msg) -> Spec model msg
 when specGenerator =
   specGenerator ()
+
+
+it : String -> Observer (Spec model msg) -> Spec model msg -> Spec model msg
+it description observer (Spec spec) =
+  Spec
+    { spec | observations = { description = "it " ++ description, observer = observer } :: spec.observations }
+
+
+expectModel : Observer model -> Observer (Spec model msg)
+expectModel observer (Spec spec) =
+  observer spec.model
 
 
 doStep : (Spec model msg -> Cmd (Msg msg)) -> (() -> Spec model msg) -> (() -> Spec model msg)
@@ -93,19 +112,6 @@ sendMessage message =
 nothing : (() -> Spec model msg) -> (() -> Spec model msg)
 nothing =
   identity
-
-
-expectModel : Observer model -> Spec model msg -> Spec model msg
-expectModel observer =
-  addStep <| \(Spec spec) ->
-    observer spec.model
-      |> recordObservation
-  
-
-recordObservation : Verdict -> Cmd (Msg msg)
-recordObservation verdict =
-  Task.succeed verdict
-    |> Task.perform ObservationComplete
 
 
 addStep : (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
@@ -156,7 +162,7 @@ update config msg model =
     NextStep ->
       case spec.steps of
         [] ->
-          (model, Cmd.none)
+          (model, Task.succeed never |> Task.perform (always ObserveSubject))
         nextStep :: remainingSteps ->
           let
               updatedSpec = Spec { spec | steps = remainingSteps }
@@ -169,8 +175,14 @@ update config msg model =
         ( { model | spec = Spec { spec | model = updatedModel } }
         , next
         )
-    ObservationComplete verdict ->
-      ( model, config.out <| Message.observation verdict )
+    ObserveSubject ->
+      ( model
+      , List.map (\observation -> (observation.description, observation.observer model.spec)) spec.observations
+        |> List.map Message.observation
+        |> List.head
+        |> Maybe.map config.out
+        |> Maybe.withDefault Cmd.none
+      )
     SendMessage message ->
       ( model, config.out message )
 

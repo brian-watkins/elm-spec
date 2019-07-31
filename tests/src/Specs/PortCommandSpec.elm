@@ -18,8 +18,10 @@ witnessPortCommandFromInitSpec =
     << Subject.withInit (\_ -> ({count = 0}, sendTestMessageOut "From init!"))
   |> Spec.when
     << Spec.nothing
-  |> Port.expect "sendTestMessageOut" Json.string (\message ->
-    Observer.isEqual message "From init!"
+  |> Spec.it "sends the expected message" (
+    Port.expect "sendTestMessageOut" Json.string <|
+        \message ->
+          Observer.isEqual message "From init!"
   )
 
 

@@ -8,7 +8,7 @@ import Observer exposing (Verdict)
 
 type Msg msg
   = ProgramMsg msg
-  | ObservationComplete Verdict
   | ReceivedMessage Message
   | SendMessage Message
   | NextStep
+  | ObserveSubject

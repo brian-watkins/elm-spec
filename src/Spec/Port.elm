@@ -40,15 +40,13 @@ send name value =
       |> Spec.sendMessage
 
 
-expect : String -> Json.Decoder a -> Observer a -> Spec model msg -> Spec model msg
-expect name decoder observer =
-  Spec.addStep <| \spec ->
-    Spec.effects spec
-      |> List.head
-      |> Maybe.map (\message ->
-        Json.decodeValue decoder message.body
-          |> Result.map observer
-          |> Result.withDefault (Observer.Reject "Unable to parse!")
-      )
-      |> Maybe.withDefault (Observer.Reject "NOT DONE YET")
-      |> Spec.recordObservation
+expect : String -> Json.Decoder a -> Observer a -> Observer (Spec model msg)
+expect name decoder observer spec =
+  Spec.effects spec
+    |> List.head
+    |> Maybe.map (\message ->
+      Json.decodeValue decoder message.body
+        |> Result.map observer
+        |> Result.withDefault (Observer.Reject "Unable to parse!")
+    )
+    |> Maybe.withDefault (Observer.Reject "NOT DONE YET")

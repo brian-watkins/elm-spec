@@ -13,8 +13,11 @@ usesModelFromInitSpec =
     << Subject.worker testUpdate
     << Subject.withInit (\_ -> testInit)
   |> Spec.when
-  |> Spec.expectModel (\model ->
-    Observer.isEqual 41 model.count
+    << Spec.nothing
+  |> Spec.it "uses the given model" (
+    Spec.expectModel <|
+      \model ->
+        Observer.isEqual 41 model.count
   )
 
 
@@ -25,8 +28,10 @@ usesCommandFromInitSpec =
     << Subject.withInit (\_ -> testInitWithCommand 33)
   |> Spec.when
     << Spec.nothing
-  |> Spec.expectModel (\model ->
-    Observer.isEqual 33 model.count
+  |> Spec.it "updates the model" (
+    Spec.expectModel <|
+      \model ->
+        Observer.isEqual 33 model.count
   )
 
 

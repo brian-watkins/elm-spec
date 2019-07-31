@@ -13,8 +13,10 @@ failingSpec =
     << Subject.withModel (\_ -> { count = 99 })
   |> Spec.when
     << Spec.nothing
-  |> Spec.expectModel (\model ->
-    Observer.isEqual 17 model.count
+  |> Spec.it "fails" (
+    Spec.expectModel <|
+      \model ->
+        Observer.isEqual 17 model.count
   )
 
 
@@ -25,8 +27,10 @@ passingSpec =
     << Subject.withModel (\_ -> { count = 99 })
   |> Spec.when
     << Spec.nothing
-  |> Spec.expectModel (\model ->
-    Observer.isEqual 99 model.count
+  |> Spec.it "contains the expected value" (
+      Spec.expectModel <|
+        \model ->
+          Observer.isEqual 99 model.count
   )
 
 
