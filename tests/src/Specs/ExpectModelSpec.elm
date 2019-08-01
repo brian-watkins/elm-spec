@@ -8,9 +8,9 @@ import Runner
 
 failingSpec : Spec Model Msg
 failingSpec =
-  Spec.given
-    << Subject.fragment testUpdate
-    << Subject.withModel (\_ -> { count = 99 })
+  Spec.given (
+    Subject.fragment { count = 99 } testUpdate
+  )
   |> Spec.when
     << Spec.nothing
   |> Spec.it "fails" (
@@ -22,9 +22,9 @@ failingSpec =
 
 passingSpec : Spec Model Msg
 passingSpec =
-  Spec.given
-    << Subject.fragment testUpdate
-    << Subject.withModel (\_ -> { count = 99 })
+  Spec.given (
+    Subject.fragment { count = 99 } testUpdate
+  )
   |> Spec.when
     << Spec.nothing
   |> Spec.it "contains the expected value" (

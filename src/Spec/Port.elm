@@ -33,16 +33,16 @@ observe portName =
     |> Subject.configure
 
 
-send : String -> Encode.Value -> (() -> Spec model msg) -> (() -> Spec model msg)
+send : String -> Encode.Value -> Spec model msg -> Spec model msg
 send name value =
   Spec.doStep <| \_ ->
     sendSubscription name value
       |> Spec.sendMessage
 
 
-expect : String -> Json.Decoder a -> Observer a -> Observer (Spec model msg)
-expect name decoder observer spec =
-  Spec.effects spec
+expect : String -> Json.Decoder a -> Observer a -> Observer (Subject model msg)
+expect name decoder observer subject =
+  Subject.effects subject
     |> List.head
     |> Maybe.map (\message ->
       Json.decodeValue decoder message.body

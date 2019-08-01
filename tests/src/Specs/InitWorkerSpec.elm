@@ -9,9 +9,9 @@ import Task
 
 usesModelFromInitSpec : Spec Model Msg
 usesModelFromInitSpec =
-  Spec.given
-    << Subject.worker testUpdate
-    << Subject.withInit (\_ -> testInit)
+  Spec.given (
+    Subject.worker (\_ -> testInit) testUpdate
+  )
   |> Spec.when
     << Spec.nothing
   |> Spec.it "uses the given model" (
@@ -23,9 +23,9 @@ usesModelFromInitSpec =
 
 usesCommandFromInitSpec : Spec Model Msg
 usesCommandFromInitSpec =
-  Spec.given
-    << Subject.worker testUpdate
-    << Subject.withInit (\_ -> testInitWithCommand 33)
+  Spec.given (
+    Subject.worker (\_ -> testInitWithCommand 33) testUpdate
+  )
   |> Spec.when
     << Spec.nothing
   |> Spec.it "updates the model" (

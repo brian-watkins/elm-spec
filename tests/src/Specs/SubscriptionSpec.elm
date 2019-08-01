@@ -11,10 +11,10 @@ import Json.Encode as Encode
 
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
-  Spec.given
-    << Subject.worker testUpdate
-    << Subject.withSubscriptions testSubscriptions
-    << Subject.withInit (\_ -> ({count = 0}, Cmd.none))
+  Spec.given (
+    Subject.worker (\_ -> ({count = 0}, Cmd.none)) testUpdate
+      |> Subject.withSubscriptions testSubscriptions
+  )
   |> Spec.when
     << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
     << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])

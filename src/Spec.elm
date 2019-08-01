@@ -8,7 +8,6 @@ module Spec exposing
   , sendMessage
   , addStep
   , doStep
-  , effects
   , nothing
   , expectModel
   , update
@@ -19,7 +18,7 @@ module Spec exposing
 
 import Observer exposing (Observer, Verdict)
 import Spec.Message as Message exposing (Message)
-import Spec.Subject exposing (Subject)
+import Spec.Subject as Subject exposing (Subject)
 import Spec.Types exposing (..)
 import Task
 import Json.Encode exposing (Value)
@@ -27,80 +26,63 @@ import Json.Encode exposing (Value)
 
 type Spec model msg =
   Spec
-    { model: model
-    , update: msg -> model -> ( model, Cmd msg )
-    , subscriptions: model -> Sub msg
+    { subject: Subject model msg
     , steps: List (Spec model msg -> Cmd (Msg msg))
-    , effects: List Message
     , observations: List (Observation model msg)
     }
 
 
 type alias Observation model msg =
   { description: String
-  , observer: Observer (Spec model msg)
+  , observer: Observer (Subject model msg)
   }
 
 
 given : Subject model msg -> Spec model msg
-given program =
-  let
-    ( initialModel, initialCommand ) = program.init ()
-  in
-    Spec
-      { model = initialModel
-      , update = program.update
-      , subscriptions = program.subscriptions
-      , steps =
-          let
-            configCommand =
-              if program.configureEnvironment == Cmd.none then
-                next
-              else
-                Cmd.batch
-                [ program.configureEnvironment
-                , sendMessage Message.stepComplete
-                ]
-          in
-          if initialCommand == Cmd.none then
+given specSubject =
+  Spec
+    { subject = specSubject
+    , steps = 
+        let
+          configCommand =
+            if specSubject.configureEnvironment == Cmd.none then
+              next
+            else
+              Cmd.batch
+              [ specSubject.configureEnvironment
+              , sendMessage Message.stepComplete
+              ]
+        in
+          if specSubject.initialCommand == Cmd.none then
             [ \_ -> configCommand ]
           else
             [ \_ -> configCommand
-            , \_ -> Cmd.map ProgramMsg initialCommand
+            , \_ -> Cmd.map ProgramMsg specSubject.initialCommand
             ]
-      , effects = []
-      , observations = []
-      }
+    , observations = []
+    }
 
 
-when : (() -> Spec model msg) -> Spec model msg
-when specGenerator =
-  specGenerator ()
+when : Spec model msg -> Spec model msg
+when =
+  identity
 
 
-it : String -> Observer (Spec model msg) -> Spec model msg -> Spec model msg
+it : String -> Observer (Subject model msg) -> Spec model msg -> Spec model msg
 it description observer (Spec spec) =
   Spec
     { spec | observations = { description = "it " ++ description, observer = observer } :: spec.observations }
 
 
-expectModel : Observer model -> Observer (Spec model msg)
-expectModel observer (Spec spec) =
-  observer spec.model
+expectModel : Observer model -> Observer (Subject model msg)
+expectModel observer specSubject =
+  observer specSubject.model
 
 
-doStep : (Spec model msg -> Cmd (Msg msg)) -> (() -> Spec model msg) -> (() -> Spec model msg)
-doStep stepper specGenerator =
-  \_ ->
-    let
-      (Spec spec) = specGenerator ()
-    in
-      Spec { spec | steps = stepper :: spec.steps }
-
-
-effects : Spec model msg -> List Message
-effects (Spec spec) =
-  spec.effects
+doStep : (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
+doStep stepper (Spec spec) =
+  Spec
+    { spec | steps = stepper :: spec.steps }
 
 
 sendMessage : Message -> Cmd (Msg msg)
@@ -109,7 +91,7 @@ sendMessage message =
     |> Task.perform SendMessage
 
 
-nothing : (() -> Spec model msg) -> (() -> Spec model msg)
+nothing : Spec model msg -> Spec model msg
 nothing =
   identity
 
@@ -124,6 +106,11 @@ next : Cmd (Msg msg)
 next =
   Task.succeed never
     |> Task.perform (always NextStep)
+
+
+subject : Spec model msg -> Subject model msg
+subject (Spec spec) =
+  spec.subject
 
 
 
@@ -149,6 +136,7 @@ update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cm
 update config msg model =
   let
     (Spec spec) = model.spec
+    specSubject = subject model.spec
   in
   case msg of
     ReceivedMessage specMessage ->
@@ -156,7 +144,7 @@ update config msg model =
         "spec" ->
           ( model, next )
         _ ->
-          ( { model | spec = Spec { spec | effects = specMessage :: spec.effects } }
+          ( { model | spec = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
           , sendMessage Message.stepComplete
           )
     NextStep ->
@@ -170,14 +158,14 @@ update config msg model =
             ( { model | spec = updatedSpec }, nextStep updatedSpec )
     ProgramMsg programMsg ->
       let
-        ( updatedModel, _ ) = spec.update programMsg spec.model
+        ( updatedModel, _ ) = specSubject.update programMsg specSubject.model
       in
-        ( { model | spec = Spec { spec | model = updatedModel } }
+        ( { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
         , next
         )
     ObserveSubject ->
       ( model
-      , List.map (\observation -> (observation.description, observation.observer model.spec)) spec.observations
+      , List.map (\observation -> (observation.description, observation.observer <| subject model.spec)) spec.observations
         |> List.map Message.observation
         |> List.head
         |> Maybe.map config.out
@@ -190,9 +178,9 @@ update config msg model =
 subscriptions : Model model msg -> Sub (Msg msg)
 subscriptions model =
   let
-    (Spec spec) = model.spec
+    specSubject = subject model.spec
   in
-    spec.subscriptions spec.model
+    specSubject.subscriptions specSubject.model
       |> Sub.map ProgramMsg
 
 

@@ -11,11 +11,11 @@ import Json.Decode as Json
 
 witnessPortCommandFromInitSpec : Spec Model Msg
 witnessPortCommandFromInitSpec =
-  Spec.given
-    << Subject.worker testUpdate
-    << Subject.withSubscriptions testSubscriptions
-    << Port.observe "sendTestMessageOut"
-    << Subject.withInit (\_ -> ({count = 0}, sendTestMessageOut "From init!"))
+  Spec.given (
+    Subject.worker (\_ -> ({count = 0}, sendTestMessageOut "From init!")) testUpdate
+      |> Subject.withSubscriptions testSubscriptions
+      |> Port.observe "sendTestMessageOut"
+  )
   |> Spec.when
     << Spec.nothing
   |> Spec.it "sends the expected message" (

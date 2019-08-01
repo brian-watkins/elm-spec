@@ -1,57 +1,61 @@
 module Spec.Subject exposing
   ( Subject
   , fragment
-  , withModel
   , worker
   , configure
-  , withInit
+  , pushEffect
+  , effects
   , withSubscriptions
   )
 
 import Spec.Types exposing (..)
+import Spec.Message exposing (Message)
 
 
 type alias Subject model msg =
-  { update: msg -> model -> ( model, Cmd msg )
-  , init: () -> ( model, Cmd msg )
+  { model: model
+  , initialCommand: Cmd msg
+  , update: msg -> model -> ( model, Cmd msg )
   , subscriptions: model -> Sub msg
   , configureEnvironment: Cmd (Msg msg)
+  , effects: List Message
   }
 
 
-fragment : (msg -> model -> ( model, Cmd msg )) -> Subject model msg -> Subject model msg
-fragment fragmentUpdate specProgram =
-  { specProgram | update = fragmentUpdate }
+fragment : model -> (msg -> model -> (model, Cmd msg)) -> Subject model msg
+fragment model =
+  worker (\_ -> (model, Cmd.none))
 
 
-worker : (msg -> model -> ( model, Cmd msg )) -> Subject model msg -> Subject model msg
-worker programUpdate specProgram =
-  { specProgram | update = programUpdate }
+worker : (() -> (model, Cmd msg)) -> (msg -> model -> (model, Cmd msg)) -> Subject model msg
+worker initGenerator update =
+  let
+      ( model, initialCommand ) = initGenerator ()
+  in
+    { model = model
+    , initialCommand = initialCommand
+    , update = update
+    , subscriptions = \_ -> Sub.none
+    , configureEnvironment = Cmd.none
+    , effects = []
+    }
 
 
 configure : Cmd (Msg msg) -> Subject model msg -> Subject model msg
-configure command specProgram =
-  { specProgram | configureEnvironment = Cmd.batch [ specProgram.configureEnvironment, command ] }
+configure command subject =
+  { subject | configureEnvironment = Cmd.batch [ subject.configureEnvironment, command ] }
 
 
 withSubscriptions : (model -> Sub msg) -> Subject model msg -> Subject model msg
-withSubscriptions programSubscriptions specProgram =
-  { specProgram | subscriptions = programSubscriptions }
+withSubscriptions programSubscriptions subject =
+  { subject | subscriptions = programSubscriptions }
 
 
-withInit : (() -> ( model, Cmd msg )) -> () -> Subject model msg
-withInit initGenerator _ =
-  { update = \_ model -> (model, Cmd.none)
-  , init = initGenerator
-  , subscriptions = \_ -> Sub.none
-  , configureEnvironment = Cmd.none
-  }
+pushEffect : Message -> Subject model msg -> Subject model msg
+pushEffect effect subject =
+  { subject | effects = effect :: subject.effects }
 
 
-withModel : (() -> model) -> () -> Subject model msg
-withModel modelGenerator _ =
-  { update = \_ model -> (model, Cmd.none)
-  , init = \_ -> ( modelGenerator (), Cmd.none )
-  , subscriptions = \_ -> Sub.none
-  , configureEnvironment = Cmd.none
-  }
+effects : Subject model msg -> List Message
+effects =
+  .effects
