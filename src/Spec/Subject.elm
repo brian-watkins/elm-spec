@@ -8,7 +8,6 @@ module Spec.Subject exposing
   , withSubscriptions
   )
 
-import Spec.Types exposing (..)
 import Spec.Message exposing (Message)
 
 
@@ -17,7 +16,7 @@ type alias Subject model msg =
   , initialCommand: Cmd msg
   , update: msg -> model -> ( model, Cmd msg )
   , subscriptions: model -> Sub msg
-  , configureEnvironment: Cmd (Msg msg)
+  , configureEnvironment: List Message
   , effects: List Message
   }
 
@@ -36,14 +35,14 @@ worker initGenerator update =
     , initialCommand = initialCommand
     , update = update
     , subscriptions = \_ -> Sub.none
-    , configureEnvironment = Cmd.none
+    , configureEnvironment = []
     , effects = []
     }
 
 
-configure : Cmd (Msg msg) -> Subject model msg -> Subject model msg
-configure command subject =
-  { subject | configureEnvironment = Cmd.batch [ subject.configureEnvironment, command ] }
+configure : Message -> Subject model msg -> Subject model msg
+configure message subject =
+  { subject | configureEnvironment = message :: subject.configureEnvironment }
 
 
 withSubscriptions : (model -> Sub msg) -> Subject model msg -> Subject model msg

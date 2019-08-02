@@ -1,12 +1,11 @@
 module Spec exposing
   ( Spec
   , Model
+  , Msg
   , Config
   , given
   , when
   , it
-  , sendMessage
-  , addStep
   , doStep
   , nothing
   , expectModel
@@ -19,7 +18,6 @@ module Spec exposing
 import Observer exposing (Observer, Verdict)
 import Spec.Message as Message exposing (Message)
 import Spec.Subject as Subject exposing (Subject)
-import Spec.Types exposing (..)
 import Task
 import Json.Encode exposing (Value)
 
@@ -45,13 +43,14 @@ given specSubject =
     , steps = 
         let
           configCommand =
-            if specSubject.configureEnvironment == Cmd.none then
+            if List.isEmpty specSubject.configureEnvironment then
               next
             else
               Cmd.batch
-              [ specSubject.configureEnvironment
-              , sendMessage Message.stepComplete
-              ]
+                [ List.map sendMessage specSubject.configureEnvironment
+                    |> Cmd.batch
+                , sendMessage Message.stepComplete
+                ]
         in
           if specSubject.initialCommand == Cmd.none then
             [ \_ -> configCommand ]
@@ -79,10 +78,16 @@ expectModel observer specSubject =
   observer specSubject.model
 
 
-doStep : (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
+doStep : (Subject model msg -> Message) -> Spec model msg -> Spec model msg
 doStep stepper (Spec spec) =
-  Spec
-    { spec | steps = stepper :: spec.steps }
+  let
+    step = \sp ->
+      subject sp
+        |> stepper
+        |> sendMessage
+  in
+    Spec
+      { spec | steps = step :: spec.steps }
 
 
 sendMessage : Message -> Cmd (Msg msg)
@@ -94,12 +99,6 @@ sendMessage message =
 nothing : Spec model msg -> Spec model msg
 nothing =
   identity
-
-
-addStep : (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
-addStep step (Spec spec) =
-  Spec
-    { spec | steps = spec.steps ++ [ step ] }
 
 
 next : Cmd (Msg msg)
@@ -120,6 +119,14 @@ subject (Spec spec) =
 type alias Config msg =
   { out: Message -> Cmd msg
   }
+
+
+type Msg msg
+  = ProgramMsg msg
+  | ReceivedMessage Message
+  | SendMessage Message
+  | NextStep
+  | ObserveSubject
 
 
 type alias Model model msg =
