@@ -46,4 +46,4 @@ expect name decoder observer subject =
         |> Result.map observer
         |> Result.withDefault (Observer.Reject "Unable to parse!")
     )
-    |> Maybe.withDefault (Observer.Reject "NOT DONE YET")
+    |> Maybe.withDefault (Observer.Reject "NOT DONE YET (No messages found)")

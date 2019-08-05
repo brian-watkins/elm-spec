@@ -43,7 +43,7 @@ given specSubject =
         let
           configCommand =
             if List.isEmpty specSubject.configureEnvironment then
-              next
+              nextStep
             else
               Cmd.batch
                 [ List.map sendMessage specSubject.configureEnvironment
@@ -101,8 +101,8 @@ sendMessage message =
     |> Task.perform SendMessage
 
 
-next : Cmd (Msg msg)
-next =
+nextStep : Cmd (Msg msg)
+nextStep =
   Task.succeed never
     |> Task.perform (always NextStep)
 
@@ -149,7 +149,7 @@ update config msg model =
     ReceivedMessage specMessage ->
       case specMessage.home of
         "spec" ->
-          ( model, next )
+          ( model, nextStep )
         _ ->
           ( { model | spec = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
           , sendMessage Message.stepComplete
@@ -158,18 +158,23 @@ update config msg model =
       case spec.steps of
         [] ->
           (model, Task.succeed never |> Task.perform (always ObserveSubject))
-        nextStep :: remainingSteps ->
+        step :: remainingSteps ->
           let
               updatedSpec = Spec { spec | steps = remainingSteps }
           in
-            ( { model | spec = updatedSpec }, nextStep updatedSpec )
+            ( { model | spec = updatedSpec }, step updatedSpec )
     ProgramMsg programMsg ->
       let
-        ( updatedModel, _ ) = specSubject.update programMsg specSubject.model
+        ( updatedModel, nextCommand ) = specSubject.update programMsg specSubject.model
       in
-        ( { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
-        , next
-        )
+        if nextCommand == Cmd.none then
+          ( { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
+          , nextStep
+          )
+        else
+          ( { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
+          , Cmd.map ProgramMsg nextCommand
+          )
     ObserveSubject ->
       ( model
       , List.map (\observation -> (observation.description, observation.observer <| subject model.spec)) spec.observations
