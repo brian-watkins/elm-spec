@@ -16,8 +16,6 @@ witnessPortCommandFromInitSpec =
       |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendTestMessageOut"
   )
-  |> Spec.when
-    << Spec.nothing
   |> Spec.it "sends the expected message" (
     Port.expect "sendTestMessageOut" Json.string <|
         \message ->

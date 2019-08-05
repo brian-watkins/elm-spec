@@ -12,8 +12,6 @@ usesModelFromInitSpec =
   Spec.given (
     Subject.worker (\_ -> testInit) testUpdate
   )
-  |> Spec.when
-    << Spec.nothing
   |> Spec.it "uses the given model" (
     Spec.expectModel <|
       \model ->
@@ -26,8 +24,6 @@ usesCommandFromInitSpec =
   Spec.given (
     Subject.worker (\_ -> testInitWithCommand 33) testUpdate
   )
-  |> Spec.when
-    << Spec.nothing
   |> Spec.it "updates the model" (
     Spec.expectModel <|
       \model ->

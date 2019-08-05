@@ -7,7 +7,6 @@ module Spec exposing
   , when
   , it
   , doStep
-  , nothing
   , expectModel
   , update
   , init
@@ -62,9 +61,15 @@ given specSubject =
     }
 
 
-when : Spec model msg -> Spec model msg
-when =
-  identity
+when : List (Subject model msg -> Message) -> Spec model msg -> Spec model msg
+when messageSteps (Spec spec) =
+  Spec
+    { spec 
+    | steps =
+        messageSteps
+          |> List.map (\f -> \s -> subject s |> f |> sendMessage)
+          |> List.append spec.steps
+    }
 
 
 it : String -> Observer (Subject model msg) -> Spec model msg -> Spec model msg
@@ -94,11 +99,6 @@ sendMessage : Message -> Cmd (Msg msg)
 sendMessage message =
   Task.succeed message
     |> Task.perform SendMessage
-
-
-nothing : Spec model msg -> Spec model msg
-nothing =
-  identity
 
 
 next : Cmd (Msg msg)

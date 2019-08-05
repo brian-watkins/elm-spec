@@ -16,8 +16,9 @@ sendsSubscriptionSpec =
       |> Subject.withSubscriptions testSubscriptions
   )
   |> Spec.when
-    << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
-    << Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+    [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
+    , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+    ]
   |> Spec.it "updates the model" (
     Spec.expectModel <|
       \model ->

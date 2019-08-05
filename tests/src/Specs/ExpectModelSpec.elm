@@ -11,8 +11,6 @@ failingSpec =
   Spec.given (
     Subject.fragment { count = 99 } testUpdate
   )
-  |> Spec.when
-    << Spec.nothing
   |> Spec.it "fails" (
     Spec.expectModel <|
       \model ->
@@ -25,8 +23,6 @@ passingSpec =
   Spec.given (
     Subject.fragment { count = 99 } testUpdate
   )
-  |> Spec.when
-    << Spec.nothing
   |> Spec.it "contains the expected value" (
       Spec.expectModel <|
         \model ->
