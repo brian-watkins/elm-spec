@@ -20,7 +20,7 @@ processCommandSpec =
     [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
     ]
   |> Spec.it "sends the port command" (
-    Port.expect "sendSomethingOut" Json.string (Observer.isEqual "test-message-41")
+    Port.expect "sendSomethingOut" Json.string (Observer.isEqual [ "test-message-41" ])
   )
 
 

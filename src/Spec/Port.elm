@@ -37,13 +37,11 @@ send name value _ =
   sendSubscription name value
 
 
-expect : String -> Json.Decoder a -> Observer a -> Observer (Subject model msg)
+expect : String -> Json.Decoder a -> Observer (List a) -> Observer (Subject model msg)
 expect name decoder observer subject =
   Subject.effects subject
-    |> List.head
-    |> Maybe.map (\message ->
+    |> List.filterMap (\message ->
       Json.decodeValue decoder message.body
-        |> Result.map observer
-        |> Result.withDefault (Observer.Reject "Unable to parse!")
+        |> Result.toMaybe
     )
-    |> Maybe.withDefault (Observer.Reject "NOT DONE YET (No messages found)")
+    |> observer

@@ -31,14 +31,17 @@ const runSpec = (specProgram, specName, matcher, done) => {
     flags: { specName }
   })
 
+  let timer = null;
+
   app.ports.sendOut.subscribe((specMessage) => {
     try {
       if (specMessage.home === "spec") {
         const state = specMessage.body
         if (state == "STEP_COMPLETE") {
-          setTimeout(() => {
+          if (timer) clearTimeout(timer)
+          timer = setTimeout(() => {
             app.ports.sendIn.send({ home: "spec", body: "NEXT_STEP" })
-          }, 35)
+          }, 1)
         }
       }
       else if (specMessage.home === "spec-send") {

@@ -5,7 +5,6 @@ import Spec.Subject as Subject
 import Spec.Port as Port
 import Observer
 import Runner
-import Task
 import Json.Decode as Json
 
 
@@ -13,30 +12,49 @@ witnessPortCommandFromInitSpec : Spec Model Msg
 witnessPortCommandFromInitSpec =
   Spec.given (
     Subject.worker (\_ -> ({count = 0}, sendTestMessageOut "From init!")) testUpdate
-      |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendTestMessageOut"
   )
   |> Spec.it "sends the expected message" (
     Port.expect "sendTestMessageOut" Json.string <|
-        \message ->
-          Observer.isEqual message "From init!"
+      Observer.isEqual [ "From init!" ]
+  )
+
+
+witnessMultiplePortCommandsFromInitSpec : Spec Model Msg
+witnessMultiplePortCommandsFromInitSpec =
+  Spec.given (
+    Subject.worker (\_ -> 
+        ( {count = 0}
+        , Cmd.batch [ sendTestMessageOut "One", sendTestMessageOut "Two", sendTestMessageOut "Three" ]
+        )
+      )
+      testUpdate
+      |> Port.observe "sendTestMessageOut"
+  )
+  |> Spec.it "records all the messages sent" (
+    Port.expect "sendTestMessageOut" Json.string <|
+      Observer.isEqual [ "One", "Two", "Three" ]
   )
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
-testUpdate msg model =
-  case msg of
-    ReceivedString str ->
-      ( model, sendTestMessageOut <| "My Port Message: " ++ str )
+testUpdate _ model =
+  ( model, Cmd.none )
 
 
 selectSpec : String -> Spec Model Msg
 selectSpec name =
-  witnessPortCommandFromInitSpec
+  case name of
+    "one" ->
+      witnessPortCommandFromInitSpec
+    "many" ->
+      witnessMultiplePortCommandsFromInitSpec
+    _ ->
+      witnessPortCommandFromInitSpec
 
 
 type Msg
-  = ReceivedString String
+  = Msg
 
 
 type alias Model =
@@ -44,13 +62,7 @@ type alias Model =
   }
 
 
-port listenForMessage : (String -> msg) -> Sub msg
 port sendTestMessageOut : String -> Cmd msg
-
-
-testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
-  listenForMessage ReceivedString
 
 
 main =
