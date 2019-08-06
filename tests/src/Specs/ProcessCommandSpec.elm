@@ -7,6 +7,7 @@ import Observer
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
+import Task
 
 
 processCommandSpec : Spec Model Msg
@@ -19,8 +20,11 @@ processCommandSpec =
   |> Spec.when
     [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
     ]
-  |> Spec.it "sends the port command" (
-    Port.expect "sendSomethingOut" Json.string (Observer.isEqual [ "test-message-41" ])
+  |> Spec.it "sends the port command the specified number of times" (
+    Port.expect "sendSomethingOut" Json.string <|
+      \messages ->
+        List.length messages
+          |> Observer.isEqual 42
   )
 
 
@@ -29,7 +33,14 @@ testUpdate msg model =
   case msg of
     ReceivedSuperObject superObject ->
       ( { model | count = superObject.number }
-      , sendSomethingOut <| "test-message-" ++ String.fromInt superObject.number
+      , Cmd.batch
+        [ sendSomethingOut <| "test-message-" ++ String.fromInt superObject.number
+        , if superObject.number > 0 then
+            Task.succeed { number = superObject.number - 1 }
+              |> Task.perform ReceivedSuperObject
+          else
+            Cmd.none
+        ]
       )
 
 

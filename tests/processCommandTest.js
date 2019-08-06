@@ -3,7 +3,7 @@ const { expectPassingSpec } = require('./helpers/SpecHelpers')
 
 describe("process commands", () => {
   describe("when the update function triggers a command", () => {
-    it("processes the command as expected", (done) => {
+    it("processes commands as expected until there are no more", (done) => {
       expectPassingSpec(Elm.Specs.ProcessCommandSpec, "", done)
     })
   })

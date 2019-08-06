@@ -165,16 +165,15 @@ update config msg model =
             ( { model | spec = updatedSpec }, step updatedSpec )
     ProgramMsg programMsg ->
       let
-        ( updatedModel, nextCommand ) = specSubject.update programMsg specSubject.model
+        ( updatedModel, nextCommand ) =
+          specSubject.update programMsg specSubject.model
+        nextModel =
+          { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
       in
         if nextCommand == Cmd.none then
-          ( { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
-          , nextStep
-          )
+          ( nextModel, nextStep )
         else
-          ( { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
-          , Cmd.map ProgramMsg nextCommand
-          )
+          ( nextModel, Cmd.map ProgramMsg nextCommand )
     ObserveSubject ->
       ( model
       , List.map (\observation -> (observation.description, observation.observer <| subject model.spec)) spec.observations
