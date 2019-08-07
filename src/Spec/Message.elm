@@ -37,22 +37,30 @@ specComplete =
   }
 
 
-observation : (String, Verdict) -> Message
-observation (description, verdict) =
+observation : List String -> (String, Verdict) -> Message
+observation conditions (description, verdict) =
+  { home = "spec-observation"
+  , body = encodeObservation conditions description verdict
+  }
+
+
+encodeObservation : List String -> String -> Verdict -> Value
+encodeObservation conditions description verdict =
+  verdictAttributes verdict
+    |> List.append
+      [ ("conditions", Encode.list Encode.string conditions)
+      , ("description", Encode.string description)
+      ]
+    |> Encode.object
+
+
+verdictAttributes verdict =
   case verdict of
     Accept ->
-      { home = "spec-observation"
-      , body = Encode.object 
-        [ ("summary", Encode.string "ACCEPT")
-        , ("description", Encode.string description)
-        , ("message", Encode.null)
-        ]
-      }
+      [ ("summary", Encode.string "ACCEPT")
+      , ("message", Encode.null)
+      ]
     Reject message ->
-      { home = "spec-observation"
-      , body = Encode.object 
-        [ ("summary", Encode.string "REJECT")
-        , ("description", Encode.string description)
-        , ("message", Encode.string message)
-        ]
-      }
+      [ ("summary", Encode.string "REJECT")
+      , ("message", Encode.string message)
+      ]

@@ -15,7 +15,7 @@ sendsSubscriptionSpec =
     Subject.worker (\_ -> ({count = 0}, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
-  |> Spec.when
+  |> Spec.when "some subscription messages are sent"
     [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
     , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
     ]

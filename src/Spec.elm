@@ -25,6 +25,7 @@ import Process
 type Spec model msg =
   Spec
     { subject: Subject model msg
+    , conditions: List String
     , steps: List (Spec model msg -> Cmd (Msg msg))
     , observations: List (Observation model msg)
     }
@@ -59,17 +60,20 @@ given specSubject =
             , \_ -> Cmd.map ProgramMsg specSubject.initialCommand
             ]
     , observations = []
+    , conditions = []
     }
 
 
-when : List (Subject model msg -> Message) -> Spec model msg -> Spec model msg
-when messageSteps (Spec spec) =
+when : String -> List (Subject model msg -> Message) -> Spec model msg -> Spec model msg
+when condition messageSteps (Spec spec) =
   Spec
     { spec 
     | steps =
         messageSteps
           |> List.map (\f -> \s -> subject s |> f |> sendMessage)
           |> List.append spec.steps
+    , conditions =
+        List.append spec.conditions [ condition ]
     }
 
 
@@ -181,7 +185,7 @@ update config msg model =
     ObserveSubject ->
       ( model
       , List.map (\observation -> (observation.description, observation.observer <| subject model.spec)) spec.observations
-        |> List.map Message.observation
+        |> List.map (Message.observation spec.conditions)
         |> List.map config.out
         |> List.append [ andThenSend SpecComplete ]
         |> Cmd.batch

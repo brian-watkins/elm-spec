@@ -17,7 +17,7 @@ processCommandSpec =
       |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendSomethingOut"
   )
-  |> Spec.when
+  |> Spec.when "a subscription message is sent"
     [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
     ]
   |> Spec.it "sends the port command the specified number of times" (
@@ -35,7 +35,7 @@ processBatchedTerminatingAndNoCallbackCommands =
       |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendSomethingOut"
   )
-  |> Spec.when (
+  |> Spec.when "many subscription messages are sent" (
     List.range 0 5
       |> List.map (\num -> Port.send "listenForObject" (Encode.object [ ("number", Encode.int num) ]))
   )
