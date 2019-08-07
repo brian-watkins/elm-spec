@@ -13,7 +13,7 @@ import Task
 processCommandSpec : Spec Model Msg
 processCommandSpec =
   Spec.given (
-    Subject.worker (\_ -> ({count = 0}, Cmd.none)) testUpdate
+    Subject.worker (\_ -> ({count = 0, num = 0}, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendSomethingOut"
   )
@@ -28,25 +28,70 @@ processCommandSpec =
   )
 
 
+processBatchedTerminatingAndNoCallbackCommands : Spec Model Msg
+processBatchedTerminatingAndNoCallbackCommands =
+  Spec.given (
+    Subject.worker (\_ -> ({count = 0, num = 0}, Cmd.none)) testUpdate
+      |> Subject.withSubscriptions testSubscriptions
+      |> Port.observe "sendSomethingOut"
+  )
+  |> Spec.when (
+    List.range 0 5
+      |> List.map (\num -> Port.send "listenForObject" (Encode.object [ ("number", Encode.int num) ]))
+  )
+  |> Spec.it "sends all the commands" (
+    Port.expect "sendSomethingOut" Json.string <|
+      \messages ->
+        List.length messages
+          |> Observer.isEqual 21
+  )
+  |> Spec.it "it ends up with the right tally" (
+    Spec.expectModel <|
+      \model ->
+        Observer.isEqual 35 model.num
+  )
+
+
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
 testUpdate msg model =
   case msg of
+    Tally num ->
+      ( { model | num = model.num + num }, Cmd.none )
     ReceivedSuperObject superObject ->
       ( { model | count = superObject.number }
       , Cmd.batch
-        [ sendSomethingOut <| "test-message-" ++ String.fromInt superObject.number
+        [ sendNonTerminatingCommand superObject.number
         , if superObject.number > 0 then
-            Task.succeed { number = superObject.number - 1 }
-              |> Task.perform ReceivedSuperObject
+            sendChainCommand superObject.number
           else
             Cmd.none
+        , sendTerminatingCommand superObject.number
         ]
       )
 
 
+sendChainCommand number =
+  Task.succeed { number = number - 1 }
+    |> Task.perform ReceivedSuperObject
+
+
+sendNonTerminatingCommand number =
+  "test-message-" ++ String.fromInt number
+    |> sendSomethingOut
+
+
+sendTerminatingCommand number =
+  Task.succeed number
+    |> Task.perform Tally
+
+
 selectSpec : String -> Spec Model Msg
 selectSpec name =
-  processCommandSpec
+  case name of
+    "terminatingAndNonTerminating" ->
+      processBatchedTerminatingAndNoCallbackCommands
+    _ ->
+      processCommandSpec
 
 
 type alias SuperObject =
@@ -56,10 +101,12 @@ type alias SuperObject =
 
 type Msg
   = ReceivedSuperObject SuperObject
+  | Tally Int
 
 
 type alias Model =
   { count: Int
+  , num: Int
   }
 
 

@@ -175,7 +175,7 @@ update config msg model =
           { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
       in
         if nextCommand == Cmd.none then
-          ( nextModel, nextStep )
+          ( nextModel, sendMessage Message.stepComplete )
         else
           ( nextModel, Cmd.map ProgramMsg nextCommand )
     ObserveSubject ->
