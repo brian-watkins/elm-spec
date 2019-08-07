@@ -6,7 +6,6 @@ module Spec exposing
   , given
   , when
   , it
-  , doStep
   , expectModel
   , update
   , init
@@ -86,18 +85,6 @@ it description observer (Spec spec) =
 expectModel : Observer model -> Observer (Subject model msg)
 expectModel observer specSubject =
   observer specSubject.model
-
-
-doStep : (Subject model msg -> Message) -> Spec model msg -> Spec model msg
-doStep stepper (Spec spec) =
-  let
-    step = \sp ->
-      subject sp
-        |> stepper
-        |> sendMessage
-  in
-    Spec
-      { spec | steps = step :: spec.steps }
 
 
 sendMessage : Message -> Cmd (Msg msg)
