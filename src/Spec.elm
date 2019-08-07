@@ -19,6 +19,7 @@ import Spec.Message as Message exposing (Message)
 import Spec.Subject as Subject exposing (Subject)
 import Task
 import Json.Encode exposing (Value)
+import Process
 
 
 type Spec model msg =
@@ -126,6 +127,7 @@ type Msg msg
   | ReceivedMessage Message
   | SendMessage Message
   | NextStep
+  | SpecComplete
   | ObserveSubject
 
 
@@ -163,6 +165,8 @@ update config msg model =
               updatedSpec = Spec { spec | steps = remainingSteps }
           in
             ( { model | spec = updatedSpec }, step updatedSpec )
+    SpecComplete ->
+      ( model, sendMessage Message.specComplete )
     ProgramMsg programMsg ->
       let
         ( updatedModel, nextCommand ) =
@@ -178,12 +182,18 @@ update config msg model =
       ( model
       , List.map (\observation -> (observation.description, observation.observer <| subject model.spec)) spec.observations
         |> List.map Message.observation
-        |> List.head
-        |> Maybe.map config.out
-        |> Maybe.withDefault Cmd.none
+        |> List.map config.out
+        |> List.append [ andThenSend SpecComplete ]
+        |> Cmd.batch
       )
     SendMessage message ->
       ( model, config.out message )
+
+
+andThenSend : msg -> Cmd msg
+andThenSend msg =
+  Process.sleep 0
+    |> Task.perform (always msg)
 
 
 subscriptions : Model model msg -> Sub (Msg msg)

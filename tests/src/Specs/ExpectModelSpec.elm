@@ -9,7 +9,7 @@ import Runner
 failingSpec : Spec Model Msg
 failingSpec =
   Spec.given (
-    Subject.fragment { count = 99 } testUpdate
+    Subject.fragment { count = 99, name = "" } testUpdate
   )
   |> Spec.it "fails" (
     Spec.expectModel <|
@@ -21,12 +21,27 @@ failingSpec =
 passingSpec : Spec Model Msg
 passingSpec =
   Spec.given (
-    Subject.fragment { count = 99 } testUpdate
+    Subject.fragment { count = 99, name = "" } testUpdate
   )
   |> Spec.it "contains the expected value" (
       Spec.expectModel <|
         \model ->
           Observer.isEqual 99 model.count
+  )
+
+
+multipleObservationsSpec : Spec Model Msg
+multipleObservationsSpec =
+  Spec.given (
+    Subject.fragment { count = 87, name = "fun-spec" } testUpdate
+  )
+  |> Spec.it "contains the expected number" ( Spec.expectModel <|
+      \model ->
+        Observer.isEqual 87 model.count
+  )
+  |> Spec.it "contains the expected name" ( Spec.expectModel <|
+      \model ->
+        Observer.isEqual "awesome-spec" model.name
   )
 
 
@@ -42,6 +57,8 @@ selectSpec specName =
       failingSpec
     "passing" ->
       passingSpec
+    "multiple" ->
+      multipleObservationsSpec
     _ ->
       failingSpec
 
@@ -52,6 +69,7 @@ type Msg
 
 type alias Model =
   { count: Int
+  , name: String
   }
 
 

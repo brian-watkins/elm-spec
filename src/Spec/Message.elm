@@ -3,6 +3,7 @@ module Spec.Message exposing
   , observation
   , startSpec
   , stepComplete
+  , specComplete
   )
 
 import Observer exposing (Verdict(..))
@@ -26,6 +27,13 @@ stepComplete : Message
 stepComplete =
   { home = "spec"
   , body = Encode.string "STEP_COMPLETE"
+  }
+
+
+specComplete : Message
+specComplete =
+  { home = "spec"
+  , body = Encode.string "SPEC_COMPLETE"
   }
 
 
