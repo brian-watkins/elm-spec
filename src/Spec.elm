@@ -6,6 +6,7 @@ module Spec exposing
   , given
   , when
   , it
+  , suppose
   , expectModel
   , update
   , init
@@ -27,6 +28,7 @@ type Spec model msg =
     , conditions: List String
     , steps: List (Spec model msg -> Cmd (Msg msg))
     , observations: List (Observation model msg)
+    , scenarios: List (Subject model msg -> Spec model msg)
     }
 
 
@@ -60,6 +62,7 @@ given specSubject =
             ]
     , observations = []
     , conditions = []
+    , scenarios = []
     }
 
 
@@ -80,6 +83,12 @@ it : String -> Observer (Subject model msg) -> Spec model msg -> Spec model msg
 it description observer (Spec spec) =
   Spec
     { spec | observations = { description = "it " ++ description, observer = observer } :: spec.observations }
+
+
+suppose : (Subject model msg -> Spec model msg) -> Spec model msg -> Spec model msg
+suppose generator (Spec spec) =
+  Spec
+    { spec | scenarios = generator :: spec.scenarios }
 
 
 expectModel : Observer model -> Observer (Subject model msg)
@@ -118,12 +127,15 @@ type Msg msg
   | ReceivedMessage Message
   | SendMessage Message
   | NextStep
+  | NextSpec
   | SpecComplete
+  | ObservationsComplete
   | ObserveSubject
 
 
 type alias Model model msg =
-  { spec: Spec model msg
+  { specs: List (Spec model msg)
+  , current: Spec model msg
   }
 
 
@@ -135,8 +147,8 @@ messageTagger =
 update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
   let
-    (Spec spec) = model.spec
-    specSubject = subject model.spec
+    (Spec spec) = model.current
+    specSubject = subject model.current
   in
   case msg of
     ReceivedMessage specMessage ->
@@ -144,7 +156,7 @@ update config msg model =
         "spec" ->
           ( model, nextStep )
         _ ->
-          ( { model | spec = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
+          ( { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
           , sendMessage Message.stepComplete
           )
     NextStep ->
@@ -155,7 +167,13 @@ update config msg model =
           let
               updatedSpec = Spec { spec | steps = remainingSteps }
           in
-            ( { model | spec = updatedSpec }, step updatedSpec )
+            ( { model | current = updatedSpec }, step updatedSpec )
+    NextSpec ->
+      case model.specs of
+        [] ->
+          ( model, Task.succeed never |> Task.perform (always SpecComplete) )
+        next :: remaining ->
+          ( { model | specs = remaining, current = next }, nextStep )
     SpecComplete ->
       ( model, sendMessage Message.specComplete )
     ProgramMsg programMsg ->
@@ -163,7 +181,7 @@ update config msg model =
         ( updatedModel, nextCommand ) =
           specSubject.update programMsg specSubject.model
         nextModel =
-          { model | spec = Spec { spec | subject = { specSubject | model = updatedModel } } }
+          { model | current = Spec { spec | subject = { specSubject | model = updatedModel } } }
       in
         if nextCommand == Cmd.none then
           ( nextModel, sendMessage Message.stepComplete )
@@ -171,12 +189,27 @@ update config msg model =
           ( nextModel, Cmd.map ProgramMsg nextCommand )
     ObserveSubject ->
       ( model
-      , List.map (\observation -> (observation.description, observation.observer <| subject model.spec)) spec.observations
+      , List.map (\observation -> (observation.description, observation.observer <| subject model.current)) spec.observations
         |> List.map (Message.observation spec.conditions)
         |> List.map config.out
-        |> List.append [ andThenSend SpecComplete ]
+        |> List.append [ andThenSend ObservationsComplete ]
         |> Cmd.batch
       )
+    ObservationsComplete ->
+      let
+        scenarioSpecs =
+          spec.scenarios
+            |> List.map (\generator ->
+              let
+                (Spec generatedSpec) = generator specSubject
+              in
+                Spec
+                  { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
+            )
+      in
+        ( { model | specs = List.append scenarioSpecs model.specs }
+        , Task.succeed never |> Task.perform (always NextSpec)
+        )
     SendMessage message ->
       ( model, config.out message )
 
@@ -190,7 +223,7 @@ andThenSend msg =
 subscriptions : Model model msg -> Sub (Msg msg)
 subscriptions model =
   let
-    specSubject = subject model.spec
+    specSubject = subject model.current
   in
     specSubject.subscriptions specSubject.model
       |> Sub.map ProgramMsg
@@ -198,6 +231,6 @@ subscriptions model =
 
 init : Spec model msg -> () -> ( Model model msg, Cmd (Msg msg) )
 init spec _ =
-  ( { spec = spec }
+  ( { specs = [], current = spec }
   , Cmd.none
   )
