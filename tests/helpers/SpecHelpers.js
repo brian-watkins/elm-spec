@@ -1,5 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
+const specRunner = require('../../runner/src/core')
 
 exports.expectFailingSpec = (specProgram, specName, done, matcher) => {
   runSpec(specProgram, specName, done, (observations) => {
@@ -38,43 +39,12 @@ exports.expectSpec = (specProgram, specName, done, matcher) => {
 }
 
 const runSpec = (specProgram, specName, done, matcher) => {
-  var app = specProgram.init({
-    flags: { specName }
-  })
-
-  let timer = null;
-  let observations = []
-
-  app.ports.sendOut.subscribe((specMessage) => {
-    try {
-      if (specMessage.home === "spec") {
-        const state = specMessage.body
-        if (state == "STEP_COMPLETE") {
-          if (timer) clearTimeout(timer)
-          timer = setTimeout(() => {
-            app.ports.sendIn.send({ home: "spec", body: "NEXT_STEP" })
-          }, 1)
-        }
-        else if (state === "SPEC_COMPLETE") {
-          matcher(observations)
-          done()
-        }
-      }
-      else if (specMessage.home === "spec-send") {
-        const subscription = specMessage.body
-        app.ports[subscription.sub].send(subscription.value)
-      }
-      else if (specMessage.home === "spec-receive") {
-        const port = specMessage.body
-        app.ports[port.cmd].subscribe((commandMessage) => {
-          app.ports.sendIn.send({ home: "spec-receive", body: commandMessage })
-        })
-      }
-      else if (specMessage.home === "spec-observation") {
-        observations.push(specMessage.body)
-      }
-    } catch (err) {
+  specRunner.run(specProgram, specName)
+    .then((observations) => {
+      matcher(observations)
+      done()
+    })
+    .catch((err) => {
       done(err)
-    }
-  })
+    })
 }
