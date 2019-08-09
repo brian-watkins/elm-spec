@@ -153,7 +153,7 @@ update config msg model =
   case msg of
     ReceivedMessage specMessage ->
       case specMessage.home of
-        "spec" ->
+        "_spec" ->
           ( model, nextStep )
         _ ->
           ( { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }

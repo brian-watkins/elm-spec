@@ -12,34 +12,39 @@ import Json.Encode as Encode exposing (Value)
 
 type alias Message =
   { home: String
+  , name: String
   , body: Value
   }
 
 
 startSpec : Message
 startSpec =
-  { home = "spec"
+  { home = "_spec"
+  , name = "state"
   , body = Encode.string "START"
   }
 
 
 stepComplete : Message
 stepComplete =
-  { home = "spec"
+  { home = "_spec"
+  , name = "state"
   , body = Encode.string "STEP_COMPLETE"
   }
 
 
 specComplete : Message
 specComplete =
-  { home = "spec"
+  { home = "_spec"
+  , name = "state"
   , body = Encode.string "SPEC_COMPLETE"
   }
 
 
 observation : List String -> (String, Verdict) -> Message
 observation conditions (description, verdict) =
-  { home = "spec-observation"
+  { home = "_spec"
+  , name = "observation"
   , body = encodeObservation conditions description verdict
   }
 

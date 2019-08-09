@@ -14,14 +14,16 @@ import Json.Decode as Json
 
 sendSubscription : String -> Encode.Value -> Message
 sendSubscription name value =
-  { home = "spec-send"
+  { home = "_port"
+  , name = "send"
   , body = Encode.object [ ("sub", Encode.string name), ("value", value) ]
   }
 
 
 observePortCommand : String -> Message
 observePortCommand name =
-  { home = "spec-receive"
+  { home = "_port"
+  , name = "receive"
   , body = Encode.object [ ("cmd", Encode.string name) ]
   }
 

@@ -1,3 +1,6 @@
+const SpecPlugin = require('./specPlugin')
+const PortPlugin = require('./portPlugin')
+
 
 exports.run = (specProgram, specName) => {
   return new Promise((resolve, reject) => {
@@ -10,35 +13,16 @@ initSpec = (specProgram, specName, resolve, reject) => {
     flags: { specName }
   })
 
-  let timer = null;
-  let observations = []
+  const specPlugin = new SpecPlugin(app, resolve)
+  const portPlugin = new PortPlugin(app)
 
   app.ports.sendOut.subscribe((specMessage) => {
     try {
-      if (specMessage.home === "spec") {
-        const state = specMessage.body
-        if (state == "STEP_COMPLETE") {
-          if (timer) clearTimeout(timer)
-          timer = setTimeout(() => {
-            app.ports.sendIn.send({ home: "spec", body: "NEXT_STEP" })
-          }, 1)
-        }
-        else if (state === "SPEC_COMPLETE") {
-          resolve(observations)
-        }
+      if (specMessage.home === "_spec") {
+        specPlugin.handle(specMessage)
       }
-      else if (specMessage.home === "spec-send") {
-        const subscription = specMessage.body
-        app.ports[subscription.sub].send(subscription.value)
-      }
-      else if (specMessage.home === "spec-receive") {
-        const port = specMessage.body
-        app.ports[port.cmd].subscribe((commandMessage) => {
-          app.ports.sendIn.send({ home: "spec-receive", body: commandMessage })
-        })
-      }
-      else if (specMessage.home === "spec-observation") {
-        observations.push(specMessage.body)
+      else if (specMessage.home === "_port") {
+        portPlugin.handle(specMessage)
       }
     } catch (err) {
       reject(err)
