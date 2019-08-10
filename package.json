@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
-    "start": "cd tests && node ../runner/app.js",
+    "start": "cd tests && node ../runner/src/node-runner/app.js",
     "test:elm": "cd tests && mocha '*Test.js'",
     "test:runner": "mocha './runner/tests/*Test.js'"
   },

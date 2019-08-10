@@ -1,7 +1,7 @@
 const chai = require('chai')
 const expect = chai.expect
-const SpecRunner = require('../../runner/src/core')
-const SpecCompiler = require('../../runner/src/compiler')
+const SpecRunner = require('../../runner/src/core/runner')
+const SpecCompiler = require('../../runner/src/node-runner/compiler')
 
 exports.expectFailingSpec = (specProgram, specName, done, matcher) => {
   runSpec(specProgram, specName, done, (observations) => {

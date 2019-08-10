@@ -1,6 +1,6 @@
-const compiler = require('./src/compiler')
-const Core = require('./src/core')
-const Reporter = require('./src/reporter')
+const compiler = require('./compiler')
+const SpecRunner = require('../core/runner')
+const Reporter = require('./reporter')
 
 const reporter = new Reporter()
 
@@ -13,7 +13,7 @@ compiler.compile({
     flags: { specName: "scenarios" }
   })
   
-  new Core(app)
+  new SpecRunner(app)
     .on("observation", (observation) => {
       reporter.record(observation)
     })
