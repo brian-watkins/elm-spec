@@ -75,7 +75,7 @@ when condition messageSteps (Spec spec) =
           |> List.map (\f -> \s -> subject s |> f |> sendMessage)
           |> List.append spec.steps
     , conditions =
-        List.append spec.conditions [ condition ]
+        List.append spec.conditions [ formatCondition condition ]
     }
 
 
@@ -121,6 +121,11 @@ subject (Spec spec) =
 formatGivenDescription : String -> String
 formatGivenDescription description =
   "Given " ++ description
+
+
+formatCondition : String -> String
+formatCondition condition =
+  "When " ++ condition
 
 
 formatObservationDescription : String -> String

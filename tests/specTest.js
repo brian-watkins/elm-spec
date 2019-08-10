@@ -12,9 +12,9 @@ describe("spec", () => {
       expectPassingSpec("SpecSpec", "", done, (observations) => {
         expect(observations[0].conditions).to.deep.equal([
           "Given a test worker",
-          "the first sub is sent",
-          "a second sub is sent",
-          "a third sub is sent"
+          "When the first sub is sent",
+          "When a second sub is sent",
+          "When a third sub is sent"
         ])
       })
     })
@@ -27,33 +27,33 @@ describe("spec", () => {
         
         expectObservation(observations[0], "ACCEPT", "It records the first number",
           [ "Given a test worker",
-            "the first sub is sent"
+            "When the first sub is sent"
           ]
         )
 
         expectObservation(observations[1], "ACCEPT", "It records the second awesome number",
           [ "Given a test worker",
-            "the first sub is sent",
+            "When the first sub is sent",
             "Given an awesome scenario",
-            "another awesome sub is sent"
+            "When another awesome sub is sent"
           ]
         )
 
         expectObservation(observations[2], "ACCEPT", "It records the second number",
           [ "Given a test worker", 
-            "the first sub is sent",
+            "When the first sub is sent",
             "Given another scenario",
-            "another sub is sent"
+            "When another sub is sent"
           ]
         )
 
         expectObservation(observations[3], "ACCEPT", "It records the final number",
           [ "Given a test worker",
-            "the first sub is sent",
+            "When the first sub is sent",
             "Given another scenario",
-            "another sub is sent",
+            "When another sub is sent",
             "Given a final scenario",
-            "the final sub is sent"
+            "When the final sub is sent"
           ]
         )
       })
