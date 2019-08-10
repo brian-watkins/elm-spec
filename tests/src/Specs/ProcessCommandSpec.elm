@@ -12,7 +12,7 @@ import Task
 
 processCommandSpec : Spec Model Msg
 processCommandSpec =
-  Spec.given (
+  Spec.given "a worker" (
     Subject.worker (\_ -> ({count = 0, num = 0}, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendSomethingOut"
@@ -30,7 +30,7 @@ processCommandSpec =
 
 processBatchedTerminatingAndNoCallbackCommands : Spec Model Msg
 processBatchedTerminatingAndNoCallbackCommands =
-  Spec.given (
+  Spec.given "a worker" (
     Subject.worker (\_ -> ({count = 0, num = 0}, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
       |> Port.observe "sendSomethingOut"

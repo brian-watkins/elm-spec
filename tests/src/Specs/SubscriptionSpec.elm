@@ -11,7 +11,7 @@ import Json.Encode as Encode
 
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
-  Spec.given (
+  Spec.given "a worker with subscriptions" (
     Subject.worker (\_ -> ({count = 0}, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )

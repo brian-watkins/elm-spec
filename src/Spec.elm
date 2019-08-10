@@ -38,8 +38,8 @@ type alias Observation model msg =
   }
 
 
-given : Subject model msg -> Spec model msg
-given specSubject =
+given : String -> Subject model msg -> Spec model msg
+given description specSubject =
   Spec
     { subject = specSubject
     , steps = 
@@ -61,7 +61,7 @@ given specSubject =
             , \_ -> Cmd.map ProgramMsg specSubject.initialCommand
             ]
     , observations = []
-    , conditions = []
+    , conditions = [ formatGivenDescription description ]
     , scenarios = []
     }
 
@@ -82,7 +82,12 @@ when condition messageSteps (Spec spec) =
 it : String -> Observer (Subject model msg) -> Spec model msg -> Spec model msg
 it description observer (Spec spec) =
   Spec
-    { spec | observations = { description = "it " ++ description, observer = observer } :: spec.observations }
+    { spec
+    | observations =
+        { description = formatObservationDescription description
+        , observer = observer
+        } :: spec.observations
+    }
 
 
 suppose : (Subject model msg -> Spec model msg) -> Spec model msg -> Spec model msg
@@ -111,6 +116,16 @@ nextStep =
 subject : Spec model msg -> Subject model msg
 subject (Spec spec) =
   spec.subject
+
+
+formatGivenDescription : String -> String
+formatGivenDescription description =
+  "Given " ++ description
+
+
+formatObservationDescription : String -> String
+formatObservationDescription description =
+  "It " ++ description
 
 
 

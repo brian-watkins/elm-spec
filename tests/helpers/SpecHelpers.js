@@ -65,5 +65,8 @@ const runSpec = (specProgram, specName, done, matcher) => {
       })
       .run()
 
-    })
+  }).catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
 }

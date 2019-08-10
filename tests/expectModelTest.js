@@ -15,7 +15,7 @@ describe("Expect Model", () => {
     it("provides the spec description", (done) => {
       expectFailingSpec("ExpectModelSpec", "failing", done, (observations) => {
         expect(observations).to.have.length(1)
-        expect(observations[0].description).to.equal("it fails")
+        expect(observations[0].description).to.equal("It fails")
       })
     })
   })
@@ -28,7 +28,7 @@ describe("Expect Model", () => {
     it("provides the spec description", (done) => {
       expectPassingSpec("ExpectModelSpec", "passing", done, (observations) => {
         expect(observations).to.have.length(1)
-        expect(observations[0].description).to.equal("it contains the expected value")
+        expect(observations[0].description).to.equal("It contains the expected value")
       })
     })
   })
@@ -38,9 +38,9 @@ describe("Expect Model", () => {
       expectSpec("ExpectModelSpec", "multiple", done, (observations) => {
         expect(observations).to.have.length(2)
         expect(observations[0].summary).to.equal("ACCEPT")
-        expect(observations[0].description).to.equal("it contains the expected number")
+        expect(observations[0].description).to.equal("It contains the expected number")
         expect(observations[1].summary).to.equal("REJECT")
-        expect(observations[1].description).to.equal("it contains the expected name")
+        expect(observations[1].description).to.equal("It contains the expected name")
         expect(observations[1].message).to.equal("Expected \"awesome-spec\" to equal \"fun-spec\", but it does not.")
       })
     })

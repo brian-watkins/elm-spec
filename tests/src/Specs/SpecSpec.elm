@@ -11,7 +11,7 @@ import Json.Decode as Json
 
 multipleWhenSpec : Spec Model Msg
 multipleWhenSpec =
-  Spec.given (
+  Spec.given "a test worker" (
     Subject.worker (\_ -> ({counts = []}, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
@@ -32,7 +32,7 @@ multipleWhenSpec =
 
 multipleScenariosSpec : Spec Model Msg
 multipleScenariosSpec =
-  Spec.given (
+  Spec.given "a test worker" (
     Subject.worker (\_ -> ({ counts = [] }, Cmd.none)) testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
@@ -44,7 +44,7 @@ multipleScenariosSpec =
       Observer.isEqual [ 87 ] model.counts
   )
   |> Spec.suppose (
-    Spec.given
+    Spec.given "another scenario"
       >> Spec.when "another sub is sent"
         [ Port.send "specSpecSub" <| subMessageWith 82 ]
       >> Spec.it "records the second number" ( Spec.expectModel <|
@@ -52,7 +52,7 @@ multipleScenariosSpec =
           Observer.isEqual [ 82, 87 ] model.counts
       )
       >> Spec.suppose (
-        Spec.given
+        Spec.given "a final scenario"
           >> Spec.when "the final sub is sent"
             [ Port.send "specSpecSub" <| subMessageWith 0 ]
           >> Spec.it "records the final number" ( Spec.expectModel <|
@@ -62,7 +62,7 @@ multipleScenariosSpec =
       )
   )
   |> Spec.suppose (
-    Spec.given
+    Spec.given "an awesome scenario"
       >> Spec.when "another awesome sub is sent"
         [ Port.send "specSpecSub" <| subMessageWith 41 ]
       >> Spec.it "records the second awesome number" ( Spec.expectModel <|

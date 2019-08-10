@@ -8,7 +8,7 @@ import Runner
 
 failingSpec : Spec Model Msg
 failingSpec =
-  Spec.given (
+  Spec.given "a fragment" (
     Subject.fragment { count = 99, name = "" } testUpdate
   )
   |> Spec.it "fails" (
@@ -20,7 +20,7 @@ failingSpec =
 
 passingSpec : Spec Model Msg
 passingSpec =
-  Spec.given (
+  Spec.given "a fragment" (
     Subject.fragment { count = 99, name = "" } testUpdate
   )
   |> Spec.it "contains the expected value" (
@@ -32,7 +32,7 @@ passingSpec =
 
 multipleObservationsSpec : Spec Model Msg
 multipleObservationsSpec =
-  Spec.given (
+  Spec.given "a fragment" (
     Subject.fragment { count = 87, name = "fun-spec" } testUpdate
   )
   |> Spec.it "contains the expected number" ( Spec.expectModel <|

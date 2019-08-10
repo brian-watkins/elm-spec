@@ -11,6 +11,7 @@ describe("spec", () => {
     it("sends all the conditions", (done) => {
       expectPassingSpec("SpecSpec", "", done, (observations) => {
         expect(observations[0].conditions).to.deep.equal([
+          "Given a test worker",
           "the first sub is sent",
           "a second sub is sent",
           "a third sub is sent"
@@ -24,25 +25,34 @@ describe("spec", () => {
       expectSpec("SpecSpec", "scenarios", done, (observations) => {
         expect(observations).to.have.length(4)
         
-        expectObservation(observations[0], "ACCEPT", "it records the first number", 
-          [ "the first sub is sent" ]
+        expectObservation(observations[0], "ACCEPT", "It records the first number",
+          [ "Given a test worker",
+            "the first sub is sent"
+          ]
         )
 
-        expectObservation(observations[1], "ACCEPT", "it records the second awesome number",
-          [ "the first sub is sent",
+        expectObservation(observations[1], "ACCEPT", "It records the second awesome number",
+          [ "Given a test worker",
+            "the first sub is sent",
+            "Given an awesome scenario",
             "another awesome sub is sent"
           ]
         )
 
-        expectObservation(observations[2], "ACCEPT", "it records the second number",
-          [ "the first sub is sent",
+        expectObservation(observations[2], "ACCEPT", "It records the second number",
+          [ "Given a test worker", 
+            "the first sub is sent",
+            "Given another scenario",
             "another sub is sent"
           ]
         )
 
-        expectObservation(observations[3], "ACCEPT", "it records the final number",
-          [ "the first sub is sent",
+        expectObservation(observations[3], "ACCEPT", "It records the final number",
+          [ "Given a test worker",
+            "the first sub is sent",
+            "Given another scenario",
             "another sub is sent",
+            "Given a final scenario",
             "the final sub is sent"
           ]
         )
