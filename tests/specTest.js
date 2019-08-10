@@ -1,16 +1,15 @@
 const chai = require('chai')
 const expect = chai.expect
-const { Elm } = require('./specs.js')
 const { expectPassingSpec, expectSpec } = require('./helpers/SpecHelpers')
 
 describe("spec", () => {
   describe("when there are multiple when blocks", () => {
     it("processes the steps as expected", (done) => {
-      expectPassingSpec(Elm.Specs.SpecSpec, "multipleWhen", done)
+      expectPassingSpec("SpecSpec", "multipleWhen", done)
     })
 
     it("sends all the conditions", (done) => {
-      expectPassingSpec(Elm.Specs.SpecSpec, "", done, (observations) => {
+      expectPassingSpec("SpecSpec", "", done, (observations) => {
         expect(observations[0].conditions).to.deep.equal([
           "the first sub is sent",
           "a second sub is sent",
@@ -22,7 +21,7 @@ describe("spec", () => {
 
   describe("when there are multiple scenarios", () => {
     it("executes the observations in each scenario", (done) => {
-      expectSpec(Elm.Specs.SpecSpec, "scenarios", done, (observations) => {
+      expectSpec("SpecSpec", "scenarios", done, (observations) => {
         expect(observations).to.have.length(4)
         
         expectObservation(observations[0], "ACCEPT", "it records the first number", 

@@ -1,6 +1,7 @@
 const chai = require('chai')
 const expect = chai.expect
-const specRunner = require('../../runner/src/core')
+const SpecRunner = require('../../runner/src/core')
+const SpecCompiler = require('../../runner/src/compiler')
 
 exports.expectFailingSpec = (specProgram, specName, done, matcher) => {
   runSpec(specProgram, specName, done, (observations) => {
@@ -39,12 +40,30 @@ exports.expectSpec = (specProgram, specName, done, matcher) => {
 }
 
 const runSpec = (specProgram, specName, done, matcher) => {
-  specRunner.run(specProgram, specName)
-    .then((observations) => {
-      matcher(observations)
-      done()
+  SpecCompiler.compile({
+    specPath: "./src/Specs/*Spec.elm",
+    elmPath: "../node_modules/.bin/elm",
+    outputPath: "./compiled-specs.js"
+  }).then((Elm) => {
+
+    var app = Elm.Specs[specProgram].init({
+      flags: { specName }
     })
-    .catch((err) => {
-      done(err)
+
+    const observations = []
+
+    new SpecRunner(app)
+      .on('observation', (observation) => {
+        observations.push(observation)
+      })
+      .on('complete', () => {
+        matcher(observations)
+        done()
+      })
+      .on('error', (err) => {
+        done(err)
+      })
+      .run()
+
     })
 }
