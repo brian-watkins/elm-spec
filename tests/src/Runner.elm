@@ -1,5 +1,6 @@
 port module Runner exposing
   ( program
+  , config
   )
 
 import Spec exposing (Spec)
@@ -11,24 +12,11 @@ port sendOut : Message -> Cmd msg
 port sendIn : (Message -> msg) -> Sub msg
 
 
-testConfig : Spec.Config (Spec.Msg msg)
-testConfig =
-  { out = sendOut
+config : Spec.Config (Spec.Msg msg)
+config =
+  { send = sendOut
+  , listen = sendIn
   }
-
-
-sendSpecMessage : Message -> Cmd (Spec.Msg msg)
-sendSpecMessage message =
-  Task.succeed message
-    |> Task.perform Spec.messageTagger
-
-
-subscriptions : Spec.Model model msg -> Sub (Spec.Msg msg)
-subscriptions model =
-  Sub.batch
-  [ Spec.subscriptions model
-  , sendIn Spec.messageTagger
-  ]
 
 
 type alias Flags =
@@ -38,14 +26,13 @@ type alias Flags =
 
 init : (String -> Spec model msg) -> Flags -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
 init specLocator flags =
-  Spec.init (specLocator flags.specName) ()
-    |> Tuple.mapSecond (\_ -> sendSpecMessage Spec.Message.startSpec)
+  Spec.init [ specLocator flags.specName ] ()
 
 
 program : (String -> Spec model msg) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 program specLocator =
   Platform.worker
     { init = init specLocator
-    , update = Spec.update testConfig
-    , subscriptions = subscriptions
+    , update = Spec.update config
+    , subscriptions = Spec.subscriptions config
     }

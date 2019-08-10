@@ -4,7 +4,7 @@ const SpecRunner = require('../../runner/src/core/runner')
 const SpecCompiler = require('../../runner/src/node-runner/compiler')
 
 exports.expectFailingSpec = (specProgram, specName, done, matcher) => {
-  runSpec(specProgram, specName, done, (observations) => {
+  runTestSpec(specProgram, specName, done, (observations) => {
     const passes = observations.filter((o) => o.summary === "ACCEPT")
     if (passes.length > 0) {
       expect.fail(`\n\n\tExpected the spec to fail but ${passes.length} passed\n`)
@@ -19,7 +19,7 @@ exports.expectFailingSpec = (specProgram, specName, done, matcher) => {
 }
 
 exports.expectPassingSpec = (specProgram, specName, done, matcher) => {
-  runSpec(specProgram, specName, done, (observations) => {
+  runTestSpec(specProgram, specName, done, (observations) => {
     const rejections = observations.filter((o) => o.summary === "REJECT")
     if (rejections.length > 0) {
       const errors = rejections.map((o) => o.message).join("\n\n\t")
@@ -36,37 +36,47 @@ exports.expectPassingSpec = (specProgram, specName, done, matcher) => {
 }
 
 exports.expectSpec = (specProgram, specName, done, matcher) => {
-  runSpec(specProgram, specName, done, matcher)
+  runTestSpec(specProgram, specName, done, matcher)
 }
 
-const runSpec = (specProgram, specName, done, matcher) => {
-  SpecCompiler.compile({
+exports.compile = () => {
+  return SpecCompiler.compile({
     specPath: "./src/Specs/*Spec.elm",
     elmPath: "../node_modules/.bin/elm",
     outputPath: "./compiled-specs.js"
-  }).then((Elm) => {
+  })
+}
+
+const runTestSpec = (specProgram, specName, done, matcher) => {
+  this.compile().then((Elm) => {
 
     var app = Elm.Specs[specProgram].init({
       flags: { specName }
     })
 
-    const observations = []
-
-    new SpecRunner(app)
-      .on('observation', (observation) => {
-        observations.push(observation)
-      })
-      .on('complete', () => {
-        matcher(observations)
-        done()
-      })
-      .on('error', (err) => {
-        done(err)
-      })
-      .run()
+    this.runSpec(app, done, matcher)
 
   }).catch((err) => {
     console.error(err)
     process.exit(1)
   })
+}
+
+exports.runSpec = (app, done, matcher) => {
+  const observations = []
+
+  new SpecRunner(app)
+    .on('observation', (observation) => {
+      observations.push(observation)
+    })
+    .on('complete', () => {
+      matcher(observations)
+      done()
+    })
+    .on('error', (err) => {
+      done(err)
+    })
+    .run()
+
+  app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
 }

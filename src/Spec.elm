@@ -11,7 +11,7 @@ module Spec exposing
   , update
   , init
   , subscriptions
-  , messageTagger
+  , program
   )
 
 import Observer exposing (Observer, Verdict)
@@ -138,7 +138,8 @@ formatObservationDescription description =
 
 
 type alias Config msg =
-  { out: Message -> Cmd msg
+  { send: Message -> Cmd msg
+  , listen: (Message -> msg) -> Sub msg
   }
 
 
@@ -157,11 +158,6 @@ type alias Model model msg =
   { specs: List (Spec model msg)
   , current: Spec model msg
   }
-
-
-messageTagger : Message -> Msg msg
-messageTagger =
-  ReceivedMessage
 
 
 update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
@@ -211,7 +207,7 @@ update config msg model =
       ( model
       , List.map (\observation -> (observation.description, observation.observer <| subject model.current)) spec.observations
         |> List.map (Message.observation spec.conditions)
-        |> List.map config.out
+        |> List.map config.send
         |> List.append [ andThenSend ObservationsComplete ]
         |> Cmd.batch
       )
@@ -231,7 +227,7 @@ update config msg model =
         , Task.succeed never |> Task.perform (always NextSpec)
         )
     SendMessage message ->
-      ( model, config.out message )
+      ( model, config.send message )
 
 
 andThenSend : msg -> Cmd msg
@@ -240,17 +236,33 @@ andThenSend msg =
     |> Task.perform (always msg)
 
 
-subscriptions : Model model msg -> Sub (Msg msg)
-subscriptions model =
+subscriptions : Config (Msg msg) -> Model model msg -> Sub (Msg msg)
+subscriptions config model =
   let
     specSubject = subject model.current
   in
-    specSubject.subscriptions specSubject.model
-      |> Sub.map ProgramMsg
+    Sub.batch
+    [ specSubject.subscriptions specSubject.model
+        |> Sub.map ProgramMsg
+    , config.listen ReceivedMessage
+    ]
 
 
-init : Spec model msg -> () -> ( Model model msg, Cmd (Msg msg) )
-init spec _ =
-  ( { specs = [], current = spec }
-  , Cmd.none
-  )
+init : List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
+init specs _ =
+  case specs of
+    [] ->
+      Elm.Kernel.Debug.todo "No specs!"
+    spec :: remaining ->
+      ( { specs = remaining, current = spec }
+      , Cmd.none
+      )
+
+
+program : Config (Msg msg) -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+program config specs =
+  Platform.worker
+    { init = init specs
+    , update = update config
+    , subscriptions = subscriptions config
+    }

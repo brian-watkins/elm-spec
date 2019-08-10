@@ -26,4 +26,6 @@ compiler.compile({
       console.log("Error:", error )
     })
     .run()
+
+    app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
 })
