@@ -46,12 +46,12 @@ given description specSubject =
         let
           configCommand =
             if List.isEmpty specSubject.configureEnvironment then
-              nextStep
+              sendMessage Message.configureComplete
             else
               Cmd.batch
                 [ List.map sendMessage specSubject.configureEnvironment
                     |> Cmd.batch
-                , sendMessage Message.stepComplete
+                , sendMessage Message.configureComplete
                 ]
         in
           if specSubject.initialCommand == Cmd.none then
@@ -150,13 +150,13 @@ type Msg msg
   | NextStep
   | NextSpec
   | SpecComplete
-  | ObservationsComplete
   | ObserveSubject
 
 
 type alias Model model msg =
   { specs: List (Spec model msg)
   , current: Spec model msg
+  , running: Bool
   }
 
 
@@ -170,15 +170,33 @@ update config msg model =
     ReceivedMessage specMessage ->
       case specMessage.home of
         "_spec" ->
-          ( model, nextStep )
+          if isNextSpecMessage specMessage then
+            let
+              scenarioSpecs =
+                spec.scenarios
+                  |> List.map (\generator ->
+                    let
+                      (Spec generatedSpec) = generator specSubject
+                    in
+                      Spec
+                        { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
+                  )
+            in
+              ( { model | specs = List.append scenarioSpecs model.specs }
+              , Task.succeed never |> Task.perform (always NextSpec)
+              )
+          else if isStartStepsMessage specMessage then
+            ( { model | running = True }, andThenSend NextStep )
+          else
+            ( model, nextStep )
         _ ->
           ( { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
-          , sendMessage Message.stepComplete
+          , config.send Message.stepComplete
           )
     NextStep ->
       case spec.steps of
         [] ->
-          (model, Task.succeed never |> Task.perform (always ObserveSubject))
+          ({ model | running = False }, andThenSend ObserveSubject )
         step :: remainingSteps ->
           let
               updatedSpec = Spec { spec | steps = remainingSteps }
@@ -191,7 +209,7 @@ update config msg model =
         next :: remaining ->
           ( { model | specs = remaining, current = next }, nextStep )
     SpecComplete ->
-      ( model, sendMessage Message.specComplete )
+      ( model, config.send Message.specComplete )
     ProgramMsg programMsg ->
       let
         ( updatedModel, nextCommand ) =
@@ -200,7 +218,7 @@ update config msg model =
           { model | current = Spec { spec | subject = { specSubject | model = updatedModel } } }
       in
         if nextCommand == Cmd.none then
-          ( nextModel, sendMessage Message.stepComplete )
+          ( nextModel, config.send Message.stepComplete )
         else
           ( nextModel, Cmd.map ProgramMsg nextCommand )
     ObserveSubject ->
@@ -208,26 +226,21 @@ update config msg model =
       , List.map (\observation -> (observation.description, observation.observer <| subject model.current)) spec.observations
         |> List.map (Message.observation spec.conditions)
         |> List.map config.send
-        |> List.append [ andThenSend ObservationsComplete ]
+        |> (++) [ config.send Message.observationsComplete ]
         |> Cmd.batch
       )
-    ObservationsComplete ->
-      let
-        scenarioSpecs =
-          spec.scenarios
-            |> List.map (\generator ->
-              let
-                (Spec generatedSpec) = generator specSubject
-              in
-                Spec
-                  { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
-            )
-      in
-        ( { model | specs = List.append scenarioSpecs model.specs }
-        , Task.succeed never |> Task.perform (always NextSpec)
-        )
     SendMessage message ->
       ( model, config.send message )
+
+
+isNextSpecMessage : Message -> Bool
+isNextSpecMessage message =
+  Message.state message == Just "NEXT_SPEC"
+
+
+isStartStepsMessage : Message -> Bool
+isStartStepsMessage message =
+  Message.state message == Just "START_STEPS"
 
 
 andThenSend : msg -> Cmd msg
@@ -242,8 +255,11 @@ subscriptions config model =
     specSubject = subject model.current
   in
     Sub.batch
-    [ specSubject.subscriptions specSubject.model
-        |> Sub.map ProgramMsg
+    [ if model.running == True then
+        specSubject.subscriptions specSubject.model
+          |> Sub.map ProgramMsg
+      else
+        Sub.none
     , config.listen ReceivedMessage
     ]
 
@@ -254,7 +270,7 @@ init specs _ =
     [] ->
       Elm.Kernel.Debug.todo "No specs!"
     spec :: remaining ->
-      ( { specs = remaining, current = spec }
+      ( { specs = remaining, current = spec, running = False }
       , Cmd.none
       )
 

@@ -1,13 +1,16 @@
 module Spec.Message exposing
   ( Message
   , observation
-  , startSpec
+  , configureComplete
   , stepComplete
+  , observationsComplete
+  , state
   , specComplete
   )
 
 import Observer exposing (Verdict(..))
 import Json.Encode as Encode exposing (Value)
+import Json.Decode as Json
 
 
 type alias Message =
@@ -17,28 +20,41 @@ type alias Message =
   }
 
 
-startSpec : Message
-startSpec =
-  { home = "_spec"
-  , name = "state"
-  , body = Encode.string "START"
-  }
+configureComplete : Message
+configureComplete =
+  specStateMessage "CONFIGURE_COMPLETE"
 
 
 stepComplete : Message
 stepComplete =
-  { home = "_spec"
-  , name = "state"
-  , body = Encode.string "STEP_COMPLETE"
-  }
+  specStateMessage "STEP_COMPLETE"
+
+
+observationsComplete : Message
+observationsComplete =
+  specStateMessage "OBSERVATIONS_COMPLETE"
 
 
 specComplete : Message
 specComplete =
+  specStateMessage "SPEC_COMPLETE"
+
+
+specStateMessage : String -> Message
+specStateMessage specState =
   { home = "_spec"
   , name = "state"
-  , body = Encode.string "SPEC_COMPLETE"
+  , body = Encode.string specState
   }
+
+
+state : Message -> Maybe String
+state message =
+  if message.home == "_spec" && message.name == "state" then
+    Json.decodeValue Json.string message.body
+      |> Result.toMaybe
+  else
+    Nothing
 
 
 observation : List String -> (String, Verdict) -> Message
