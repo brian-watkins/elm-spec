@@ -217,31 +217,28 @@ recordEffect specMessage model =
 
 lifecycleUpdate : Config (Msg msg) -> LifecycleMsg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 lifecycleUpdate config msg model =
-  let
-    (Spec spec) = model.current
-  in
-    case msg of
-      NextStep ->
-        case spec.steps of
-          [] ->
-            ( { model | current = setState Observe model.current }
-            , sendLifecycle ObserveSubject
-            )
-          step :: remainingSteps ->
-            let
-              updatedSpec = Spec { spec | steps = remainingSteps }
-            in
-              ( { model | current = updatedSpec }, step updatedSpec )
-      NextSpec ->
-        case model.specs of
-          [] ->
-            ( model, sendLifecycle SpecComplete )
-          next :: remaining ->
-            ( { model | specs = remaining, current = next }, nextStep )
-      SpecComplete ->
-        ( model, config.send Message.specComplete )
-      ObserveSubject ->
-        ( model, sendObservations config model.current )
+  case msg of
+    NextStep ->
+      case specSteps model.current of
+        [] ->
+          ( { model | current = setState Observe model.current }
+          , sendLifecycle ObserveSubject
+          )
+        step :: remainingSteps ->
+          let
+            updatedSpec = setSteps remainingSteps model.current
+          in
+            ( { model | current = updatedSpec }, step updatedSpec )
+    NextSpec ->
+      case model.specs of
+        [] ->
+          ( model, sendLifecycle SpecComplete )
+        next :: remaining ->
+          ( { model | specs = remaining, current = next }, nextStep )
+    SpecComplete ->
+      ( model, config.send Message.specComplete )
+    ObserveSubject ->
+      ( model, sendObservations config model.current )
 
 
 sendObservations : Config (Msg msg) -> Spec model msg -> Cmd (Msg msg)
@@ -310,6 +307,16 @@ specState (Spec spec) =
 setState : SpecState -> Spec model msg -> Spec model msg
 setState state (Spec spec) =
   Spec { spec | state = state }
+
+
+specSteps : Spec model msg -> List (Spec model msg -> Cmd (Msg msg))
+specSteps (Spec spec) =
+  spec.steps
+
+
+setSteps : List (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
+setSteps steps (Spec spec) =
+  Spec { spec | steps = steps }
 
 
 init : List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
