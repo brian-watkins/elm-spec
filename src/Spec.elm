@@ -29,7 +29,14 @@ type Spec model msg =
     , steps: List (Spec model msg -> Cmd (Msg msg))
     , observations: List (Observation model msg)
     , scenarios: List (Subject model msg -> Spec model msg)
+    , state: SpecState
     }
+
+
+type SpecState
+  = Configure
+  | Exercise
+  | Observe
 
 
 type alias Observation model msg =
@@ -63,6 +70,7 @@ given description specSubject =
     , observations = []
     , conditions = [ formatGivenDescription description ]
     , scenarios = []
+    , state = Configure
     }
 
 
@@ -165,7 +173,6 @@ type LifecycleMsg
 type alias Model model msg =
   { specs: List (Spec model msg)
   , current: Spec model msg
-  , running: Bool
   }
 
 
@@ -217,7 +224,9 @@ lifecycleUpdate config msg model =
       NextStep ->
         case spec.steps of
           [] ->
-            ({ model | running = False }, sendLifecycle ObserveSubject )
+            ( { model | current = setState Observe model.current }
+            , sendLifecycle ObserveSubject
+            )
           step :: remainingSteps ->
             let
               updatedSpec = Spec { spec | steps = remainingSteps }
@@ -261,7 +270,7 @@ handleIncomingSpecMessage model messageType =
       , sendLifecycle NextSpec
       )
     Message.StartSteps ->
-      ( { model | running = True }, nextStep )
+      ( { model | current = setState Exercise model.current }, nextStep )
     Message.NextStep ->
       ( model, nextStep )
 
@@ -284,7 +293,7 @@ subscriptions config model =
     specSubject = subject model.current
   in
     Sub.batch
-    [ if model.running == True then
+    [ if specState model.current == Exercise then
         specSubject.subscriptions specSubject.model
           |> Sub.map ProgramMsg
       else
@@ -293,13 +302,23 @@ subscriptions config model =
     ]
 
 
+specState : Spec model msg -> SpecState
+specState (Spec spec) =
+  spec.state
+
+
+setState : SpecState -> Spec model msg -> Spec model msg
+setState state (Spec spec) =
+  Spec { spec | state = state }
+
+
 init : List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
 init specs _ =
   case specs of
     [] ->
       Elm.Kernel.Debug.todo "No specs!"
     spec :: remaining ->
-      ( { specs = remaining, current = spec, running = False }
+      ( { specs = remaining, current = spec }
       , Cmd.none
       )
 
