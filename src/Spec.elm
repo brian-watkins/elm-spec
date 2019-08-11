@@ -183,7 +183,7 @@ update config msg model =
           ({ model | running = False }, andThenSend ObserveSubject )
         step :: remainingSteps ->
           let
-              updatedSpec = Spec { spec | steps = remainingSteps }
+            updatedSpec = Spec { spec | steps = remainingSteps }
           in
             ( { model | current = updatedSpec }, step updatedSpec )
     NextSpec ->
@@ -206,15 +206,25 @@ update config msg model =
         else
           ( nextModel, Cmd.map ProgramMsg nextCommand )
     ObserveSubject ->
-      ( model
-      , List.map (\observation -> (observation.description, observation.observer <| subject model.current)) spec.observations
-        |> List.map (Message.observation spec.conditions)
-        |> List.map config.send
-        |> (++) [ config.send Message.observationsComplete ]
-        |> Cmd.batch
-      )
+      ( model, sendObservations config model.current )
     SendMessage message ->
       ( model, config.send message )
+
+
+sendObservations : Config (Msg msg) -> Spec model msg -> Cmd (Msg msg)
+sendObservations config (Spec spec) =
+  List.map (runObservation spec.subject) spec.observations
+    |> List.map (Message.observation spec.conditions)
+    |> List.map config.send
+    |> (++) [ config.send Message.observationsComplete ]
+    |> Cmd.batch
+
+
+runObservation : Subject model msg -> Observation model msg -> (String, Verdict)
+runObservation specSubject observation =
+  ( observation.description
+  , observation.observer specSubject
+  )
 
 
 handleIncomingSpecMessage : Model model msg -> Message.IncomingMessageType -> ( Model model msg, Cmd (Msg msg) )
