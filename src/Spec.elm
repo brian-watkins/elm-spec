@@ -118,12 +118,6 @@ sendLifecycle lifecycleMsg =
     |> Task.perform (always <| Lifecycle lifecycleMsg)
 
 
-andThenSendLifecycle : LifecycleMsg -> Cmd (Msg msg)
-andThenSendLifecycle msg =
-  Process.sleep 0
-    |> Task.perform (always <| Lifecycle msg)
-
-
 subject : Spec model msg -> Subject model msg
 subject (Spec spec) =
   spec.subject
@@ -223,7 +217,7 @@ lifecycleUpdate config msg model =
       NextStep ->
         case spec.steps of
           [] ->
-            ({ model | running = False }, andThenSendLifecycle ObserveSubject )
+            ({ model | running = False }, sendLifecycle ObserveSubject )
           step :: remainingSteps ->
             let
               updatedSpec = Spec { spec | steps = remainingSteps }
