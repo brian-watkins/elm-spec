@@ -16,6 +16,7 @@ module Spec exposing
 
 import Observer exposing (Observer, Verdict)
 import Spec.Message as Message exposing (Message)
+import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
 import Task
 import Json.Encode exposing (Value)
@@ -53,12 +54,12 @@ given description specSubject =
         let
           configCommand =
             if List.isEmpty specSubject.configureEnvironment then
-              sendMessage Message.configureComplete
+              sendMessage Lifecycle.configureComplete
             else
               Cmd.batch
                 [ List.map sendMessage specSubject.configureEnvironment
                     |> Cmd.batch
-                , sendMessage Message.configureComplete
+                , sendMessage Lifecycle.configureComplete
                 ]
         in
           if specSubject.initialCommand == Cmd.none then
@@ -180,15 +181,14 @@ update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cm
 update config msg model =
   case msg of
     ReceivedMessage specMessage ->
-      case specMessage.home of
-        "_spec" ->
-          Message.incoming specMessage
-            |> Maybe.map (handleIncomingSpecMessage model)
-            |> Maybe.withDefault (model, Cmd.none)
-        _ ->
-          ( recordEffect specMessage model
-          , config.send Message.stepComplete
-          )
+      if Lifecycle.isLifecycleMessage specMessage then
+        Lifecycle.commandFrom specMessage
+          |> Maybe.map (handleLifecycleCommand model)
+          |> Maybe.withDefault (model, Cmd.none)
+      else
+        ( recordEffect specMessage model
+        , config.send Lifecycle.stepComplete
+        )
     SendMessage message ->
       ( model, config.send message )
     ProgramMsg programMsg ->
@@ -199,7 +199,7 @@ update config msg model =
           |> Tuple.mapFirst (\updatedSubject -> { model | current = Spec { spec | subject = updatedSubject } })
           |> Tuple.mapSecond (\nextCommand ->
             if nextCommand == Cmd.none then
-              config.send Message.stepComplete
+              config.send Lifecycle.stepComplete
             else
               Cmd.map ProgramMsg nextCommand
           )
@@ -236,7 +236,7 @@ lifecycleUpdate config msg model =
         next :: remaining ->
           ( { model | specs = remaining, current = next }, nextStep )
     SpecComplete ->
-      ( model, config.send Message.specComplete )
+      ( model, config.send Lifecycle.specComplete )
     ObserveSubject ->
       ( model, sendObservations config model.current )
 
@@ -244,9 +244,9 @@ lifecycleUpdate config msg model =
 sendObservations : Config (Msg msg) -> Spec model msg -> Cmd (Msg msg)
 sendObservations config (Spec spec) =
   List.map (runObservation spec.subject) spec.observations
-    |> List.map (Message.observation spec.conditions)
+    |> List.map (Lifecycle.observation spec.conditions)
     |> List.map config.send
-    |> (++) [ config.send Message.observationsComplete ]
+    |> (++) [ config.send Lifecycle.observationsComplete ]
     |> Cmd.batch
 
 
@@ -257,18 +257,18 @@ runObservation specSubject observation =
   )
 
 
-handleIncomingSpecMessage : Model model msg -> Message.IncomingMessageType -> ( Model model msg, Cmd (Msg msg) )
-handleIncomingSpecMessage model messageType =
-  case messageType of
-    Message.Start ->
+handleLifecycleCommand : Model model msg -> Lifecycle.Command -> ( Model model msg, Cmd (Msg msg) )
+handleLifecycleCommand model command =
+  case command of
+    Lifecycle.Start ->
       ( model, nextStep )
-    Message.NextSpec ->
+    Lifecycle.NextSpec ->
       ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
       , sendLifecycle NextSpec
       )
-    Message.StartSteps ->
+    Lifecycle.StartSteps ->
       ( { model | current = setState Exercise model.current }, nextStep )
-    Message.NextStep ->
+    Lifecycle.NextStep ->
       ( model, nextStep )
 
 
@@ -299,26 +299,6 @@ subscriptions config model =
     ]
 
 
-specState : Spec model msg -> SpecState
-specState (Spec spec) =
-  spec.state
-
-
-setState : SpecState -> Spec model msg -> Spec model msg
-setState state (Spec spec) =
-  Spec { spec | state = state }
-
-
-specSteps : Spec model msg -> List (Spec model msg -> Cmd (Msg msg))
-specSteps (Spec spec) =
-  spec.steps
-
-
-setSteps : List (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
-setSteps steps (Spec spec) =
-  Spec { spec | steps = steps }
-
-
 init : List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
 init specs _ =
   case specs of
@@ -337,3 +317,27 @@ program config specs =
     , update = update config
     , subscriptions = subscriptions config
     }
+
+
+
+--- Helpers
+
+
+specState : Spec model msg -> SpecState
+specState (Spec spec) =
+  spec.state
+
+
+setState : SpecState -> Spec model msg -> Spec model msg
+setState state (Spec spec) =
+  Spec { spec | state = state }
+
+
+specSteps : Spec model msg -> List (Spec model msg -> Cmd (Msg msg))
+specSteps (Spec spec) =
+  spec.steps
+
+
+setSteps : List (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
+setSteps steps (Spec spec) =
+  Spec { spec | steps = steps }
