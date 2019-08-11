@@ -127,11 +127,6 @@ sendLifecycle lifecycleMsg =
     |> Task.perform (always <| Lifecycle lifecycleMsg)
 
 
-subject : Spec model msg -> Subject model msg
-subject (Spec spec) =
-  spec.subject
-
-
 formatGivenDescription : String -> String
 formatGivenDescription description =
   "Given " ++ description
@@ -192,27 +187,22 @@ update config msg model =
     SendMessage message ->
       ( model, config.send message )
     ProgramMsg programMsg ->
-      let
-        (Spec spec) = model.current
-      in
-        Subject.update programMsg spec.subject
-          |> Tuple.mapFirst (\updatedSubject -> { model | current = Spec { spec | subject = updatedSubject } })
-          |> Tuple.mapSecond (\nextCommand ->
-            if nextCommand == Cmd.none then
-              config.send Lifecycle.stepComplete
-            else
-              Cmd.map ProgramMsg nextCommand
-          )
+      subject model.current
+        |> Subject.update programMsg 
+        |> Tuple.mapFirst (\updated -> { model | current = mapSubject (always updated) model.current })
+        |> Tuple.mapSecond (\nextCommand ->
+          if nextCommand == Cmd.none then
+            config.send Lifecycle.stepComplete
+          else
+            Cmd.map ProgramMsg nextCommand
+        )
     Lifecycle lifecycleMsg ->
       lifecycleUpdate config lifecycleMsg model
 
 
 recordEffect : Message -> Model model msg -> Model model msg
 recordEffect specMessage model =
-  let
-    (Spec spec) = model.current
-  in
-    { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
+  { model | current = mapSubject (Subject.pushEffect specMessage) model.current }
 
 
 lifecycleUpdate : Config (Msg msg) -> LifecycleMsg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
@@ -321,6 +311,16 @@ program config specs =
 
 
 --- Helpers
+
+
+subject : Spec model msg -> Subject model msg
+subject (Spec spec) =
+  spec.subject
+
+
+mapSubject : (Subject model msg -> Subject model msg) -> Spec model msg -> Spec model msg
+mapSubject mapper (Spec spec) =
+  Spec { spec | subject = mapper spec.subject }
 
 
 specState : Spec model msg -> SpecState
