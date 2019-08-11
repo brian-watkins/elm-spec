@@ -109,8 +109,19 @@ sendMessage message =
 
 nextStep : Cmd (Msg msg)
 nextStep =
+  sendLifecycle NextStep
+
+
+sendLifecycle : LifecycleMsg -> Cmd (Msg msg)
+sendLifecycle lifecycleMsg =
   Task.succeed never
-    |> Task.perform (always NextStep)
+    |> Task.perform (always <| Lifecycle lifecycleMsg)
+
+
+andThenSendLifecycle : LifecycleMsg -> Cmd (Msg msg)
+andThenSendLifecycle msg =
+  Process.sleep 0
+    |> Task.perform (always <| Lifecycle msg)
 
 
 subject : Spec model msg -> Subject model msg
@@ -147,7 +158,11 @@ type Msg msg
   = ProgramMsg msg
   | ReceivedMessage Message
   | SendMessage Message
-  | NextStep
+  | Lifecycle LifecycleMsg
+
+
+type LifecycleMsg
+  = NextStep
   | NextSpec
   | SpecComplete
   | ObserveSubject
@@ -162,9 +177,6 @@ type alias Model model msg =
 
 update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
-  let
-    (Spec spec) = model.current
-  in
   case msg of
     ReceivedMessage specMessage ->
       case specMessage.home of
@@ -173,39 +185,60 @@ update config msg model =
             |> Maybe.map (handleIncomingSpecMessage model)
             |> Maybe.withDefault (model, Cmd.none)
         _ ->
-          ( { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
+          ( recordEffect specMessage model
           , config.send Message.stepComplete
           )
-    NextStep ->
-      case spec.steps of
-        [] ->
-          ({ model | running = False }, andThenSend ObserveSubject )
-        step :: remainingSteps ->
-          let
-            updatedSpec = Spec { spec | steps = remainingSteps }
-          in
-            ( { model | current = updatedSpec }, step updatedSpec )
-    NextSpec ->
-      case model.specs of
-        [] ->
-          ( model, Task.succeed never |> Task.perform (always SpecComplete) )
-        next :: remaining ->
-          ( { model | specs = remaining, current = next }, nextStep )
-    SpecComplete ->
-      ( model, config.send Message.specComplete )
-    ProgramMsg programMsg ->
-      Subject.update programMsg spec.subject
-        |> Tuple.mapFirst (\updatedSubject -> { model | current = Spec { spec | subject = updatedSubject } })
-        |> Tuple.mapSecond (\nextCommand -> 
-          if nextCommand == Cmd.none then
-            config.send Message.stepComplete
-          else
-            Cmd.map ProgramMsg nextCommand
-        )
-    ObserveSubject ->
-      ( model, sendObservations config model.current )
     SendMessage message ->
       ( model, config.send message )
+    ProgramMsg programMsg ->
+      let
+        (Spec spec) = model.current
+      in
+        Subject.update programMsg spec.subject
+          |> Tuple.mapFirst (\updatedSubject -> { model | current = Spec { spec | subject = updatedSubject } })
+          |> Tuple.mapSecond (\nextCommand ->
+            if nextCommand == Cmd.none then
+              config.send Message.stepComplete
+            else
+              Cmd.map ProgramMsg nextCommand
+          )
+    Lifecycle lifecycleMsg ->
+      lifecycleUpdate config lifecycleMsg model
+
+
+recordEffect : Message -> Model model msg -> Model model msg
+recordEffect specMessage model =
+  let
+    (Spec spec) = model.current
+  in
+    { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
+
+
+lifecycleUpdate : Config (Msg msg) -> LifecycleMsg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+lifecycleUpdate config msg model =
+  let
+    (Spec spec) = model.current
+  in
+    case msg of
+      NextStep ->
+        case spec.steps of
+          [] ->
+            ({ model | running = False }, andThenSendLifecycle ObserveSubject )
+          step :: remainingSteps ->
+            let
+              updatedSpec = Spec { spec | steps = remainingSteps }
+            in
+              ( { model | current = updatedSpec }, step updatedSpec )
+      NextSpec ->
+        case model.specs of
+          [] ->
+            ( model, sendLifecycle SpecComplete )
+          next :: remaining ->
+            ( { model | specs = remaining, current = next }, nextStep )
+      SpecComplete ->
+        ( model, config.send Message.specComplete )
+      ObserveSubject ->
+        ( model, sendObservations config model.current )
 
 
 sendObservations : Config (Msg msg) -> Spec model msg -> Cmd (Msg msg)
@@ -231,7 +264,7 @@ handleIncomingSpecMessage model messageType =
       ( model, nextStep )
     Message.NextSpec ->
       ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
-      , Task.succeed never |> Task.perform (always NextSpec)
+      , sendLifecycle NextSpec
       )
     Message.StartSteps ->
       ( { model | running = True }, nextStep )
@@ -249,12 +282,6 @@ scenarioSpecs (Spec spec) =
         Spec
           { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
     )
-
-
-andThenSend : msg -> Cmd msg
-andThenSend msg =
-  Process.sleep 0
-    |> Task.perform (always msg)
 
 
 subscriptions : Config (Msg msg) -> Model model msg -> Sub (Msg msg)
