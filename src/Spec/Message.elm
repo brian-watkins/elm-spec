@@ -1,10 +1,11 @@
 module Spec.Message exposing
   ( Message
+  , IncomingMessageType(..)
+  , incoming
   , observation
   , configureComplete
   , stepComplete
   , observationsComplete
-  , state
   , specComplete
   )
 
@@ -18,6 +19,38 @@ type alias Message =
   , name: String
   , body: Value
   }
+
+
+type IncomingMessageType
+  = Start
+  | NextSpec
+  | StartSteps
+  | NextStep
+
+
+incoming : Message -> Maybe IncomingMessageType
+incoming message =
+  if message.home == "_spec" && message.name == "state" then
+    Json.decodeValue Json.string message.body
+      |> Result.toMaybe
+      |> Maybe.andThen stateToType
+  else
+    Nothing
+
+
+stateToType : String -> Maybe IncomingMessageType
+stateToType specState =
+  case specState of
+    "START" ->
+      Just Start
+    "NEXT_SPEC" ->
+      Just NextSpec
+    "START_STEPS" ->
+      Just StartSteps
+    "NEXT_STEP" ->
+      Just NextStep
+    _ ->
+      Nothing
 
 
 configureComplete : Message
@@ -46,15 +79,6 @@ specStateMessage specState =
   , name = "state"
   , body = Encode.string specState
   }
-
-
-state : Message -> Maybe String
-state message =
-  if message.home == "_spec" && message.name == "state" then
-    Json.decodeValue Json.string message.body
-      |> Result.toMaybe
-  else
-    Nothing
 
 
 observation : List String -> (String, Verdict) -> Message

@@ -170,25 +170,9 @@ update config msg model =
     ReceivedMessage specMessage ->
       case specMessage.home of
         "_spec" ->
-          if isNextSpecMessage specMessage then
-            let
-              scenarioSpecs =
-                spec.scenarios
-                  |> List.map (\generator ->
-                    let
-                      (Spec generatedSpec) = generator specSubject
-                    in
-                      Spec
-                        { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
-                  )
-            in
-              ( { model | specs = List.append scenarioSpecs model.specs }
-              , Task.succeed never |> Task.perform (always NextSpec)
-              )
-          else if isStartStepsMessage specMessage then
-            ( { model | running = True }, andThenSend NextStep )
-          else
-            ( model, nextStep )
+          Message.incoming specMessage
+            |> Maybe.map (handleIncomingSpecMessage model)
+            |> Maybe.withDefault (model, Cmd.none)
         _ ->
           ( { model | current = Spec { spec | subject = Subject.pushEffect specMessage spec.subject } }
           , config.send Message.stepComplete
@@ -233,14 +217,31 @@ update config msg model =
       ( model, config.send message )
 
 
-isNextSpecMessage : Message -> Bool
-isNextSpecMessage message =
-  Message.state message == Just "NEXT_SPEC"
+handleIncomingSpecMessage : Model model msg -> Message.IncomingMessageType -> ( Model model msg, Cmd (Msg msg) )
+handleIncomingSpecMessage model messageType =
+  case messageType of
+    Message.NextSpec ->
+      ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
+      , Task.succeed never |> Task.perform (always NextSpec)
+      )
+    Message.StartSteps ->
+      ( { model | running = True }, andThenSend NextStep )
+    Message.NextStep ->
+      ( model, nextStep )
+    Message.Start ->
+      ( model, nextStep )
 
 
-isStartStepsMessage : Message -> Bool
-isStartStepsMessage message =
-  Message.state message == Just "START_STEPS"
+scenarioSpecs : Spec model msg -> List (Spec model msg)
+scenarioSpecs (Spec spec) =
+  spec.scenarios
+    |> List.map (\generator ->
+      let
+        (Spec generatedSpec) = generator spec.subject
+      in
+        Spec
+          { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
+    )
 
 
 andThenSend : msg -> Cmd msg
