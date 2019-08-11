@@ -6,6 +6,7 @@ module Spec.Subject exposing
   , pushEffect
   , effects
   , withSubscriptions
+  , update
   )
 
 import Spec.Message exposing (Message)
@@ -27,13 +28,13 @@ fragment model =
 
 
 worker : (() -> (model, Cmd msg)) -> (msg -> model -> (model, Cmd msg)) -> Subject model msg
-worker initGenerator update =
+worker initGenerator workerUpdate =
   let
       ( model, initialCommand ) = initGenerator ()
   in
     { model = model
     , initialCommand = initialCommand
-    , update = update
+    , update = workerUpdate
     , subscriptions = \_ -> Sub.none
     , configureEnvironment = []
     , effects = []
@@ -58,3 +59,9 @@ pushEffect effect subject =
 effects : Subject model msg -> List Message
 effects =
   .effects
+
+
+update : msg -> Subject model msg -> ( Subject model msg, Cmd msg )
+update msg subject =
+  subject.update msg subject.model
+    |> Tuple.mapFirst (\updatedModel -> { subject | model = updatedModel })

@@ -164,7 +164,6 @@ update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cm
 update config msg model =
   let
     (Spec spec) = model.current
-    specSubject = subject model.current
   in
   case msg of
     ReceivedMessage specMessage ->
@@ -195,16 +194,14 @@ update config msg model =
     SpecComplete ->
       ( model, config.send Message.specComplete )
     ProgramMsg programMsg ->
-      let
-        ( updatedModel, nextCommand ) =
-          specSubject.update programMsg specSubject.model
-        nextModel =
-          { model | current = Spec { spec | subject = { specSubject | model = updatedModel } } }
-      in
-        if nextCommand == Cmd.none then
-          ( nextModel, config.send Message.stepComplete )
-        else
-          ( nextModel, Cmd.map ProgramMsg nextCommand )
+      Subject.update programMsg spec.subject
+        |> Tuple.mapFirst (\updatedSubject -> { model | current = Spec { spec | subject = updatedSubject } })
+        |> Tuple.mapSecond (\nextCommand -> 
+          if nextCommand == Cmd.none then
+            config.send Message.stepComplete
+          else
+            Cmd.map ProgramMsg nextCommand
+        )
     ObserveSubject ->
       ( model, sendObservations config model.current )
     SendMessage message ->
@@ -230,15 +227,15 @@ runObservation specSubject observation =
 handleIncomingSpecMessage : Model model msg -> Message.IncomingMessageType -> ( Model model msg, Cmd (Msg msg) )
 handleIncomingSpecMessage model messageType =
   case messageType of
+    Message.Start ->
+      ( model, nextStep )
     Message.NextSpec ->
       ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
       , Task.succeed never |> Task.perform (always NextSpec)
       )
     Message.StartSteps ->
-      ( { model | running = True }, andThenSend NextStep )
+      ( { model | running = True }, nextStep )
     Message.NextStep ->
-      ( model, nextStep )
-    Message.Start ->
       ( model, nextStep )
 
 
