@@ -11,7 +11,8 @@ import Json.Decode as Json
 witnessPortCommandFromInitSpec : Spec Model Msg
 witnessPortCommandFromInitSpec =
   Spec.given "a worker with a port" (
-    Subject.worker (\_ -> ({count = 0}, sendTestMessageOut "From init!")) testUpdate
+    Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
+      |> Subject.withUpdate testUpdate
       |> Port.observe "sendTestMessageOut"
   )
   |> Spec.it "sends the expected message" (
@@ -23,12 +24,11 @@ witnessPortCommandFromInitSpec =
 witnessMultiplePortCommandsFromInitSpec : Spec Model Msg
 witnessMultiplePortCommandsFromInitSpec =
   Spec.given "a worker with a port" (
-    Subject.worker (\_ -> 
+    Subject.init
         ( {count = 0}
         , Cmd.batch [ sendTestMessageOut "One", sendTestMessageOut "Two", sendTestMessageOut "Three" ]
         )
-      )
-      testUpdate
+      |> Subject.withUpdate testUpdate
       |> Port.observe "sendTestMessageOut"
   )
   |> Spec.it "records all the messages sent" (

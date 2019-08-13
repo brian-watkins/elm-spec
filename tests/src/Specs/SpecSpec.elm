@@ -12,7 +12,8 @@ import Json.Decode as Json
 multipleWhenSpec : Spec Model Msg
 multipleWhenSpec =
   Spec.given "a test worker" (
-    Subject.worker (\_ -> ({counts = []}, Cmd.none)) testUpdate
+    Subject.init ( { counts = [] }, Cmd.none )
+      |> Subject.withUpdate testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
   |> Spec.when "the first sub is sent"
@@ -33,7 +34,8 @@ multipleWhenSpec =
 multipleScenariosSpec : Spec Model Msg
 multipleScenariosSpec =
   Spec.given "a test worker" (
-    Subject.worker (\_ -> ({ counts = [] }, Cmd.none)) testUpdate
+    Subject.init ( { counts = [] }, Cmd.none )
+      |> Subject.withUpdate testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
   |> Spec.when "the first sub is sent"

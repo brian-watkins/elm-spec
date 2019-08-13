@@ -14,7 +14,8 @@ import Time exposing (Posix)
 countTimePassingSpec : Spec Model Msg
 countTimePassingSpec =
   Spec.given "a worker that subscribes to the time" (
-    Subject.worker (\_ -> ({count = 0}, Cmd.none)) testUpdate
+    Subject.init ( { count = 0 }, Cmd.none )
+      |> Subject.withUpdate testUpdate
       |> Subject.withSubscriptions testSubscriptions
       |> Spec.Time.fake
   )

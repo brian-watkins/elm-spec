@@ -12,7 +12,8 @@ import Json.Decode as Json
 passingSpec : Spec Model Msg
 passingSpec =
   Spec.given "a fragment" (
-    Subject.fragment { count = 99 } testUpdate
+    Subject.initWithModel { count = 99 }
+      |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
       Spec.expectModel <|
@@ -24,7 +25,8 @@ passingSpec =
 failingSpec : Spec Model Msg
 failingSpec =
   Spec.given "another fragment" (
-    Subject.fragment { count = 99 } testUpdate
+    Subject.initWithModel { count = 99 }
+      |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
       Spec.expectModel <|
@@ -36,7 +38,8 @@ failingSpec =
 specWithAScenario : Spec Model Msg
 specWithAScenario =
   Spec.given "a third fragment" (
-    Subject.fragment { count = 108 } testUpdate
+    Subject.initWithModel { count = 108 }
+      |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
       Spec.expectModel <|

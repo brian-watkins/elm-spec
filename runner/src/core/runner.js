@@ -24,6 +24,9 @@ module.exports = class Core extends EventEmitter {
           case "_time":
             this.timePlugin.handle(specMessage)
             break
+          case "_witness":
+            this.app.ports.sendIn.send(specMessage)
+            break
           default:
             console.log("Unknown message:", specMessage)
             break

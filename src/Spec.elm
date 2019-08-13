@@ -147,8 +147,9 @@ formatObservationDescription description =
 
 
 type alias Config msg =
-  { send: Message -> Cmd msg
-  , listen: (Message -> msg) -> Sub msg
+  { send: Message -> Cmd (Msg msg)
+  , outlet: Message -> Cmd msg
+  , listen: (Message -> (Msg msg)) -> Sub (Msg msg)
   }
 
 
@@ -172,7 +173,7 @@ type alias Model model msg =
   }
 
 
-update : Config (Msg msg) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
   case msg of
     ReceivedMessage specMessage ->
@@ -188,7 +189,7 @@ update config msg model =
       ( model, config.send message )
     ProgramMsg programMsg ->
       subject model.current
-        |> Subject.update programMsg 
+        |> Subject.update config.outlet programMsg
         |> Tuple.mapFirst (\updated -> { model | current = mapSubject (always updated) model.current })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then
@@ -205,7 +206,7 @@ recordEffect specMessage model =
   { model | current = mapSubject (Subject.pushEffect specMessage) model.current }
 
 
-lifecycleUpdate : Config (Msg msg) -> LifecycleMsg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+lifecycleUpdate : Config msg -> LifecycleMsg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 lifecycleUpdate config msg model =
   case msg of
     NextStep ->
@@ -231,7 +232,7 @@ lifecycleUpdate config msg model =
       ( model, sendObservations config model.current )
 
 
-sendObservations : Config (Msg msg) -> Spec model msg -> Cmd (Msg msg)
+sendObservations : Config msg -> Spec model msg -> Cmd (Msg msg)
 sendObservations config (Spec spec) =
   List.map (runObservation spec.subject) spec.observations
     |> List.map (Lifecycle.observation spec.conditions)
@@ -274,7 +275,7 @@ scenarioSpecs (Spec spec) =
     )
 
 
-subscriptions : Config (Msg msg) -> Model model msg -> Sub (Msg msg)
+subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
   let
     specSubject = subject model.current
@@ -300,7 +301,7 @@ init specs _ =
       )
 
 
-program : Config (Msg msg) -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+program : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
 program config specs =
   Platform.worker
     { init = init specs

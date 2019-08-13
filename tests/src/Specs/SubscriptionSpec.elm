@@ -12,7 +12,8 @@ import Json.Encode as Encode
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
   Spec.given "a worker with subscriptions" (
-    Subject.worker (\_ -> ({count = 0}, Cmd.none)) testUpdate
+    Subject.init ( { count = 0 }, Cmd.none )
+      |> Subject.withUpdate testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
   |> Spec.when "some subscription messages are sent"
