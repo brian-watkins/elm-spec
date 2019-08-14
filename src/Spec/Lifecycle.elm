@@ -9,7 +9,7 @@ module Spec.Lifecycle exposing
   , specComplete
   )
 
-import Spec.Message exposing (Message)
+import Spec.Message as Message exposing (Message)
 import Observer exposing (Verdict(..))
 import Json.Encode as Encode exposing (Value)
 import Json.Decode as Json
@@ -23,15 +23,14 @@ type Command
 
 
 isLifecycleMessage : Message -> Bool
-isLifecycleMessage message =
-  message.home == "_spec"
+isLifecycleMessage =
+  Message.belongsTo "_spec"
 
 
 commandFrom : Message -> Maybe Command
 commandFrom message =
-  if isLifecycleMessage message && message.name == "state" then
-    Json.decodeValue Json.string message.body
-      |> Result.toMaybe
+  if Message.is "_spec" "state" message then
+    Message.decode Json.string message
       |> Maybe.andThen toCommand
   else
     Nothing

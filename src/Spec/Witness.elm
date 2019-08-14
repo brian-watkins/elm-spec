@@ -7,7 +7,7 @@ module Spec.Witness exposing
   )
 
 import Spec.Subject as Subject exposing (Subject)
-import Spec.Message exposing (Message)
+import Spec.Message as Message exposing (Message)
 import Observer exposing (Observer)
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -49,11 +49,8 @@ expect name reportObserver subject =
 verdict : String -> Observer (List Report) -> Observer (Subject model msg)
 verdict name reportObserver subject =
   Subject.effects subject
-    |> List.filter (\message -> message.home == "_witness" && message.name == "spy")
-    |> List.filterMap (\message ->
-      Json.decodeValue reportDecoder message.body
-        |> Result.toMaybe
-    )
+    |> List.filter (Message.is "_witness" "spy")
+    |> List.filterMap (Message.decode reportDecoder)
     |> List.filter (\report -> report.name == name)
     |> reportObserver
 

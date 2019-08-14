@@ -7,7 +7,7 @@ module Spec.Port exposing
 import Spec exposing (Spec)
 import Spec.Subject as Subject exposing (Subject)
 import Observer exposing (Observer)
-import Spec.Message exposing (Message)
+import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -42,9 +42,6 @@ send name value _ =
 expect : String -> Json.Decoder a -> Observer (List a) -> Observer (Subject model msg)
 expect name decoder observer subject =
   Subject.effects subject
-    |> List.filter (\message -> message.home == "_port" && message.name == "received")
-    |> List.filterMap (\message ->
-      Json.decodeValue decoder message.body
-        |> Result.toMaybe
-    )
+    |> List.filter (Message.is "_port" "received")
+    |> List.filterMap (Message.decode decoder)
     |> observer
