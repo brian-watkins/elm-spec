@@ -6,6 +6,7 @@ import Spec.Port as Port
 import Observer
 import Runner
 import Json.Decode as Json
+import Json.Encode as Encode
 
 
 witnessPortCommandFromInitSpec : Spec Model Msg
@@ -14,6 +15,7 @@ witnessPortCommandFromInitSpec =
     Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
       |> Subject.withUpdate testUpdate
       |> Port.observe "sendTestMessageOut"
+      |> Subject.pushEffect { home = "test", name = "something", body = Encode.null }
   )
   |> Spec.it "sends the expected message" (
     Port.expect "sendTestMessageOut" Json.string <|

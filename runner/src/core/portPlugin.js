@@ -12,7 +12,7 @@ module.exports = class PortPlugin {
       case "receive":
         const port = specMessage.body
         this.app.ports[port.cmd].subscribe((commandMessage) => {
-          this.app.ports.sendIn.send({ home: "_port", name: "receive", body: commandMessage })
+          this.app.ports.sendIn.send({ home: "_port", name: "received", body: commandMessage })
         })
     }
   }
