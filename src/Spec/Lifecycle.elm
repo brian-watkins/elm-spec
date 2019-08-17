@@ -2,7 +2,6 @@ module Spec.Lifecycle exposing
   ( Command(..)
   , isLifecycleMessage
   , commandFrom
-  , observation
   , configureComplete
   , stepComplete
   , observationsComplete
@@ -10,7 +9,7 @@ module Spec.Lifecycle exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Observer exposing (Verdict(..))
+import Spec.Observer as Observer exposing (Verdict(..))
 import Json.Encode as Encode exposing (Value)
 import Json.Decode as Json
 
@@ -77,33 +76,3 @@ specStateMessage specState =
   , name = "state"
   , body = Encode.string specState
   }
-
-
-observation : List String -> (String, Verdict) -> Message
-observation conditions (description, verdict) =
-  { home = "_spec"
-  , name = "observation"
-  , body = encodeObservation conditions description verdict
-  }
-
-
-encodeObservation : List String -> String -> Verdict -> Value
-encodeObservation conditions description verdict =
-  verdictAttributes verdict
-    |> List.append
-      [ ("conditions", Encode.list Encode.string conditions)
-      , ("description", Encode.string description)
-      ]
-    |> Encode.object
-
-
-verdictAttributes verdict =
-  case verdict of
-    Accept ->
-      [ ("summary", Encode.string "ACCEPT")
-      , ("message", Encode.null)
-      ]
-    Reject message ->
-      [ ("summary", Encode.string "REJECT")
-      , ("message", Encode.string message)
-      ]

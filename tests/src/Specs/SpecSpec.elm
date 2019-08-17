@@ -3,7 +3,8 @@ port module Specs.SpecSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
-import Observer
+import Spec.Observer as Observer
+import Spec.Context as Context
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -25,7 +26,7 @@ multipleWhenSpec =
   |> Spec.when "a third sub is sent"
     [ Port.send "specSpecSub" <| subMessageWith 39
     ]
-  |> Spec.it "updates the model with all three subscriptions" ( Spec.expectModel <|
+  |> Spec.it "updates the model with all three subscriptions" ( Context.expectModel <|
       \model ->
         Observer.isEqual [ 39, 78, 41 ] model.counts
   )
@@ -41,7 +42,7 @@ multipleScenariosSpec =
   |> Spec.when "the first sub is sent"
     [ Port.send "specSpecSub" <| subMessageWith 87
     ]
-  |> Spec.it "records the first number" ( Spec.expectModel <|
+  |> Spec.it "records the first number" ( Context.expectModel <|
     \model ->
       Observer.isEqual [ 87 ] model.counts
   )
@@ -49,7 +50,7 @@ multipleScenariosSpec =
     Spec.given "another scenario"
       >> Spec.when "another sub is sent"
         [ Port.send "specSpecSub" <| subMessageWith 82 ]
-      >> Spec.it "records the second number" ( Spec.expectModel <|
+      >> Spec.it "records the second number" ( Context.expectModel <|
         \model ->
           Observer.isEqual [ 82, 87 ] model.counts
       )
@@ -57,7 +58,7 @@ multipleScenariosSpec =
         Spec.given "a final scenario"
           >> Spec.when "the final sub is sent"
             [ Port.send "specSpecSub" <| subMessageWith 0 ]
-          >> Spec.it "records the final number" ( Spec.expectModel <|
+          >> Spec.it "records the final number" ( Context.expectModel <|
             \model ->
               Observer.isEqual [ 0, 82, 87 ] model.counts
           )
@@ -67,7 +68,7 @@ multipleScenariosSpec =
     Spec.given "an awesome scenario"
       >> Spec.when "another awesome sub is sent"
         [ Port.send "specSpecSub" <| subMessageWith 41 ]
-      >> Spec.it "records the second awesome number" ( Spec.expectModel <|
+      >> Spec.it "records the second awesome number" ( Context.expectModel <|
         \model ->
           Observer.isEqual [ 41, 87 ] model.counts
       )

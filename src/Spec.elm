@@ -7,20 +7,23 @@ module Spec exposing
   , when
   , it
   , suppose
-  , expectModel
   , update
+  , view
   , init
   , subscriptions
   , program
   )
 
-import Observer exposing (Observer, Verdict)
+import Spec.Observer as Observer exposing (Observer, Verdict)
 import Spec.Message as Message exposing (Message)
+import Spec.Context exposing (Context)
 import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
 import Task
 import Json.Encode exposing (Value)
 import Process
+import Html exposing (Html)
+import Dict exposing (Dict)
 
 
 type Spec model msg =
@@ -28,7 +31,7 @@ type Spec model msg =
     { subject: Subject model msg
     , conditions: List String
     , steps: List (Spec model msg -> Cmd (Msg msg))
-    , observations: List (Observation model msg)
+    , observations: Dict String (Observation model)
     , scenarios: List (Subject model msg -> Spec model msg)
     , state: SpecState
     }
@@ -40,9 +43,10 @@ type SpecState
   | Observe
 
 
-type alias Observation model msg =
-  { description: String
-  , observer: Observer (Subject model msg)
+type alias Observation model =
+  { key: String
+  , description: String
+  , observer: Observer (Context model)
   }
 
 
@@ -68,7 +72,7 @@ given description specSubject =
             [ \_ -> configCommand
             , \_ -> Cmd.map ProgramMsg specSubject.initialCommand
             ]
-    , observations = []
+    , observations = Dict.empty
     , conditions = [ formatGivenDescription description ]
     , scenarios = []
     , state = Configure
@@ -88,26 +92,27 @@ when condition messageSteps (Spec spec) =
     }
 
 
-it : String -> Observer (Subject model msg) -> Spec model msg -> Spec model msg
+it : String -> Observer (Context model) -> Spec model msg -> Spec model msg
 it description observer (Spec spec) =
-  Spec
-    { spec
-    | observations =
-        { description = formatObservationDescription description
-        , observer = observer
-        } :: spec.observations
-    }
+  let
+    observationKey = "Observer-" ++ (String.fromInt <| Dict.size spec.observations)
+  in
+    Spec
+      { spec
+      | observations =
+          spec.observations
+            |> Dict.insert observationKey
+                { key = observationKey
+                , description = formatObservationDescription description
+                , observer = observer
+                }
+      }
 
 
 suppose : (Subject model msg -> Spec model msg) -> Spec model msg -> Spec model msg
 suppose generator (Spec spec) =
   Spec
     { spec | scenarios = generator :: spec.scenarios }
-
-
-expectModel : Observer model -> Observer (Subject model msg)
-expectModel observer specSubject =
-  observer specSubject.model
 
 
 sendMessage : Message -> Cmd (Msg msg)
@@ -173,6 +178,15 @@ type alias Model model msg =
   }
 
 
+view : Model model msg -> Html (Msg msg)
+view model =
+  let
+    (Spec spec) = model.current
+  in
+    spec.subject.view spec.subject.model
+      |> Html.map ProgramMsg
+
+
 update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
   case msg of
@@ -229,23 +243,38 @@ lifecycleUpdate config msg model =
     SpecComplete ->
       ( model, config.send Lifecycle.specComplete )
     ObserveSubject ->
-      ( model, sendObservations config model.current )
+      let
+        (Spec spec) = model.current
+        ( remainingObservations, command ) = processObservers config model.current spec.observations
+      in
+        if Dict.isEmpty remainingObservations then
+          ( { model | current = Spec { spec | observations = Dict.empty } }
+          , Cmd.batch [ command, config.send Lifecycle.observationsComplete ]
+          )
+        else
+          ( { model | current = Spec { spec | observations = remainingObservations } }
+          , command
+          )
 
 
-sendObservations : Config msg -> Spec model msg -> Cmd (Msg msg)
-sendObservations config (Spec spec) =
-  List.map (runObservation spec.subject) spec.observations
-    |> List.map (Lifecycle.observation spec.conditions)
-    |> List.map config.send
-    |> (++) [ config.send Lifecycle.observationsComplete ]
-    |> Cmd.batch
-
-
-runObservation : Subject model msg -> Observation model msg -> (String, Verdict)
-runObservation specSubject observation =
-  ( observation.description
-  , observation.observer specSubject
-  )
+processObservers : Config msg -> Spec model msg -> Dict String (Observation model) -> (Dict String (Observation model), Cmd (Msg msg))
+processObservers config (Spec spec) =
+  (Dict.empty, Cmd.none)
+    |> Dict.foldl (\key observation (remaining, command) ->
+      case observation.observer <| Subject.contextForObservation observation.key spec.subject of
+        Observer.Inquire message ->
+          ( Dict.insert key observation remaining
+          , config.send <| Observer.inquiry observation.key message
+          )
+        Observer.Render verdict ->
+          ( remaining
+          , Cmd.batch 
+            [ Observer.observation spec.conditions observation.description verdict
+                |> config.send
+            , command
+            ]
+          )
+    )
 
 
 handleLifecycleCommand : Model model msg -> Lifecycle.Command -> ( Model model msg, Cmd (Msg msg) )

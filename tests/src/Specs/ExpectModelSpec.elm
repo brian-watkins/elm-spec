@@ -2,7 +2,8 @@ module Specs.ExpectModelSpec exposing (..)
 
 import Spec exposing (Spec(..))
 import Spec.Subject as Subject
-import Observer
+import Spec.Observer as Observer
+import Spec.Context as Context
 import Runner
 
 
@@ -13,7 +14,7 @@ failingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "fails" (
-    Spec.expectModel <|
+    Context.expectModel <|
       \model ->
         Observer.isEqual 17 model.count
   )
@@ -26,7 +27,7 @@ passingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Spec.expectModel <|
+      Context.expectModel <|
         \model ->
           Observer.isEqual 99 model.count
   )
@@ -38,11 +39,11 @@ multipleObservationsSpec =
     Subject.initWithModel { count = 87, name = "fun-spec" }
       |> Subject.withUpdate testUpdate
   )
-  |> Spec.it "contains the expected number" ( Spec.expectModel <|
+  |> Spec.it "contains the expected number" ( Context.expectModel <|
       \model ->
         Observer.isEqual 87 model.count
   )
-  |> Spec.it "contains the expected name" ( Spec.expectModel <|
+  |> Spec.it "contains the expected name" ( Context.expectModel <|
       \model ->
         Observer.isEqual "awesome-spec" model.name
   )

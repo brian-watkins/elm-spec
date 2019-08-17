@@ -3,7 +3,8 @@ port module Specs.ProcessCommandSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
-import Observer
+import Spec.Observer as Observer
+import Spec.Context as Context
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -48,7 +49,7 @@ processBatchedTerminatingAndNoCallbackCommands =
           |> Observer.isEqual 21
   )
   |> Spec.it "it ends up with the right tally" (
-    Spec.expectModel <|
+    Context.expectModel <|
       \model ->
         Observer.isEqual 35 model.num
   )

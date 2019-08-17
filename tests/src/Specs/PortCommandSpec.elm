@@ -3,7 +3,7 @@ port module Specs.PortCommandSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
-import Observer
+import Spec.Observer as Observer
 import Runner
 import Json.Decode as Json
 import Json.Encode as Encode

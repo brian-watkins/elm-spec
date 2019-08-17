@@ -4,7 +4,8 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Time
-import Observer
+import Spec.Observer as Observer
+import Spec.Context as Context
 import Runner
 import Task
 import Json.Encode as Encode
@@ -26,7 +27,7 @@ countTimePassingSpec =
     , Spec.Time.tick 1000
     ]
   |> Spec.it "updates the model" (
-    Spec.expectModel <|
+    Context.expectModel <|
       \model ->
         Observer.isEqual 4 model.count
   )

@@ -3,8 +3,9 @@ module Specs.MultipleSpecSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 import Spec.Subject as Subject
+import Spec.Observer as Observer
+import Spec.Context as Context
 import Runner as TestRunner
-import Observer
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -16,7 +17,7 @@ passingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Spec.expectModel <|
+      Context.expectModel <|
         \model ->
           Observer.isEqual 99 model.count
   )
@@ -29,7 +30,7 @@ failingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Spec.expectModel <|
+      Context.expectModel <|
         \model ->
           Observer.isEqual 76 model.count
   )
@@ -42,14 +43,14 @@ specWithAScenario =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Spec.expectModel <|
+      Context.expectModel <|
         \model ->
           Observer.isEqual 108 model.count
   )
   |> Spec.suppose (
     Spec.given "another scenario"
       >> Spec.it "contains a different value" (
-        Spec.expectModel <|
+        Context.expectModel <|
           \model ->
             Observer.isEqual 94 model.count
       )

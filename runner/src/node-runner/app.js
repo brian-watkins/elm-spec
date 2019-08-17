@@ -1,19 +1,30 @@
-const compiler = require('./compiler')
+const Compiler = require('./compiler')
 const SpecRunner = require('../core/runner')
 const Reporter = require('./reporter')
+const HtmlContext = require('./htmlContext')
+const HtmlPlugin = require('../core/htmlPlugin')
 
-const reporter = new Reporter(console.log)
-
-compiler.compile({
+const compiler = new Compiler({
   specPath: "./src/Specs/*Spec.elm",
   elmPath: "../node_modules/.bin/elm",
   outputPath: "./compiled-specs.js"
-}).then((Elm) => {
-  var app = Elm.Specs.ExpectModelSpec.init({
+})
+
+const htmlContext = new HtmlContext(compiler)
+
+const plugins = {
+  "_html": new HtmlPlugin(htmlContext.document())
+}
+
+htmlContext.evaluate(function (Elm) {
+  var app = Elm.Specs.HtmlSpec.init({
+    node: htmlContext.document().getElementById('app'),
     flags: { specName: "failing" }
   })
-  
-  new SpecRunner(app)
+
+  const reporter = new Reporter(console.log)
+
+  new SpecRunner(app, plugins)
     .on("observation", (observation) => {
       reporter.record(observation)
     })
@@ -27,5 +38,5 @@ compiler.compile({
     })
     .run()
 
-    app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
+  app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
 })

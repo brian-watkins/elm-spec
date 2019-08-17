@@ -3,7 +3,8 @@ port module Specs.SubscriptionSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
-import Observer
+import Spec.Observer as Observer
+import Spec.Context as Context
 import Runner
 import Task
 import Json.Encode as Encode
@@ -21,7 +22,7 @@ sendsSubscriptionSpec =
     , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
     ]
   |> Spec.it "updates the model" (
-    Spec.expectModel <|
+    Context.expectModel <|
       \model ->
         Observer.isEqual 78 model.count
   )
