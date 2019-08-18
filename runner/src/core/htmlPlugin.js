@@ -8,7 +8,7 @@ module.exports = class HtmlPlugin {
     switch (specMessage.name) {
       case "select":
         const selector = specMessage.body.selector
-        const element = this.document.querySelector(`#${selector}`)
+        const element = this.document.querySelector(selector)
         out({
           home: "_html",
           name: "selected",

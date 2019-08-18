@@ -3,6 +3,7 @@ module Specs.HtmlSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Html as Markup
+import Spec.Html.Selector exposing (..)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Runner
@@ -15,7 +16,7 @@ htmlSpecSingle =
       |> Subject.withView testView
   )
   |> Spec.it "renders the name based on the model" (
-    Markup.target "my-name"
+    Markup.select << by [ id "my-name" ]
       |> Markup.expect (Markup.hasText "Hello, Cool Dude!")
   )
 
@@ -27,11 +28,11 @@ htmlSpecMultiple =
       |> Subject.withView testView
   )
   |> Spec.it "renders the name based on the model" (
-    Markup.target "my-name"
+    Markup.select << by [ id "my-name" ]
       |> Markup.expect (Markup.hasText "Hello, Cool Dude!")
   )
   |> Spec.it "renders the count based on the model" (
-    Markup.target "my-count"
+    Markup.select << by [ id "my-count" ]
       |> Markup.expect (Markup.hasText "The count is 78!")
   )
 
@@ -43,7 +44,7 @@ hasTextFails =
       |> Subject.withView testView
   )
   |> Spec.it "renders the name based on the model" (
-    Markup.target "my-name"
+    Markup.select << by [ id "my-name" ]
       |> Markup.expect (Markup.hasText "Something not present")
   )
 

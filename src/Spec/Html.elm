@@ -1,5 +1,7 @@
 module Spec.Html exposing
-  ( target
+  ( Selector(..)
+  , Selection(..)
+  , select
   , expect
   , hasText
   )
@@ -11,33 +13,39 @@ import Json.Encode as Encode
 import Json.Decode as Json
 
 
-type alias HtmlSelector =
-  { selector: String
-  }
+type Selector =
+  Selector String
 
 
-target : String -> HtmlSelector
-target id =
-  { selector = id
-  }
+type Selection
+  = By (List Selector)
 
 
-selectHtml : HtmlSelector -> Message
-selectHtml selector =
+select : Selection -> Selector
+select selection =
+  case selection of
+    By selectors ->
+      List.map (\(Selector selector) -> selector) selectors
+        |> String.join ""
+        |> Selector
+
+
+selectHtml : Selector -> Message
+selectHtml (Selector selector) =
   { home = "_html"
   , name = "select"
-  , body = Encode.object [ ("selector", Encode.string selector.selector) ]
+  , body = Encode.object [ ("selector", Encode.string selector) ]
   }
 
 
-expect : Observer HtmlElement -> HtmlSelector -> Observer (Context model)
-expect observer selector context =
+expect : Observer HtmlElement -> (() -> Selector) -> Observer (Context model)
+expect observer selectorGenerator context =
   context.inquiries
     |> List.filter (Message.is "_html" "selected")
     |> List.head
     |> Maybe.andThen (Message.decode htmlDecoder)
     |> Maybe.map observer
-    |> Maybe.withDefault (Observer.Inquire <| selectHtml selector)
+    |> Maybe.withDefault (Observer.Inquire <| selectHtml (selectorGenerator ()))
 
 
 type HtmlNode
