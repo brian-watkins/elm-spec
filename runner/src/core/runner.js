@@ -92,6 +92,7 @@ module.exports = class Core extends EventEmitter {
       case "STEP_COMPLETE":
         if (this.timer) clearTimeout(this.timer)
         this.timer = setTimeout(() => {
+          this.notifyStepComplete()
           out({ home: "_spec", name: "state", body: "NEXT_STEP" })
         }, 0)
         break
@@ -105,5 +106,13 @@ module.exports = class Core extends EventEmitter {
         this.emit('complete')
         break
     }
+  }
+
+  notifyStepComplete() {
+    Object.values(this.plugins).forEach(plugin => {
+      if ("onStepComplete" in plugin) {
+        plugin.onStepComplete()
+      }
+    })
   }
 }

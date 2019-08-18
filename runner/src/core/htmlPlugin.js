@@ -27,11 +27,14 @@ module.exports = class HtmlPlugin {
       case "click":
         const el = this.document.querySelector(specMessage.body.selector)
         el.click()
-        this.clock.runToFrame()
         break
       default:
         console.log("Unknown message:", specMessage)
         break
     }
+  }
+
+  onStepComplete() {
+    this.clock.runToFrame()
   }
 }

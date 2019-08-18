@@ -15,6 +15,12 @@ describe("html plugin", () => {
     })  
   })
 
+  context("when the model is updated", () => {
+    it("updates the view as expected", (done) => {
+      expectPassingBrowserSpec("HtmlSpec", "sub", done)
+    })
+  })
+
   context("hasText", () => {
     it("prints the proper error message", (done) => {
       expectFailingBrowserSpec("HtmlSpec", "hasTextFails", done, (observations) => {
