@@ -79,9 +79,9 @@ const runTestSpec = (specProgram, specName, done, matcher) => {
 }
 
 const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
-  this.htmlContext.evaluate((Elm, appElement, clock, document) => {
+  this.htmlContext.evaluate((Elm, appElement, clock, window) => {
     const plugins = {
-      "_html": new HtmlPlugin(document, clock)
+      "_html": new HtmlPlugin(window, clock)
     }
 
     var app = Elm.Specs[specProgram].init({

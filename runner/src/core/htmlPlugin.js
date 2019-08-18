@@ -1,7 +1,7 @@
 
 module.exports = class HtmlPlugin {
-  constructor(document, clock) {
-    this.document = document
+  constructor(window, clock) {
+    this.document = window.document
     this.clock = clock
   }
 
@@ -27,14 +27,11 @@ module.exports = class HtmlPlugin {
       case "click":
         const el = this.document.querySelector(specMessage.body.selector)
         el.click()
-        this.clock.tick(16)
+        this.clock.runToFrame()
         break
       default:
         console.log("Unknown message:", specMessage)
         break
     }
-  }
-
-  reset() {
   }
 }
