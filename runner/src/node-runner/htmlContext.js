@@ -1,12 +1,13 @@
 const { JSDOM } = require("jsdom");
+const fs = require('fs')
 
 module.exports = class HtmlContext {
   constructor(compiler) {
     this.compiler = compiler
     this.dom = new JSDOM(
       "<html><head></head><body></body></html>",
-      { pretendToBeVisual: true
-      , runScripts: "outside-only"
+      { pretendToBeVisual: true,
+        runScripts: "dangerously"
       }
     )
   }
@@ -15,9 +16,11 @@ module.exports = class HtmlContext {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
+          this.addJs("../node_modules/lolex/lolex.js", this.dom.window)
+          this.clock = this.dom.window.eval('lolex.install({toFake: [ "requestAnimationFrame" ]})')
           this.dom.window.eval(compiledCode)
           const appElement = this.prepareForApp(this.dom.window)
-          evaluator(this.dom.window.Elm, appElement, this.dom.window.document)
+          evaluator(this.dom.window.Elm, appElement, this.clock, this.dom.window.document)
         })
         .catch((err) => {
           console.log(err)
@@ -26,12 +29,12 @@ module.exports = class HtmlContext {
     }
     else {
       const appElement = this.prepareForApp(this.dom.window)
-      evaluator(this.dom.window.Elm, appElement, this.dom.window.document)
+      evaluator(this.dom.window.Elm, appElement, this.clock, this.dom.window.document)
     }
   }
 
   prepareForApp(window) {
-    window.__stopAllTimers()
+    this.clock.reset()
 
     const document = window.document
 
@@ -44,5 +47,12 @@ module.exports = class HtmlContext {
     document.body.appendChild(wrapper)
 
     return wrapper
+  }
+
+  addJs(file, window) {
+    const source = fs.readFileSync(file, { encoding: "utf-8" })
+    const script = window.document.createElement("script")
+    script.textContent = source
+    window.document.body.appendChild(script)
   }
 }

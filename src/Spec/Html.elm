@@ -2,11 +2,13 @@ module Spec.Html exposing
   ( Selector(..)
   , Selection(..)
   , select
+  , target
   , expect
   , hasText
   )
 
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Subject exposing (Subject)
 import Spec.Context exposing (Context)
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -21,13 +23,25 @@ type Selection
   = By (List Selector)
 
 
+target : Selection -> Message
+target selection =
+  { home = "_html"
+  , name = "target"
+  , body = Encode.string <| toString selection
+  }
+
+
 select : Selection -> Selector
-select selection =
+select =
+  Selector << toString
+
+
+toString : Selection -> String
+toString selection =
   case selection of
     By selectors ->
-      List.map (\(Selector selector) -> selector) selectors
+      List.map (\(Selector sel) -> sel) selectors
         |> String.join ""
-        |> Selector
 
 
 selectHtml : Selector -> Message

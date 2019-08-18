@@ -13,6 +13,6 @@ id expectedId =
   Spec.Html.Selector <| "#" ++ expectedId
 
 
-by : List Spec.Html.Selector -> () -> Spec.Html.Selection
+by : List Spec.Html.Selector -> a -> Spec.Html.Selection
 by selectors _ =
   Spec.Html.By selectors

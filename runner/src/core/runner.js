@@ -93,7 +93,7 @@ module.exports = class Core extends EventEmitter {
         if (this.timer) clearTimeout(this.timer)
         this.timer = setTimeout(() => {
           out({ home: "_spec", name: "state", body: "NEXT_STEP" })
-        }, 1)
+        }, 0)
         break
       case "OBSERVATIONS_COMPLETE":
         setTimeout(() => {
