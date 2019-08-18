@@ -63,13 +63,13 @@ const runTestSpec = (specProgram, specName, done, matcher) => {
 }
 
 exports.runBrowserTestSpec = (specProgram, specName, done, matcher) => {
-  this.htmlContext.evaluate((Elm, document) => {
+  this.htmlContext.evaluate((Elm, appElement, document) => {
     const plugins = {
       "_html": new HtmlPlugin(document)
     }
 
     var app = Elm.Specs[specProgram].init({
-      node: document.getElementById('app'),
+      node: appElement,
       flags: { specName }
     })
   
