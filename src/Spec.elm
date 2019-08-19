@@ -189,11 +189,9 @@ type alias Model model msg =
 
 view : Model model msg -> Html (Msg msg)
 view model =
-  let
-    (Spec spec) = model.current
-  in
-    spec.subject.view spec.subject.model
-      |> Html.map ProgramMsg
+  subject model.current
+    |> Subject.render
+    |> Html.map ProgramMsg
 
 
 update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
@@ -255,32 +253,30 @@ lifecycleUpdate config msg model =
       ( model, config.send Lifecycle.specComplete )
     ObserveSubject ->
       let
-        (Spec spec) = model.current
-        ( remainingObservations, command ) = processObservers config model.current spec.observations
+        ( remainingObservations, command ) = processObservers config model.current
       in
         if Dict.isEmpty remainingObservations then
-          ( { model | current = Spec { spec | observations = Dict.empty } }
+          ( { model | current = setObservations Dict.empty model.current }
           , Cmd.batch [ command, config.send Lifecycle.observationsComplete ]
           )
         else
-          ( { model | current = Spec { spec | observations = remainingObservations } }
+          ( { model | current = setObservations remainingObservations model.current }
           , command
           )
     AbortSpec reason ->
-      let
-        (Spec spec) = model.current
-      in
-        ( model
-        , Cmd.batch
-          [ config.send <| Observer.observation spec.conditions "A spec step failed" <| Observer.Reject reason
-          , config.send Lifecycle.observationsComplete
-          ]
-        )
+      ( model
+      , Cmd.batch
+        [ Observer.Reject reason
+            |> Observer.observation (conditions model.current) "A spec step failed"
+            |> config.send
+        , config.send Lifecycle.observationsComplete
+        ]
+      )
 
 
-processObservers : Config msg -> Spec model msg -> Dict String (Observation model) -> (Dict String (Observation model), Cmd (Msg msg))
+processObservers : Config msg -> Spec model msg -> (Dict String (Observation model), Cmd (Msg msg))
 processObservers config (Spec spec) =
-  (Dict.empty, Cmd.none)
+  spec.observations
     |> Dict.foldl (\key observation (remaining, command) ->
       case observation.observer <| Subject.contextForObservation observation.key spec.subject of
         Observer.Inquire message ->
@@ -295,7 +291,7 @@ processObservers config (Spec spec) =
             , command
             ]
           )
-    )
+    ) (Dict.empty, Cmd.none)
 
 
 handleLifecycleCommand : Model model msg -> Lifecycle.Command -> ( Model model msg, Cmd (Msg msg) )
@@ -405,3 +401,18 @@ addCondition condition (Spec spec) =
     Spec spec
   else
     Spec { spec | conditions = spec.conditions ++ [ condition ] }
+
+
+conditions : Spec model msg -> List String
+conditions (Spec spec) =
+  spec.conditions
+
+
+observations : Spec model msg -> Dict String (Observation model)
+observations (Spec spec) =
+  spec.observations
+
+
+setObservations : Dict String (Observation model) -> Spec model msg -> Spec model msg
+setObservations specObservations (Spec spec) =
+  Spec { spec | observations = specObservations }

@@ -9,6 +9,7 @@ module Spec.Subject exposing
   , withUpdate
   , withView
   , update
+  , render
   , contextForObservation
   )
 
@@ -80,6 +81,11 @@ update : (Message -> Cmd msg) -> msg -> Subject model msg -> ( Subject model msg
 update outlet msg subject =
   subject.update outlet msg subject.model
     |> Tuple.mapFirst (\updatedModel -> { subject | model = updatedModel })
+
+
+render : Subject model msg -> Html msg
+render subject =
+  subject.view subject.model
 
 
 contextForObservation : String -> Subject model msg -> Context model
