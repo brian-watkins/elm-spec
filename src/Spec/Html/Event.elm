@@ -1,5 +1,6 @@
 module Spec.Html.Event exposing
   ( click
+  , input
   )
 
 import Spec.Subject exposing (Subject)
@@ -14,6 +15,17 @@ click subject =
   , name = "click"
   , body = Encode.object
     [ ( "selector", Encode.string <| targetSelector subject )
+    ]
+  }
+
+
+input : String -> Subject model msg -> Message
+input text subject =
+  { home = "_html"
+  , name = "input"
+  , body = Encode.object
+    [ ( "selector", Encode.string <| targetSelector subject )
+    , ( "text", Encode.string text )
     ]
   }
 
