@@ -19,6 +19,7 @@ type Command
   | NextSpec
   | StartSteps
   | NextStep
+  | AbortSpec String
 
 
 isLifecycleMessage : Message -> Bool
@@ -28,11 +29,16 @@ isLifecycleMessage =
 
 commandFrom : Message -> Maybe Command
 commandFrom message =
-  if Message.is "_spec" "state" message then
-    Message.decode Json.string message
-      |> Maybe.andThen toCommand
-  else
-    Nothing
+  case message.name of
+    "state" ->
+      Message.decode Json.string message
+        |> Maybe.andThen toCommand
+    "abort" ->
+      Message.decode Json.string message
+        |> Maybe.withDefault "Spec aborted for unknown reason!"
+        |> Just << AbortSpec
+    _ ->
+      Nothing
 
 
 toCommand : String -> Maybe Command

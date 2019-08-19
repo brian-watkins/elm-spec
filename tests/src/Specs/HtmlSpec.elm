@@ -78,6 +78,36 @@ clickSpec =
   )
 
 
+targetUnknownSpec : Spec Model Msg
+targetUnknownSpec =
+  Spec.given "an html program that targets an unknown element" (
+    Subject.initWithModel { name = "Cool Dude", count = 0 }
+      |> Subject.withUpdate testUpdate
+      |> Subject.withView testView
+  )
+  |> Spec.when "the button is clicked three times"
+    [ Markup.target << by [ id "some-element-that-does-not-exist" ]
+    , Event.click
+    , Event.click
+    , Event.click
+    ]
+  |> Spec.when "the other button is clicked once"
+    [ Markup.target << by [ id "another-button" ]
+    , Event.click
+    ]
+  |> Spec.it "renders the count" (
+    Markup.select << by [ id "my-count" ]
+      |> Markup.expect (Markup.hasText "The count is 30!")
+  )
+  |> Spec.suppose (
+    Spec.given "it should not do this since we've failed already"
+      >> Spec.it "checks the name" (
+        Markup.select << by [ id "my-name" ]
+          |> Markup.expect (Markup.hasText "Hello, Somebody!")
+      )
+  )
+
+
 subSpec : Spec Model Msg
 subSpec =
   Spec.given "an html program with a subscription" (
@@ -165,6 +195,7 @@ selectSpec name =
     "hasTextFails" -> hasTextFails
     "click" -> clickSpec
     "sub" -> subSpec
+    "targetUnknown" -> targetUnknownSpec
     _ -> htmlSpecSingle
 
 

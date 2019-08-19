@@ -5,7 +5,7 @@ module.exports = class HtmlPlugin {
     this.clock = clock
   }
 
-  handle(specMessage, out) {
+  handle(specMessage, out, abort) {
     switch (specMessage.name) {
       case "select":
         const selector = specMessage.body.selector
@@ -21,9 +21,15 @@ module.exports = class HtmlPlugin {
           }
         })
         break
-      case "target":
-        out(specMessage)
+      case "target": {
+        const el = this.document.querySelector(specMessage.body)
+        if (el == null) {
+          abort(`No match for selector: ${specMessage.body}`)
+        } else {
+          out(specMessage)
+        }
         break
+      }
       case "click":
         const el = this.document.querySelector(specMessage.body.selector)
         el.click()

@@ -34,4 +34,24 @@ describe("html plugin", () => {
       expectPassingBrowserSpec("HtmlSpec", "click", done)
     })
   })
+
+  context("target element", () => {
+    context("when the target fails to select an element", () => {
+      it("fails before any observations or other scenarios and reports the reason", (done) => {
+        expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
+          console.log(observations)
+          expect(observations).to.have.length(1)
+          expect(observations[0].message).to.equal("No match for selector: #some-element-that-does-not-exist")
+        })
+      })
+
+      it("shows only the steps that have been completed or attempted", (done) => {
+        expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
+          expect(observations[0].conditions).to.have.length(2)
+          expect(observations[0].conditions[0]).to.equal("Given an html program that targets an unknown element")
+          expect(observations[0].conditions[1]).to.equal("When the button is clicked three times")
+        })
+      })
+    })
+  })
 })

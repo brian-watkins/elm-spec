@@ -44,11 +44,17 @@ module.exports = class Core extends EventEmitter {
       default:
         const plugin = this.plugins[specMessage.home]
         if (plugin) {
-          plugin.handle(specMessage, out)
+          plugin.handle(specMessage, out, this.sendAbortMessage(out))
         } else {
           console.log("Unknown message:", specMessage)
         }
         break
+    }
+  }
+
+  sendAbortMessage(out) {
+    return (reason) => {
+      out({ home: "_spec", name: "abort", body: reason})
     }
   }
 

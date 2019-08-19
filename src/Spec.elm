@@ -30,17 +30,24 @@ type Spec model msg =
   Spec
     { subject: Subject model msg
     , conditions: List String
-    , steps: List (Spec model msg -> Cmd (Msg msg))
+    , steps: List (SpecStep model msg)
     , observations: Dict String (Observation model)
     , scenarios: List (Subject model msg -> Spec model msg)
     , state: SpecState
     }
 
 
+type alias SpecStep model msg =
+  { run: Spec model msg -> Cmd (Msg msg)
+  , condition: String
+  }
+
+
 type SpecState
   = Configure
   | Exercise
   | Observe
+  | Aborted
 
 
 type alias Observation model =
@@ -65,12 +72,14 @@ given description specSubject =
                     |> Cmd.batch
                 , sendMessage Lifecycle.configureComplete
                 ]
+          toInitialStep stepFunction =
+            { condition = formatGivenDescription description, run = stepFunction }
         in
           if specSubject.initialCommand == Cmd.none then
-            [ \_ -> configCommand ]
+            [ toInitialStep <| \_ -> configCommand ]
           else
-            [ \_ -> configCommand
-            , \_ -> Cmd.map ProgramMsg specSubject.initialCommand
+            [ toInitialStep <| \_ -> configCommand
+            , toInitialStep <| \_ -> Cmd.map ProgramMsg specSubject.initialCommand
             ]
     , observations = Dict.empty
     , conditions = [ formatGivenDescription description ]
@@ -86,9 +95,8 @@ when condition messageSteps (Spec spec) =
     | steps =
         messageSteps
           |> List.map (\f -> \s -> subject s |> f |> sendMessage)
+          |> List.map (\step -> { run = step, condition = formatCondition condition })
           |> List.append spec.steps
-    , conditions =
-        List.append spec.conditions [ formatCondition condition ]
     }
 
 
@@ -170,6 +178,7 @@ type LifecycleMsg
   | NextSpec
   | SpecComplete
   | ObserveSubject
+  | AbortSpec String
 
 
 type alias Model model msg =
@@ -231,9 +240,11 @@ lifecycleUpdate config msg model =
           )
         step :: remainingSteps ->
           let
-            updatedSpec = setSteps remainingSteps model.current
+            updatedSpec =
+              setSteps remainingSteps model.current
+                |> addCondition step.condition
           in
-            ( { model | current = updatedSpec }, step updatedSpec )
+            ( { model | current = updatedSpec }, step.run updatedSpec )
     NextSpec ->
       case model.specs of
         [] ->
@@ -255,6 +266,16 @@ lifecycleUpdate config msg model =
           ( { model | current = Spec { spec | observations = remainingObservations } }
           , command
           )
+    AbortSpec reason ->
+      let
+        (Spec spec) = model.current
+      in
+        ( model
+        , Cmd.batch
+          [ config.send <| Observer.observation spec.conditions "A spec step failed" <| Observer.Reject reason
+          , config.send Lifecycle.observationsComplete
+          ]
+        )
 
 
 processObservers : Config msg -> Spec model msg -> Dict String (Observation model) -> (Dict String (Observation model), Cmd (Msg msg))
@@ -283,13 +304,18 @@ handleLifecycleCommand model command =
     Lifecycle.Start ->
       ( model, nextStep )
     Lifecycle.NextSpec ->
-      ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
-      , sendLifecycle NextSpec
-      )
+      if specState model.current == Aborted then
+        ( model, sendLifecycle NextSpec )
+      else
+        ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
+        , sendLifecycle NextSpec
+        )
     Lifecycle.StartSteps ->
       ( { model | current = setState Exercise model.current }, nextStep )
     Lifecycle.NextStep ->
       ( model, nextStep )
+    Lifecycle.AbortSpec reason ->
+      ( { model | current = setState Aborted model.current }, sendLifecycle <| AbortSpec reason )
 
 
 scenarioSpecs : Spec model msg -> List (Spec model msg)
@@ -363,11 +389,19 @@ setState state (Spec spec) =
   Spec { spec | state = state }
 
 
-specSteps : Spec model msg -> List (Spec model msg -> Cmd (Msg msg))
+specSteps : Spec model msg -> List (SpecStep model msg)
 specSteps (Spec spec) =
   spec.steps
 
 
-setSteps : List (Spec model msg -> Cmd (Msg msg)) -> Spec model msg -> Spec model msg
+setSteps : List (SpecStep model msg) -> Spec model msg -> Spec model msg
 setSteps steps (Spec spec) =
   Spec { spec | steps = steps }
+
+
+addCondition : String -> Spec model msg -> Spec model msg
+addCondition condition (Spec spec) =
+  if List.member condition spec.conditions then
+    Spec spec
+  else
+    Spec { spec | conditions = spec.conditions ++ [ condition ] }
