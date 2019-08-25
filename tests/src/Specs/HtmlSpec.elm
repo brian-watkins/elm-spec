@@ -23,7 +23,7 @@ htmlSpecSingle =
   )
   |> Spec.it "renders the name based on the model" (
     Markup.select << by [ id "my-name" ]
-      |> Markup.expect (Markup.hasText "Hello, Cool Dude!")
+      |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
   )
 
 
@@ -35,21 +35,21 @@ htmlSpecMultiple =
   )
   |> Spec.it "renders the name based on the model" (
     Markup.select << by [ id "my-name" ]
-      |> Markup.expect (Markup.hasText "Hello, Cool Dude!")
+      |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
   )
   |> Spec.it "renders the count based on the model" (
     Markup.select << by [ id "my-count" ]
-      |> Markup.expect (Markup.hasText "The count is 78!")
+      |> Markup.expectElement (Markup.hasText "The count is 78!")
   )
   |> Spec.suppose (
     Spec.given "another scenario"
       >> Spec.it "finds a third thing" (
         Markup.select << by [ id "my-label" ]
-          |> Markup.expect (Markup.hasText "Here is a label")
+          |> Markup.expectElement (Markup.hasText "Here is a label")
       )
       >> Spec.it "finds a fourth thing" (
         Markup.select << by [ id "my-label-2" ]
-          |> Markup.expect (Markup.hasText "Another label")
+          |> Markup.expectElement (Markup.hasText "Another label")
       )
   )
 
@@ -62,7 +62,7 @@ hasTextFails =
   )
   |> Spec.it "renders the name based on the model" (
     Markup.select << by [ id "my-name" ]
-      |> Markup.expect (Markup.hasText "Something not present")
+      |> Markup.expectElement (Markup.hasText "Something not present")
   )
 
 
@@ -85,7 +85,7 @@ clickSpec =
     ]
   |> Spec.it "renders the count" (
     Markup.select << by [ id "my-count" ]
-      |> Markup.expect (Markup.hasText "The count is 30!")
+      |> Markup.expectElement (Markup.hasText "The count is 30!")
   )
 
 
@@ -108,13 +108,13 @@ targetUnknownSpec =
     ]
   |> Spec.it "renders the count" (
     Markup.select << by [ id "my-count" ]
-      |> Markup.expect (Markup.hasText "The count is 30!")
+      |> Markup.expectElement (Markup.hasText "The count is 30!")
   )
   |> Spec.suppose (
     Spec.given "it should not do this since we've failed already"
       >> Spec.it "checks the name" (
         Markup.select << by [ id "my-name" ]
-          |> Markup.expect (Markup.hasText "Hello, Somebody!")
+          |> Markup.expectElement (Markup.hasText "Hello, Somebody!")
       )
   )
 
@@ -133,12 +133,36 @@ subSpec =
     ]
   |> Spec.it "renders the count" (
     Markup.select << by [ id "my-count" ]
-      |> Markup.expect (Markup.hasText "The count is 40!")
+      |> Markup.expectElement (Markup.hasText "The count is 40!")
   )
   |> Spec.it "updates the model" (
     Actual.model
       |> Actual.map .count
       |> Spec.expect (Observer.isEqual 40)
+  )
+
+
+manyElementsSpec : Spec Model Msg
+manyElementsSpec =
+  Spec.given "an html program with many elements" (
+    Subject.initWithModel { name = "Cool Dude", count = 7 }
+      |> Subject.withUpdate testUpdate
+      |> Subject.withView testView
+  )
+  |> Spec.it "selects many elements" (
+    Markup.select << by [ tag "div" ]
+      |> Markup.expectElements (\elements ->
+        Observer.isEqual 6 (List.length elements)
+      )
+  )
+  |> Spec.it "fetchs text for the elements" (
+    Markup.select << by [ tag "div" ]
+      |> Markup.expectElements (\elements ->
+        List.drop 2 elements
+          |> List.head
+          |> Maybe.map (Markup.hasText "The count is 7!")
+          |> Maybe.withDefault (Observer.Reject "Element not found!")
+      )
   )
 
 
@@ -212,6 +236,7 @@ selectSpec name =
     "click" -> Just clickSpec
     "sub" -> Just subSpec
     "targetUnknown" -> Just targetUnknownSpec
+    "manyElements" -> Just manyElementsSpec
     _ -> Nothing
 
 

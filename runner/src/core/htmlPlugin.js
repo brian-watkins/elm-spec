@@ -11,16 +11,13 @@ module.exports = class HtmlPlugin {
       case "select": {
         const selector = specMessage.body.selector
         const element = this.document.querySelector(selector)
-        out({
-          home: "_html",
-          name: "selected",
-          body: {
-            tag: element.tagName,
-            children: [
-              { text: element.textContent }
-            ]
-          }
-        })
+        out(this.selected(this.describeElement(element)))
+        break
+      }
+      case "selectAll": {
+        const selector = specMessage.body.selector
+        const elements = Array.from(this.document.querySelectorAll(selector)).map(this.describeElement)
+        out(this.selected(elements))
         break
       }
       case "target": {
@@ -47,6 +44,23 @@ module.exports = class HtmlPlugin {
       default:
         console.log("Unknown message:", specMessage)
         break
+    }
+  }
+
+  selected(body) {
+    return {
+      home: "_html",
+      name: "selected",
+      body: body
+    }
+  }
+
+  describeElement(element) {
+    return {
+      tag: element.tagName,
+      children: [
+        { text: element.textContent }
+      ]
     }
   }
 

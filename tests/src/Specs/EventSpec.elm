@@ -24,7 +24,7 @@ inputSpec =
     ]
   |> Spec.it "renders the text on the view" (
     Markup.select << by [ id "my-message" ]
-      |> Markup.expect (Markup.hasText "You wrote: Here is some fun text!")
+      |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
   )
 
 

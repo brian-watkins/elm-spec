@@ -3,7 +3,8 @@ module Spec.Html exposing
   , Selection(..)
   , select
   , target
-  , expect
+  , expectElement
+  , expectElements
   , hasText
   )
 
@@ -80,11 +81,27 @@ selectHtml selection =
   }
 
 
-expect : Observer HtmlElement -> (() -> Selection) -> Expectation model msg
-expect observer selectionGenerator =
+selectAllHtml : Selection -> Message
+selectAllHtml selection =
+  { home = "_html"
+  , name = "selectAll"
+  , body = Encode.object [ ("selector", Encode.string <| toString selection) ]
+  }
+
+
+expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model msg
+expectElement observer selectionGenerator =
   Actual.inquire (selectHtml <| selectionGenerator ())
     |> Actual.map (Message.decode htmlDecoder)
     |> Actual.map (Maybe.withDefault emptyElement)
+    |> Spec.expect observer
+
+
+expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Expectation model msg
+expectElements observer selectionGenerator =
+  Actual.inquire (selectAllHtml <| selectionGenerator ())
+    |> Actual.map (Message.decode <| Json.list htmlDecoder)
+    |> Actual.map (Maybe.withDefault [])
     |> Spec.expect observer
 
 

@@ -55,4 +55,10 @@ describe("html plugin", () => {
       })
     })
   })
+
+  context("select elements", () => {
+    it("selects all the elements to observe", (done) => {
+      expectPassingBrowserSpec("HtmlSpec", "manyElements", done)
+    })
+  })
 })

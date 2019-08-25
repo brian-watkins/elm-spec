@@ -18,7 +18,7 @@ onlyOneTagAllowedSpec =
   )
   |> Spec.it "uses the first tag only" (
     Markup.select << by [ tag "h1", tag "div", tag "a" ]
-      |> Markup.expect (Markup.hasText "This is an H1 tag")
+      |> Markup.expectElement (Markup.hasText "This is an H1 tag")
   )
 
 
@@ -30,7 +30,7 @@ tagSelectorSpec =
   )
   |> Spec.it "renders the text on the view" (
     Markup.select << by [ tag "h1" ]
-      |> Markup.expect (Markup.hasText "This is an H1 tag")
+      |> Markup.expectElement (Markup.hasText "This is an H1 tag")
   )
 
 
@@ -42,13 +42,13 @@ combinedTagSelectorSpec =
   )
   |> Spec.it "selects the text on the view" (
     Markup.select << by [ tag "h1", id "fun-id" ]
-      |> Markup.expect (Markup.hasText "This is an H1 tag")
+      |> Markup.expectElement (Markup.hasText "This is an H1 tag")
   )
   |> Spec.suppose (
     Spec.given "an Html program that selects by id and tag"
     >> Spec.it "selects the text on the view" (
       Markup.select << by [ id "fun-id", tag "h1" ]
-        |> Markup.expect (Markup.hasText "This is an H1 tag")
+        |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
   )
 
