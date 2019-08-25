@@ -26,7 +26,7 @@ import Json.Encode exposing (Value)
 import Process
 import Html exposing (Html)
 import Dict exposing (Dict)
-import Procedure.Config
+import Procedure.Program
 import Procedure
 import Procedure.Channel as Channel
 
@@ -206,7 +206,7 @@ type alias Config msg =
 
 
 type Msg msg
-  = ProcedureMsg (Procedure.Config.Msg (Msg msg))
+  = ProcedureMsg (Procedure.Program.Msg (Msg msg))
   | ProgramMsg msg
   | SendMessage Message
   | ReceivedEffect Message
@@ -216,7 +216,7 @@ type Msg msg
 type alias Model model msg =
   { specs: List (Spec model msg)
   , current: Spec model msg
-  , procedureModel: Procedure.Config.Model (Msg msg)
+  , procedureModel: Procedure.Program.Model (Msg msg)
   }
 
 
@@ -253,7 +253,7 @@ update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg
 update config msg model =
   case msg of
     ProcedureMsg procMsg ->
-      Procedure.Config.update procMsg model.procedureModel
+      Procedure.Program.update procMsg model.procedureModel
         |> Tuple.mapFirst (\updated -> { model | procedureModel = updated })
     ReceivedEffect message ->
       ( recordEffect message model
@@ -369,7 +369,7 @@ subscriptions config model =
         |> Sub.map ProgramMsg
     else
       Sub.none
-  , Procedure.Config.subscriptions model.procedureModel
+  , Procedure.Program.subscriptions model.procedureModel
   ]
 
 
@@ -379,7 +379,7 @@ init config specs _ =
     [] ->
       Elm.Kernel.Debug.todo "No specs!"
     spec :: remaining ->
-      ( { specs = remaining, current = spec, procedureModel = Procedure.Config.init }
+      ( { specs = remaining, current = spec, procedureModel = Procedure.Program.init }
       , Cmd.batch
         [ receiveLifecycleMessages config
         , receiveEffectMessages config
