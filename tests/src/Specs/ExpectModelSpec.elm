@@ -1,9 +1,9 @@
 module Specs.ExpectModelSpec exposing (..)
 
 import Spec exposing (Spec(..))
+import Spec.Actual as Actual
 import Spec.Subject as Subject
 import Spec.Observer as Observer
-import Spec.Context as Context
 import Runner
 
 
@@ -14,9 +14,9 @@ failingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "fails" (
-    Context.expectModel <|
-      \model ->
-        Observer.isEqual 17 model.count
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 17)
   )
 
 
@@ -27,9 +27,9 @@ passingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Context.expectModel <|
-        \model ->
-          Observer.isEqual 99 model.count
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 99)
   )
 
 
@@ -39,13 +39,15 @@ multipleObservationsSpec =
     Subject.initWithModel { count = 87, name = "fun-spec" }
       |> Subject.withUpdate testUpdate
   )
-  |> Spec.it "contains the expected number" ( Context.expectModel <|
-      \model ->
-        Observer.isEqual 87 model.count
+  |> Spec.it "contains the expected number" (
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 87)
   )
-  |> Spec.it "contains the expected name" ( Context.expectModel <|
-      \model ->
-        Observer.isEqual "awesome-spec" model.name
+  |> Spec.it "contains the expected name" (
+    Actual.model
+      |> Actual.map .name
+      |> Spec.expect (Observer.isEqual "awesome-spec")
   )
 
 
@@ -54,17 +56,13 @@ testUpdate msg model =
   ( model, Cmd.none )
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec specName =
   case specName of
-    "failing" ->
-      failingSpec
-    "passing" ->
-      passingSpec
-    "multiple" ->
-      multipleObservationsSpec
-    _ ->
-      failingSpec
+    "failing" -> Just failingSpec
+    "passing" -> Just passingSpec
+    "multiple" -> Just multipleObservationsSpec
+    _ -> Nothing
 
 
 type Msg

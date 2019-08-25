@@ -1,15 +1,10 @@
 module Spec.Observer exposing
   ( Observer
-  , Msg(..)
   , Verdict(..)
-  , accept
-  , reject
-  , isEqual
-  , inquiryDecoder
-  , Inquiry
   , inquiry
   , observation
-  , mapRejection
+  , isEqual
+  , inquiryDecoder
   )
 
 import Spec.Message as Message exposing (Message)
@@ -17,13 +12,8 @@ import Json.Encode as Encode
 import Json.Decode as Json
 
 
-type Msg
-  = Inquire Message
-  | Render Verdict
-
-
 type alias Observer a =
-  a -> Msg
+  a -> Verdict
 
 
 type alias Inquiry =
@@ -53,15 +43,6 @@ inquiryDecoder =
   Json.map2 Inquiry
     ( Json.field "key" Json.string )
     ( Json.field "message" Message.decoder )
-
-
-mapRejection : (String -> String) -> Msg -> Msg
-mapRejection mapper msg =
-  case msg of
-    Render (Reject reason) ->
-      Render << Reject <| mapper reason
-    _ ->
-      msg
 
 
 observation : List String -> String -> Verdict -> Message
@@ -94,22 +75,12 @@ verdictAttributes verdict =
       ]
 
 
-accept : Msg
-accept =
-  Render Accept
-
-
-reject : String -> Msg
-reject =
-  Render << Reject
-
-
 isEqual : a -> Observer a
 isEqual expected actual =
   if expected == actual then
-    accept
+    Accept
   else
-    reject <| "Expected " ++ (toString expected) ++ " to equal " ++ (toString actual) ++ ", but it does not."
+    Reject <| "Expected " ++ (toString expected) ++ " to equal " ++ (toString actual) ++ ", but it does not."
       
 
 toString : a -> String

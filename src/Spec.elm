@@ -3,6 +3,7 @@ module Spec exposing
   , Model
   , Msg
   , Config
+  , Expectation
   , given
   , when
   , it
@@ -12,18 +13,22 @@ module Spec exposing
   , init
   , subscriptions
   , program
+  , expect
   )
 
 import Spec.Observer as Observer exposing (Observer, Verdict)
 import Spec.Message as Message exposing (Message)
-import Spec.Context exposing (Context)
 import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
+import Spec.Actual as Actual exposing (Actual)
 import Task
 import Json.Encode exposing (Value)
 import Process
 import Html exposing (Html)
 import Dict exposing (Dict)
+import Procedure.Config
+import Procedure
+import Procedure.Channel as Channel
 
 
 type Spec model msg =
@@ -31,7 +36,7 @@ type Spec model msg =
     { subject: Subject model msg
     , conditions: List String
     , steps: List (SpecStep model msg)
-    , observations: Dict String (Observation model)
+    , requirements: List (Requirement model msg)
     , scenarios: List (Subject model msg -> Spec model msg)
     , state: SpecState
     }
@@ -50,10 +55,13 @@ type SpecState
   | Aborted
 
 
-type alias Observation model =
-  { key: String
-  , description: String
-  , observer: Observer (Context model)
+type alias Expectation model msg =
+  String -> Config msg -> Spec model msg -> Cmd (Msg msg)
+
+
+type alias Requirement model msg =
+  { description: String
+  , expectation: Expectation model msg
   }
 
 
@@ -81,7 +89,7 @@ given description specSubject =
             [ toInitialStep <| \_ -> configCommand
             , toInitialStep <| \_ -> Cmd.map ProgramMsg specSubject.initialCommand
             ]
-    , observations = Dict.empty
+    , requirements = []
     , conditions = [ formatGivenDescription description ]
     , scenarios = []
     , state = Configure
@@ -100,21 +108,52 @@ when condition messageSteps (Spec spec) =
     }
 
 
-it : String -> Observer (Context model) -> Spec model msg -> Spec model msg
-it description observer (Spec spec) =
-  let
-    observationKey = "Observer-" ++ (String.fromInt <| Dict.size spec.observations)
-  in
-    Spec
-      { spec
-      | observations =
-          spec.observations
-            |> Dict.insert observationKey
-                { key = observationKey
-                , description = formatObservationDescription description
-                , observer = observer
-                }
-      }
+it : String -> Expectation model msg -> Spec model msg -> Spec model msg
+it description expectation (Spec spec) =
+  Spec 
+    { spec 
+    | requirements = spec.requirements ++
+      [ { description = formatObservationDescription description
+        , expectation = expectation
+        }
+      ]
+    }
+
+
+expect : Observer a -> Actual model a -> String -> Config msg -> Spec model msg -> Cmd (Msg msg)
+expect observer actual description config (Spec spec) =
+  case actual of
+    Actual.Model mapper ->
+      Procedure.provide spec.subject.model
+        |> Procedure.map (mapper >> observer)
+        |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
+    Actual.Effects mapper ->
+      Procedure.provide spec.subject.effects
+        |> Procedure.map (mapper >> observer)
+        |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
+    Actual.Inquiry message mapper ->
+      Channel.open (\key -> config.send <| Observer.inquiry key message)
+        |> Channel.connect config.listen
+        |> Channel.filter (\key data -> filterForInquiryResult key data)
+        |> Channel.acceptOne
+        |> Procedure.map (\inquiry ->
+          Message.decode Observer.inquiryDecoder inquiry
+            |> Maybe.map .message
+            |> Maybe.map (mapper >> observer)
+            |> Maybe.withDefault (Observer.Reject "Unable to decode inquiry result!")
+        )
+        |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
+
+
+filterForInquiryResult : String -> Message -> Bool
+filterForInquiryResult key message =
+  if Message.is "_observer" "inquiryResult" message then
+    Message.decode Observer.inquiryDecoder message
+      |> Maybe.map .key
+      |> Maybe.map (\actual -> actual == key)
+      |> Maybe.withDefault False
+  else
+    False
 
 
 suppose : (Subject model msg -> Spec model msg) -> Spec model msg -> Spec model msg
@@ -131,10 +170,10 @@ sendMessage message =
 
 nextStep : Cmd (Msg msg)
 nextStep =
-  sendLifecycle NextStep
+  sendLifecycle Lifecycle.NextStep
 
 
-sendLifecycle : LifecycleMsg -> Cmd (Msg msg)
+sendLifecycle : Lifecycle.Msg -> Cmd (Msg msg)
 sendLifecycle lifecycleMsg =
   Task.succeed never
     |> Task.perform (always <| Lifecycle lifecycleMsg)
@@ -167,23 +206,17 @@ type alias Config msg =
 
 
 type Msg msg
-  = ProgramMsg msg
-  | ReceivedMessage Message
+  = ProcedureMsg (Procedure.Config.Msg (Msg msg))
+  | ProgramMsg msg
   | SendMessage Message
-  | Lifecycle LifecycleMsg
-
-
-type LifecycleMsg
-  = NextStep
-  | NextSpec
-  | SpecComplete
-  | ObserveSubject
-  | AbortSpec String
+  | ReceivedEffect Message
+  | Lifecycle Lifecycle.Msg
 
 
 type alias Model model msg =
   { specs: List (Spec model msg)
   , current: Spec model msg
+  , procedureModel: Procedure.Config.Model (Msg msg)
   }
 
 
@@ -194,18 +227,38 @@ view model =
     |> Html.map ProgramMsg
 
 
+receiveLifecycleMessages : Config msg -> Cmd (Msg msg)
+receiveLifecycleMessages config =
+  Channel.join config.listen
+    |> Channel.filter (\_ message ->
+      Lifecycle.isLifecycleMessage message
+    )
+    |> Channel.accept
+    |> Procedure.map Lifecycle.toMsg
+    |> Procedure.andThen (\msg -> Procedure.fromTask <| (Process.sleep 0 |> Task.andThen (\_ -> Task.succeed msg)))
+    |> Procedure.run ProcedureMsg Lifecycle
+
+
+receiveEffectMessages : Config msg -> Cmd (Msg msg)
+receiveEffectMessages config =
+  Channel.join config.listen
+    |> Channel.filter (\_ message ->
+      message.home /= "_spec" && message.home /= "_observer"
+    )
+    |> Channel.accept
+    |> Procedure.run ProcedureMsg ReceivedEffect
+
+
 update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
   case msg of
-    ReceivedMessage specMessage ->
-      if Lifecycle.isLifecycleMessage specMessage then
-        Lifecycle.commandFrom specMessage
-          |> Maybe.map (handleLifecycleCommand model)
-          |> Maybe.withDefault (model, Cmd.none)
-      else
-        ( recordEffect specMessage model
-        , config.send Lifecycle.stepComplete
-        )
+    ProcedureMsg procMsg ->
+      Procedure.Config.update procMsg model.procedureModel
+        |> Tuple.mapFirst (\updated -> { model | procedureModel = updated })
+    ReceivedEffect message ->
+      ( recordEffect message model
+      , config.send Lifecycle.stepComplete
+      )
     SendMessage message ->
       ( model, config.send message )
     ProgramMsg programMsg ->
@@ -227,14 +280,20 @@ recordEffect specMessage model =
   { model | current = mapSubject (Subject.pushEffect specMessage) model.current }
 
 
-lifecycleUpdate : Config msg -> LifecycleMsg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+lifecycleUpdate : Config msg -> Lifecycle.Msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 lifecycleUpdate config msg model =
   case msg of
-    NextStep ->
+    Lifecycle.Start ->
+      ( model, nextStep )
+    Lifecycle.StartSteps ->
+      ( { model | current = setState Exercise model.current }
+      , nextStep
+      )
+    Lifecycle.NextStep ->
       case specSteps model.current of
         [] ->
           ( { model | current = setState Observe model.current }
-          , sendLifecycle ObserveSubject
+          , sendLifecycle Lifecycle.ObserveSubject
           )
         step :: remainingSteps ->
           let
@@ -243,28 +302,43 @@ lifecycleUpdate config msg model =
                 |> addCondition step.condition
           in
             ( { model | current = updatedSpec }, step.run updatedSpec )
-    NextSpec ->
-      case model.specs of
-        [] ->
-          ( model, sendLifecycle SpecComplete )
-        next :: remaining ->
-          ( { model | specs = remaining, current = next }, nextStep )
-    SpecComplete ->
-      ( model, config.send Lifecycle.specComplete )
-    ObserveSubject ->
+    Lifecycle.NextSpec ->
       let
-        ( remainingObservations, command ) = processObservers config model.current
+        updatedModel =
+          if specState model.current == Aborted then
+            model
+          else
+            { model | specs = List.append (scenarioSpecs model.current) model.specs }
       in
-        if Dict.isEmpty remainingObservations then
-          ( { model | current = setObservations Dict.empty model.current }
-          , Cmd.batch [ command, config.send Lifecycle.observationsComplete ]
+        case updatedModel.specs of
+          [] ->
+            ( updatedModel, sendLifecycle Lifecycle.SpecComplete )
+          next :: remaining ->
+            ( { updatedModel | specs = remaining, current = next }, nextStep )
+    Lifecycle.SpecComplete ->
+      ( model, config.send Lifecycle.specComplete )
+    Lifecycle.ObserveSubject ->
+      case specRequirements model.current of
+        [] ->
+          ( model
+          , config.send Lifecycle.observationsComplete
           )
-        else
-          ( { model | current = setObservations remainingObservations model.current }
-          , command
+        next :: remaining ->
+          ( { model | current = setRequirements remaining model.current }
+          , next.expectation next.description config model.current
           )
-    AbortSpec reason ->
-      ( model
+    Lifecycle.ObservationComplete description verdict ->
+      let
+        (Spec spec) = model.current
+      in
+        ( model
+        , Cmd.batch
+          [ config.send <| Observer.observation spec.conditions description verdict
+          , sendLifecycle Lifecycle.ObserveSubject
+          ]
+        )
+    Lifecycle.AbortSpec reason ->
+      ( { model | current = setState Aborted model.current }
       , Cmd.batch
         [ Observer.Reject reason
             |> Observer.observation (conditions model.current) "A spec step failed"
@@ -272,46 +346,6 @@ lifecycleUpdate config msg model =
         , config.send Lifecycle.observationsComplete
         ]
       )
-
-
-processObservers : Config msg -> Spec model msg -> (Dict String (Observation model), Cmd (Msg msg))
-processObservers config (Spec spec) =
-  spec.observations
-    |> Dict.foldl (\key observation (remaining, command) ->
-      case observation.observer <| Subject.contextForObservation observation.key spec.subject of
-        Observer.Inquire message ->
-          ( Dict.insert key observation remaining
-          , config.send <| Observer.inquiry observation.key message
-          )
-        Observer.Render verdict ->
-          ( remaining
-          , Cmd.batch 
-            [ Observer.observation spec.conditions observation.description verdict
-                |> config.send
-            , command
-            ]
-          )
-    ) (Dict.empty, Cmd.none)
-
-
-handleLifecycleCommand : Model model msg -> Lifecycle.Command -> ( Model model msg, Cmd (Msg msg) )
-handleLifecycleCommand model command =
-  case command of
-    Lifecycle.Start ->
-      ( model, nextStep )
-    Lifecycle.NextSpec ->
-      if specState model.current == Aborted then
-        ( model, sendLifecycle NextSpec )
-      else
-        ( { model | specs = List.append (scenarioSpecs model.current) model.specs }
-        , sendLifecycle NextSpec
-        )
-    Lifecycle.StartSteps ->
-      ( { model | current = setState Exercise model.current }, nextStep )
-    Lifecycle.NextStep ->
-      ( model, nextStep )
-    Lifecycle.AbortSpec reason ->
-      ( { model | current = setState Aborted model.current }, sendLifecycle <| AbortSpec reason )
 
 
 scenarioSpecs : Spec model msg -> List (Spec model msg)
@@ -328,34 +362,35 @@ scenarioSpecs (Spec spec) =
 
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
-  let
-    specSubject = subject model.current
-  in
-    Sub.batch
-    [ if specState model.current == Exercise then
-        specSubject.subscriptions specSubject.model
-          |> Sub.map ProgramMsg
-      else
-        Sub.none
-    , config.listen ReceivedMessage
-    ]
+  Sub.batch
+  [ if specState model.current == Exercise then
+      subject model.current
+        |> Subject.subscriptions
+        |> Sub.map ProgramMsg
+    else
+      Sub.none
+  , Procedure.Config.subscriptions model.procedureModel
+  ]
 
 
-init : List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
-init specs _ =
+init : Config msg -> List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
+init config specs _ =
   case specs of
     [] ->
       Elm.Kernel.Debug.todo "No specs!"
     spec :: remaining ->
-      ( { specs = remaining, current = spec }
-      , Cmd.none
+      ( { specs = remaining, current = spec, procedureModel = Procedure.Config.init }
+      , Cmd.batch
+        [ receiveLifecycleMessages config
+        , receiveEffectMessages config
+        ]
       )
 
 
 program : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
 program config specs =
   Platform.worker
-    { init = init specs
+    { init = init config specs
     , update = update config
     , subscriptions = subscriptions config
     }
@@ -395,6 +430,16 @@ setSteps steps (Spec spec) =
   Spec { spec | steps = steps }
 
 
+specRequirements : Spec model msg -> List (Requirement model msg)
+specRequirements (Spec spec) =
+  spec.requirements
+
+
+setRequirements : List (Requirement model msg) -> Spec model msg -> Spec model msg
+setRequirements requirements (Spec spec) =
+  Spec { spec | requirements = requirements }
+
+
 addCondition : String -> Spec model msg -> Spec model msg
 addCondition condition (Spec spec) =
   if List.member condition spec.conditions then
@@ -406,13 +451,3 @@ addCondition condition (Spec spec) =
 conditions : Spec model msg -> List String
 conditions (Spec spec) =
   spec.conditions
-
-
-observations : Spec model msg -> Dict String (Observation model)
-observations (Spec spec) =
-  spec.observations
-
-
-setObservations : Dict String (Observation model) -> Spec model msg -> Spec model msg
-setObservations specObservations (Spec spec) =
-  Spec { spec | observations = specObservations }

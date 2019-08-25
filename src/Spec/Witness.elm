@@ -6,8 +6,9 @@ module Spec.Witness exposing
   , hasReports
   )
 
+import Spec exposing (Expectation)
+import Spec.Actual as Actual
 import Spec.Subject as Subject exposing (Subject)
-import Spec.Context exposing (Context)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer)
 import Json.Encode as Encode
@@ -37,21 +38,24 @@ spy name (Witness witness) =
     }
 
 
-expect : String -> Observer (List Report) -> Observer (Context model)
-expect name reportObserver context =
-  verdict name reportObserver context
-    |> Observer.mapRejection (\reason ->
-        "Expected witness\n\t" ++ name ++ reason
+expect : String -> Observer (List Report) -> Expectation model msg
+expect name reportObserver =
+  Actual.effects
+    |> Actual.map (filterReportsForWitness name)
+    |> Spec.expect (\reports ->
+      case reportObserver reports of
+        Observer.Accept ->
+          Observer.Accept
+        Observer.Reject reason ->
+          Observer.Reject <| "Expected witness\n\t" ++ name ++ reason
     )
 
 
-verdict : String -> Observer (List Report) -> Observer (Context model)
-verdict name reportObserver context =
-  context.effects
-    |> List.filter (Message.is "_witness" "spy")
+filterReportsForWitness : String -> List Message -> List Report
+filterReportsForWitness name messages =
+  List.filter (Message.is "_witness" "spy") messages
     |> List.filterMap (Message.decode reportDecoder)
     |> List.filter (\report -> report.name == name)
-    |> reportObserver
 
 
 reportDecoder : Json.Decoder (Report)
@@ -63,9 +67,9 @@ reportDecoder =
 hasReports : Int -> Observer (List Report)
 hasReports times reports =
   if times == List.length reports then
-    Observer.accept
+    Observer.Accept
   else
-    Observer.reject <|
+    Observer.Reject <|
       "\nto have been called " ++ timesString times ++ ", but it was called " ++
       (timesString <| List.length reports) ++ "."
 

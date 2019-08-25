@@ -3,7 +3,7 @@ module Specs.InitWorkerSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Observer as Observer
-import Spec.Context as Context
+import Spec.Actual as Actual
 import Runner
 import Task
 
@@ -15,9 +15,9 @@ usesModelFromInitSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "uses the given model" (
-    Context.expectModel <|
-      \model ->
-        Observer.isEqual 41 model.count
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 41)
   )
 
 
@@ -28,9 +28,9 @@ usesCommandFromInitSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "updates the model" (
-    Context.expectModel <|
-      \model ->
-        Observer.isEqual 33 model.count
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 33)
   )
 
 
@@ -53,15 +53,12 @@ testInitWithCommand number =
   )
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "modelNoCommandInit" ->
-      usesModelFromInitSpec
-    "modelAndCommandInit" ->
-      usesCommandFromInitSpec
-    _ ->
-      usesModelFromInitSpec
+    "modelNoCommandInit" -> Just usesModelFromInitSpec
+    "modelAndCommandInit" -> Just usesCommandFromInitSpec
+    _ -> Nothing
 
 
 type Msg

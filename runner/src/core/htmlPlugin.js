@@ -8,7 +8,7 @@ module.exports = class HtmlPlugin {
 
   handle(specMessage, out, abort) {
     switch (specMessage.name) {
-      case "select":
+      case "select": {
         const selector = specMessage.body.selector
         const element = this.document.querySelector(selector)
         out({
@@ -22,6 +22,7 @@ module.exports = class HtmlPlugin {
           }
         })
         break
+      }
       case "target": {
         const element = this.document.querySelector(specMessage.body)
         if (element == null) {

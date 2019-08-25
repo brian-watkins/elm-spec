@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 import Spec.Subject as Subject
 import Spec.Observer as Observer
-import Spec.Context as Context
+import Spec.Actual as Actual
 import Runner as TestRunner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -17,9 +17,9 @@ passingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Context.expectModel <|
-        \model ->
-          Observer.isEqual 99 model.count
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 99)
   )
 
 
@@ -30,9 +30,9 @@ failingSpec =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Context.expectModel <|
-        \model ->
-          Observer.isEqual 76 model.count
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 76)
   )
 
 
@@ -43,16 +43,16 @@ specWithAScenario =
       |> Subject.withUpdate testUpdate
   )
   |> Spec.it "contains the expected value" (
-      Context.expectModel <|
-        \model ->
-          Observer.isEqual 108 model.count
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 108)
   )
   |> Spec.suppose (
     Spec.given "another scenario"
       >> Spec.it "contains a different value" (
-        Context.expectModel <|
-          \model ->
-            Observer.isEqual 94 model.count
+        Actual.model
+          |> Actual.map .count
+          |> Spec.expect (Observer.isEqual 94)
       )
   )
 

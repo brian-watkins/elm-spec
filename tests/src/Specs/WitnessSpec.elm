@@ -61,9 +61,9 @@ testSubscriptions _ =
   witnessSpecSub ReceivedNumber
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
-  spySpec
+  Just spySpec
 
 
 main =

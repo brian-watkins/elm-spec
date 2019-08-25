@@ -4,8 +4,9 @@ module Spec.Port exposing
   , expect
   )
 
+import Spec exposing (Expectation)
 import Spec.Subject as Subject exposing (Subject)
-import Spec.Context exposing (Context)
+import Spec.Actual as Actual
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -39,9 +40,11 @@ send name value _ =
   sendSubscription name value
 
 
-expect : String -> Json.Decoder a -> Observer (List a) -> Observer (Context model)
-expect name decoder observer context =
-  context.effects
-    |> List.filter (Message.is "_port" "received")
-    |> List.filterMap (Message.decode decoder)
-    |> observer
+expect : String -> Json.Decoder a -> Observer (List a) -> Expectation model msg
+expect name decoder observer =
+  Actual.effects
+    |> Actual.map (\messages ->
+      List.filter (Message.is "_port" "received") messages
+        |> List.filterMap (Message.decode decoder)
+    )
+    |> Spec.expect observer

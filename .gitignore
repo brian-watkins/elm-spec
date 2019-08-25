@@ -1,3 +1,6 @@
 node_modules
 elm-stuff
 tests/specs.js
+
+src/Procedure
+src/Procedure.elm

@@ -44,15 +44,12 @@ testUpdate _ model =
   ( model, Cmd.none )
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "one" ->
-      witnessPortCommandFromInitSpec
-    "many" ->
-      witnessMultiplePortCommandsFromInitSpec
-    _ ->
-      witnessPortCommandFromInitSpec
+    "one" -> Just witnessPortCommandFromInitSpec
+    "many" -> Just witnessMultiplePortCommandsFromInitSpec
+    _ -> Nothing
 
 
 type Msg

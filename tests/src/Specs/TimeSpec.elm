@@ -5,7 +5,7 @@ import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Time
 import Spec.Observer as Observer
-import Spec.Context as Context
+import Spec.Actual as Actual
 import Runner
 import Task
 import Json.Encode as Encode
@@ -27,9 +27,9 @@ countTimePassingSpec =
     , Spec.Time.tick 1000
     ]
   |> Spec.it "updates the model" (
-    Context.expectModel <|
-      \model ->
-        Observer.isEqual 4 model.count
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 4)
   )
 
 
@@ -40,9 +40,9 @@ testUpdate msg model =
       ( { model | count = model.count + 1 }, Cmd.none )
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
-  countTimePassingSpec
+  Just countTimePassingSpec
 
 
 type Msg

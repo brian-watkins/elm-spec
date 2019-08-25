@@ -9,7 +9,7 @@ describe("spec", () => {
     })
 
     it("sends all the conditions", (done) => {
-      expectPassingSpec("SpecSpec", "", done, (observations) => {
+      expectPassingSpec("SpecSpec", "multipleWhen", done, (observations) => {
         expect(observations[0].conditions).to.deep.equal([
           "Given a test worker",
           "When the first sub is sent",

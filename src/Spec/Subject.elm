@@ -10,12 +10,11 @@ module Spec.Subject exposing
   , withView
   , update
   , render
-  , contextForObservation
+  , subscriptions
   )
 
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer
-import Spec.Context exposing (Context)
 import Html exposing (Html)
 
 
@@ -88,14 +87,6 @@ render subject =
   subject.view subject.model
 
 
-contextForObservation : String -> Subject model msg -> Context model
-contextForObservation key subject =
-  { model = subject.model
-  , effects = subject.effects
-  , inquiries =
-      subject.effects
-        |> List.filter (Message.is "_observer" "inquiryResult")
-        |> List.filterMap (Message.decode Observer.inquiryDecoder)
-        |> List.filter (\inquiry -> inquiry.key == key)
-        |> List.map .message
-  }
+subscriptions : Subject model msg -> Sub msg
+subscriptions subject =
+  subject.subscriptions subject.model

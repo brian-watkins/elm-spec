@@ -11,7 +11,9 @@ describe("html plugin", () => {
 
   context("when there are multiple distinct (deferred) observations about the html", () => {
     it("handles selecting the appropriate element for each observation", (done) => {
-      expectPassingBrowserSpec("HtmlSpec", "multiple", done)
+      expectPassingBrowserSpec("HtmlSpec", "multiple", done, (observations) => {
+        expect(observations).to.have.length(4)
+      })
     })  
   })
 
@@ -39,7 +41,6 @@ describe("html plugin", () => {
     context("when the target fails to select an element", () => {
       it("fails before any observations or other scenarios and reports the reason", (done) => {
         expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
-          console.log(observations)
           expect(observations).to.have.length(1)
           expect(observations[0].message).to.equal("No match for selector: #some-element-that-does-not-exist")
         })

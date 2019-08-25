@@ -1,7 +1,7 @@
 module Spec.Lifecycle exposing
-  ( Command(..)
+  ( Msg(..)
   , isLifecycleMessage
-  , commandFrom
+  , toMsg
   , configureComplete
   , stepComplete
   , observationsComplete
@@ -14,11 +14,14 @@ import Json.Encode as Encode exposing (Value)
 import Json.Decode as Json
 
 
-type Command
+type Msg
   = Start
+  | NextStep
   | NextSpec
   | StartSteps
-  | NextStep
+  | SpecComplete
+  | ObserveSubject
+  | ObservationComplete String Verdict
   | AbortSpec String
 
 
@@ -27,33 +30,34 @@ isLifecycleMessage =
   Message.belongsTo "_spec"
 
 
-commandFrom : Message -> Maybe Command
-commandFrom message =
+toMsg : Message -> Msg
+toMsg message =
   case message.name of
     "state" ->
       Message.decode Json.string message
-        |> Maybe.andThen toCommand
+        |> Maybe.map toStateMsg
+        |> Maybe.withDefault (AbortSpec "Unable to parse lifecycle state event!")
     "abort" ->
       Message.decode Json.string message
-        |> Maybe.withDefault "Spec aborted for unknown reason!"
-        |> Just << AbortSpec
-    _ ->
-      Nothing
+        |> Maybe.withDefault "Unable to parse abort spec event!"
+        |> AbortSpec
+    unknown ->
+      AbortSpec <| "Unknown lifecycle event: " ++ unknown
 
 
-toCommand : String -> Maybe Command
-toCommand specState =
+toStateMsg : String -> Msg
+toStateMsg specState =
   case specState of
     "START" ->
-      Just Start
+      Start
     "NEXT_SPEC" ->
-      Just NextSpec
+      NextSpec
     "START_STEPS" ->
-      Just StartSteps
+      StartSteps
     "NEXT_STEP" ->
-      Just NextStep
-    _ ->
-      Nothing
+      NextStep
+    unknown ->
+      AbortSpec <| "Unknown lifecycle state: " ++ unknown
 
 
 configureComplete : Message

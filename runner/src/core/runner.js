@@ -91,9 +91,7 @@ module.exports = class Core extends EventEmitter {
   handleStateChange(state, out) {
     switch (state) {
       case "CONFIGURE_COMPLETE":
-        setTimeout(() => {
-          out({ home: "_spec", name: "state", body: "START_STEPS" })
-        }, 0)
+        out({ home: "_spec", name: "state", body: "START_STEPS" })
         break
       case "STEP_COMPLETE":
         if (this.timer) clearTimeout(this.timer)
@@ -103,10 +101,8 @@ module.exports = class Core extends EventEmitter {
         }, 0)
         break
       case "OBSERVATIONS_COMPLETE":
-        setTimeout(() => {
-          this.timePlugin.reset()
-          out({ home: "_spec", name: "state", body: "NEXT_SPEC" })
-        }, 0)
+        this.timePlugin.reset()
+        out({ home: "_spec", name: "state", body: "NEXT_SPEC" })
         break
       case "SPEC_COMPLETE":
         this.emit('complete')

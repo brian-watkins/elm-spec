@@ -3,11 +3,11 @@ port module Specs.HtmlSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Html as Markup
+import Spec.Actual as Actual
 import Spec.Html.Selector exposing (..)
 import Spec.Html.Event as Event
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Context as Context
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -40,6 +40,17 @@ htmlSpecMultiple =
   |> Spec.it "renders the count based on the model" (
     Markup.select << by [ id "my-count" ]
       |> Markup.expect (Markup.hasText "The count is 78!")
+  )
+  |> Spec.suppose (
+    Spec.given "another scenario"
+      >> Spec.it "finds a third thing" (
+        Markup.select << by [ id "my-label" ]
+          |> Markup.expect (Markup.hasText "Here is a label")
+      )
+      >> Spec.it "finds a fourth thing" (
+        Markup.select << by [ id "my-label-2" ]
+          |> Markup.expect (Markup.hasText "Another label")
+      )
   )
 
 
@@ -125,8 +136,9 @@ subSpec =
       |> Markup.expect (Markup.hasText "The count is 40!")
   )
   |> Spec.it "updates the model" (
-    Context.expectModel <| \model ->
-      Observer.isEqual model.count 40
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 40)
   )
 
 
@@ -135,6 +147,10 @@ testView model =
   Html.div []
   [ Html.div [ Attr.id "my-name" ] [ Html.text <| "Hello, " ++ model.name ++ "!" ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
+  , Html.div []
+    [ Html.div [ Attr.id "my-label" ] [ Html.text "Here is a label" ]
+    , Html.div [ Attr.id "my-label-2" ] [ Html.text "Another label" ]
+    ]
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "Click me!" ]
   ]
@@ -187,16 +203,16 @@ testSubscriptions model =
 port htmlSpecSub : (Int -> msg) -> Sub msg
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "single" -> htmlSpecSingle
-    "multiple" -> htmlSpecMultiple
-    "hasTextFails" -> hasTextFails
-    "click" -> clickSpec
-    "sub" -> subSpec
-    "targetUnknown" -> targetUnknownSpec
-    _ -> htmlSpecSingle
+    "single" -> Just htmlSpecSingle
+    "multiple" -> Just htmlSpecMultiple
+    "hasTextFails" -> Just hasTextFails
+    "click" -> Just clickSpec
+    "sub" -> Just subSpec
+    "targetUnknown" -> Just targetUnknownSpec
+    _ -> Nothing
 
 
 main =

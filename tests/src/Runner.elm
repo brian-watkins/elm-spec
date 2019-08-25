@@ -28,24 +28,28 @@ type alias Flags =
   }
 
 
-init : (String -> Spec model msg) -> Flags -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
-init specLocator flags =
-  Spec.init [ specLocator flags.specName ] ()
+init : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
+init specConfig specLocator flags =
+  case specLocator flags.specName of
+    Just spec ->
+      Spec.init specConfig [ spec ] ()
+    Nothing ->
+      Debug.todo <| "Unknown spec: " ++ flags.specName
 
 
-program : (String -> Spec model msg) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
+program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 program specLocator =
   Platform.worker
-    { init = init specLocator
+    { init = init config specLocator
     , update = Spec.update config
     , subscriptions = Spec.subscriptions config
     }
   
 
-browserProgram : (String -> Spec model msg) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
+browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 browserProgram specLocator =
   Browser.element
-    { init = init specLocator
+    { init = init config specLocator
     , update = Spec.update config
     , view = Spec.view
     , subscriptions = Spec.subscriptions config

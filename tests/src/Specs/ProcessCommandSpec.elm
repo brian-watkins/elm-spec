@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Context as Context
+import Spec.Actual as Actual
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -49,9 +49,9 @@ processBatchedTerminatingAndNoCallbackCommands =
           |> Observer.isEqual 21
   )
   |> Spec.it "it ends up with the right tally" (
-    Context.expectModel <|
-      \model ->
-        Observer.isEqual 35 model.num
+    Actual.model
+      |> Actual.map .num
+      |> Spec.expect (Observer.isEqual 35)
   )
 
 
@@ -88,13 +88,12 @@ sendTerminatingCommand number =
     |> Task.perform Tally
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "terminatingAndNonTerminating" ->
-      processBatchedTerminatingAndNoCallbackCommands
-    _ ->
-      processCommandSpec
+    "terminatingAndNonTerminating" -> Just processBatchedTerminatingAndNoCallbackCommands
+    "processCommand" -> Just processCommandSpec
+    _ -> Nothing
 
 
 type alias SuperObject =

@@ -52,9 +52,9 @@ testView model =
   ]
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
-  inputSpec
+  Just inputSpec
 
 
 main =

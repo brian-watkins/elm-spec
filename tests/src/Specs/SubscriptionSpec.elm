@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Context as Context
+import Spec.Actual as Actual
 import Runner
 import Task
 import Json.Encode as Encode
@@ -22,9 +22,9 @@ sendsSubscriptionSpec =
     , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
     ]
   |> Spec.it "updates the model" (
-    Context.expectModel <|
-      \model ->
-        Observer.isEqual 78 model.count
+    Actual.model
+      |> Actual.map .count
+      |> Spec.expect (Observer.isEqual 78)
   )
 
 
@@ -35,9 +35,9 @@ testUpdate msg model =
       ( { model | count = superObject.number }, Cmd.none )
 
 
-selectSpec : String -> Spec Model Msg
+selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
-  sendsSubscriptionSpec
+  Just sendsSubscriptionSpec
 
 
 type alias SuperObject =
@@ -60,6 +60,7 @@ port listenForSuperObject : (SuperObject -> msg) -> Sub msg
 testSubscriptions : Model -> Sub Msg
 testSubscriptions model =
   listenForSuperObject ReceivedSuperObject
+
 
 main =
   Runner.program selectSpec
