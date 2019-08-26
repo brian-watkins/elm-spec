@@ -8,6 +8,7 @@ module Spec.Observer exposing
   )
 
 import Spec.Message as Message exposing (Message)
+import Spec.Observer.Report as Report exposing (Report)
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -24,7 +25,7 @@ type alias Inquiry =
 
 type Verdict
   = Accept
-  | Reject String
+  | Reject Report
 
 
 inquiry : String -> Message -> Message
@@ -67,11 +68,11 @@ verdictAttributes verdict =
   case verdict of
     Accept ->
       [ ("summary", Encode.string "ACCEPT")
-      , ("message", Encode.null)
+      , ("report", Encode.null)
       ]
-    Reject reason ->
+    Reject report ->
       [ ("summary", Encode.string "REJECT")
-      , ("message", Encode.string reason)
+      , ("report", Report.encoder report)
       ]
 
 
@@ -80,7 +81,10 @@ isEqual expected actual =
   if expected == actual then
     Accept
   else
-    Reject <| "Expected " ++ (toString expected) ++ " to equal " ++ (toString actual) ++ ", but it does not."
+    Reject <| Report.batch
+      [ Report.fact "Expected" <| toString expected
+      , Report.fact "to equal" <| toString actual
+      ]
       
 
 toString : a -> String

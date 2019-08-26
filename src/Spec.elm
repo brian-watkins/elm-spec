@@ -17,6 +17,7 @@ module Spec exposing
   )
 
 import Spec.Observer as Observer exposing (Observer, Verdict)
+import Spec.Observer.Report as Report
 import Spec.Message as Message exposing (Message)
 import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
@@ -140,7 +141,7 @@ expect observer actual description config (Spec spec) =
           Message.decode Observer.inquiryDecoder inquiry
             |> Maybe.map .message
             |> Maybe.map (mapper >> observer)
-            |> Maybe.withDefault (Observer.Reject "Unable to decode inquiry result!")
+            |> Maybe.withDefault (Observer.Reject <| Report.note "Unable to decode inquiry result!")
         )
         |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
 
@@ -337,10 +338,10 @@ lifecycleUpdate config msg model =
           , sendLifecycle Lifecycle.ObserveSubject
           ]
         )
-    Lifecycle.AbortSpec reason ->
+    Lifecycle.AbortSpec report ->
       ( { model | current = setState Aborted model.current }
       , Cmd.batch
-        [ Observer.Reject reason
+        [ Observer.Reject report
             |> Observer.observation (conditions model.current) "A spec step failed"
             |> config.send
         , config.send Lifecycle.observationsComplete

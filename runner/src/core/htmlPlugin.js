@@ -27,7 +27,10 @@ module.exports = class HtmlPlugin {
       case "target": {
         const element = this.document.querySelector(specMessage.body)
         if (element == null) {
-          abort(`No match for selector: ${specMessage.body}`)
+          abort([{
+            statement: "No match for selector",
+            detail: specMessage.body
+          }])
         } else {
           out(specMessage)
         }

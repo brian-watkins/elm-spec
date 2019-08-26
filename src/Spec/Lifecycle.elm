@@ -10,6 +10,7 @@ module Spec.Lifecycle exposing
 
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Verdict(..))
+import Spec.Observer.Report as Report exposing (Report)
 import Json.Encode as Encode exposing (Value)
 import Json.Decode as Json
 
@@ -22,7 +23,7 @@ type Msg
   | SpecComplete
   | ObserveSubject
   | ObservationComplete String Verdict
-  | AbortSpec String
+  | AbortSpec Report
 
 
 isLifecycleMessage : Message -> Bool
@@ -36,13 +37,13 @@ toMsg message =
     "state" ->
       Message.decode Json.string message
         |> Maybe.map toStateMsg
-        |> Maybe.withDefault (AbortSpec "Unable to parse lifecycle state event!")
+        |> Maybe.withDefault (AbortSpec <| Report.note "Unable to parse lifecycle state event!")
     "abort" ->
-      Message.decode Json.string message
-        |> Maybe.withDefault "Unable to parse abort spec event!"
+      Message.decode Report.decoder message
+        |> Maybe.withDefault (Report.note "Unable to parse abort spec event!")
         |> AbortSpec
     unknown ->
-      AbortSpec <| "Unknown lifecycle event: " ++ unknown
+      AbortSpec <| Report.fact "Unknown lifecycle event" unknown
 
 
 toStateMsg : String -> Msg
@@ -57,7 +58,7 @@ toStateMsg specState =
     "NEXT_STEP" ->
       NextStep
     unknown ->
-      AbortSpec <| "Unknown lifecycle state: " ++ unknown
+      AbortSpec <| Report.fact "Unknown lifecycle state" unknown
 
 
 configureComplete : Message

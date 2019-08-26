@@ -8,6 +8,7 @@ import Spec.Html.Selector exposing (..)
 import Spec.Html.Event as Event
 import Spec.Port as Port
 import Spec.Observer as Observer
+import Spec.Observer.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -165,7 +166,7 @@ manyElementsSpec =
         List.drop 2 elements
           |> List.head
           |> Maybe.map (Markup.hasText "The count is 7!")
-          |> Maybe.withDefault (Observer.Reject "Element not found!")
+          |> Maybe.withDefault (Observer.Reject <| Report.note "Element not found!")
       )
   )
 

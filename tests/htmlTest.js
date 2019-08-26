@@ -16,7 +16,10 @@ describe("html plugin", () => {
     it("fails when selecting an element that does not exist", (done) => {
       expectBrowserSpec("HtmlSpec", "single", done, (observations) => {
         expect(observations[1].summary).to.equal("REJECT")
-        expect(observations[1].message).to.equal("No element matches selector:\n\t#something-not-present")
+        expect(observations[1].report).to.deep.equal([{
+          statement: "No element matches selector",
+          detail: "#something-not-present"
+        }])
       })
     })
   })
@@ -38,7 +41,10 @@ describe("html plugin", () => {
   context("hasText", () => {
     it("prints the proper error message", (done) => {
       expectFailingBrowserSpec("HtmlSpec", "hasTextFails", done, (observations) => {
-        expect(observations[0].message).to.equal("Expected text\n\tSomething not present\nbut the actual text was\n\tHello, Cool Dude!")
+        expect(observations[0].report).to.deep.equal([
+          { statement: "Expected text", detail: "Something not present" }, 
+          { statement: "but the actual text was", detail: "Hello, Cool Dude!" }
+        ])
       })
     })
   })
@@ -54,7 +60,10 @@ describe("html plugin", () => {
       it("fails before any observations or other scenarios and reports the reason", (done) => {
         expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
           expect(observations).to.have.length(1)
-          expect(observations[0].message).to.equal("No match for selector: #some-element-that-does-not-exist")
+          expect(observations[0].report).to.deep.equal([{
+            statement: "No match for selector",
+            detail: "#some-element-that-does-not-exist"
+          }])
         })
       })
 

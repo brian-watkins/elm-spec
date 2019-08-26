@@ -1,9 +1,10 @@
 module Spec.Witness exposing
   ( Witness
+  , Statement
   , forUpdate
   , spy
   , expect
-  , hasReports
+  , hasStatements
   )
 
 import Spec exposing (Expectation)
@@ -11,6 +12,7 @@ import Spec.Actual as Actual
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Observer.Report as Report
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -19,7 +21,7 @@ type Witness msg =
   Witness (Message -> Cmd msg)
 
 
-type alias Report =
+type alias Statement =
   { name: String
   }
 
@@ -38,40 +40,44 @@ spy name (Witness witness) =
     }
 
 
-expect : String -> Observer (List Report) -> Expectation model msg
-expect name reportObserver =
+expect : String -> Observer (List Statement) -> Expectation model msg
+expect name observer =
   Actual.effects
-    |> Actual.map (filterReportsForWitness name)
-    |> Spec.expect (\reports ->
-      case reportObserver reports of
+    |> Actual.map (filterStatementsFromWitness name)
+    |> Spec.expect (\statements ->
+      case observer statements of
         Observer.Accept ->
           Observer.Accept
-        Observer.Reject reason ->
-          Observer.Reject <| "Expected witness\n\t" ++ name ++ reason
+        Observer.Reject report ->
+          Observer.Reject <| Report.batch
+            [ Report.fact "Expected witness" name
+            , report
+            ]
     )
 
 
-filterReportsForWitness : String -> List Message -> List Report
-filterReportsForWitness name messages =
+filterStatementsFromWitness : String -> List Message -> List Statement
+filterStatementsFromWitness name messages =
   List.filter (Message.is "_witness" "spy") messages
-    |> List.filterMap (Message.decode reportDecoder)
-    |> List.filter (\report -> report.name == name)
+    |> List.filterMap (Message.decode statementDecoder)
+    |> List.filter (\statement -> statement.name == name)
 
 
-reportDecoder : Json.Decoder (Report)
-reportDecoder =
-  Json.map Report
+statementDecoder : Json.Decoder (Statement)
+statementDecoder =
+  Json.map Statement
     ( Json.field "name" Json.string )
 
 
-hasReports : Int -> Observer (List Report)
-hasReports times reports =
-  if times == List.length reports then
+hasStatements : Int -> Observer (List Statement)
+hasStatements times statements =
+  if times == List.length statements then
     Observer.Accept
   else
-    Observer.Reject <|
-      "\nto have been called " ++ timesString times ++ ", but it was called " ++
-      (timesString <| List.length reports) ++ "."
+    Observer.Reject <| Report.batch
+      [ Report.fact "to have been called" <| timesString times
+      , Report.fact "but it was called" <| timesString <| List.length statements
+      ]
 
 
 timesString : Int -> String

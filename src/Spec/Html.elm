@@ -11,6 +11,7 @@ module Spec.Html exposing
 import Spec exposing (Expectation)
 import Spec.Actual as Actual
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Observer.Report as Report
 import Spec.Subject exposing (Subject)
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -101,7 +102,7 @@ expectElement observer selectionGenerator =
           Just element ->
             observer element
           Nothing ->
-            Observer.Reject <| "No element matches selector:\n\t" ++ (toString selection)
+            Observer.Reject <| Report.fact "No element matches selector" (toString selection)
       )
 
 
@@ -148,7 +149,10 @@ hasText expectedText element =
   if List.member expectedText <| flattenTexts element.children then
     Observer.Accept
   else
-    Observer.Reject <| "Expected text\n\t" ++ expectedText ++ "\nbut the actual text was\n\t" ++ (String.join ", " (flattenTexts element.children))
+    Observer.Reject <| Report.batch
+      [ Report.fact "Expected text" expectedText
+      , Report.fact "but the actual text was" <| String.join ", " <| flattenTexts element.children
+      ]
 
 
 flattenTexts : List HtmlNode -> List String

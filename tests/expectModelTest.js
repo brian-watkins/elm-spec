@@ -8,7 +8,10 @@ describe("Expect Model", () => {
     it("sends a failure message", (done) => {
       expectFailingSpec("ExpectModelSpec", "failing", done, (observations) => {
         expect(observations).to.have.length(1)
-        expect(observations[0].message).to.equal("Expected 17 to equal 99, but it does not.")
+        expect(observations[0].report).to.deep.equal([
+          { statement: "Expected", detail: "17" },
+          { statement: "to equal", detail: "99" }
+        ])
       })
     })
 
@@ -41,7 +44,10 @@ describe("Expect Model", () => {
         expect(observations[0].description).to.equal("It contains the expected number")
         expect(observations[1].summary).to.equal("REJECT")
         expect(observations[1].description).to.equal("It contains the expected name")
-        expect(observations[1].message).to.equal("Expected \"awesome-spec\" to equal \"fun-spec\", but it does not.")
+        expect(observations[1].report).to.deep.equal([
+          { statement: "Expected", detail: "\"awesome-spec\"" },
+          { statement: "to equal", detail: "\"fun-spec\"" }
+        ])
       })
     })
   })

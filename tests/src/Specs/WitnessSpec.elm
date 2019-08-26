@@ -21,18 +21,18 @@ spySpec =
     [ Port.send "witnessSpecSub" <| Encode.int 88
     ]
   |> Spec.it "records the call to the injected function" (
-    Witness.expect "injected" (Witness.hasReports 1)
+    Witness.expect "injected" (Witness.hasStatements 1)
   )
   |> Spec.suppose (
-    Spec.given "the witness has no reports"
+    Spec.given "the witness has no statements"
       >> Spec.it "fails" (
-        Witness.expect "some-other-witness" (Witness.hasReports 1)
+        Witness.expect "some-other-witness" (Witness.hasStatements 1)
       )
   )
   |> Spec.suppose (
-    Spec.given "the witness has too few reports"
+    Spec.given "the witness has too few statements"
       >> Spec.it "fails" (
-        Witness.expect "injected" (Witness.hasReports 17)
+        Witness.expect "injected" (Witness.hasStatements 17)
       )
   )
 
