@@ -91,10 +91,18 @@ selectAllHtml selection =
 
 expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model msg
 expectElement observer selectionGenerator =
-  Actual.inquire (selectHtml <| selectionGenerator ())
-    |> Actual.map (Message.decode htmlDecoder)
-    |> Actual.map (Maybe.withDefault emptyElement)
-    |> Spec.expect observer
+  let
+    selection = selectionGenerator ()
+  in
+    Actual.inquire (selectHtml selection)
+      |> Actual.map (Message.decode htmlDecoder)
+      |> Spec.expect (\maybeElement ->
+        case maybeElement of
+          Just element ->
+            observer element
+          Nothing ->
+            Observer.Reject <| "No element matches selector:\n\t" ++ (toString selection)
+      )
 
 
 expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Expectation model msg

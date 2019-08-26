@@ -25,6 +25,10 @@ htmlSpecSingle =
     Markup.select << by [ id "my-name" ]
       |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
   )
+  |> Spec.it "does not find an element that is not there" (
+    Markup.select << by [ id "something-not-present" ]
+      |> Markup.expectElement (Markup.hasText "I should not be present!")
+  )
 
 
 htmlSpecMultiple : Spec Model Msg

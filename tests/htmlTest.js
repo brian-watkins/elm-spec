@@ -1,11 +1,23 @@
 const chai = require('chai')
 const expect = chai.expect
-const { expectFailingBrowserSpec, expectPassingBrowserSpec } = require("./helpers/SpecHelpers")
+const { 
+  expectFailingBrowserSpec,
+  expectPassingBrowserSpec,
+  expectBrowserSpec
+} = require("./helpers/SpecHelpers")
 
 describe("html plugin", () => {
-  context("when there is a single observation", () => {
-    it("renders the view as necessary for the spec", (done) => {
-      expectPassingBrowserSpec("HtmlSpec", "single", done)
+  context("when a single element is selected", () => {
+    it("selects an existing element", (done) => {
+      expectBrowserSpec("HtmlSpec", "single", done, (observations) => {
+        expect(observations[0].summary).to.equal("ACCEPT")
+      })
+    })
+    it("fails when selecting an element that does not exist", (done) => {
+      expectBrowserSpec("HtmlSpec", "single", done, (observations) => {
+        expect(observations[1].summary).to.equal("REJECT")
+        expect(observations[1].message).to.equal("No element matches selector:\n\t#something-not-present")
+      })
     })
   })
 

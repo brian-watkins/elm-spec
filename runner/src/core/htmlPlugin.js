@@ -11,7 +11,11 @@ module.exports = class HtmlPlugin {
       case "select": {
         const selector = specMessage.body.selector
         const element = this.document.querySelector(selector)
-        out(this.selected(this.describeElement(element)))
+        if (element) {
+          out(this.selected(this.describeElement(element)))
+        } else {
+          out(this.elementNotFound())
+        }
         break
       }
       case "selectAll": {
@@ -52,6 +56,14 @@ module.exports = class HtmlPlugin {
       home: "_html",
       name: "selected",
       body: body
+    }
+  }
+
+  elementNotFound() {
+    return {
+      home: "_html",
+      name: "selected",
+      body: null
     }
   }
 

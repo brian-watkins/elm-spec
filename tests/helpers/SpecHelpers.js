@@ -58,6 +58,10 @@ exports.expectSpec = (specProgram, specName, done, matcher) => {
   runTestSpec(specProgram, specName, done, matcher)
 }
 
+exports.expectBrowserSpec = (specProgram, specName, done, matcher) => {
+  runBrowserTestSpec(specProgram, specName, done, matcher)
+}
+
 const compiler = new SpecCompiler({
   specPath: "./src/Specs/*Spec.elm",
   elmPath: "../node_modules/.bin/elm",
