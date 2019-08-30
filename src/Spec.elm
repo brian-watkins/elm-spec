@@ -13,6 +13,7 @@ module Spec exposing
   , init
   , subscriptions
   , program
+  , browserProgram
   , expect
   )
 
@@ -30,6 +31,7 @@ import Dict exposing (Dict)
 import Procedure.Program
 import Procedure
 import Procedure.Channel as Channel
+import Browser
 
 
 type Spec model msg =
@@ -396,6 +398,15 @@ program config specs =
     , subscriptions = subscriptions config
     }
 
+
+browserProgram : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+browserProgram config specs =
+  Browser.element
+    { init = init config specs
+    , view = view
+    , update = update config
+    , subscriptions = subscriptions config
+    }
 
 
 --- Helpers

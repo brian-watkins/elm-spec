@@ -2,7 +2,7 @@ const EventEmitter = require('events')
 const PortPlugin = require('./portPlugin')
 const TimePlugin = require('./timePlugin')
 
-module.exports = class Core extends EventEmitter {
+module.exports = class ProgramRunner extends EventEmitter {
   constructor(app, plugins) {
     super()
     this.app = app
@@ -22,6 +22,10 @@ module.exports = class Core extends EventEmitter {
         this.emit('error', err)
       }
     })
+
+    setTimeout(() => {
+      this.app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
+    }, 0)
   }
 
   handleMessage(specMessage, out) {

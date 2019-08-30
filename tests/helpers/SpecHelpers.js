@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const SpecRunner = require('../../runner/src/core/runner')
+const SpecRunner = require('../../runner/src/core/programRunner')
 const SpecCompiler = require('../../runner/src/node-runner/compiler')
 const GlobalContext = require('../../runner/src/node-runner/globalContext')
 const HtmlContext = require('../../runner/src/node-runner/htmlContext')
@@ -64,8 +64,7 @@ exports.expectBrowserSpec = (specProgram, specName, done, matcher) => {
 
 const compiler = new SpecCompiler({
   specPath: "./src/Specs/*Spec.elm",
-  elmPath: "../node_modules/.bin/elm",
-  outputPath: "./compiled-specs.js"
+  elmPath: "../node_modules/.bin/elm"
 })
 
 exports.globalContext = new GlobalContext(compiler)
@@ -112,6 +111,4 @@ exports.runSpec = (app, plugins, done, matcher) => {
       done(err)
     })
     .run()
-
-  app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
 }

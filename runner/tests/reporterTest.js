@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Reporter = require('../src/node-runner/reporter')
+const Reporter = require('../src/node-runner/consoleReporter')
 
 describe("reporter", () => {
   it("counts the number of accepted observations", () => {
@@ -34,17 +34,25 @@ describe("reporter", () => {
       subject.record(rejectedMessage({
         conditions: [ "Given a subject", "When something happens" ],
         description: "It does something else",
-        message: "Expected something else to happen but it did not"
+        report: [
+          { statement: "Expected the following", detail: "something" },
+          { statement: "to be", detail: "something else" },
+          { statement: "and a final statement", detail: null }
+        ]
       }))
     })
 
     it("writes the reason for rejection", () => {
       expect(lines).to.deep.equal([
-        "\nSubject does not satisfy the specification:\n",
+        "\nFailed to satisfy spec!\n",
         "\tGiven a subject",
         "\tWhen something happens",
         "\tIt does something else",
-        "\n\tExpected something else to happen but it did not\n"
+        "Expected the following",
+        "\tsomething",
+        "to be",
+        "\tsomething else",
+        "and a final statement"
       ])
     })
   })
@@ -58,11 +66,11 @@ const acceptedMessage = (data = { conditions: [], description: '' }) => {
   }
 }
 
-const rejectedMessage = (data = { conditions: [], description: '', message: '' }) => {
+const rejectedMessage = (data = { conditions: [], description: '', message: '', report: [] }) => {
   return {
     summary: 'REJECT',
     conditions: data.conditions,
     description: data.description,
-    message: data.message
+    report: data.report
   }
 }

@@ -1,3 +1,4 @@
+const HtmlPlugin = require('../core/htmlPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 
@@ -17,13 +18,28 @@ module.exports = class HtmlContext {
       .install({toFake: [ "requestAnimationFrame" ]})
   }
 
+  evaluateProgram(program, callback) {
+    this.execute((_, window) => {
+      const appElement = this.prepareForApp(window)
+      const app = this.initializeApp(program, appElement)
+      const plugins = this.generatePlugins(window, this.clock)
+      callback(app, plugins)
+    })
+  }
+
   evaluate(evaluator) {
+    this.execute((Elm, window) => {
+      const appElement = this.prepareForApp(window)
+      evaluator(Elm, appElement, this.clock, window)
+    })
+  }
+
+  execute(callback) {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
           this.dom.window.eval(compiledCode)
-          const appElement = this.prepareForApp(this.dom.window)
-          evaluator(this.dom.window.Elm, appElement, this.clock, this.dom.window)
+          callback(this.dom.window.Elm, this.dom.window)
         })
         .catch((err) => {
           console.log(err)
@@ -31,8 +47,19 @@ module.exports = class HtmlContext {
         })
     }
     else {
-      const appElement = this.prepareForApp(this.dom.window)
-      evaluator(this.dom.window.Elm, appElement, this.clock, this.dom.window)
+      callback(this.dom.window.Elm, this.dom.window)
+    }
+  }
+
+  initializeApp(program, element) {
+    return program.init({
+      node: element
+    })
+  }
+
+  generatePlugins(window, clock) {
+    return {
+      "_html": new HtmlPlugin(window, clock)
     }
   }
 
