@@ -20,4 +20,10 @@ describe("Selectors", () => {
       })
     })
   })
+
+  describe("attributeName", () => {
+    it("selects the element as expected", (done) => {
+      expectPassingBrowserSpec("SelectorSpec", "attributeName", done)
+    })
+  })
 })

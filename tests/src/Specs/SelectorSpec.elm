@@ -10,6 +10,18 @@ import Html.Events as Events
 import Runner
 
 
+attributeNameSelectorSpec : Spec () Msg
+attributeNameSelectorSpec =
+  Spec.given "an Html program that attempts to select by attribute name" (
+    Subject.initWithModel ()
+      |> Subject.withView testView
+  )
+  |> Spec.it "finds the element" (
+    Markup.select << by [ attributeName "data-fun" ]
+      |> Markup.expectElement (Markup.hasText "This is fun!")
+  )
+
+
 onlyOneTagAllowedSpec : Spec () Msg
 onlyOneTagAllowedSpec =
   Spec.given "an Html program that attempts to select by multiple tags" (
@@ -41,13 +53,13 @@ combinedTagSelectorSpec =
       |> Subject.withView testView
   )
   |> Spec.it "selects the text on the view" (
-    Markup.select << by [ tag "h1", id "fun-id" ]
+    Markup.select << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
       |> Markup.expectElement (Markup.hasText "This is an H1 tag")
   )
   |> Spec.suppose (
     Spec.given "an Html program that selects by id and tag"
     >> Spec.it "selects the text on the view" (
-      Markup.select << by [ id "fun-id", tag "h1" ]
+      Markup.select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
   )
@@ -62,7 +74,9 @@ testView _ =
   Html.div []
   [ Html.p [] []
   , Html.div []
-    [ Html.h1 [ Attr.id "fun-id" ] [ Html.text "This is an H1 tag" ] ]
+    [ Html.h1 [ Attr.id "fun-id", Attr.attribute "data-tag" "tag" ] [ Html.text "This is an H1 tag" ]
+    , Html.div [ Attr.attribute "data-fun" "something" ] [ Html.text "This is fun!" ]
+    ]
   ]
 
 
@@ -72,6 +86,7 @@ selectSpec name =
     "tag" -> Just tagSelectorSpec
     "combinedTag" -> Just combinedTagSelectorSpec
     "onlyOneTag" -> Just onlyOneTagAllowedSpec
+    "attributeName" -> Just attributeNameSelectorSpec
     _ -> Nothing
 
 

@@ -21,6 +21,7 @@ import Json.Decode as Json
 type Selector
   = Id String
   | Tag String
+  | AttributeName String
 
 
 type Selection
@@ -69,6 +70,8 @@ anyOtherSelectors selectors selString =
       case selector of
         Id name ->
           output ++ "#" ++ name
+        AttributeName name ->
+          output ++ "[" ++ name ++ "]"
         _ ->
           output  
     ) selString
