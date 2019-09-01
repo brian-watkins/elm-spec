@@ -212,7 +212,7 @@ type State model msg
   | Configure (Spec model msg)
   | Exercise (Spec model msg) (ExerciseModel model msg)
   | Observe (Spec model msg) (ObserveModel model msg)
-  | Abort (Spec model msg)
+  | Abort
 
 
 type alias StateModel model a =
@@ -353,12 +353,12 @@ lifecycleUpdate config msg model =
                   |> currentSubject observeModel
                   |> requirement.expectation requirement.description config
               )
-        Abort _ ->
+        Abort ->
           ( model, config.send Lifecycle.specComplete )
     Lifecycle.Abort report ->
       case model.state of
         Exercise spec exerciseModel ->
-          ( { model | state = Abort spec }
+          ( { model | state = Abort }
           , Observer.Reject report
               |> Observer.observation exerciseModel.conditionsApplied "A spec step failed"
               |> config.send
