@@ -9,6 +9,7 @@ module.exports = class HtmlPlugin {
   handle(specMessage, out, abort) {
     switch (specMessage.name) {
       case "select": {
+        this.clock.runToFrame()
         const selector = specMessage.body.selector
         const element = this.document.querySelector(selector)
         if (element) {
@@ -19,12 +20,14 @@ module.exports = class HtmlPlugin {
         break
       }
       case "selectAll": {
+        this.clock.runToFrame()
         const selector = specMessage.body.selector
         const elements = Array.from(this.document.querySelectorAll(selector)).map(this.describeElement)
         out(this.selected(elements))
         break
       }
       case "target": {
+        this.clock.runToFrame()
         const element = this.document.querySelector(specMessage.body)
         if (element == null) {
           abort([{
@@ -77,9 +80,5 @@ module.exports = class HtmlPlugin {
         { text: element.textContent }
       ]
     }
-  }
-
-  onStepComplete() {
-    this.clock.runToFrame()
   }
 }

@@ -25,41 +25,32 @@ import Spec.Subject as Subject exposing (Subject)
 import Spec.Actual as Actual exposing (Actual)
 import Task
 import Json.Encode exposing (Value)
-import Process
 import Html exposing (Html)
 import Dict exposing (Dict)
 import Procedure.Program
 import Procedure
 import Procedure.Channel as Channel
+import Procedure.Extra
 import Browser
 
 
 type Spec model msg =
   Spec
     { subject: Subject model msg
-    , conditions: List String
     , steps: List (SpecStep model msg)
     , requirements: List (Requirement model msg)
     , scenarios: List (Subject model msg -> Spec model msg)
-    , state: SpecState
     }
 
 
 type alias SpecStep model msg =
-  { run: Spec model msg -> Cmd (Msg msg)
+  { run: Subject model msg -> Cmd (Msg msg)
   , condition: String
   }
 
 
-type SpecState
-  = Configure
-  | Exercise
-  | Observe
-  | Aborted
-
-
 type alias Expectation model msg =
-  String -> Config msg -> Spec model msg -> Cmd (Msg msg)
+  String -> Config msg -> Subject model msg -> Cmd (Msg msg)
 
 
 type alias Requirement model msg =
@@ -73,29 +64,16 @@ given description specSubject =
   Spec
     { subject = specSubject
     , steps = 
-        let
-          configCommand =
-            if List.isEmpty specSubject.configureEnvironment then
-              sendMessage Lifecycle.configureComplete
+        [ { condition = formatGivenDescription description
+          , run = \_ ->
+            if specSubject.initialCommand == Cmd.none then
+              goToNext
             else
-              Cmd.batch
-                [ List.map sendMessage specSubject.configureEnvironment
-                    |> Cmd.batch
-                , sendMessage Lifecycle.configureComplete
-                ]
-          toInitialStep stepFunction =
-            { condition = formatGivenDescription description, run = stepFunction }
-        in
-          if specSubject.initialCommand == Cmd.none then
-            [ toInitialStep <| \_ -> configCommand ]
-          else
-            [ toInitialStep <| \_ -> configCommand
-            , toInitialStep <| \_ -> Cmd.map ProgramMsg specSubject.initialCommand
-            ]
+              Cmd.map ProgramMsg specSubject.initialCommand
+          }
+        ]
     , requirements = []
-    , conditions = [ formatGivenDescription description ]
     , scenarios = []
-    , state = Configure
     }
 
 
@@ -105,7 +83,10 @@ when condition messageSteps (Spec spec) =
     { spec 
     | steps =
         messageSteps
-          |> List.map (\f -> \s -> subject s |> f |> sendMessage)
+          |> List.map (\f -> \specSubject ->
+            f specSubject
+              |> sendMessage
+          )
           |> List.map (\step -> { run = step, condition = formatCondition condition })
           |> List.append spec.steps
     }
@@ -123,17 +104,19 @@ it description expectation (Spec spec) =
     }
 
 
-expect : Observer a -> Actual model a -> String -> Config msg -> Spec model msg -> Cmd (Msg msg)
-expect observer actual description config (Spec spec) =
+expect : Observer a -> Actual model a -> String -> Config msg -> Subject model msg -> Cmd (Msg msg)
+expect observer actual description config subject =
   case actual of
     Actual.Model mapper ->
-      Procedure.provide spec.subject.model
+      Procedure.provide subject.model
         |> Procedure.map (mapper >> observer)
-        |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
+        |> Procedure.map (Observer.observation subject.conditions description)
+        |> Procedure.run ProcedureMsg SendMessage
     Actual.Effects mapper ->
-      Procedure.provide spec.subject.effects
+      Procedure.provide subject.effects
         |> Procedure.map (mapper >> observer)
-        |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
+        |> Procedure.map (Observer.observation subject.conditions description)
+        |> Procedure.run ProcedureMsg SendMessage
     Actual.Inquiry message mapper ->
       Channel.open (\key -> config.send <| Observer.inquiry key message)
         |> Channel.connect config.listen
@@ -144,8 +127,9 @@ expect observer actual description config (Spec spec) =
             |> Maybe.map .message
             |> Maybe.map (mapper >> observer)
             |> Maybe.withDefault (Observer.Reject <| Report.note "Unable to decode inquiry result!")
+            |> Observer.observation subject.conditions description
         )
-        |> Procedure.run ProcedureMsg (Lifecycle << Lifecycle.ObservationComplete description)
+        |> Procedure.run ProcedureMsg SendMessage
 
 
 filterForInquiryResult : String -> Message -> Bool
@@ -171,9 +155,9 @@ sendMessage message =
     |> Task.perform SendMessage
 
 
-nextStep : Cmd (Msg msg)
-nextStep =
-  sendLifecycle Lifecycle.NextStep
+goToNext : Cmd (Msg msg)
+goToNext =
+  sendLifecycle Lifecycle.Next
 
 
 sendLifecycle : Lifecycle.Msg -> Cmd (Msg msg)
@@ -218,16 +202,50 @@ type Msg msg
 
 type alias Model model msg =
   { specs: List (Spec model msg)
-  , current: Spec model msg
+  , state: State model msg
   , procedureModel: Procedure.Program.Model (Msg msg)
   }
 
 
+type State model msg
+  = Ready
+  | Configure (Spec model msg)
+  | Exercise (Spec model msg) (ExerciseModel model msg)
+  | Observe (Spec model msg) (ObserveModel model msg)
+  | Abort (Spec model msg)
+
+
+type alias StateModel model a =
+  { a
+  | conditionsApplied: List String
+  , model: model
+  , effects: List Message
+  }
+
+
+type alias ExerciseModel model msg =
+  StateModel model
+    { steps: List (SpecStep model msg)
+    }
+
+
+type alias ObserveModel model msg =
+  StateModel model
+    { requirements: (List (Requirement model msg))
+    }
+
+
 view : Model model msg -> Html (Msg msg)
 view model =
-  subject model.current
-    |> Subject.render
-    |> Html.map ProgramMsg
+  case model.state of
+    Exercise (Spec spec) exerciseModel ->
+      spec.subject.view exerciseModel.model
+        |> Html.map ProgramMsg
+    Observe (Spec spec) observeModel ->
+      spec.subject.view observeModel.model
+        |> Html.map ProgramMsg
+    _ ->
+      Html.text ""
 
 
 receiveLifecycleMessages : Config msg -> Cmd (Msg msg)
@@ -238,7 +256,7 @@ receiveLifecycleMessages config =
     )
     |> Channel.accept
     |> Procedure.map Lifecycle.toMsg
-    |> Procedure.andThen (\msg -> Procedure.fromTask <| (Process.sleep 0 |> Task.andThen (\_ -> Task.succeed msg)))
+    |> Procedure.andThen Procedure.Extra.bump
     |> Procedure.run ProcedureMsg Lifecycle
 
 
@@ -259,135 +277,154 @@ update config msg model =
       Procedure.Program.update procMsg model.procedureModel
         |> Tuple.mapFirst (\updated -> { model | procedureModel = updated })
     ReceivedEffect message ->
-      ( recordEffect message model
-      , config.send Lifecycle.stepComplete
-      )
+      case model.state of
+        Exercise spec exerciseModel ->
+          ( { model | state = Exercise spec { exerciseModel | effects = message :: exerciseModel.effects } }
+          , config.send Lifecycle.stepComplete
+          )
+        _ ->
+          ( model, Cmd.none )
     SendMessage message ->
       ( model, config.send message )
     ProgramMsg programMsg ->
-      subject model.current
-        |> Subject.update config.outlet programMsg
-        |> Tuple.mapFirst (\updated -> { model | current = mapSubject (always updated) model.current })
-        |> Tuple.mapSecond (\nextCommand ->
-          if nextCommand == Cmd.none then
-            config.send Lifecycle.stepComplete
-          else
-            Cmd.map ProgramMsg nextCommand
-        )
+      case model.state of
+        Exercise (Spec spec) exerciseModel ->
+          spec.subject.update config.outlet programMsg exerciseModel.model
+            |> Tuple.mapFirst (\updated -> { model | state = Exercise (Spec spec) { exerciseModel | model = updated } })
+            |> Tuple.mapSecond (\nextCommand ->
+              if nextCommand == Cmd.none then
+                config.send Lifecycle.stepComplete
+              else
+                Cmd.map ProgramMsg nextCommand
+            )
+        _ -> 
+          ( model, Cmd.none )
     Lifecycle lifecycleMsg ->
       lifecycleUpdate config lifecycleMsg model
-
-
-recordEffect : Message -> Model model msg -> Model model msg
-recordEffect specMessage model =
-  { model | current = mapSubject (Subject.pushEffect specMessage) model.current }
 
 
 lifecycleUpdate : Config msg -> Lifecycle.Msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 lifecycleUpdate config msg model =
   case msg of
-    Lifecycle.Start ->
-      ( model, nextStep )
-    Lifecycle.StartSteps ->
-      ( { model | current = setState Exercise model.current }
-      , nextStep
-      )
-    Lifecycle.NextStep ->
-      case specSteps model.current of
-        [] ->
-          ( { model | current = setState Observe model.current }
-          , sendLifecycle Lifecycle.ObserveSubject
+    Lifecycle.Next ->
+      case model.state of
+        Ready ->
+          case model.specs of
+            [] ->
+              ( model, config.send Lifecycle.specComplete )
+            (Spec spec) :: remaining ->
+              ( { model | specs = remaining, state = Configure (Spec spec) }
+              , Cmd.batch
+                [ sendMessage Lifecycle.configureComplete
+                , Cmd.batch <| List.map sendMessage spec.subject.configureEnvironment
+                ]
+              )
+        Configure spec ->
+          ( { model | state = toExercise spec }
+          , goToNext
           )
-        step :: remainingSteps ->
-          let
-            updatedSpec =
-              setSteps remainingSteps model.current
-                |> addCondition step.condition
-          in
-            ( { model | current = updatedSpec }, step.run updatedSpec )
-    Lifecycle.NextSpec ->
-      let
-        updatedModel =
-          if specState model.current == Aborted then
-            model
-          else
-            { model | specs = List.append (scenarioSpecs model.current) model.specs }
-      in
-        case updatedModel.specs of
-          [] ->
-            ( updatedModel, sendLifecycle Lifecycle.SpecComplete )
-          next :: remaining ->
-            ( { updatedModel | specs = remaining, current = next }, nextStep )
-    Lifecycle.SpecComplete ->
-      ( model, config.send Lifecycle.specComplete )
-    Lifecycle.ObserveSubject ->
-      case specRequirements model.current of
-        [] ->
-          ( model
-          , config.send Lifecycle.observationsComplete
+        Exercise spec exerciseModel ->
+          case exerciseModel.steps of
+            [] ->
+              ( { model | state = toObserve spec exerciseModel }
+              , goToNext
+              )
+            step :: remaining ->
+              ( { model | state = Exercise spec
+                  { exerciseModel
+                  | steps = remaining
+                  , conditionsApplied = exerciseModel.conditionsApplied ++ [ step.condition ]
+                  }
+                }
+              , step.run <| currentSubject exerciseModel <| subjectFrom spec
+              )
+        Observe spec observeModel ->
+          case observeModel.requirements of
+            [] ->
+              ( { model
+                | specs = List.append (scenarioSpecs spec observeModel) model.specs 
+                , state = Ready
+                }
+              , goToNext
+              )
+            requirement :: remaining ->
+              ( { model | state = Observe spec { observeModel | requirements = remaining } }
+              , subjectFrom spec
+                  |> currentSubject observeModel
+                  |> requirement.expectation requirement.description config
+              )
+        Abort _ ->
+          ( model, config.send Lifecycle.specComplete )
+    Lifecycle.Abort report ->
+      case model.state of
+        Exercise spec exerciseModel ->
+          ( { model | state = Abort spec }
+          , Observer.Reject report
+              |> Observer.observation exerciseModel.conditionsApplied "A spec step failed"
+              |> config.send
           )
-        next :: remaining ->
-          ( { model | current = setRequirements remaining model.current }
-          , next.expectation next.description config model.current
-          )
-    Lifecycle.ObservationComplete description verdict ->
-      let
-        (Spec spec) = model.current
-      in
-        ( model
-        , Cmd.batch
-          [ config.send <| Observer.observation spec.conditions description verdict
-          , sendLifecycle Lifecycle.ObserveSubject
-          ]
-        )
-    Lifecycle.AbortSpec report ->
-      ( { model | current = setState Aborted model.current }
-      , Cmd.batch
-        [ Observer.Reject report
-            |> Observer.observation (conditions model.current) "A spec step failed"
-            |> config.send
-        , config.send Lifecycle.observationsComplete
-        ]
-      )
+        _ ->
+          ( model, Cmd.none )
 
 
-scenarioSpecs : Spec model msg -> List (Spec model msg)
-scenarioSpecs (Spec spec) =
+toExercise : Spec model msg -> State model msg
+toExercise (Spec spec) =
+  Exercise (Spec spec)
+    { conditionsApplied = spec.subject.conditions
+    , model = spec.subject.model
+    , effects = spec.subject.effects
+    , steps = spec.steps
+    }
+
+
+toObserve : Spec model msg -> ExerciseModel model msg -> State model msg
+toObserve (Spec spec) exerciseModel =
+  Observe (Spec spec)
+    { conditionsApplied = exerciseModel.conditionsApplied
+    , model = exerciseModel.model
+    , effects = exerciseModel.effects
+    , requirements = spec.requirements
+    }
+
+
+scenarioSpecs : Spec model msg -> ObserveModel model msg -> List (Spec model msg)
+scenarioSpecs (Spec spec) observeModel =
   spec.scenarios
     |> List.map (\generator ->
-      let
-        (Spec generatedSpec) = generator spec.subject
-      in
-        Spec
-          { generatedSpec | conditions = List.append spec.conditions generatedSpec.conditions }
+      currentSubject observeModel spec.subject
+        |> generator
     )
+
+
+currentSubject : StateModel model a -> Subject model msg -> Subject model msg
+currentSubject state original =
+  { original
+  | model = state.model
+  , effects = state.effects
+  , conditions = state.conditionsApplied
+  }
 
 
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
-  Sub.batch
-  [ if specState model.current == Exercise then
-      subject model.current
-        |> Subject.subscriptions
-        |> Sub.map ProgramMsg
-    else
-      Sub.none
-  , Procedure.Program.subscriptions model.procedureModel
-  ]
-
+  case model.state of
+    Exercise (Spec spec) exerciseModel ->
+      Sub.batch
+      [ Sub.map ProgramMsg <| Subject.subscriptions spec.subject
+      , Procedure.Program.subscriptions model.procedureModel
+      ]
+    _ ->
+      Procedure.Program.subscriptions model.procedureModel
+  
 
 init : Config msg -> List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
 init config specs _ =
-  case specs of
-    [] ->
-      Elm.Kernel.Debug.todo "No specs!"
-    spec :: remaining ->
-      ( { specs = remaining, current = spec, procedureModel = Procedure.Program.init }
-      , Cmd.batch
-        [ receiveLifecycleMessages config
-        , receiveEffectMessages config
-        ]
-      )
+  ( { specs = specs, state = Ready, procedureModel = Procedure.Program.init }
+  , Cmd.batch
+    [ receiveLifecycleMessages config
+    , receiveEffectMessages config
+    ]
+  )
 
 
 program : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
@@ -409,57 +446,8 @@ browserProgram config specs =
     }
 
 
---- Helpers
+-- Helpers
 
-
-subject : Spec model msg -> Subject model msg
-subject (Spec spec) =
+subjectFrom : Spec model msg -> Subject model msg
+subjectFrom (Spec spec) =
   spec.subject
-
-
-mapSubject : (Subject model msg -> Subject model msg) -> Spec model msg -> Spec model msg
-mapSubject mapper (Spec spec) =
-  Spec { spec | subject = mapper spec.subject }
-
-
-specState : Spec model msg -> SpecState
-specState (Spec spec) =
-  spec.state
-
-
-setState : SpecState -> Spec model msg -> Spec model msg
-setState state (Spec spec) =
-  Spec { spec | state = state }
-
-
-specSteps : Spec model msg -> List (SpecStep model msg)
-specSteps (Spec spec) =
-  spec.steps
-
-
-setSteps : List (SpecStep model msg) -> Spec model msg -> Spec model msg
-setSteps steps (Spec spec) =
-  Spec { spec | steps = steps }
-
-
-specRequirements : Spec model msg -> List (Requirement model msg)
-specRequirements (Spec spec) =
-  spec.requirements
-
-
-setRequirements : List (Requirement model msg) -> Spec model msg -> Spec model msg
-setRequirements requirements (Spec spec) =
-  Spec { spec | requirements = requirements }
-
-
-addCondition : String -> Spec model msg -> Spec model msg
-addCondition condition (Spec spec) =
-  if List.member condition spec.conditions then
-    Spec spec
-  else
-    Spec { spec | conditions = spec.conditions ++ [ condition ] }
-
-
-conditions : Spec model msg -> List String
-conditions (Spec spec) =
-  spec.conditions

@@ -16,14 +16,8 @@ import Json.Decode as Json
 
 
 type Msg
-  = Start
-  | NextStep
-  | NextSpec
-  | StartSteps
-  | SpecComplete
-  | ObserveSubject
-  | ObservationComplete String Verdict
-  | AbortSpec Report
+  = Next
+  | Abort Report
 
 
 isLifecycleMessage : Message -> Bool
@@ -37,28 +31,24 @@ toMsg message =
     "state" ->
       Message.decode Json.string message
         |> Maybe.map toStateMsg
-        |> Maybe.withDefault (AbortSpec <| Report.note "Unable to parse lifecycle state event!")
+        |> Maybe.withDefault (Abort <| Report.note "Unable to parse lifecycle state event!")
     "abort" ->
       Message.decode Report.decoder message
         |> Maybe.withDefault (Report.note "Unable to parse abort spec event!")
-        |> AbortSpec
+        |> Abort
     unknown ->
-      AbortSpec <| Report.fact "Unknown lifecycle event" unknown
+      Abort <| Report.fact "Unknown lifecycle event" unknown
 
 
 toStateMsg : String -> Msg
 toStateMsg specState =
   case specState of
     "START" ->
-      Start
-    "NEXT_SPEC" ->
-      NextSpec
-    "START_STEPS" ->
-      StartSteps
-    "NEXT_STEP" ->
-      NextStep
+      Next
+    "NEXT" ->
+      Next
     unknown ->
-      AbortSpec <| Report.fact "Unknown lifecycle state" unknown
+      Abort <| Report.fact "Unknown lifecycle state" unknown
 
 
 configureComplete : Message

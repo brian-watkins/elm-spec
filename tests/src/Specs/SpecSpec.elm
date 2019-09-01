@@ -50,33 +50,40 @@ multipleScenariosSpec =
   )
   |> Spec.suppose (
     Spec.given "another scenario"
-      >> Spec.when "another sub is sent"
-        [ Port.send "specSpecSub" <| subMessageWith 82 ]
-      >> Spec.it "records the second number" (
+      >>
+    Spec.when "another sub is sent"
+      [ Port.send "specSpecSub" <| subMessageWith 82 ]
+      >>
+    Spec.it "records the second number" (
+      Actual.model
+        |> Actual.map .counts
+        |> Spec.expect (Observer.isEqual [ 82, 87 ])
+    )
+      >>
+    Spec.suppose (
+      Spec.given "a final scenario"
+        >>
+      Spec.when "the final sub is sent"
+        [ Port.send "specSpecSub" <| subMessageWith 0 ]
+        >>
+      Spec.it "records the final number" (
         Actual.model
           |> Actual.map .counts
-          |> Spec.expect (Observer.isEqual [ 82, 87 ])
+          |> Spec.expect (Observer.isEqual [ 0, 82, 87 ])
       )
-      >> Spec.suppose (
-        Spec.given "a final scenario"
-          >> Spec.when "the final sub is sent"
-            [ Port.send "specSpecSub" <| subMessageWith 0 ]
-          >> Spec.it "records the final number" (
-            Actual.model
-              |> Actual.map .counts
-              |> Spec.expect (Observer.isEqual [ 0, 82, 87 ])
-          )
-      )
+    )
   )
   |> Spec.suppose (
     Spec.given "an awesome scenario"
-      >> Spec.when "another awesome sub is sent"
-        [ Port.send "specSpecSub" <| subMessageWith 41 ]
-      >> Spec.it "records the second awesome number" (
-        Actual.model
-          |> Actual.map .counts
-          |> Spec.expect (Observer.isEqual [ 41, 87 ])
-      )
+      >>
+    Spec.when "another awesome sub is sent"
+      [ Port.send "specSpecSub" <| subMessageWith 41 ]
+      >>
+    Spec.it "records the second awesome number" (
+      Actual.model
+        |> Actual.map .counts
+        |> Spec.expect (Observer.isEqual [ 41, 87 ])
+    )
   )
 
 

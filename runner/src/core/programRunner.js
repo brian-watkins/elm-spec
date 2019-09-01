@@ -80,6 +80,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "observation":
         this.emit('observation', specMessage.body)
+        out(this.continue())
         break
     }
   }
@@ -95,18 +96,17 @@ module.exports = class ProgramRunner extends EventEmitter {
   handleStateChange(state, out) {
     switch (state) {
       case "CONFIGURE_COMPLETE":
-        out({ home: "_spec", name: "state", body: "START_STEPS" })
+        out(this.continue())
         break
       case "STEP_COMPLETE":
         if (this.timer) clearTimeout(this.timer)
         this.timer = setTimeout(() => {
-          this.notifyStepComplete()
-          out({ home: "_spec", name: "state", body: "NEXT_STEP" })
+          out(this.continue())
         }, 0)
         break
       case "OBSERVATIONS_COMPLETE":
         this.timePlugin.reset()
-        out({ home: "_spec", name: "state", body: "NEXT_SPEC" })
+        out(this.continue())
         break
       case "SPEC_COMPLETE":
         this.emit('complete')
@@ -114,11 +114,11 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
-  notifyStepComplete() {
-    Object.values(this.plugins).forEach(plugin => {
-      if ("onStepComplete" in plugin) {
-        plugin.onStepComplete()
-      }
-    })
+  continue () {
+    return {
+      home: "_spec",
+      name: "state",
+      body: "NEXT"
+    }
   }
 }

@@ -58,7 +58,8 @@ combinedTagSelectorSpec =
   )
   |> Spec.suppose (
     Spec.given "an Html program that selects by id and tag"
-    >> Spec.it "selects the text on the view" (
+      >>
+    Spec.it "selects the text on the view" (
       Markup.select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )

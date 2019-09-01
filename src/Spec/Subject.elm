@@ -3,13 +3,11 @@ module Spec.Subject exposing
   , init
   , initWithModel
   , configure
-  , pushEffect
+  , withEffects
   , effects
   , withSubscriptions
   , withUpdate
   , withView
-  , update
-  , render
   , subscriptions
   )
 
@@ -26,6 +24,7 @@ type alias Subject model msg =
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
   , effects: List Message
+  , conditions: List String
   }
 
 
@@ -38,6 +37,7 @@ init ( model, initialCommand ) =
   , subscriptions = \_ -> Sub.none
   , configureEnvironment = []
   , effects = []
+  , conditions = []
   }
 
 
@@ -66,25 +66,14 @@ withSubscriptions programSubscriptions subject =
   { subject | subscriptions = programSubscriptions }
 
 
-pushEffect : Message -> Subject model msg -> Subject model msg
-pushEffect effect subject =
-  { subject | effects = effect :: subject.effects }
+withEffects : List Message -> Subject model msg -> Subject model msg
+withEffects effectMessages subject =
+  { subject | effects = effectMessages }
 
 
 effects : Subject model msg -> List Message
 effects =
   .effects
-
-
-update : (Message -> Cmd msg) -> msg -> Subject model msg -> ( Subject model msg, Cmd msg )
-update outlet msg subject =
-  subject.update outlet msg subject.model
-    |> Tuple.mapFirst (\updatedModel -> { subject | model = updatedModel })
-
-
-render : Subject model msg -> Html msg
-render subject =
-  subject.view subject.model
 
 
 subscriptions : Subject model msg -> Sub msg

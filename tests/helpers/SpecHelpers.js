@@ -41,7 +41,10 @@ const expectPass = (runner, specProgram, specName, done, matcher) => {
   runner(specProgram, specName, done, (observations) => {
     const rejections = observations.filter((o) => o.summary === "REJECT")
     if (rejections.length > 0) {
-      const errors = rejections.map((o) => o.message).join("\n\n\t")
+      const errors = rejections
+        .map(o => o.report)
+        .map((r) => r.map(o => o.statement + " " + o.detail).join(" "))
+        .join("\n\n")
       expect.fail(`\n\n\tExpected the spec to pass but:\n\n\t${errors}\n`)
     }
     for (let i = 0; i < rejections.length; i++) {

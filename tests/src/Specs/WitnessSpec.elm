@@ -15,7 +15,7 @@ spySpec =
     Subject.initWithModel { count = 0 }
       |> Witness.forUpdate (\witness -> testUpdate <| \_ -> Witness.spy "injected" witness)
       |> Subject.withSubscriptions testSubscriptions
-      |> Subject.pushEffect { home = "test", name = "some-message", body = Encode.null }
+      |> Subject.withEffects [ { home = "test", name = "some-message", body = Encode.null } ]
   )
   |> Spec.when "a message is sent that triggers the injected function"
     [ Port.send "witnessSpecSub" <| Encode.int 88
