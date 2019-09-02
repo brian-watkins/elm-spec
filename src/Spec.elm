@@ -37,13 +37,13 @@ import Browser
 type Spec model msg =
   Spec
     { subject: Subject model msg
-    , steps: List (SpecStep model msg)
+    , steps: List (Step model msg)
     , requirements: List (Requirement model msg)
     , scenarios: List (Subject model msg -> Spec model msg)
     }
 
 
-type alias SpecStep model msg =
+type alias Step model msg =
   { run: Subject model msg -> Cmd (Msg msg)
   , condition: String
   }
@@ -225,7 +225,7 @@ type alias StateModel model a =
 
 type alias ExerciseModel model msg =
   StateModel model
-    { steps: List (SpecStep model msg)
+    { steps: List (Step model msg)
     }
 
 
@@ -315,8 +315,8 @@ lifecycleUpdate config msg model =
             (Spec spec) :: remaining ->
               ( { model | specs = remaining, state = Configure (Spec spec) }
               , Cmd.batch
-                [ sendMessage Lifecycle.configureComplete
-                , Cmd.batch <| List.map sendMessage spec.subject.configureEnvironment
+                [ config.send Lifecycle.configureComplete
+                , Cmd.batch <| List.map config.send spec.subject.configureEnvironment
                 ]
               )
         Configure spec ->
@@ -336,7 +336,9 @@ lifecycleUpdate config msg model =
                   , conditionsApplied = exerciseModel.conditionsApplied ++ [ step.condition ]
                   }
                 }
-              , step.run <| currentSubject exerciseModel <| subjectFrom spec
+              , subjectFrom spec
+                  |> currentSubject exerciseModel
+                  |> step.run
               )
         Observe spec observeModel ->
           case observeModel.requirements of
