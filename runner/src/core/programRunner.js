@@ -37,7 +37,9 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.portPlugin.handle(specMessage)
         break
       case "_time":
-        this.timePlugin.handle(specMessage)
+        this.timePlugin.handle(specMessage, () => {
+          this.handleMessage({home: "_spec", name: "state", body: "STEP_COMPLETE"}, out)
+        })
         break
       case "_witness":
         out(specMessage)
