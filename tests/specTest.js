@@ -12,8 +12,7 @@ describe("spec", () => {
       expectPassingSpec("SpecSpec", "multipleWhen", done, (observations) => {
         expect(observations[0].conditions).to.deep.equal([
           "Given a test worker",
-          "When the first sub is sent",
-          "When a second sub is sent",
+          "When the first two subs are sent",
           "When a third sub is sent"
         ])
       })

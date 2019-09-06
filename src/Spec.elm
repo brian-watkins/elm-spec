@@ -333,7 +333,7 @@ lifecycleUpdate config msg model =
               ( { model | state = Exercise spec
                   { exerciseModel
                   | steps = remaining
-                  , conditionsApplied = exerciseModel.conditionsApplied ++ [ step.condition ]
+                  , conditionsApplied = addIfAbsent step.condition exerciseModel.conditionsApplied
                   }
                 }
               , subjectFrom spec
@@ -453,3 +453,11 @@ browserProgram config specs =
 subjectFrom : Spec model msg -> Subject model msg
 subjectFrom (Spec spec) =
   spec.subject
+
+
+addIfAbsent : a -> List a -> List a
+addIfAbsent val list =
+  if List.member val list then
+    list
+  else
+    list ++ [ val ]

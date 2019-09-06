@@ -17,11 +17,9 @@ multipleWhenSpec =
       |> Subject.withUpdate testUpdate
       |> Subject.withSubscriptions testSubscriptions
   )
-  |> Spec.when "the first sub is sent"
+  |> Spec.when "the first two subs are sent"
     [ Port.send "specSpecSub" <| subMessageWith 41
-    ]
-  |> Spec.when "a second sub is sent"
-    [ Port.send "specSpecSub" <| subMessageWith 78
+    , Port.send "specSpecSub" <| subMessageWith 78
     ]
   |> Spec.when "a third sub is sent"
     [ Port.send "specSpecSub" <| subMessageWith 39
