@@ -1,4 +1,4 @@
-const HtmlPlugin = require('../core/htmlPlugin')
+const HtmlPlugin = require('elm-spec-core/src/htmlPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 

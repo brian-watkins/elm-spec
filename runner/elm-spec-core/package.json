@@ -1,0 +1,15 @@
+{
+  "name": "elm-spec-core",
+  "version": "1.0.0",
+  "description": "Run Elm-Spec Specs",
+  "files": ["src/"],
+  "main": "src/suiteRunner.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Brian Watkins",
+  "license": "MIT",
+  "dependencies": {
+    "lolex": "^4.2.0"
+  }
+}

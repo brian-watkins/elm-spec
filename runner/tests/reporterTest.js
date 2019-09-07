@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Reporter = require('../src/node-runner/consoleReporter')
+const Reporter = require('../elm-spec-runner/src/spec/consoleReporter')
 
 describe("reporter", () => {
   it("counts the number of accepted observations", () => {

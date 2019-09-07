@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Program = require('../src/core/program')
+const Program = require('../elm-spec-core/src/program')
 
 describe("Find All Programs", () => {
   context("when there are top level spec programs", () => {

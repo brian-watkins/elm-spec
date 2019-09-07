@@ -1,10 +1,10 @@
 const chai = require('chai')
 const expect = chai.expect
-const SpecRunner = require('../../runner/src/core/programRunner')
-const SpecCompiler = require('../../runner/src/node-runner/compiler')
-const GlobalContext = require('../../runner/src/node-runner/globalContext')
-const HtmlContext = require('../../runner/src/node-runner/htmlContext')
-const HtmlPlugin = require('../../runner/src/core/htmlPlugin')
+const SpecRunner = require('../../runner/elm-spec-core/src/programRunner')
+const SpecCompiler = require('../../runner/elm-spec-runner/src/spec/compiler')
+const GlobalContext = require('../../runner/elm-spec-runner/src/spec/globalContext')
+const HtmlContext = require('../../runner/elm-spec-runner/src/spec/htmlContext')
+const HtmlPlugin = require('../../runner/elm-spec-core/src/htmlPlugin')
 
 exports.expectFailingBrowserSpec = (specProgram, specName, done, matcher) => {
   expectFailure(runBrowserTestSpec, specProgram, specName, done, matcher)
