@@ -4,12 +4,13 @@ const Reporter = require('./spec/consoleReporter')
 const HtmlContext = require('./spec/htmlContext')
 const SuiteRunner = require('elm-spec-core')
 const commandExists = require('command-exists').sync
+const glob = require("glob")
 
 class ElmSpecRunnerCommand extends Command {
   async run() {
     const {flags} = this.parse(ElmSpecRunnerCommand)
-    const elmPath = flags.elm || 'elm'
     
+    const elmPath = flags.elm || 'elm'
     if (!commandExists(elmPath)) {
       if (flags.elm) {
         this.error(`No elm executable found at: ${flags.elm}`)
@@ -17,9 +18,14 @@ class ElmSpecRunnerCommand extends Command {
         this.error('No elm executable found in the current path')
       }
     }
-      
+
+    const specPath = flags.specs || './specs/**/*Spec.elm'
+    if (glob.sync(specPath).length == 0) {
+      this.error(`No spec modules found matching: ${specPath}`)
+    }    
+
     this.runSpecs({
-      specPath: "./specs/**/*Spec.elm",
+      specPath,
       elmPath
     })
   }
@@ -46,6 +52,7 @@ ElmSpecRunnerCommand.flags = {
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
   elm: flags.string({char: 'e', description: 'path to elm'}),
+  specs: flags.string({char: 's', description: 'glob for spec modules'})
 }
 
 module.exports = ElmSpecRunnerCommand

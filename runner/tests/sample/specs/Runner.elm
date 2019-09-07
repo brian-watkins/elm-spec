@@ -2,7 +2,6 @@ port module Runner exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Message exposing (Message)
-import Main as App
 
 
 port sendOut : Message -> Cmd msg

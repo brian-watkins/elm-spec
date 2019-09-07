@@ -4,9 +4,10 @@
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
     "start": "cd runner/tests/sample && ../../elm-spec-runner/bin/run --elm ../../../node_modules/.bin/elm",
-    "test": "run-s test:elm test:runner",
+    "test": "run-s test:elm test:runner test:spec-runner",
     "test:elm": "cd tests && mocha '*Test.js'",
-    "test:runner": "mocha './runner/tests/*Test.js'"
+    "test:runner": "mocha './runner/tests/*Test.js'",
+    "test:spec-runner": "cd runner/elm-spec-runner && npm test"
   },
   "author": "Brian Watkins",
   "license": "MIT",
