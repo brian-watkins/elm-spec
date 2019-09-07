@@ -70,9 +70,23 @@ const compiler = new SpecCompiler({
   elmPath: "../node_modules/.bin/elm"
 })
 
-exports.globalContext = new GlobalContext(compiler)
+const testCompiler = {
+  compile: () => {
+    if (!this.compiledCode) {
+      return compiler.compile()
+        .then((code) => {
+          this.compiledCode = code
+          return code
+        })
+    } else {
+      return Promise.resolve(this.compiledCode)
+    }
+  }
+}
 
-exports.htmlContext = htmlContext = new HtmlContext(compiler)
+exports.globalContext = new GlobalContext(testCompiler)
+
+exports.htmlContext = htmlContext = new HtmlContext(testCompiler)
 
 const runTestSpec = (specProgram, specName, done, matcher) => {
   this.globalContext.evaluate((Elm) => {
