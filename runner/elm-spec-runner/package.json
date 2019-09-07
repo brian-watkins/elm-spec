@@ -11,7 +11,7 @@
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.13.3",
     "@oclif/plugin-help": "^2.2.1",
-    "elm": "^0.19.0-no-deps",
+    "command-exists": "^1.2.8",
     "elm-spec-core": "file:../elm-spec-core",
     "glob": "^7.1.4",
     "jsdom": "^15.1.1",
@@ -42,6 +42,6 @@
   },
   "repository": "brian-watkins/elm-spec",
   "scripts": {
-    "test": "nyc mocha --forbid-only \"test/**/*.test.js\""
+    "test": "mocha --forbid-only \"test/**/*.test.js\""
   }
 }

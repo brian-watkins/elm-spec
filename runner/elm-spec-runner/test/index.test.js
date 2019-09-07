@@ -2,17 +2,18 @@ const {expect, test} = require('@oclif/test')
 const cmd = require('..')
 
 describe('elm-spec-runner', () => {
-  test
-  .stdout()
-  .do(() => cmd.run([]))
-  .it('runs hello', ctx => {
-    expect(ctx.stdout).to.contain('hello world')
+  context("when the gloabl elm executable does not exist", () => {
+    test
+    .env({PATH: "./nowhere"})
+    .do(() => cmd.run([]))
+    .catch(err => expect(err.message).to.contain("No elm executable found in the current path"))
+    .it('gives an error message')
   })
-
-  test
-  .stdout()
-  .do(() => cmd.run(['--name', 'jeff']))
-  .it('runs hello --name jeff', ctx => {
-    expect(ctx.stdout).to.contain('hello jeff')
+  
+  context("when the specified elm executable does not exist", () => {
+    test
+    .do(() => cmd.run(["--elm", "blah"]))
+    .catch(err => expect(err.message).to.contain("No elm executable found at: blah"))
+    .it('gives an error message')
   })
 })
