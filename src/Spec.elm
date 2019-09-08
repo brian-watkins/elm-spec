@@ -41,8 +41,9 @@ type alias Step model msg =
   }
 
 
-type alias Expectation model msg =
-  String -> Config msg -> Subject model msg -> Cmd (Msg msg)
+type Expectation model msg =
+  Expectation
+    ( String -> Config msg -> Subject model msg -> Cmd (Msg msg) )
 
 
 type alias Requirement model msg =
@@ -110,32 +111,33 @@ it description expectation (Scenario scenarioData) =
     }
 
 
-expect : Observer a -> Actual model a -> String -> Config msg -> Subject model msg -> Cmd (Msg msg)
-expect observer actual description config subject =
-  case actual of
-    Actual.Model mapper ->
-      Procedure.provide subject.model
-        |> Procedure.map (mapper >> observer)
-        |> Procedure.map (Observer.observation subject.conditions description)
-        |> Procedure.run ProcedureMsg SendMessage
-    Actual.Effects mapper ->
-      Procedure.provide subject.effects
-        |> Procedure.map (mapper >> observer)
-        |> Procedure.map (Observer.observation subject.conditions description)
-        |> Procedure.run ProcedureMsg SendMessage
-    Actual.Inquiry message mapper ->
-      Channel.open (\key -> config.send <| Observer.inquiry key message)
-        |> Channel.connect config.listen
-        |> Channel.filter (\key data -> filterForInquiryResult key data)
-        |> Channel.acceptOne
-        |> Procedure.map (\inquiry ->
-          Message.decode Observer.inquiryDecoder inquiry
-            |> Maybe.map .message
-            |> Maybe.map (mapper >> observer)
-            |> Maybe.withDefault (Observer.Reject <| Report.note "Unable to decode inquiry result!")
-            |> Observer.observation subject.conditions description
-        )
-        |> Procedure.run ProcedureMsg SendMessage
+expect : Observer a -> Actual model a -> Expectation model msg
+expect observer actual =
+  Expectation <| \description config subject ->
+    case actual of
+      Actual.Model mapper ->
+        Procedure.provide subject.model
+          |> Procedure.map (mapper >> observer)
+          |> Procedure.map (Observer.observation subject.conditions description)
+          |> Procedure.run ProcedureMsg SendMessage
+      Actual.Effects mapper ->
+        Procedure.provide subject.effects
+          |> Procedure.map (mapper >> observer)
+          |> Procedure.map (Observer.observation subject.conditions description)
+          |> Procedure.run ProcedureMsg SendMessage
+      Actual.Inquiry message mapper ->
+        Channel.open (\key -> config.send <| Observer.inquiry key message)
+          |> Channel.connect config.listen
+          |> Channel.filter (\key data -> filterForInquiryResult key data)
+          |> Channel.acceptOne
+          |> Procedure.map (\inquiry ->
+            Message.decode Observer.inquiryDecoder inquiry
+              |> Maybe.map .message
+              |> Maybe.map (mapper >> observer)
+              |> Maybe.withDefault (Observer.Reject <| Report.note "Unable to decode inquiry result!")
+              |> Observer.observation subject.conditions description
+          )
+          |> Procedure.run ProcedureMsg SendMessage
 
 
 filterForInquiryResult : String -> Message -> Bool
@@ -351,9 +353,12 @@ lifecycleUpdate config msg model =
               ( { model | state = Ready }, goToNext )
             requirement :: remaining ->
               ( { model | state = Observe scenarioData { observeModel | requirements = remaining } }
-              , subjectFrom scenarioData
-                  |> currentSubject observeModel
-                  |> requirement.expectation requirement.description config
+              , let
+                  (Expectation expectation) = requirement.expectation
+                in
+                  subjectFrom scenarioData
+                    |> currentSubject observeModel
+                    |> expectation requirement.description config
               )
         Abort ->
           ( model, config.send Lifecycle.specComplete )
