@@ -1,7 +1,8 @@
 module Spec exposing
-  ( Spec, Model, Msg, Config, Expectation
+  ( Spec, Scenario, Expectation
   , describe, scenario
   , when, it, expect
+  , Model, Msg, Config
   , update, view, init, subscriptions
   , program, browserProgram
   )
@@ -24,7 +25,8 @@ import Browser
 
 
 type Spec model msg =
-  Spec (List (Scenario model msg))
+  Spec
+    (List (Scenario model msg))
 
 
 type Scenario model msg =
