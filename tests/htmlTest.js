@@ -69,9 +69,10 @@ describe("html plugin", () => {
 
       it("shows only the steps that have been completed or attempted", (done) => {
         expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
-          expect(observations[0].conditions).to.have.length(2)
-          expect(observations[0].conditions[0]).to.equal("Given an html program that targets an unknown element")
-          expect(observations[0].conditions[1]).to.equal("When the button is clicked three times")
+          expect(observations[0].conditions).to.have.length(3)
+          expect(observations[0].conditions[0]).to.equal("Describing: an html program")
+          expect(observations[0].conditions[1]).to.equal("Scenario: targeting an unknown element")
+          expect(observations[0].conditions[2]).to.equal("When the button is clicked three times")
         })
       })
     })

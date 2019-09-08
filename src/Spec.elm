@@ -1,20 +1,9 @@
 module Spec exposing
-  ( Spec
-  , Model
-  , Msg
-  , Config
-  , Expectation
-  , given
-  , when
-  , it
-  , suppose
-  , update
-  , view
-  , init
-  , subscriptions
-  , program
-  , browserProgram
-  , expect
+  ( Spec, Model, Msg, Config, Expectation
+  , describe, scenario
+  , when, it, expect
+  , update, view, init, subscriptions
+  , program, browserProgram
   )
 
 import Spec.Observer as Observer exposing (Observer, Verdict)
@@ -35,11 +24,14 @@ import Browser
 
 
 type Spec model msg =
-  Spec
+  Spec (List (Scenario model msg))
+
+
+type Scenario model msg =
+  Scenario
     { subject: Subject model msg
     , steps: List (Step model msg)
     , requirements: List (Requirement model msg)
-    , scenarios: List (Subject model msg -> Spec model msg)
     }
 
 
@@ -59,12 +51,27 @@ type alias Requirement model msg =
   }
 
 
-given : String -> Subject model msg -> Spec model msg
-given description specSubject =
-  Spec
+describe : String -> List (Scenario model msg) -> Spec model msg
+describe description scenarios =
+  scenarios
+    |> List.map (\(Scenario scenarioData) ->
+      let
+          subject = scenarioData.subject
+      in
+        Scenario
+          { scenarioData
+          | subject = { subject | conditions = [ formatSpecDescription description ] }
+          }
+    )
+    |> Spec
+
+
+scenario : String -> Subject model msg -> Scenario model msg
+scenario description specSubject =
+  Scenario
     { subject = specSubject
     , steps = 
-        [ { condition = formatGivenDescription description
+        [ { condition = formatScenarioDescription description
           , run = \_ ->
             if specSubject.initialCommand == Cmd.none then
               goToNext
@@ -73,14 +80,13 @@ given description specSubject =
           }
         ]
     , requirements = []
-    , scenarios = []
     }
 
 
-when : String -> List (Subject model msg -> Message) -> Spec model msg -> Spec model msg
-when condition messageSteps (Spec spec) =
-  Spec
-    { spec 
+when : String -> List (Subject model msg -> Message) -> Scenario model msg -> Scenario model msg
+when condition messageSteps (Scenario scenarioData) =
+  Scenario
+    { scenarioData
     | steps =
         messageSteps
           |> List.map (\f -> \specSubject ->
@@ -88,15 +94,15 @@ when condition messageSteps (Spec spec) =
               |> sendMessage
           )
           |> List.map (\step -> { run = step, condition = formatCondition condition })
-          |> List.append spec.steps
+          |> List.append scenarioData.steps
     }
 
 
-it : String -> Expectation model msg -> Spec model msg -> Spec model msg
-it description expectation (Spec spec) =
-  Spec 
-    { spec 
-    | requirements = spec.requirements ++
+it : String -> Expectation model msg -> Scenario model msg -> Scenario model msg
+it description expectation (Scenario scenarioData) =
+  Scenario
+    { scenarioData
+    | requirements = scenarioData.requirements ++
       [ { description = formatObservationDescription description
         , expectation = expectation
         }
@@ -143,12 +149,6 @@ filterForInquiryResult key message =
     False
 
 
-suppose : (Subject model msg -> Spec model msg) -> Spec model msg -> Spec model msg
-suppose generator (Spec spec) =
-  Spec
-    { spec | scenarios = generator :: spec.scenarios }
-
-
 sendMessage : Message -> Cmd (Msg msg)
 sendMessage message =
   Task.succeed message
@@ -166,9 +166,14 @@ sendLifecycle lifecycleMsg =
     |> Task.perform (always <| Lifecycle lifecycleMsg)
 
 
-formatGivenDescription : String -> String
-formatGivenDescription description =
-  "Given " ++ description
+formatSpecDescription : String -> String
+formatSpecDescription description =
+  "Describing: " ++ description
+
+
+formatScenarioDescription : String -> String
+formatScenarioDescription description =
+  "Scenario: " ++ description
 
 
 formatCondition : String -> String
@@ -201,7 +206,7 @@ type Msg msg
 
 
 type alias Model model msg =
-  { specs: List (Spec model msg)
+  { scenarios: List (Scenario model msg)
   , state: State model msg
   , procedureModel: Procedure.Program.Model (Msg msg)
   }
@@ -209,9 +214,9 @@ type alias Model model msg =
 
 type State model msg
   = Ready
-  | Configure (Spec model msg)
-  | Exercise (Spec model msg) (ExerciseModel model msg)
-  | Observe (Spec model msg) (ObserveModel model msg)
+  | Configure (Scenario model msg)
+  | Exercise (Scenario model msg) (ExerciseModel model msg)
+  | Observe (Scenario model msg) (ObserveModel model msg)
   | Abort
 
 
@@ -238,11 +243,11 @@ type alias ObserveModel model msg =
 view : Model model msg -> Html (Msg msg)
 view model =
   case model.state of
-    Exercise (Spec spec) exerciseModel ->
-      spec.subject.view exerciseModel.model
+    Exercise (Scenario scenarioData) exerciseModel ->
+      scenarioData.subject.view exerciseModel.model
         |> Html.map ProgramMsg
-    Observe (Spec spec) observeModel ->
-      spec.subject.view observeModel.model
+    Observe (Scenario scenarioData) observeModel ->
+      scenarioData.subject.view observeModel.model
         |> Html.map ProgramMsg
     _ ->
       Html.text ""
@@ -278,8 +283,8 @@ update config msg model =
         |> Tuple.mapFirst (\updated -> { model | procedureModel = updated })
     ReceivedEffect message ->
       case model.state of
-        Exercise spec exerciseModel ->
-          ( { model | state = Exercise spec { exerciseModel | effects = message :: exerciseModel.effects } }
+        Exercise scenarioData exerciseModel ->
+          ( { model | state = Exercise scenarioData { exerciseModel | effects = message :: exerciseModel.effects } }
           , config.send Lifecycle.stepComplete
           )
         _ ->
@@ -288,9 +293,9 @@ update config msg model =
       ( model, config.send message )
     ProgramMsg programMsg ->
       case model.state of
-        Exercise (Spec spec) exerciseModel ->
-          spec.subject.update config.outlet programMsg exerciseModel.model
-            |> Tuple.mapFirst (\updated -> { model | state = Exercise (Spec spec) { exerciseModel | model = updated } })
+        Exercise (Scenario scenarioData) exerciseModel ->
+          scenarioData.subject.update config.outlet programMsg exerciseModel.model
+            |> Tuple.mapFirst (\updated -> { model | state = Exercise (Scenario scenarioData) { exerciseModel | model = updated } })
             |> Tuple.mapSecond (\nextCommand ->
               if nextCommand == Cmd.none then
                 config.send Lifecycle.stepComplete
@@ -309,49 +314,44 @@ lifecycleUpdate config msg model =
     Lifecycle.Next ->
       case model.state of
         Ready ->
-          case model.specs of
+          case model.scenarios of
             [] ->
               ( model, config.send Lifecycle.specComplete )
-            (Spec spec) :: remaining ->
-              ( { model | specs = remaining, state = Configure (Spec spec) }
+            (Scenario scenarioData) :: remaining ->
+              ( { model | scenarios = remaining, state = Configure (Scenario scenarioData) }
               , Cmd.batch
                 [ config.send Lifecycle.configureComplete
-                , Cmd.batch <| List.map config.send spec.subject.configureEnvironment
+                , Cmd.batch <| List.map config.send scenarioData.subject.configureEnvironment
                 ]
               )
-        Configure spec ->
-          ( { model | state = toExercise spec }
+        Configure scenarioData ->
+          ( { model | state = toExercise scenarioData }
           , goToNext
           )
-        Exercise spec exerciseModel ->
+        Exercise scenarioData exerciseModel ->
           case exerciseModel.steps of
             [] ->
-              ( { model | state = toObserve spec exerciseModel }
+              ( { model | state = toObserve scenarioData exerciseModel }
               , goToNext
               )
             step :: remaining ->
-              ( { model | state = Exercise spec
+              ( { model | state = Exercise scenarioData
                   { exerciseModel
                   | steps = remaining
                   , conditionsApplied = addIfAbsent step.condition exerciseModel.conditionsApplied
                   }
                 }
-              , subjectFrom spec
+              , subjectFrom scenarioData
                   |> currentSubject exerciseModel
                   |> step.run
               )
-        Observe spec observeModel ->
+        Observe scenarioData observeModel ->
           case observeModel.requirements of
             [] ->
-              ( { model
-                | specs = List.append (scenarioSpecs spec observeModel) model.specs 
-                , state = Ready
-                }
-              , goToNext
-              )
+              ( { model | state = Ready }, goToNext )
             requirement :: remaining ->
-              ( { model | state = Observe spec { observeModel | requirements = remaining } }
-              , subjectFrom spec
+              ( { model | state = Observe scenarioData { observeModel | requirements = remaining } }
+              , subjectFrom scenarioData
                   |> currentSubject observeModel
                   |> requirement.expectation requirement.description config
               )
@@ -359,7 +359,7 @@ lifecycleUpdate config msg model =
           ( model, config.send Lifecycle.specComplete )
     Lifecycle.Abort report ->
       case model.state of
-        Exercise spec exerciseModel ->
+        Exercise scenarioData exerciseModel ->
           ( { model | state = Abort }
           , Observer.Reject report
               |> Observer.observation exerciseModel.conditionsApplied "A spec step failed"
@@ -369,33 +369,24 @@ lifecycleUpdate config msg model =
           ( model, Cmd.none )
 
 
-toExercise : Spec model msg -> State model msg
-toExercise (Spec spec) =
-  Exercise (Spec spec)
-    { conditionsApplied = spec.subject.conditions
-    , model = spec.subject.model
-    , effects = spec.subject.effects
-    , steps = spec.steps
+toExercise : Scenario model msg -> State model msg
+toExercise (Scenario scenarioData) =
+  Exercise (Scenario scenarioData)
+    { conditionsApplied = scenarioData.subject.conditions
+    , model = scenarioData.subject.model
+    , effects = scenarioData.subject.effects
+    , steps = scenarioData.steps
     }
 
 
-toObserve : Spec model msg -> ExerciseModel model msg -> State model msg
-toObserve (Spec spec) exerciseModel =
-  Observe (Spec spec)
+toObserve : Scenario model msg -> ExerciseModel model msg -> State model msg
+toObserve (Scenario scenarioData) exerciseModel =
+  Observe (Scenario scenarioData)
     { conditionsApplied = exerciseModel.conditionsApplied
     , model = exerciseModel.model
     , effects = exerciseModel.effects
-    , requirements = spec.requirements
+    , requirements = scenarioData.requirements
     }
-
-
-scenarioSpecs : Spec model msg -> ObserveModel model msg -> List (Spec model msg)
-scenarioSpecs (Spec spec) observeModel =
-  spec.scenarios
-    |> List.map (\generator ->
-      currentSubject observeModel spec.subject
-        |> generator
-    )
 
 
 currentSubject : StateModel model a -> Subject model msg -> Subject model msg
@@ -410,9 +401,9 @@ currentSubject state original =
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
   case model.state of
-    Exercise (Spec spec) exerciseModel ->
+    Exercise (Scenario scenarioData) exerciseModel ->
       Sub.batch
-      [ Sub.map ProgramMsg <| Subject.subscriptions spec.subject
+      [ Sub.map ProgramMsg <| Subject.subscriptions scenarioData.subject
       , Procedure.Program.subscriptions model.procedureModel
       ]
     _ ->
@@ -421,7 +412,12 @@ subscriptions config model =
 
 init : Config msg -> List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
 init config specs _ =
-  ( { specs = specs, state = Ready, procedureModel = Procedure.Program.init }
+  ( { scenarios =
+        List.map (\(Spec scenarios) -> scenarios) specs
+          |> List.concat
+    , state = Ready
+    , procedureModel = Procedure.Program.init
+    }
   , Cmd.batch
     [ receiveLifecycleMessages config
     , receiveEffectMessages config
@@ -450,9 +446,9 @@ browserProgram config specs =
 
 -- Helpers
 
-subjectFrom : Spec model msg -> Subject model msg
-subjectFrom (Spec spec) =
-  spec.subject
+subjectFrom : Scenario model msg -> Subject model msg
+subjectFrom (Scenario scenarioData) =
+  scenarioData.subject
 
 
 addIfAbsent : a -> List a -> List a

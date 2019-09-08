@@ -14,23 +14,25 @@ import Time exposing (Posix)
 
 countTimePassingSpec : Spec Model Msg
 countTimePassingSpec =
-  Spec.given "a worker that subscribes to the time" (
-    Subject.init ( { count = 0 }, Cmd.none )
-      |> Subject.withUpdate testUpdate
-      |> Subject.withSubscriptions testSubscriptions
-      |> Spec.Time.fake
-  )
-  |> Spec.when "time passes"
-    [ Spec.Time.tick 1000
-    , Spec.Time.tick 1000
-    , Spec.Time.tick 1000
-    , Spec.Time.tick 1000
-    ]
-  |> Spec.it "updates the model" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 4)
-  )
+  Spec.describe "a worker that subscribes to the time"
+  [ Spec.scenario "the time passes as expected" (
+      Subject.init ( { count = 0 }, Cmd.none )
+        |> Subject.withUpdate testUpdate
+        |> Subject.withSubscriptions testSubscriptions
+        |> Spec.Time.fake
+    )
+    |> Spec.when "time passes"
+      [ Spec.Time.tick 1000
+      , Spec.Time.tick 1000
+      , Spec.Time.tick 1000
+      , Spec.Time.tick 1000
+      ]
+    |> Spec.it "updates the model" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 4)
+    )
+  ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

@@ -9,46 +9,52 @@ import Runner
 
 failingSpec : Spec Model Msg
 failingSpec =
-  Spec.given "a fragment" (
-    Subject.initWithModel { count = 99, name = "" }
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "fails" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 17)
-  )
+  Spec.describe "a fragment"
+  [ Spec.scenario "failing observation" (
+      Subject.initWithModel { count = 99, name = "" }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "fails" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 17)
+    )
+  ]
 
 
 passingSpec : Spec Model Msg
 passingSpec =
-  Spec.given "a fragment" (
-    Subject.initWithModel { count = 99, name = "" }
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "contains the expected value" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 99)
-  )
+  Spec.describe "a fragment"
+  [ Spec.scenario "a valid observation" (
+      Subject.initWithModel { count = 99, name = "" }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "contains the expected value" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 99)
+    )
+  ]
 
 
 multipleObservationsSpec : Spec Model Msg
 multipleObservationsSpec =
-  Spec.given "a fragment" (
-    Subject.initWithModel { count = 87, name = "fun-spec" }
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "contains the expected number" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 87)
-  )
-  |> Spec.it "contains the expected name" (
-    Actual.model
-      |> Actual.map .name
-      |> Spec.expect (Observer.isEqual "awesome-spec")
-  )
+  Spec.describe "a fragment"
+  [ Spec.scenario "multiple observations" (
+      Subject.initWithModel { count = 87, name = "fun-spec" }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "contains the expected number" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 87)
+    )
+    |> Spec.it "contains the expected name" (
+      Actual.model
+        |> Actual.map .name
+        |> Spec.expect (Observer.isEqual "awesome-spec")
+    )
+  ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

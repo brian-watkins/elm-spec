@@ -11,30 +11,35 @@ import Runner
 
 spySpec : Spec Model Msg
 spySpec =
-  Spec.given "a fragment injected with a cmd-generating function" (
-    Subject.initWithModel { count = 0 }
-      |> Witness.forUpdate (\witness -> testUpdate <| \_ -> Witness.spy "injected" witness)
-      |> Subject.withSubscriptions testSubscriptions
-      |> Subject.withEffects [ { home = "test", name = "some-message", body = Encode.null } ]
-  )
-  |> Spec.when "a message is sent that triggers the injected function"
-    [ Port.send "witnessSpecSub" <| Encode.int 88
-    ]
-  |> Spec.it "records the call to the injected function" (
-    Witness.expect "injected" (Witness.hasStatements 1)
-  )
-  |> Spec.suppose (
-    Spec.given "the witness has no statements"
-      >> Spec.it "fails" (
-        Witness.expect "some-other-witness" (Witness.hasStatements 1)
+  Spec.describe "a fragment injected with a cmd-generating function"
+  [ Spec.scenario "the witness is called the expected number of times" testSubject
+      |> triggerInjectedFunctionWith 88
+      |> Spec.it "records the call to the injected function" (
+        Witness.expect "injected" (Witness.hasStatements 1)
       )
-  )
-  |> Spec.suppose (
-    Spec.given "the witness has too few statements"
-      >> Spec.it "fails" (
+  , Spec.scenario "the witness is never triggered" testSubject
+      |> Spec.it "fails" (
+        Witness.expect "injected" (Witness.hasStatements 1)
+      )
+  , Spec.scenario "the witness has too few statements" testSubject
+      |> triggerInjectedFunctionWith 88
+      |> Spec.it "fails" (
         Witness.expect "injected" (Witness.hasStatements 17)
       )
-  )
+  ]
+
+
+testSubject =
+  Subject.initWithModel { count = 0 }
+    |> Witness.forUpdate (\witness -> testUpdate <| \_ -> Witness.spy "injected" witness)
+    |> Subject.withSubscriptions testSubscriptions
+    |> Subject.withEffects [ { home = "test", name = "some-message", body = Encode.null } ]
+
+
+triggerInjectedFunctionWith number =
+  Spec.when "a message is sent that triggers the injected function"
+  [ Port.send "witnessSpecSub" <| Encode.int 88
+  ]
 
 
 type Msg =

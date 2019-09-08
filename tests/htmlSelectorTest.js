@@ -1,6 +1,4 @@
-const chai = require('chai')
-const expect = chai.expect
-const { expectFailingBrowserSpec, expectPassingBrowserSpec } = require("./helpers/SpecHelpers")
+const { expectPassingBrowserSpec } = require("./helpers/SpecHelpers")
 
 describe("Selectors", () => {
   describe("tag", () => {

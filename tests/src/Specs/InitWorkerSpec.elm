@@ -10,28 +10,32 @@ import Task
 
 usesModelFromInitSpec : Spec Model Msg
 usesModelFromInitSpec =
-  Spec.given "a worker" (
-    Subject.init testInit
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "uses the given model" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 41)
-  )
+  Spec.describe "a worker"
+  [ Spec.scenario "Uses Model from Init" (
+      Subject.init testInit
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "uses the given model" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 41)
+    )
+  ]
 
 
 usesCommandFromInitSpec : Spec Model Msg
 usesCommandFromInitSpec =
-  Spec.given "a worker with an initial command" (
-    Subject.init (testInitWithCommand 33)
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "updates the model" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 33)
-  )
+  Spec.describe "a worker"
+  [ Spec.scenario "Uses command from Init" (
+      Subject.init (testInitWithCommand 33)
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "updates the model" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 33)
+    )
+  ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

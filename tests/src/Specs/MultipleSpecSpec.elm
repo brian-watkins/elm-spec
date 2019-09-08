@@ -12,49 +12,56 @@ import Json.Decode as Json
 
 passingSpec : Spec Model Msg
 passingSpec =
-  Spec.given "a fragment" (
-    Subject.initWithModel { count = 99 }
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "contains the expected value" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 99)
-  )
+  Spec.describe "a fragment"
+  [ Spec.scenario "the observation is valid" (
+      Subject.initWithModel { count = 99 }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "contains the expected value" (
+        Actual.model
+          |> Actual.map .count
+          |> Spec.expect (Observer.isEqual 99)
+    )
+  ]
 
 
 failingSpec : Spec Model Msg
 failingSpec =
-  Spec.given "another fragment" (
-    Subject.initWithModel { count = 99 }
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "contains the expected value" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 76)
-  )
+  Spec.describe "another fragment"
+  [ Spec.scenario "the observation is invalid" (
+      Subject.initWithModel { count = 99 }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "contains the expected value" (
+        Actual.model
+          |> Actual.map .count
+          |> Spec.expect (Observer.isEqual 76)
+    )
+  ]
 
 
 specWithAScenario : Spec Model Msg
 specWithAScenario =
-  Spec.given "a third fragment" (
-    Subject.initWithModel { count = 108 }
-      |> Subject.withUpdate testUpdate
-  )
-  |> Spec.it "contains the expected value" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 108)
-  )
-  |> Spec.suppose (
-    Spec.given "another scenario"
-      >> Spec.it "contains a different value" (
+  Spec.describe "a third fragment"
+  [ Spec.scenario "passing" (
+      Subject.initWithModel { count = 108 }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "contains the expected value" (
+        Actual.model
+          |> Actual.map .count
+          |> Spec.expect (Observer.isEqual 108)
+    )
+  , Spec.scenario "failing" (
+      Subject.initWithModel { count = 108 }
+        |> Subject.withUpdate testUpdate
+    )
+    |> Spec.it "contains a different value" (
         Actual.model
           |> Actual.map .count
           |> Spec.expect (Observer.isEqual 94)
-      )
-  )
+    )
+  ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

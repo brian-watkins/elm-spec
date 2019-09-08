@@ -12,20 +12,22 @@ import Json.Encode as Encode
 
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
-  Spec.given "a worker with subscriptions" (
-    Subject.init ( { count = 0 }, Cmd.none )
-      |> Subject.withUpdate testUpdate
-      |> Subject.withSubscriptions testSubscriptions
-  )
-  |> Spec.when "some subscription messages are sent"
-    [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
-    , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
-    ]
-  |> Spec.it "updates the model" (
-    Actual.model
-      |> Actual.map .count
-      |> Spec.expect (Observer.isEqual 78)
-  )
+  Spec.describe "a worker with subscriptions"
+  [ Spec.scenario "the worker receives subscriptions" (
+      Subject.init ( { count = 0 }, Cmd.none )
+        |> Subject.withUpdate testUpdate
+        |> Subject.withSubscriptions testSubscriptions
+    )
+    |> Spec.when "some subscription messages are sent"
+      [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
+      , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+      ]
+    |> Spec.it "updates the model" (
+      Actual.model
+        |> Actual.map .count
+        |> Spec.expect (Observer.isEqual 78)
+    )
+  ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

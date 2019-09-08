@@ -13,46 +13,50 @@ import Task
 
 processCommandSpec : Spec Model Msg
 processCommandSpec =
-  Spec.given "a worker" (
-    Subject.init ( { count = 0, num = 0 }, Cmd.none )
-      |> Subject.withUpdate testUpdate
-      |> Subject.withSubscriptions testSubscriptions
-      |> Port.observe "sendSomethingOut"
-  )
-  |> Spec.when "a subscription message is sent"
-    [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
-    ]
-  |> Spec.it "sends the port command the specified number of times" (
-    Port.expect "sendSomethingOut" Json.string <|
-      \messages ->
-        List.length messages
-          |> Observer.isEqual 42
-  )
+  Spec.describe "a worker"
+  [ Spec.scenario "a command is sent by the update function and processed" (
+      Subject.init ( { count = 0, num = 0 }, Cmd.none )
+        |> Subject.withUpdate testUpdate
+        |> Subject.withSubscriptions testSubscriptions
+        |> Port.observe "sendSomethingOut"
+    )
+    |> Spec.when "a subscription message is sent"
+      [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
+      ]
+    |> Spec.it "sends the port command the specified number of times" (
+      Port.expect "sendSomethingOut" Json.string <|
+        \messages ->
+          List.length messages
+            |> Observer.isEqual 42
+    )
+  ]
 
 
 processBatchedTerminatingAndNoCallbackCommands : Spec Model Msg
 processBatchedTerminatingAndNoCallbackCommands =
-  Spec.given "a worker" (
-    Subject.init ( { count = 0, num = 0 }, Cmd.none )
-      |> Subject.withUpdate testUpdate
-      |> Subject.withSubscriptions testSubscriptions
-      |> Port.observe "sendSomethingOut"
-  )
-  |> Spec.when "many subscription messages are sent" (
-    List.range 0 5
-      |> List.map (\num -> Port.send "listenForObject" (Encode.object [ ("number", Encode.int num) ]))
-  )
-  |> Spec.it "sends all the commands" (
-    Port.expect "sendSomethingOut" Json.string <|
-      \messages ->
-        List.length messages
-          |> Observer.isEqual 21
-  )
-  |> Spec.it "it ends up with the right tally" (
-    Actual.model
-      |> Actual.map .num
-      |> Spec.expect (Observer.isEqual 35)
-  )
+  Spec.describe "a worker"
+  [ Spec.scenario "commands with no callback are sent from the update function" (
+      Subject.init ( { count = 0, num = 0 }, Cmd.none )
+        |> Subject.withUpdate testUpdate
+        |> Subject.withSubscriptions testSubscriptions
+        |> Port.observe "sendSomethingOut"
+    )
+    |> Spec.when "many subscription messages are sent" (
+      List.range 0 5
+        |> List.map (\num -> Port.send "listenForObject" (Encode.object [ ("number", Encode.int num) ]))
+    )
+    |> Spec.it "sends all the commands" (
+      Port.expect "sendSomethingOut" Json.string <|
+        \messages ->
+          List.length messages
+            |> Observer.isEqual 21
+    )
+    |> Spec.it "it ends up with the right tally" (
+      Actual.model
+        |> Actual.map .num
+        |> Spec.expect (Observer.isEqual 35)
+    )
+  ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )

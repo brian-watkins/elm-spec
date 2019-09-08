@@ -13,23 +13,25 @@ import Time exposing (Posix)
 
 intervalSpec : Spec Model Msg
 intervalSpec =
-  Spec.given "a program that updates the time" (
-    Subject.initWithModel { count = 0 }
-      |> Subject.withUpdate testUpdate
-      |> Subject.withView testView
-      |> Subject.withSubscriptions testSubscriptions
-      |> Spec.Time.fake
-  )
-  |> Spec.when "time passes" 
-    [ Spec.Time.tick 1000
-    , Spec.Time.tick 1000
-    , Spec.Time.tick 1000
-    , Spec.Time.tick 1000
-    ]
-  |> Spec.it "updates the count" (
-    Markup.select << by [ id "seconds-passed" ]
-      |> Markup.expectElement (hasText "4 seconds passed")
-  )
+  Spec.describe "an Html program that updates the time"
+  [ Spec.scenario "the expected amount of time passes" (
+      Subject.initWithModel { count = 0 }
+        |> Subject.withUpdate testUpdate
+        |> Subject.withView testView
+        |> Subject.withSubscriptions testSubscriptions
+        |> Spec.Time.fake
+    )
+    |> Spec.when "time passes"
+      [ Spec.Time.tick 1000
+      , Spec.Time.tick 1000
+      , Spec.Time.tick 1000
+      , Spec.Time.tick 1000
+      ]
+    |> Spec.it "updates the count" (
+      Markup.select << by [ id "seconds-passed" ]
+        |> Markup.expectElement (hasText "4 seconds passed")
+    )
+  ]
 
 
 type Msg

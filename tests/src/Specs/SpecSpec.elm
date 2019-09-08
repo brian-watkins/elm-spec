@@ -10,84 +10,72 @@ import Json.Encode as Encode
 import Json.Decode as Json
 
 
+noScenariosSpec : Spec Model Msg
+noScenariosSpec =
+  Spec.describe "nothing" []
+
+
 multipleWhenSpec : Spec Model Msg
 multipleWhenSpec =
-  Spec.given "a test worker" (
-    Subject.init ( { counts = [] }, Cmd.none )
+  Spec.describe "A Spec"
+  [ Spec.scenario "multiple when blocks" testSubject
+      |> Spec.when "the first two subs are sent"
+        [ sendMessageWith 41
+        , sendMessageWith 78
+        ]
+      |> Spec.when "a third sub is sent"
+        [ sendMessageWith 39
+        ]
+      |> Spec.it "updates the model with all three subscriptions" (
+          Actual.model
+            |> Actual.map .counts
+            |> Spec.expect (Observer.isEqual [ 39, 78, 41 ])
+      )
+  ]
+
+
+testSubject =
+  Subject.init ( { counts = [] }, Cmd.none )
       |> Subject.withUpdate testUpdate
       |> Subject.withSubscriptions testSubscriptions
-  )
-  |> Spec.when "the first two subs are sent"
-    [ Port.send "specSpecSub" <| subMessageWith 41
-    , Port.send "specSpecSub" <| subMessageWith 78
-    ]
-  |> Spec.when "a third sub is sent"
-    [ Port.send "specSpecSub" <| subMessageWith 39
-    ]
-  |> Spec.it "updates the model with all three subscriptions" (
-      Actual.model
-        |> Actual.map .counts
-        |> Spec.expect (Observer.isEqual [ 39, 78, 41 ])
-  )
 
 
 multipleScenariosSpec : Spec Model Msg
 multipleScenariosSpec =
-  Spec.given "a test worker" (
-    Subject.init ( { counts = [] }, Cmd.none )
-      |> Subject.withUpdate testUpdate
-      |> Subject.withSubscriptions testSubscriptions
-  )
-  |> Spec.when "the first sub is sent"
-    [ Port.send "specSpecSub" <| subMessageWith 87
-    ]
-  |> Spec.it "records the first number" (
-      Actual.model
-        |> Actual.map .counts
-        |> Spec.expect (Observer.isEqual [ 87 ])
-  )
-  |> Spec.suppose (
-    Spec.given "another scenario"
-      >>
-    Spec.when "another sub is sent"
-      [ Port.send "specSpecSub" <| subMessageWith 82 ]
-      >>
-    Spec.it "records the second number" (
-      Actual.model
-        |> Actual.map .counts
-        |> Spec.expect (Observer.isEqual [ 82, 87 ])
-    )
-      >>
-    Spec.suppose (
-      Spec.given "a final scenario"
-        >>
-      Spec.when "the final sub is sent"
-        [ Port.send "specSpecSub" <| subMessageWith 0 ]
-        >>
-      Spec.it "records the final number" (
+  Spec.describe "Multiple scenarios"
+  [ Spec.scenario "the happy path" testSubject
+      |> Spec.when "a single message is sent"
+        [ sendMessageWith 87
+        ]
+      |> Spec.it "records the number" (
         Actual.model
           |> Actual.map .counts
-          |> Spec.expect (Observer.isEqual [ 0, 82, 87 ])
+          |> Spec.expect (Observer.isEqual [ 87 ])
       )
-    )
-  )
-  |> Spec.suppose (
-    Spec.given "an awesome scenario"
-      >>
-    Spec.when "another awesome sub is sent"
-      [ Port.send "specSpecSub" <| subMessageWith 41 ]
-      >>
-    Spec.it "records the second awesome number" (
-      Actual.model
-        |> Actual.map .counts
-        |> Spec.expect (Observer.isEqual [ 41, 87 ])
-    )
-  )
+  , Spec.scenario "multiple sub messages are sent" testSubject
+      |> Spec.when "multiple messages are sent"
+        [ sendMessageWith 87
+        , sendMessageWith 65
+        ]
+      |> Spec.it "records the numbers" (
+        Actual.model
+          |> Actual.map .counts
+          |> Spec.expect (Observer.isEqual [ 65, 87 ])
+      )
+  , Spec.scenario "a different message is sent" testSubject
+      |> Spec.when "a single message is sent"
+        [ sendMessageWith 14
+        ]
+      |> Spec.it "records the number" (
+        Actual.model
+          |> Actual.map .counts
+          |> Spec.expect (Observer.isEqual [ 14 ])
+      )
+  ]
 
 
-subMessageWith : Int -> Json.Value
-subMessageWith number =
-  Encode.object [ ("number", Encode.int number) ]
+sendMessageWith number =
+  Port.send "specSpecSub" <| Encode.object [ ("number", Encode.int number) ]
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
@@ -102,6 +90,7 @@ selectSpec name =
   case name of
     "multipleWhen" -> Just multipleWhenSpec
     "scenarios" -> Just multipleScenariosSpec
+    "noScenarios" -> Just noScenariosSpec
     _ -> Nothing
 
 

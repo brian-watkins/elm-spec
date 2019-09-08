@@ -18,13 +18,13 @@ describe("witness", () => {
         expectSpec("WitnessSpec", "spy", done, (observations) => {
           expect(observations[1].report).to.deep.equal([
             { statement: "Expected witness", detail: "injected" },
-            { statement: "to have been called", detail: "17 times" },
-            { statement: "but it was called", detail: "1 time" }
-          ])
-          expect(observations[2].report).to.deep.equal([
-            { statement: "Expected witness", detail: "some-other-witness" },
             { statement: "to have been called", detail: "1 time" },
             { statement: "but it was called", detail: "0 times" }
+          ])
+          expect(observations[2].report).to.deep.equal([
+            { statement: "Expected witness", detail: "injected" },
+            { statement: "to have been called", detail: "17 times" },
+            { statement: "but it was called", detail: "1 time" }
           ])
         })
       })

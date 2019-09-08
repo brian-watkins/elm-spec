@@ -13,19 +13,21 @@ import Runner
 
 inputSpec : Spec Model Msg
 inputSpec =
-  Spec.given "an html program with a input event" (
-    Subject.initWithModel { message = "" }
-      |> Subject.withUpdate testUpdate
-      |> Subject.withView testView
-  )
-  |> Spec.when "some text is input"
-    [ Markup.target << by [ id "my-field" ]
-    , Event.input "Here is some fun text!"
-    ]
-  |> Spec.it "renders the text on the view" (
-    Markup.select << by [ id "my-message" ]
-      |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
-  )
+  Spec.describe "an html program"
+  [ Spec.scenario "Input event" (
+      Subject.initWithModel { message = "" }
+        |> Subject.withUpdate testUpdate
+        |> Subject.withView testView
+    )
+    |> Spec.when "some text is input"
+      [ Markup.target << by [ id "my-field" ]
+      , Event.input "Here is some fun text!"
+      ]
+    |> Spec.it "renders the text on the view" (
+      Markup.select << by [ id "my-message" ]
+        |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
+    )
+  ]
 
 
 type Msg =
