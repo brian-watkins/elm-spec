@@ -11,6 +11,7 @@
         "Spec.Message",
         "Spec.Observer",
         "Spec.Port",
+        "Spec.Step",
         "Spec.Subject",
         "Spec.Time",
         "Spec.Witness"

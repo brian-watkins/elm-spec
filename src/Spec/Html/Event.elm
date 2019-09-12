@@ -3,36 +3,38 @@ module Spec.Html.Event exposing
   , input
   )
 
-import Spec.Subject exposing (Subject)
-import Spec.Message as Message exposing (Message)
+import Spec.Step as Step
+import Spec.Message as Message
 import Json.Encode as Encode
 import Json.Decode as Json
 
 
-click : Subject model msg -> Message
-click subject =
-  { home = "_html"
-  , name = "click"
-  , body = Encode.object
-    [ ( "selector", Encode.string <| targetSelector subject )
-    ]
-  }
+click : Step.Context model -> Step.Command msg
+click context =
+  Step.sendMessage
+    { home = "_html"
+    , name = "click"
+    , body = Encode.object
+      [ ( "selector", Encode.string <| targetSelector context )
+      ]
+    }
 
 
-input : String -> Subject model msg -> Message
-input text subject =
-  { home = "_html"
-  , name = "input"
-  , body = Encode.object
-    [ ( "selector", Encode.string <| targetSelector subject )
-    , ( "text", Encode.string text )
-    ]
-  }
+input : String -> Step.Context model -> Step.Command msg
+input text context =
+  Step.sendMessage
+    { home = "_html"
+    , name = "input"
+    , body = Encode.object
+      [ ( "selector", Encode.string <| targetSelector context )
+      , ( "text", Encode.string text )
+      ]
+    }
 
 
-targetSelector : Subject model msg -> String
-targetSelector subject =
-  subject.effects
+targetSelector : Step.Context model -> String
+targetSelector context =
+  context.effects
     |> List.filter (Message.is "_html" "target")
     |> List.head
     |> Maybe.andThen (Message.decode Json.string)

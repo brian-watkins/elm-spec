@@ -6,6 +6,7 @@ module Spec.Port exposing
 
 import Spec exposing (Expectation)
 import Spec.Subject as Subject exposing (Subject)
+import Spec.Step as Step
 import Spec.Actual as Actual
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Message as Message exposing (Message)
@@ -35,9 +36,9 @@ observe portName =
     |> Subject.configure
 
 
-send : String -> Encode.Value -> Subject model msg -> Message
+send : String -> Encode.Value -> Step.Context model -> Step.Command msg
 send name value _ =
-  sendSubscription name value
+  Step.sendMessage <| sendSubscription name value
 
 
 expect : String -> Json.Decoder a -> Observer (List a) -> Expectation model msg

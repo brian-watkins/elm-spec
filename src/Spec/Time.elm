@@ -4,7 +4,7 @@ module Spec.Time exposing
   )
 
 import Spec.Subject as Subject exposing (Subject)
-import Spec.Message exposing (Message)
+import Spec.Step as Step
 import Json.Encode as Encode
 
 fake : Subject model msg -> Subject model msg
@@ -16,9 +16,10 @@ fake =
   |> Subject.configure
 
 
-tick : Int -> Subject model msg -> Message
+tick : Int -> Step.Context model -> Step.Command msg
 tick duration _ =
-  { home = "_time"
-  , name = "tick"
-  , body = Encode.int duration
-  }
+  Step.sendMessage
+    { home = "_time"
+    , name = "tick"
+    , body = Encode.int duration
+    }

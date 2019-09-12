@@ -13,6 +13,8 @@ import Spec.Message as Message exposing (Message)
 import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Actual as Actual exposing (Actual)
+import Spec.Step as Step exposing (Step)
+import Spec.Step.Command as StepCommand
 import Task
 import Json.Encode exposing (Value)
 import Html exposing (Html)
@@ -35,12 +37,6 @@ type Scenario model msg =
     , steps: List (Step model msg)
     , requirements: List (Requirement model msg)
     }
-
-
-type alias Step model msg =
-  { run: Subject model msg -> Cmd (Msg msg)
-  , condition: String
-  }
 
 
 type Expectation model msg =
@@ -74,29 +70,21 @@ scenario description specSubject =
   Scenario
     { subject = specSubject
     , steps = 
-        [ { condition = formatScenarioDescription description
-          , run = \_ ->
-            if specSubject.initialCommand == Cmd.none then
-              goToNext
-            else
-              Cmd.map ProgramMsg specSubject.initialCommand
-          }
+        [ Step.build (formatScenarioDescription description) <|
+            \_ ->
+              Step.sendCommand specSubject.initialCommand
         ]
     , requirements = []
     }
 
 
-when : String -> List (Subject model msg -> Message) -> Scenario model msg -> Scenario model msg
+when : String -> List (Step.Context model -> Step.Command msg) -> Scenario model msg -> Scenario model msg
 when condition messageSteps (Scenario scenarioData) =
   Scenario
     { scenarioData
     | steps =
         messageSteps
-          |> List.map (\f -> \specSubject ->
-            f specSubject
-              |> sendMessage
-          )
-          |> List.map (\step -> { run = step, condition = formatCondition condition })
+          |> List.map (Step.build <| formatCondition condition)
           |> List.append scenarioData.steps
     }
 
@@ -342,12 +330,16 @@ lifecycleUpdate config msg model =
               ( { model | state = Exercise scenarioData
                   { exerciseModel
                   | steps = remaining
-                  , conditionsApplied = addIfAbsent step.condition exerciseModel.conditionsApplied
+                  , conditionsApplied =
+                      Step.condition step
+                        |> addIfUnique exerciseModel.conditionsApplied
                   }
                 }
-              , subjectFrom scenarioData
-                  |> currentSubject exerciseModel
-                  |> step.run
+              , { model = exerciseModel.model, effects = exerciseModel.effects }
+                  |> Step.run step 
+                  |> StepCommand.map ProgramMsg
+                  |> StepCommand.withDefault goToNext
+                  |> StepCommand.toCmdOr sendMessage
               )
         Observe scenarioData observeModel ->
           case observeModel.requirements of
@@ -458,8 +450,8 @@ subjectFrom (Scenario scenarioData) =
   scenarioData.subject
 
 
-addIfAbsent : a -> List a -> List a
-addIfAbsent val list =
+addIfUnique : List a -> a -> List a
+addIfUnique list val =
   if List.member val list then
     list
   else

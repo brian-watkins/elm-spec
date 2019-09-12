@@ -13,6 +13,7 @@ import Spec.Actual as Actual
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observer.Report as Report
 import Spec.Subject exposing (Subject)
+import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -28,12 +29,13 @@ type Selection
   = By (List Selector)
 
 
-target : Selection -> Message
+target : Selection -> Step.Command msg
 target selection =
-  { home = "_html"
-  , name = "target"
-  , body = Encode.string <| toString selection
-  }
+  Step.sendMessage
+    { home = "_html"
+    , name = "target"
+    , body = Encode.string <| toString selection
+    }
 
 
 select : Selection -> Selection
