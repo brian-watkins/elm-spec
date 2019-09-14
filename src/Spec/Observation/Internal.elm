@@ -1,6 +1,6 @@
 module Spec.Observation.Internal exposing
   ( Judgment(..)
-  , Observation(..)
+  , Expectation(..)
   , Context
   , Config
   , toProcedure
@@ -14,8 +14,8 @@ import Procedure.Channel as Channel
 import Spec.Observation.Report as Report
 
 
-type Observation model =
-  Observation
+type Expectation model =
+  Expectation
     (Context model -> Judgment model)
 
 
@@ -37,8 +37,8 @@ type alias Config msg a =
   }
 
 
-toProcedure : Config msg a -> Context model -> Observation model -> Procedure Never Verdict msg
-toProcedure config context (Observation observation) =
+toProcedure : Config msg a -> Context model -> Expectation model -> Procedure Never Verdict msg
+toProcedure config context (Expectation observation) =
   case observation context of
     Complete verdict ->
       Procedure.provide verdict

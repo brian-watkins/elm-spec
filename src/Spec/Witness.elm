@@ -7,7 +7,7 @@ module Spec.Witness exposing
   , hasStatements
   )
 
-import Spec.Observation as Observation exposing (Observation)
+import Spec.Observation as Observation exposing (Expectation)
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer)
@@ -39,7 +39,7 @@ spy name (Witness witness) =
     }
 
 
-expect : String -> Observer (List Statement) -> Observation model
+expect : String -> Observer (List Statement) -> Expectation model
 expect name observer =
   Observation.selectEffects
     |> Observation.mapSelection (filterStatementsFromWitness name)

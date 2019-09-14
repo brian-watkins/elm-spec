@@ -4,7 +4,7 @@ module Spec.Observation exposing
   , selectEffects
   , inquire
   , mapSelection
-  , Observation
+  , Expectation
   , Judgment
   , expect
   )
@@ -24,8 +24,8 @@ type alias Judgment model =
   Internal.Judgment model
 
 
-type alias Observation model =
-  Internal.Observation model
+type alias Expectation model =
+  Internal.Expectation model
 
 
 selectModel : Selection model model
@@ -54,9 +54,9 @@ mapSelection mapper selection =
       Inquiry message (generator >> mapper)
 
 
-expect : Observer a -> Selection model a -> Observation model
+expect : Observer a -> Selection model a -> Expectation model
 expect observer selection =
-  Internal.Observation <|
+  Internal.Expectation <|
     \context ->
       case selection of
         Model mapper ->

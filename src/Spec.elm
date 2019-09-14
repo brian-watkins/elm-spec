@@ -14,7 +14,7 @@ import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Step as Step exposing (Step)
 import Spec.Step.Command as StepCommand
-import Spec.Observation as Observation exposing (Observation)
+import Spec.Observation as Observation exposing (Expectation)
 import Spec.Observation.Internal as Observation_
 import Task
 import Html exposing (Html)
@@ -34,8 +34,14 @@ type Scenario model msg =
   Scenario
     { subject: Subject model msg
     , steps: List (Step model msg)
-    , observations: List ({ description: String, observation: Observation model })
+    , observations: List (Observation model)
     }
+
+
+type alias Observation model =
+  { description: String
+  , expectation: Expectation model
+  }
 
 
 describe : String -> List (Scenario model msg) -> Spec model msg
@@ -77,13 +83,13 @@ when condition messageSteps (Scenario scenarioData) =
     }
 
 
-it : String -> Observation model -> Scenario model msg -> Scenario model msg
-it description observation (Scenario scenarioData) =
+it : String -> Expectation model -> Scenario model msg -> Scenario model msg
+it description expectation (Scenario scenarioData) =
   Scenario
     { scenarioData
     | observations = List.append scenarioData.observations
         [ { description = formatObservationDescription description
-          , observation = observation 
+          , expectation = expectation
           }
         ]
     }
@@ -176,7 +182,7 @@ type alias ExerciseModel model msg =
 
 type alias ObserveModel model =
   StateModel model
-    { observations: (List ({ description: String, observation: Observation model }))
+    { observations: List (Observation model)
     }
 
 
@@ -295,7 +301,7 @@ lifecycleUpdate config msg model =
               ( { model | state = Ready }, goToNext )
             observation :: remaining ->
               ( { model | state = Observe scenarioData { observeModel | observations = remaining } }
-              , Observation_.toProcedure config (toObservationContext observeModel) observation.observation
+              , Observation_.toProcedure config (toObservationContext observeModel) observation.expectation
                   |> Procedure.map (Message.observation observeModel.conditionsApplied observation.description)
                   |> Procedure.run ProcedureMsg SendMessage
               )

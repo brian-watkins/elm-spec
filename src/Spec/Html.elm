@@ -8,7 +8,7 @@ module Spec.Html exposing
   , hasText
   )
 
-import Spec.Observation as Observation exposing (Observation)
+import Spec.Observation as Observation exposing (Expectation)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report
 import Spec.Subject exposing (Subject)
@@ -94,7 +94,7 @@ selectAllHtml selection =
   }
 
 
-expectElement : Observer HtmlElement -> (() -> Selection) -> Observation model
+expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model
 expectElement observer selectionGenerator =
   let
     selection = selectionGenerator ()
@@ -110,7 +110,7 @@ expectElement observer selectionGenerator =
       )
 
 
-expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Observation model
+expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Expectation model
 expectElements observer selectionGenerator =
   Observation.inquire (selectAllHtml <| selectionGenerator ())
     |> Observation.mapSelection (Message.decode <| Json.list htmlDecoder)
