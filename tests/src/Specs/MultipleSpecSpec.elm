@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 import Spec.Subject as Subject
 import Spec.Observer as Observer
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Runner as TestRunner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -18,9 +18,9 @@ passingSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "contains the expected value" (
-        Actual.model
-          |> Actual.map .count
-          |> Spec.expect (Observer.isEqual 99)
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 99)
     )
   ]
 
@@ -33,9 +33,9 @@ failingSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "contains the expected value" (
-        Actual.model
-          |> Actual.map .count
-          |> Spec.expect (Observer.isEqual 76)
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 76)
     )
   ]
 
@@ -48,18 +48,18 @@ specWithAScenario =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "contains the expected value" (
-        Actual.model
-          |> Actual.map .count
-          |> Spec.expect (Observer.isEqual 108)
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 108)
     )
   , Spec.scenario "failing" (
       Subject.initWithModel { count = 108 }
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "contains a different value" (
-        Actual.model
-          |> Actual.map .count
-          |> Spec.expect (Observer.isEqual 94)
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 94)
     )
   ]
 

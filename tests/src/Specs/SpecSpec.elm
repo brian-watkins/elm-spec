@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -27,9 +27,9 @@ multipleWhenSpec =
         [ sendMessageWith 39
         ]
       |> Spec.it "updates the model with all three subscriptions" (
-          Actual.model
-            |> Actual.map .counts
-            |> Spec.expect (Observer.isEqual [ 39, 78, 41 ])
+          Observation.selectModel
+            |> Observation.mapSelection .counts
+            |> Observation.expect (Observer.isEqual [ 39, 78, 41 ])
       )
   ]
 
@@ -48,9 +48,9 @@ multipleScenariosSpec =
         [ sendMessageWith 87
         ]
       |> Spec.it "records the number" (
-        Actual.model
-          |> Actual.map .counts
-          |> Spec.expect (Observer.isEqual [ 87 ])
+        Observation.selectModel
+          |> Observation.mapSelection .counts
+          |> Observation.expect (Observer.isEqual [ 87 ])
       )
   , Spec.scenario "multiple sub messages are sent" testSubject
       |> Spec.when "multiple messages are sent"
@@ -58,18 +58,18 @@ multipleScenariosSpec =
         , sendMessageWith 65
         ]
       |> Spec.it "records the numbers" (
-        Actual.model
-          |> Actual.map .counts
-          |> Spec.expect (Observer.isEqual [ 65, 87 ])
+        Observation.selectModel
+          |> Observation.mapSelection .counts
+          |> Observation.expect (Observer.isEqual [ 65, 87 ])
       )
   , Spec.scenario "a different message is sent" testSubject
       |> Spec.when "a single message is sent"
         [ sendMessageWith 14
         ]
       |> Spec.it "records the number" (
-        Actual.model
-          |> Actual.map .counts
-          |> Spec.expect (Observer.isEqual [ 14 ])
+        Observation.selectModel
+          |> Observation.mapSelection .counts
+          |> Observation.expect (Observer.isEqual [ 14 ])
       )
   ]
 

@@ -6,10 +6,11 @@
     "version": "0.0.1",
     "exposed-modules": [
         "Spec",
-        "Spec.Context",
+        "Spec.Command",
         "Spec.Html",
         "Spec.Message",
         "Spec.Observer",
+        "Spec.Observation",
         "Spec.Port",
         "Spec.Step",
         "Spec.Subject",

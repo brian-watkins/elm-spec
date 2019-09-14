@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Spec.Time as Time
 import Runner
 import Json.Encode as Encode
@@ -30,9 +30,9 @@ processSpec =
       , Time.tick 100
       ]
     |> Spec.it "receives the delayed messages" (
-      Actual.model
-        |> Actual.map .items
-        |> Spec.expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
+      Observation.selectModel
+        |> Observation.mapSelection .items
+        |> Observation.expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
     )
   ]
 
@@ -52,9 +52,9 @@ processOnlyUpToDelaySpec =
       , Time.tick 50
       ]
     |> Spec.it "receives the expected messages only" (
-      Actual.model
-        |> Actual.map .items
-        |> Spec.expect (Observer.isEqual [ "Hey", "a", "Hey" ])
+      Observation.selectModel
+        |> Observation.mapSelection .items
+        |> Observation.expect (Observer.isEqual [ "Hey", "a", "Hey" ])
     )
   ]
 

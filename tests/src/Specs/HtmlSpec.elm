@@ -3,12 +3,12 @@ port module Specs.HtmlSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Html as Markup
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Spec.Html.Selector exposing (..)
 import Spec.Html.Event as Event
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Observer.Report as Report
+import Spec.Observation.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -155,9 +155,9 @@ subSpec =
         |> Markup.expectElement (Markup.hasText "The count is 40!")
     )
     |> Spec.it "updates the model" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 40)
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 40)
     )
   ]
 

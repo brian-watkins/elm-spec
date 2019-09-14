@@ -8,10 +8,9 @@ module Spec.Html exposing
   , hasText
   )
 
-import Spec exposing (Expectation)
-import Spec.Actual as Actual
+import Spec.Observation as Observation exposing (Observation)
 import Spec.Observer as Observer exposing (Observer)
-import Spec.Observer.Report as Report
+import Spec.Observation.Report as Report
 import Spec.Subject exposing (Subject)
 import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
@@ -95,14 +94,14 @@ selectAllHtml selection =
   }
 
 
-expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model msg
+expectElement : Observer HtmlElement -> (() -> Selection) -> Observation model
 expectElement observer selectionGenerator =
   let
     selection = selectionGenerator ()
   in
-    Actual.inquire (selectHtml selection)
-      |> Actual.map (Message.decode htmlDecoder)
-      |> Spec.expect (\maybeElement ->
+    Observation.inquire (selectHtml selection)
+      |> Observation.mapSelection (Message.decode htmlDecoder)
+      |> Observation.expect (\maybeElement ->
         case maybeElement of
           Just element ->
             observer element
@@ -111,12 +110,12 @@ expectElement observer selectionGenerator =
       )
 
 
-expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Expectation model msg
+expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Observation model
 expectElements observer selectionGenerator =
-  Actual.inquire (selectAllHtml <| selectionGenerator ())
-    |> Actual.map (Message.decode <| Json.list htmlDecoder)
-    |> Actual.map (Maybe.withDefault [])
-    |> Spec.expect observer
+  Observation.inquire (selectAllHtml <| selectionGenerator ())
+    |> Observation.mapSelection (Message.decode <| Json.list htmlDecoder)
+    |> Observation.mapSelection (Maybe.withDefault [])
+    |> Observation.expect observer
 
 
 type HtmlNode

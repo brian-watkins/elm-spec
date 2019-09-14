@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Observer as Observer
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -52,9 +52,9 @@ processBatchedTerminatingAndNoCallbackCommands =
             |> Observer.isEqual 21
     )
     |> Spec.it "it ends up with the right tally" (
-      Actual.model
-        |> Actual.map .num
-        |> Spec.expect (Observer.isEqual 35)
+      Observation.selectModel
+        |> Observation.mapSelection .num
+        |> Observation.expect (Observer.isEqual 35)
     )
   ]
 

@@ -1,7 +1,7 @@
 module Specs.ExpectModelSpec exposing (..)
 
 import Spec exposing (Spec(..))
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Spec.Subject as Subject
 import Spec.Observer as Observer
 import Runner
@@ -15,9 +15,9 @@ failingSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "fails" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 17)
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 17)
     )
   ]
 
@@ -30,9 +30,9 @@ passingSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "contains the expected value" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 99)
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 99)
     )
   ]
 
@@ -45,14 +45,14 @@ multipleObservationsSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "contains the expected number" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 87)
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 87)
     )
     |> Spec.it "contains the expected name" (
-      Actual.model
-        |> Actual.map .name
-        |> Spec.expect (Observer.isEqual "awesome-spec")
+      Observation.selectModel
+        |> Observation.mapSelection .name
+        |> Observation.expect (Observer.isEqual "awesome-spec")
     )
   ]
 

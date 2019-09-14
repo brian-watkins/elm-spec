@@ -3,7 +3,7 @@ module Specs.InitWorkerSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Observer as Observer
-import Spec.Actual as Actual
+import Spec.Observation as Observation
 import Runner
 import Task
 
@@ -16,9 +16,9 @@ usesModelFromInitSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "uses the given model" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 41)
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 41)
     )
   ]
 
@@ -31,9 +31,9 @@ usesCommandFromInitSpec =
         |> Subject.withUpdate testUpdate
     )
     |> Spec.it "updates the model" (
-      Actual.model
-        |> Actual.map .count
-        |> Spec.expect (Observer.isEqual 33)
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 33)
     )
   ]
 

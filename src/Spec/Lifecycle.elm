@@ -10,7 +10,7 @@ module Spec.Lifecycle exposing
 
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Verdict(..))
-import Spec.Observer.Report as Report exposing (Report)
+import Spec.Observation.Report as Report exposing (Report)
 import Json.Encode as Encode exposing (Value)
 import Json.Decode as Json
 

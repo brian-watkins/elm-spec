@@ -7,12 +7,11 @@ module Spec.Witness exposing
   , hasStatements
   )
 
-import Spec exposing (Expectation)
-import Spec.Actual as Actual
+import Spec.Observation as Observation exposing (Observation)
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer)
-import Spec.Observer.Report as Report
+import Spec.Observation.Report as Report
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -40,11 +39,11 @@ spy name (Witness witness) =
     }
 
 
-expect : String -> Observer (List Statement) -> Expectation model msg
+expect : String -> Observer (List Statement) -> Observation model
 expect name observer =
-  Actual.effects
-    |> Actual.map (filterStatementsFromWitness name)
-    |> Spec.expect (\statements ->
+  Observation.selectEffects
+    |> Observation.mapSelection (filterStatementsFromWitness name)
+    |> Observation.expect (\statements ->
       case observer statements of
         Observer.Accept ->
           Observer.Accept

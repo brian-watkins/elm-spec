@@ -1,24 +1,23 @@
 module Spec exposing
-  ( Spec, Scenario, Expectation
+  ( Spec, Scenario
   , describe, scenario
-  , when, it, expect
+  , when, it
   , Model, Msg, Config
   , update, view, init, subscriptions
   , program, browserProgram
   )
 
-import Spec.Observer as Observer exposing (Observer, Verdict)
-import Spec.Observer.Report as Report
+import Spec.Observer as Observer
+import Spec.Observation.Message as Message
 import Spec.Message as Message exposing (Message)
 import Spec.Lifecycle as Lifecycle
 import Spec.Subject as Subject exposing (Subject)
-import Spec.Actual as Actual exposing (Actual)
 import Spec.Step as Step exposing (Step)
 import Spec.Step.Command as StepCommand
+import Spec.Observation as Observation exposing (Observation)
+import Spec.Observation.Internal as Observation_
 import Task
-import Json.Encode exposing (Value)
 import Html exposing (Html)
-import Dict exposing (Dict)
 import Procedure.Program
 import Procedure
 import Procedure.Channel as Channel
@@ -35,19 +34,8 @@ type Scenario model msg =
   Scenario
     { subject: Subject model msg
     , steps: List (Step model msg)
-    , requirements: List (Requirement model msg)
+    , observations: List ({ description: String, observation: Observation model })
     }
-
-
-type Expectation model msg =
-  Expectation
-    ( String -> Config msg -> Subject model msg -> Cmd (Msg msg) )
-
-
-type alias Requirement model msg =
-  { description: String
-  , expectation: Expectation model msg
-  }
 
 
 describe : String -> List (Scenario model msg) -> Spec model msg
@@ -74,7 +62,7 @@ scenario description specSubject =
             \_ ->
               Step.sendCommand specSubject.initialCommand
         ]
-    , requirements = []
+    , observations = []
     }
 
 
@@ -89,56 +77,16 @@ when condition messageSteps (Scenario scenarioData) =
     }
 
 
-it : String -> Expectation model msg -> Scenario model msg -> Scenario model msg
-it description expectation (Scenario scenarioData) =
+it : String -> Observation model -> Scenario model msg -> Scenario model msg
+it description observation (Scenario scenarioData) =
   Scenario
     { scenarioData
-    | requirements = scenarioData.requirements ++
-      [ { description = formatObservationDescription description
-        , expectation = expectation
-        }
-      ]
+    | observations = List.append scenarioData.observations
+        [ { description = formatObservationDescription description
+          , observation = observation 
+          }
+        ]
     }
-
-
-expect : Observer a -> Actual model a -> Expectation model msg
-expect observer actual =
-  Expectation <| \description config subject ->
-    case actual of
-      Actual.Model mapper ->
-        Procedure.provide subject.model
-          |> Procedure.map (mapper >> observer)
-          |> Procedure.map (Observer.observation subject.conditions description)
-          |> Procedure.run ProcedureMsg SendMessage
-      Actual.Effects mapper ->
-        Procedure.provide subject.effects
-          |> Procedure.map (mapper >> observer)
-          |> Procedure.map (Observer.observation subject.conditions description)
-          |> Procedure.run ProcedureMsg SendMessage
-      Actual.Inquiry message mapper ->
-        Channel.open (\key -> config.send <| Observer.inquiry key message)
-          |> Channel.connect config.listen
-          |> Channel.filter (\key data -> filterForInquiryResult key data)
-          |> Channel.acceptOne
-          |> Procedure.map (\inquiry ->
-            Message.decode Observer.inquiryDecoder inquiry
-              |> Maybe.map .message
-              |> Maybe.map (mapper >> observer)
-              |> Maybe.withDefault (Observer.Reject <| Report.note "Unable to decode inquiry result!")
-              |> Observer.observation subject.conditions description
-          )
-          |> Procedure.run ProcedureMsg SendMessage
-
-
-filterForInquiryResult : String -> Message -> Bool
-filterForInquiryResult key message =
-  if Message.is "_observer" "inquiryResult" message then
-    Message.decode Observer.inquiryDecoder message
-      |> Maybe.map .key
-      |> Maybe.map (\actual -> actual == key)
-      |> Maybe.withDefault False
-  else
-    False
 
 
 sendMessage : Message -> Cmd (Msg msg)
@@ -208,7 +156,7 @@ type State model msg
   = Ready
   | Configure (Scenario model msg)
   | Exercise (Scenario model msg) (ExerciseModel model msg)
-  | Observe (Scenario model msg) (ObserveModel model msg)
+  | Observe (Scenario model msg) (ObserveModel model)
   | Abort
 
 
@@ -226,9 +174,9 @@ type alias ExerciseModel model msg =
     }
 
 
-type alias ObserveModel model msg =
+type alias ObserveModel model =
   StateModel model
-    { requirements: (List (Requirement model msg))
+    { observations: (List ({ description: String, observation: Observation model }))
     }
 
 
@@ -342,17 +290,14 @@ lifecycleUpdate config msg model =
                   |> StepCommand.toCmdOr sendMessage
               )
         Observe scenarioData observeModel ->
-          case observeModel.requirements of
+          case observeModel.observations of
             [] ->
               ( { model | state = Ready }, goToNext )
-            requirement :: remaining ->
-              ( { model | state = Observe scenarioData { observeModel | requirements = remaining } }
-              , let
-                  (Expectation expectation) = requirement.expectation
-                in
-                  subjectFrom scenarioData
-                    |> currentSubject observeModel
-                    |> expectation requirement.description config
+            observation :: remaining ->
+              ( { model | state = Observe scenarioData { observeModel | observations = remaining } }
+              , Observation_.toProcedure config (toObservationContext observeModel) observation.observation
+                  |> Procedure.map (Message.observation observeModel.conditionsApplied observation.description)
+                  |> Procedure.run ProcedureMsg SendMessage
               )
         Abort ->
           ( model, config.send Lifecycle.specComplete )
@@ -361,11 +306,18 @@ lifecycleUpdate config msg model =
         Exercise scenarioData exerciseModel ->
           ( { model | state = Abort }
           , Observer.Reject report
-              |> Observer.observation exerciseModel.conditionsApplied "A spec step failed"
+              |> Message.observation exerciseModel.conditionsApplied "A spec step failed"
               |> config.send
           )
         _ ->
           ( model, Cmd.none )
+
+
+toObservationContext : ObserveModel model -> Observation_.Context model
+toObservationContext observeModel =
+  { model = observeModel.model
+  , effects = observeModel.effects
+  }
 
 
 toExercise : Scenario model msg -> State model msg
@@ -384,7 +336,7 @@ toObserve (Scenario scenarioData) exerciseModel =
     { conditionsApplied = exerciseModel.conditionsApplied
     , model = exerciseModel.model
     , effects = exerciseModel.effects
-    , requirements = scenarioData.requirements
+    , observations = scenarioData.observations
     }
 
 
@@ -444,10 +396,6 @@ browserProgram config specs =
 
 
 -- Helpers
-
-subjectFrom : Scenario model msg -> Subject model msg
-subjectFrom (Scenario scenarioData) =
-  scenarioData.subject
 
 
 addIfUnique : List a -> a -> List a
