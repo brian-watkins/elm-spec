@@ -3,6 +3,7 @@ module Spec.Observation.Message exposing
   , inquiry
   , inquiryDecoder
   , observation
+  , isObservationMessage
   )
 
 import Spec.Message as Message exposing (Message)
@@ -11,27 +12,30 @@ import Spec.Observation.Report as Report
 import Json.Decode as Json
 import Json.Encode as Encode
 
+
 type alias Inquiry =
-  { key: String
-  , message: Message
+  { message: Message
   }
 
 
-inquiry : String -> Message -> Message
-inquiry key message =
+isObservationMessage : Message -> Bool
+isObservationMessage message =
+  message.home == "_observer"
+
+
+inquiry : Message -> Message
+inquiry message =
   { home = "_observer"
   , name = "inquiry"
   , body = Encode.object
-      [ ( "key", Encode.string key )
-      , ( "message", Message.encode message )
+      [ ( "message", Message.encode message )
       ]
   }
 
 
 inquiryDecoder : Json.Decoder Inquiry
 inquiryDecoder =
-  Json.map2 Inquiry
-    ( Json.field "key" Json.string )
+  Json.map Inquiry
     ( Json.field "message" Message.decoder )
 
 

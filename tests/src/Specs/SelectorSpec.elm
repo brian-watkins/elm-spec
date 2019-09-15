@@ -2,6 +2,7 @@ module Specs.SelectorSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Html as Markup
 import Spec.Html.Selector exposing (..)
 import Html exposing (Html)
@@ -13,11 +14,11 @@ import Runner
 attributeNameSelectorSpec : Spec () Msg
 attributeNameSelectorSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "Select by attribute name" (
+  [ scenario "Select by attribute name" (
       Subject.initWithModel ()
         |> Subject.withView testView
     )
-    |> Spec.it "finds the element" (
+    |> it "finds the element" (
       Markup.select << by [ attributeName "data-fun" ]
         |> Markup.expectElement (Markup.hasText "This is fun!")
     )
@@ -27,11 +28,11 @@ attributeNameSelectorSpec =
 onlyOneTagAllowedSpec : Spec () Msg
 onlyOneTagAllowedSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "Select by multiple tags" (
+  [ scenario "Select by multiple tags" (
       Subject.initWithModel ()
         |> Subject.withView testView
     )
-    |> Spec.it "uses the first tag only" (
+    |> it "uses the first tag only" (
       Markup.select << by [ tag "h1", tag "div", tag "a" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
@@ -41,11 +42,11 @@ onlyOneTagAllowedSpec =
 tagSelectorSpec : Spec () Msg
 tagSelectorSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "Selects elements by tag" (
+  [ scenario "Selects elements by tag" (
       Subject.initWithModel ()
         |> Subject.withView testView
     )
-    |> Spec.it "renders the text on the view" (
+    |> it "renders the text on the view" (
       Markup.select << by [ tag "h1" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
@@ -55,19 +56,19 @@ tagSelectorSpec =
 combinedTagSelectorSpec : Spec () Msg
 combinedTagSelectorSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "Selects by tag and then id" (
+  [ scenario "Selects by tag and then id" (
       Subject.initWithModel ()
         |> Subject.withView testView
     )
-    |> Spec.it "selects the text on the view" (
+    |> it "selects the text on the view" (
       Markup.select << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
-  , Spec.scenario "Selects by id and then tag" (
+  , scenario "Selects by id and then tag" (
       Subject.initWithModel ()
         |> Subject.withView testView
     )
-    |> Spec.it "selects the text on the view" (
+    |> it "selects the text on the view" (
       Markup.select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )

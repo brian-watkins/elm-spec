@@ -2,6 +2,7 @@ port module Specs.SpecSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation as Observation
@@ -18,15 +19,15 @@ noScenariosSpec =
 multipleWhenSpec : Spec Model Msg
 multipleWhenSpec =
   Spec.describe "A Spec"
-  [ Spec.scenario "multiple when blocks" testSubject
-      |> Spec.when "the first two subs are sent"
+  [ scenario "multiple when blocks" testSubject
+      |> when "the first two subs are sent"
         [ sendMessageWith 41
         , sendMessageWith 78
         ]
-      |> Spec.when "a third sub is sent"
+      |> when "a third sub is sent"
         [ sendMessageWith 39
         ]
-      |> Spec.it "updates the model with all three subscriptions" (
+      |> it "updates the model with all three subscriptions" (
           Observation.selectModel
             |> Observation.mapSelection .counts
             |> Observation.expect (Observer.isEqual [ 39, 78, 41 ])
@@ -43,30 +44,30 @@ testSubject =
 multipleScenariosSpec : Spec Model Msg
 multipleScenariosSpec =
   Spec.describe "Multiple scenarios"
-  [ Spec.scenario "the happy path" testSubject
-      |> Spec.when "a single message is sent"
+  [ scenario "the happy path" testSubject
+      |> when "a single message is sent"
         [ sendMessageWith 87
         ]
-      |> Spec.it "records the number" (
+      |> it "records the number" (
         Observation.selectModel
           |> Observation.mapSelection .counts
           |> Observation.expect (Observer.isEqual [ 87 ])
       )
-  , Spec.scenario "multiple sub messages are sent" testSubject
-      |> Spec.when "multiple messages are sent"
+  , scenario "multiple sub messages are sent" testSubject
+      |> when "multiple messages are sent"
         [ sendMessageWith 87
         , sendMessageWith 65
         ]
-      |> Spec.it "records the numbers" (
+      |> it "records the numbers" (
         Observation.selectModel
           |> Observation.mapSelection .counts
           |> Observation.expect (Observer.isEqual [ 65, 87 ])
       )
-  , Spec.scenario "a different message is sent" testSubject
-      |> Spec.when "a single message is sent"
+  , scenario "a different message is sent" testSubject
+      |> when "a single message is sent"
         [ sendMessageWith 14
         ]
-      |> Spec.it "records the number" (
+      |> it "records the number" (
         Observation.selectModel
           |> Observation.mapSelection .counts
           |> Observation.expect (Observer.isEqual [ 14 ])

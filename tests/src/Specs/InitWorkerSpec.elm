@@ -2,6 +2,7 @@ module Specs.InitWorkerSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Observer as Observer
 import Spec.Observation as Observation
 import Runner
@@ -11,11 +12,11 @@ import Task
 usesModelFromInitSpec : Spec Model Msg
 usesModelFromInitSpec =
   Spec.describe "a worker"
-  [ Spec.scenario "Uses Model from Init" (
+  [ scenario "Uses Model from Init" (
       Subject.init testInit
         |> Subject.withUpdate testUpdate
     )
-    |> Spec.it "uses the given model" (
+    |> it "uses the given model" (
       Observation.selectModel
         |> Observation.mapSelection .count
         |> Observation.expect (Observer.isEqual 41)
@@ -26,11 +27,11 @@ usesModelFromInitSpec =
 usesCommandFromInitSpec : Spec Model Msg
 usesCommandFromInitSpec =
   Spec.describe "a worker"
-  [ Spec.scenario "Uses command from Init" (
+  [ scenario "Uses command from Init" (
       Subject.init (testInitWithCommand 33)
         |> Subject.withUpdate testUpdate
     )
-    |> Spec.it "updates the model" (
+    |> it "updates the model" (
       Observation.selectModel
         |> Observation.mapSelection .count
         |> Observation.expect (Observer.isEqual 33)

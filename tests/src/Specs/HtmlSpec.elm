@@ -2,6 +2,7 @@ port module Specs.HtmlSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Html as Markup
 import Spec.Observation as Observation
 import Spec.Html.Selector exposing (..)
@@ -9,6 +10,7 @@ import Spec.Html.Event as Event
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation.Report as Report
+import Spec.Scenario exposing (..)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -19,15 +21,15 @@ import Json.Encode as Encode
 htmlSpecSingle : Spec Model Msg
 htmlSpecSingle =
   Spec.describe "an html program"
-  [ Spec.scenario "observes the rendered view" (
+  [ scenario "observes the rendered view" (
       Subject.initWithModel { name = "Cool Dude", count = 78 }
         |> Subject.withView testView
     )
-    |> Spec.it "renders the name based on the model" (
+    |> it "renders the name based on the model" (
       Markup.select << by [ id "my-name" ]
         |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
     )
-    |> Spec.it "does not find an element that is not there" (
+    |> it "does not find an element that is not there" (
       Markup.select << by [ id "something-not-present" ]
         |> Markup.expectElement (Markup.hasText "I should not be present!")
     )
@@ -37,27 +39,27 @@ htmlSpecSingle =
 htmlSpecMultiple : Spec Model Msg
 htmlSpecMultiple =
   Spec.describe "an html program"
-  [ Spec.scenario "multiple observations one" (
+  [ scenario "multiple observations one" (
       Subject.initWithModel { name = "Cool Dude", count = 78 }
         |> Subject.withView testView
     )
-    |> Spec.it "renders the name based on the model" (
+    |> it "renders the name based on the model" (
       Markup.select << by [ id "my-name" ]
         |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
     )
-    |> Spec.it "renders the count based on the model" (
+    |> it "renders the count based on the model" (
       Markup.select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 78!")
     )
-  , Spec.scenario "multiple observations two" (
+  , scenario "multiple observations two" (
       Subject.initWithModel { name = "Cool Dude", count = 78 }
         |> Subject.withView testView
     )
-    |> Spec.it "finds a third thing" (
+    |> it "finds a third thing" (
         Markup.select << by [ id "my-label" ]
           |> Markup.expectElement (Markup.hasText "Here is a label")
       )
-    |> Spec.it "finds a fourth thing" (
+    |> it "finds a fourth thing" (
         Markup.select << by [ id "my-label-2" ]
           |> Markup.expectElement (Markup.hasText "Another label")
       )
@@ -67,11 +69,11 @@ htmlSpecMultiple =
 hasTextFails : Spec Model Msg
 hasTextFails =
   Spec.describe "an html program"
-  [ Spec.scenario "the hasText matcher fails" (
+  [ scenario "the hasText matcher fails" (
       Subject.initWithModel { name = "Cool Dude", count = 78 }
        |> Subject.withView testView
     )
-    |> Spec.it "renders the name based on the model" (
+    |> it "renders the name based on the model" (
       Markup.select << by [ id "my-name" ]
         |> Markup.expectElement (Markup.hasText "Something not present")
     )
@@ -81,22 +83,22 @@ hasTextFails =
 clickSpec : Spec Model Msg
 clickSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "a click event" (
+  [ scenario "a click event" (
       Subject.initWithModel { name = "Cool Dude", count = 0 }
         |> Subject.withUpdate testUpdate
         |> Subject.withView testView
     )
-    |> Spec.when "the button is clicked three times"
+    |> when "the button is clicked three times"
       [ Markup.target << by [ id "my-button" ]
       , Event.click
       , Event.click
       , Event.click
       ]
-    |> Spec.when "the other button is clicked once"
+    |> when "the other button is clicked once"
       [ Markup.target << by [ id "another-button" ]
       , Event.click
       ]
-    |> Spec.it "renders the count" (
+    |> it "renders the count" (
       Markup.select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 30!")
     )
@@ -106,31 +108,31 @@ clickSpec =
 targetUnknownSpec : Spec Model Msg
 targetUnknownSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "targeting an unknown element" (
+  [ scenario "targeting an unknown element" (
       Subject.initWithModel { name = "Cool Dude", count = 0 }
         |> Subject.withUpdate testUpdate
         |> Subject.withView testView
     )
-    |> Spec.when "the button is clicked three times"
+    |> when "the button is clicked three times"
       [ Markup.target << by [ id "some-element-that-does-not-exist" ]
       , Event.click
       , Event.click
       , Event.click
       ]
-    |> Spec.when "the other button is clicked once"
+    |> when "the other button is clicked once"
       [ Markup.target << by [ id "another-button" ]
       , Event.click
       ]
-    |> Spec.it "renders the count" (
+    |> it "renders the count" (
       Markup.select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 30!")
     )
-  , Spec.scenario "Should not run since the spec has been aborted" (
+  , scenario "Should not run since the spec has been aborted" (
       Subject.initWithModel { name = "Cool Dude", count = 0 }
         |> Subject.withUpdate testUpdate
         |> Subject.withView testView
     )
-    |> Spec.it "should not do this since we've failed already" (
+    |> it "should not do this since we've failed already" (
         Markup.select << by [ id "my-name" ]
           |> Markup.expectElement (Markup.hasText "Hello, Somebody!")
     )
@@ -140,21 +142,21 @@ targetUnknownSpec =
 subSpec : Spec Model Msg
 subSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "Program with a subscription" (
+  [ scenario "Program with a subscription" (
     Subject.initWithModel { name = "Cool Dude", count = 0 }
         |> Subject.withUpdate testSubUpdate
         |> Subject.withView testSubView
         |> Subject.withSubscriptions testSubscriptions
     )
-    |> Spec.when "a subscription message is received"
+    |> when "a subscription message is received"
       [ Port.send "htmlSpecSub" <| Encode.int 27
       , Port.send "htmlSpecSub" <| Encode.int 13
       ]
-    |> Spec.it "renders the count" (
+    |> it "renders the count" (
       Markup.select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 40!")
     )
-    |> Spec.it "updates the model" (
+    |> it "updates the model" (
       Observation.selectModel
         |> Observation.mapSelection .count
         |> Observation.expect (Observer.isEqual 40)
@@ -165,18 +167,18 @@ subSpec =
 manyElementsSpec : Spec Model Msg
 manyElementsSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "the view has many elements" (
+  [ scenario "the view has many elements" (
       Subject.initWithModel { name = "Cool Dude", count = 7 }
         |> Subject.withUpdate testUpdate
         |> Subject.withView testView
     )
-    |> Spec.it "selects many elements" (
+    |> it "selects many elements" (
       Markup.select << by [ tag "div" ]
         |> Markup.expectElements (\elements ->
           Observer.isEqual 6 (List.length elements)
         )
     )
-    |> Spec.it "fetchs text for the elements" (
+    |> it "fetchs text for the elements" (
       Markup.select << by [ tag "div" ]
         |> Markup.expectElements (\elements ->
           List.drop 2 elements

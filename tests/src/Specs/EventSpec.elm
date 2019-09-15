@@ -2,6 +2,7 @@ module Specs.EventSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Html as Markup
 import Spec.Html.Selector exposing (..)
 import Spec.Html.Event as Event
@@ -14,16 +15,16 @@ import Runner
 inputSpec : Spec Model Msg
 inputSpec =
   Spec.describe "an html program"
-  [ Spec.scenario "Input event" (
+  [ scenario "Input event" (
       Subject.initWithModel { message = "" }
         |> Subject.withUpdate testUpdate
         |> Subject.withView testView
     )
-    |> Spec.when "some text is input"
+    |> when "some text is input"
       [ Markup.target << by [ id "my-field" ]
       , Event.input "Here is some fun text!"
       ]
-    |> Spec.it "renders the text on the view" (
+    |> it "renders the text on the view" (
       Markup.select << by [ id "my-message" ]
         |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
     )

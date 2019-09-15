@@ -2,6 +2,7 @@ port module Specs.SubscriptionSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation as Observation
@@ -13,16 +14,16 @@ import Json.Encode as Encode
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
   Spec.describe "a worker with subscriptions"
-  [ Spec.scenario "the worker receives subscriptions" (
+  [ scenario "the worker receives subscriptions" (
       Subject.init ( { count = 0 }, Cmd.none )
         |> Subject.withUpdate testUpdate
         |> Subject.withSubscriptions testSubscriptions
     )
-    |> Spec.when "some subscription messages are sent"
+    |> when "some subscription messages are sent"
       [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
       , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
       ]
-    |> Spec.it "updates the model" (
+    |> it "updates the model" (
       Observation.selectModel
         |> Observation.mapSelection .count
         |> Observation.expect (Observer.isEqual 78)

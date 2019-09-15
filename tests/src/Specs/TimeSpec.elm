@@ -3,6 +3,7 @@ module Specs.TimeSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Port as Port
+import Spec.Scenario exposing (..)
 import Spec.Time
 import Spec.Observer as Observer
 import Spec.Observation as Observation
@@ -15,19 +16,19 @@ import Time exposing (Posix)
 countTimePassingSpec : Spec Model Msg
 countTimePassingSpec =
   Spec.describe "a worker that subscribes to the time"
-  [ Spec.scenario "the time passes as expected" (
+  [ scenario "the time passes as expected" (
       Subject.init ( { count = 0 }, Cmd.none )
         |> Subject.withUpdate testUpdate
         |> Subject.withSubscriptions testSubscriptions
         |> Spec.Time.fake
     )
-    |> Spec.when "time passes"
+    |> when "time passes"
       [ Spec.Time.tick 1000
       , Spec.Time.tick 1000
       , Spec.Time.tick 1000
       , Spec.Time.tick 1000
       ]
-    |> Spec.it "updates the model" (
+    |> it "updates the model" (
       Observation.selectModel
         |> Observation.mapSelection .count
         |> Observation.expect (Observer.isEqual 4)

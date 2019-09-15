@@ -2,6 +2,7 @@ port module Specs.HtmlTimeSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Html as Markup exposing (hasText)
 import Spec.Html.Selector exposing (..)
 import Spec.Time
@@ -14,20 +15,20 @@ import Time exposing (Posix)
 intervalSpec : Spec Model Msg
 intervalSpec =
   Spec.describe "an Html program that updates the time"
-  [ Spec.scenario "the expected amount of time passes" (
+  [ scenario "the expected amount of time passes" (
       Subject.initWithModel { count = 0 }
         |> Subject.withUpdate testUpdate
         |> Subject.withView testView
         |> Subject.withSubscriptions testSubscriptions
         |> Spec.Time.fake
     )
-    |> Spec.when "time passes"
+    |> when "time passes"
       [ Spec.Time.tick 1000
       , Spec.Time.tick 1000
       , Spec.Time.tick 1000
       , Spec.Time.tick 1000
       ]
-    |> Spec.it "updates the count" (
+    |> it "updates the count" (
       Markup.select << by [ id "seconds-passed" ]
         |> Markup.expectElement (hasText "4 seconds passed")
     )

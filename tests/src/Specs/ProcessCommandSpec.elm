@@ -2,6 +2,7 @@ port module Specs.ProcessCommandSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation as Observation
@@ -14,16 +15,16 @@ import Task
 processCommandSpec : Spec Model Msg
 processCommandSpec =
   Spec.describe "a worker"
-  [ Spec.scenario "a command is sent by the update function and processed" (
+  [ scenario "a command is sent by the update function and processed" (
       Subject.init ( { count = 0, num = 0 }, Cmd.none )
         |> Subject.withUpdate testUpdate
         |> Subject.withSubscriptions testSubscriptions
         |> Port.observe "sendSomethingOut"
     )
-    |> Spec.when "a subscription message is sent"
+    |> when "a subscription message is sent"
       [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
       ]
-    |> Spec.it "sends the port command the specified number of times" (
+    |> it "sends the port command the specified number of times" (
       Port.expect "sendSomethingOut" Json.string <|
         \messages ->
           List.length messages
@@ -35,23 +36,23 @@ processCommandSpec =
 processBatchedTerminatingAndNoCallbackCommands : Spec Model Msg
 processBatchedTerminatingAndNoCallbackCommands =
   Spec.describe "a worker"
-  [ Spec.scenario "commands with no callback are sent from the update function" (
+  [ scenario "commands with no callback are sent from the update function" (
       Subject.init ( { count = 0, num = 0 }, Cmd.none )
         |> Subject.withUpdate testUpdate
         |> Subject.withSubscriptions testSubscriptions
         |> Port.observe "sendSomethingOut"
     )
-    |> Spec.when "many subscription messages are sent" (
+    |> when "many subscription messages are sent" (
       List.range 0 5
         |> List.map (\num -> Port.send "listenForObject" (Encode.object [ ("number", Encode.int num) ]))
     )
-    |> Spec.it "sends all the commands" (
+    |> it "sends all the commands" (
       Port.expect "sendSomethingOut" Json.string <|
         \messages ->
           List.length messages
             |> Observer.isEqual 21
     )
-    |> Spec.it "it ends up with the right tally" (
+    |> it "it ends up with the right tally" (
       Observation.selectModel
         |> Observation.mapSelection .num
         |> Observation.expect (Observer.isEqual 35)

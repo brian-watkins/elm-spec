@@ -2,6 +2,7 @@ port module Specs.SleepSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation as Observation
@@ -15,13 +16,13 @@ import Process
 processSpec : Spec Model Msg
 processSpec =
   Spec.describe "a program that uses Process.sleep"
-  [ Spec.scenario "the program stores up sleeps and processes them when time passes" (
+  [ scenario "the program stores up sleeps and processes them when time passes" (
       Subject.init ( { items = [] }, Cmd.none )
         |> Subject.withUpdate testUpdate
         |> Subject.withSubscriptions testSubscriptions
         |> Time.fake
     )
-    |> Spec.when "subscription messages are received"
+    |> when "subscription messages are received"
       [ Port.send "processSub" (Encode.string "a")
       , Port.send "processSub" (Encode.string "b")
       , Port.send "processSub" (Encode.string "c")
@@ -29,7 +30,7 @@ processSpec =
       , Time.tick 100
       , Time.tick 100
       ]
-    |> Spec.it "receives the delayed messages" (
+    |> it "receives the delayed messages" (
       Observation.selectModel
         |> Observation.mapSelection .items
         |> Observation.expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
@@ -39,19 +40,19 @@ processSpec =
 processOnlyUpToDelaySpec : Spec Model Msg
 processOnlyUpToDelaySpec =
   Spec.describe "a program that uses Process.sleep"
-  [ Spec.scenario "not enough time passes for everything" (
+  [ scenario "not enough time passes for everything" (
       Subject.init ( { items = [] }, Cmd.none )
         |> Subject.withUpdate testDelayUpdate
         |> Subject.withSubscriptions testSubscriptions
         |> Time.fake
     )
-    |> Spec.when "subscription messages are received"
+    |> when "subscription messages are received"
       [ Port.send "processSub" (Encode.string "a")
       , Time.tick 100
       , Port.send "processSub" (Encode.string "b")
       , Time.tick 50
       ]
-    |> Spec.it "receives the expected messages only" (
+    |> it "receives the expected messages only" (
       Observation.selectModel
         |> Observation.mapSelection .items
         |> Observation.expect (Observer.isEqual [ "Hey", "a", "Hey" ])

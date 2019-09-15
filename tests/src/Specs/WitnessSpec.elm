@@ -2,6 +2,7 @@ port module Specs.WitnessSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
+import Spec.Scenario exposing (..)
 import Spec.Message exposing (Message)
 import Spec.Port as Port
 import Spec.Witness as Witness exposing (Witness)
@@ -12,18 +13,18 @@ import Runner
 spySpec : Spec Model Msg
 spySpec =
   Spec.describe "a fragment injected with a cmd-generating function"
-  [ Spec.scenario "the witness is called the expected number of times" testSubject
+  [ scenario "the witness is called the expected number of times" testSubject
       |> triggerInjectedFunctionWith 88
-      |> Spec.it "records the call to the injected function" (
+      |> it "records the call to the injected function" (
         Witness.expect "injected" (Witness.hasStatements 1)
       )
-  , Spec.scenario "the witness is never triggered" testSubject
-      |> Spec.it "fails" (
+  , scenario "the witness is never triggered" testSubject
+      |> it "fails" (
         Witness.expect "injected" (Witness.hasStatements 1)
       )
-  , Spec.scenario "the witness has too few statements" testSubject
+  , scenario "the witness has too few statements" testSubject
       |> triggerInjectedFunctionWith 88
-      |> Spec.it "fails" (
+      |> it "fails" (
         Witness.expect "injected" (Witness.hasStatements 17)
       )
   ]
@@ -37,7 +38,7 @@ testSubject =
 
 
 triggerInjectedFunctionWith number =
-  Spec.when "a message is sent that triggers the injected function"
+  when "a message is sent that triggers the injected function"
   [ Port.send "witnessSpecSub" <| Encode.int 88
   ]
 

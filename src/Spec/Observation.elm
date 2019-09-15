@@ -1,17 +1,23 @@
 module Spec.Observation exposing
-  ( Selection
+  ( Observation
+  , Selection
   , selectModel
   , selectEffects
   , inquire
   , mapSelection
   , Expectation
-  , Judgment
   , expect
   )
 
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer, Verdict)
-import Spec.Observation.Internal as Internal
+import Spec.Observation.Expectation as Expectation
+
+
+type alias Observation model =
+  { description: String
+  , expectation: Expectation model
+  }
 
 
 type Selection model a
@@ -20,12 +26,8 @@ type Selection model a
   | Inquiry Message (Message -> a)
 
 
-type alias Judgment model =
-  Internal.Judgment model
-
-
 type alias Expectation model =
-  Internal.Expectation model
+  Expectation.Expectation model
 
 
 selectModel : Selection model model
@@ -56,20 +58,20 @@ mapSelection mapper selection =
 
 expect : Observer a -> Selection model a -> Expectation model
 expect observer selection =
-  Internal.Expectation <|
+  Expectation.Expectation <|
     \context ->
       case selection of
         Model mapper ->
           mapper context.model
             |> observer
-            |> Internal.Complete
+            |> Expectation.Complete
         Effects mapper ->
           mapper context.effects
             |> observer
-            |> Internal.Complete
+            |> Expectation.Complete
         Inquiry message mapper ->
-          Internal.AndThen message <|
+          Expectation.Inquire message <|
             \inquiryResult ->
               mapper inquiryResult
                 |> observer
-                |> Internal.Complete
+                |> Expectation.Complete

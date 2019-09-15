@@ -31,14 +31,17 @@ module.exports = class ProgramRunner extends EventEmitter {
   handleMessage(specMessage, out) {
     switch (specMessage.home) {
       case "_spec":
-        this.handleLifecycleEvent(specMessage, out)
+        this.handleSpecEvent(specMessage)
+        break
+      case "_scenario":
+        this.handleScenarioEvent(specMessage, out)
         break
       case "_port":
         this.portPlugin.handle(specMessage)
         break
       case "_time":
         this.timePlugin.handle(specMessage, () => {
-          this.handleMessage({home: "_spec", name: "state", body: "STEP_COMPLETE"}, out)
+          this.handleMessage({home: "_scenario", name: "state", body: "STEP_COMPLETE"}, out)
         })
         break
       case "_witness":
@@ -60,21 +63,19 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   sendAbortMessage(out) {
     return (reason) => {
-      out({ home: "_spec", name: "abort", body: reason})
+      out({ home: "_scenario", name: "abort", body: reason})
     }
   }
 
   handleObserverEvent(specMessage, out) {
     switch (specMessage.name) {
       case "inquiry":
-        const key = specMessage.body.key
         const inquiry = specMessage.body.message
         this.handleMessage(inquiry, (message) => {
           out({
             home: "_observer",
             name: "inquiryResult",
             body: {
-              key,
               message
             }
           })
@@ -87,7 +88,15 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
-  handleLifecycleEvent(specMessage, out) {
+  handleSpecEvent(specMessage) {
+    switch (specMessage.body) {
+      case "SPEC_COMPLETE":
+        this.emit('complete')
+        break  
+    }
+  }
+
+  handleScenarioEvent(specMessage, out) {
     switch (specMessage.name) {
       case "state":
         this.handleStateChange(specMessage.body, out)
@@ -110,17 +119,14 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.timePlugin.reset()
         out(this.continue())
         break
-      case "SPEC_COMPLETE":
-        this.emit('complete')
-        break
     }
   }
 
   continue () {
     return {
-      home: "_spec",
+      home: "_scenario",
       name: "state",
-      body: "NEXT"
+      body: "CONTINUE"
     }
   }
 }

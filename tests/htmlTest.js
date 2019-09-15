@@ -15,6 +15,7 @@ describe("html plugin", () => {
     })
     it("fails when selecting an element that does not exist", (done) => {
       expectBrowserSpec("HtmlSpec", "single", done, (observations) => {
+        expect(observations[1].description).to.equal("It does not find an element that is not there")
         expect(observations[1].summary).to.equal("REJECT")
         expect(observations[1].report).to.deep.equal([{
           statement: "No element matches selector",

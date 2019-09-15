@@ -1,28 +1,22 @@
 module Spec exposing
-  ( Spec, Scenario
-  , describe, scenario
-  , when, it
+  ( Spec
+  , describe
   , Model, Msg, Config
   , update, view, init, subscriptions
-  , program, browserProgram
+  , program
+  , browserProgram
   )
 
-import Spec.Observer as Observer
-import Spec.Observation.Message as Message
 import Spec.Message as Message exposing (Message)
-import Spec.Lifecycle as Lifecycle
-import Spec.Subject as Subject exposing (Subject)
-import Spec.Step as Step exposing (Step)
-import Spec.Step.Command as StepCommand
-import Spec.Observation as Observation exposing (Expectation)
-import Spec.Observation.Internal as Observation_
+import Spec.Scenario as Scenario exposing (Scenario)
+import Spec.Scenario.Message as Message
+import Spec.Scenario.Program as ScenarioProgram
+import Spec.Scenario.State as ScenarioProgram
+import Spec.Observation.Message as Message
 import Task
 import Html exposing (Html)
-import Procedure.Program
-import Procedure
-import Procedure.Channel as Channel
-import Procedure.Extra
 import Browser
+import Json.Encode as Encode
 
 
 type Spec model msg =
@@ -30,107 +24,16 @@ type Spec model msg =
     (List (Scenario model msg))
 
 
-type Scenario model msg =
-  Scenario
-    { subject: Subject model msg
-    , steps: List (Step model msg)
-    , observations: List (Observation model)
-    }
-
-
-type alias Observation model =
-  { description: String
-  , expectation: Expectation model
-  }
-
-
 describe : String -> List (Scenario model msg) -> Spec model msg
 describe description scenarios =
   scenarios
-    |> List.map (\(Scenario scenarioData) ->
-      let
-          subject = scenarioData.subject
-      in
-        Scenario
-          { scenarioData
-          | subject = { subject | conditions = [ formatSpecDescription description ] }
-          }
-    )
+    |> List.map (Scenario.addCondition <| formatSpecDescription description)
     |> Spec
-
-
-scenario : String -> Subject model msg -> Scenario model msg
-scenario description specSubject =
-  Scenario
-    { subject = specSubject
-    , steps = 
-        [ Step.build (formatScenarioDescription description) <|
-            \_ ->
-              Step.sendCommand specSubject.initialCommand
-        ]
-    , observations = []
-    }
-
-
-when : String -> List (Step.Context model -> Step.Command msg) -> Scenario model msg -> Scenario model msg
-when condition messageSteps (Scenario scenarioData) =
-  Scenario
-    { scenarioData
-    | steps =
-        messageSteps
-          |> List.map (Step.build <| formatCondition condition)
-          |> List.append scenarioData.steps
-    }
-
-
-it : String -> Expectation model -> Scenario model msg -> Scenario model msg
-it description expectation (Scenario scenarioData) =
-  Scenario
-    { scenarioData
-    | observations = List.append scenarioData.observations
-        [ { description = formatObservationDescription description
-          , expectation = expectation
-          }
-        ]
-    }
-
-
-sendMessage : Message -> Cmd (Msg msg)
-sendMessage message =
-  Task.succeed message
-    |> Task.perform SendMessage
-
-
-goToNext : Cmd (Msg msg)
-goToNext =
-  sendLifecycle Lifecycle.Next
-
-
-sendLifecycle : Lifecycle.Msg -> Cmd (Msg msg)
-sendLifecycle lifecycleMsg =
-  Task.succeed never
-    |> Task.perform (always <| Lifecycle lifecycleMsg)
 
 
 formatSpecDescription : String -> String
 formatSpecDescription description =
   "Describing: " ++ description
-
-
-formatScenarioDescription : String -> String
-formatScenarioDescription description =
-  "Scenario: " ++ description
-
-
-formatCondition : String -> String
-formatCondition condition =
-  "When " ++ condition
-
-
-formatObservationDescription : String -> String
-formatObservationDescription description =
-  "It " ++ description
-
 
 
 ---- Program
@@ -139,232 +42,77 @@ formatObservationDescription description =
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
   , outlet: Message -> Cmd msg
-  , listen: (Message -> (Msg msg)) -> Sub (Msg msg)
+  , listen: (Message -> Msg msg) -> Sub (Msg msg)
   }
 
 
 type Msg msg
-  = ProcedureMsg (Procedure.Program.Msg (Msg msg))
-  | ProgramMsg msg
+  = ScenarioMsg (ScenarioProgram.Msg msg)
   | SendMessage Message
-  | ReceivedEffect Message
-  | Lifecycle Lifecycle.Msg
+  | RunNextScenario
+  | ReceivedMessage Message
 
 
 type alias Model model msg =
   { scenarios: List (Scenario model msg)
-  , state: State model msg
-  , procedureModel: Procedure.Program.Model (Msg msg)
+  , scenarioModel: ScenarioProgram.Model model msg
   }
-
-
-type State model msg
-  = Ready
-  | Configure (Scenario model msg)
-  | Exercise (Scenario model msg) (ExerciseModel model msg)
-  | Observe (Scenario model msg) (ObserveModel model)
-  | Abort
-
-
-type alias StateModel model a =
-  { a
-  | conditionsApplied: List String
-  , model: model
-  , effects: List Message
-  }
-
-
-type alias ExerciseModel model msg =
-  StateModel model
-    { steps: List (Step model msg)
-    }
-
-
-type alias ObserveModel model =
-  StateModel model
-    { observations: List (Observation model)
-    }
 
 
 view : Model model msg -> Html (Msg msg)
 view model =
-  case model.state of
-    Exercise (Scenario scenarioData) exerciseModel ->
-      scenarioData.subject.view exerciseModel.model
-        |> Html.map ProgramMsg
-    Observe (Scenario scenarioData) observeModel ->
-      scenarioData.subject.view observeModel.model
-        |> Html.map ProgramMsg
-    _ ->
-      Html.text ""
-
-
-receiveLifecycleMessages : Config msg -> Cmd (Msg msg)
-receiveLifecycleMessages config =
-  Channel.join config.listen
-    |> Channel.filter (\_ message ->
-      Lifecycle.isLifecycleMessage message
-    )
-    |> Channel.accept
-    |> Procedure.map Lifecycle.toMsg
-    |> Procedure.andThen Procedure.Extra.bump
-    |> Procedure.run ProcedureMsg Lifecycle
-
-
-receiveEffectMessages : Config msg -> Cmd (Msg msg)
-receiveEffectMessages config =
-  Channel.join config.listen
-    |> Channel.filter (\_ message ->
-      message.home /= "_spec" && message.home /= "_observer"
-    )
-    |> Channel.accept
-    |> Procedure.run ProcedureMsg ReceivedEffect
+  ScenarioProgram.view model.scenarioModel
+    |> Html.map ScenarioMsg
 
 
 update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config msg model =
   case msg of
-    ProcedureMsg procMsg ->
-      Procedure.Program.update procMsg model.procedureModel
-        |> Tuple.mapFirst (\updated -> { model | procedureModel = updated })
-    ReceivedEffect message ->
-      case model.state of
-        Exercise scenarioData exerciseModel ->
-          ( { model | state = Exercise scenarioData { exerciseModel | effects = message :: exerciseModel.effects } }
-          , config.send Lifecycle.stepComplete
+    RunNextScenario ->
+      case model.scenarios of
+        [] ->
+          ( model, config.send specComplete )
+        scenario :: remaining ->
+          ( { model | scenarioModel = ScenarioProgram.with scenario, scenarios = remaining }
+          , Cmd.map ScenarioMsg ScenarioProgram.start
           )
-        _ ->
-          ( model, Cmd.none )
+    ScenarioMsg scenarioMsg ->
+      ScenarioProgram.update (scenarioConfig config) scenarioMsg model.scenarioModel
+        |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated })
     SendMessage message ->
       ( model, config.send message )
-    ProgramMsg programMsg ->
-      case model.state of
-        Exercise (Scenario scenarioData) exerciseModel ->
-          scenarioData.subject.update config.outlet programMsg exerciseModel.model
-            |> Tuple.mapFirst (\updated -> { model | state = Exercise (Scenario scenarioData) { exerciseModel | model = updated } })
-            |> Tuple.mapSecond (\nextCommand ->
-              if nextCommand == Cmd.none then
-                config.send Lifecycle.stepComplete
-              else
-                Cmd.map ProgramMsg nextCommand
-            )
-        _ -> 
-          ( model, Cmd.none )
-    Lifecycle lifecycleMsg ->
-      lifecycleUpdate config lifecycleMsg model
+    ReceivedMessage message ->
+      if message.home == "_spec" then
+        update config RunNextScenario model
+      else
+        update config (ScenarioMsg <| ScenarioProgram.receivedMessage message) model
 
 
-lifecycleUpdate : Config msg -> Lifecycle.Msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-lifecycleUpdate config msg model =
-  case msg of
-    Lifecycle.Next ->
-      case model.state of
-        Ready ->
-          case model.scenarios of
-            [] ->
-              ( model, config.send Lifecycle.specComplete )
-            (Scenario scenarioData) :: remaining ->
-              ( { model | scenarios = remaining, state = Configure (Scenario scenarioData) }
-              , Cmd.batch
-                [ config.send Lifecycle.configureComplete
-                , Cmd.batch <| List.map config.send scenarioData.subject.configureEnvironment
-                ]
-              )
-        Configure scenarioData ->
-          ( { model | state = toExercise scenarioData }
-          , goToNext
-          )
-        Exercise scenarioData exerciseModel ->
-          case exerciseModel.steps of
-            [] ->
-              ( { model | state = toObserve scenarioData exerciseModel }
-              , goToNext
-              )
-            step :: remaining ->
-              ( { model | state = Exercise scenarioData
-                  { exerciseModel
-                  | steps = remaining
-                  , conditionsApplied =
-                      Step.condition step
-                        |> addIfUnique exerciseModel.conditionsApplied
-                  }
-                }
-              , { model = exerciseModel.model, effects = exerciseModel.effects }
-                  |> Step.run step 
-                  |> StepCommand.map ProgramMsg
-                  |> StepCommand.withDefault goToNext
-                  |> StepCommand.toCmdOr sendMessage
-              )
-        Observe scenarioData observeModel ->
-          case observeModel.observations of
-            [] ->
-              ( { model | state = Ready }, goToNext )
-            observation :: remaining ->
-              ( { model | state = Observe scenarioData { observeModel | observations = remaining } }
-              , Observation_.toProcedure config (toObservationContext observeModel) observation.expectation
-                  |> Procedure.map (Message.observation observeModel.conditionsApplied observation.description)
-                  |> Procedure.run ProcedureMsg SendMessage
-              )
-        Abort ->
-          ( model, config.send Lifecycle.specComplete )
-    Lifecycle.Abort report ->
-      case model.state of
-        Exercise scenarioData exerciseModel ->
-          ( { model | state = Abort }
-          , Observer.Reject report
-              |> Message.observation exerciseModel.conditionsApplied "A spec step failed"
-              |> config.send
-          )
-        _ ->
-          ( model, Cmd.none )
-
-
-toObservationContext : ObserveModel model -> Observation_.Context model
-toObservationContext observeModel =
-  { model = observeModel.model
-  , effects = observeModel.effects
+specComplete : Message
+specComplete =
+  { home = "_spec"
+  , name = "state"
+  , body = Encode.string "SPEC_COMPLETE"
   }
 
 
-toExercise : Scenario model msg -> State model msg
-toExercise (Scenario scenarioData) =
-  Exercise (Scenario scenarioData)
-    { conditionsApplied = scenarioData.subject.conditions
-    , model = scenarioData.subject.model
-    , effects = scenarioData.subject.effects
-    , steps = scenarioData.steps
-    }
-
-
-toObserve : Scenario model msg -> ExerciseModel model msg -> State model msg
-toObserve (Scenario scenarioData) exerciseModel =
-  Observe (Scenario scenarioData)
-    { conditionsApplied = exerciseModel.conditionsApplied
-    , model = exerciseModel.model
-    , effects = exerciseModel.effects
-    , observations = scenarioData.observations
-    }
-
-
-currentSubject : StateModel model a -> Subject model msg -> Subject model msg
-currentSubject state original =
-  { original
-  | model = state.model
-  , effects = state.effects
-  , conditions = state.conditionsApplied
+scenarioConfig : Config msg -> ScenarioProgram.Config (Msg msg) msg
+scenarioConfig config =
+  { send = config.send
+  , outlet = config.outlet
+  , sendToSelf = ScenarioMsg
+  , complete = Task.succeed never |> Task.perform (always RunNextScenario)
+  , stop = config.send specComplete
   }
 
 
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
-  case model.state of
-    Exercise (Scenario scenarioData) exerciseModel ->
-      Sub.batch
-      [ Sub.map ProgramMsg <| Subject.subscriptions scenarioData.subject
-      , Procedure.Program.subscriptions model.procedureModel
-      ]
-    _ ->
-      Procedure.Program.subscriptions model.procedureModel
+  Sub.batch
+  [ config.listen ReceivedMessage
+  , ScenarioProgram.subscriptions model.scenarioModel
+      |> Sub.map ScenarioMsg
+  ]
   
 
 init : Config msg -> List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
@@ -372,13 +120,9 @@ init config specs _ =
   ( { scenarios =
         List.map (\(Spec scenarios) -> scenarios) specs
           |> List.concat
-    , state = Ready
-    , procedureModel = Procedure.Program.init
+    , scenarioModel = ScenarioProgram.init
     }
-  , Cmd.batch
-    [ receiveLifecycleMessages config
-    , receiveEffectMessages config
-    ]
+  , Cmd.none
   )
 
 
@@ -399,14 +143,3 @@ browserProgram config specs =
     , update = update config
     , subscriptions = subscriptions config
     }
-
-
--- Helpers
-
-
-addIfUnique : List a -> a -> List a
-addIfUnique list val =
-  if List.member val list then
-    list
-  else
-    list ++ [ val ]
