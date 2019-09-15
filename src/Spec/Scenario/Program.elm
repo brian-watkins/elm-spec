@@ -102,30 +102,16 @@ update config msg state =
       else
         case state of
           Exercise model ->
-            case Exercise.update config.outlet msg model of
-              ( updated, Send nextMessage ) ->
-                ( Exercise updated, config.send nextMessage )
-              ( updated, _ ) ->
-                badState config state
+            exerciseUpdate config msg model
           Observe model ->
-            case Observe.update msg model of
-              ( updated, Send nextMessage ) ->
-                ( Observe updated, config.send nextMessage )
-              ( updated, _ ) ->
-                badState config state
+            observeUpdate config msg model
           _ ->
             badState config state
         
     ProgramMsg programMsg ->
       case state of
         Exercise model ->
-          case Exercise.update config.outlet msg model of
-            ( updated, Do cmd ) ->
-              ( Exercise updated, Cmd.map config.sendToSelf cmd )
-            ( updated, Send message ) ->
-              ( Exercise updated, config.send message )
-            ( updated, _ ) ->
-              badState config state
+          exerciseUpdate config msg model
         _ ->
           badState config state
 
@@ -142,23 +128,9 @@ update config msg state =
         Configure model ->
           update config Continue <| toExercise model.scenario
         Exercise model ->
-          case Exercise.update config.outlet msg model of
-            ( updated, Do cmd ) ->
-              ( Exercise updated, Cmd.map config.sendToSelf cmd )
-            ( updated, Send message ) ->
-              ( Exercise updated, config.send message )
-            ( updated, Transition ) ->
-              update config Continue <| toObserve updated
-            ( updated, _ ) ->
-              badState config state
+          exerciseUpdate config msg model
         Observe model ->
-          case Observe.update msg model of
-            ( updated, Send message ) ->
-              ( Observe updated, config.send message )
-            ( updated, Transition ) ->
-              ( Ready, config.complete )
-            ( updated, _ ) ->
-              badState config state
+          observeUpdate config msg model
 
     Abort report ->
       case state of
@@ -177,6 +149,30 @@ update config msg state =
                 |> config.send 
             ]
           )
+
+
+exerciseUpdate : Config msg programMsg -> Msg programMsg -> Exercise.Model model programMsg -> ( Model model programMsg, Cmd msg )
+exerciseUpdate config msg model =
+  case Exercise.update config.outlet msg model of
+    ( updated, Do cmd ) ->
+      ( Exercise updated, Cmd.map config.sendToSelf cmd )
+    ( updated, Send message ) ->
+      ( Exercise updated, config.send message )
+    ( updated, SendMany messages ) ->
+      ( Exercise updated, Cmd.batch <| List.map config.send messages )
+    ( updated, Transition ) ->
+      update config Continue <| toObserve updated
+
+
+observeUpdate : Config msg programMsg -> Msg programMsg -> Observe.Model model programMsg -> ( Model model programMsg, Cmd msg )
+observeUpdate config msg model =
+  case Observe.update msg model of
+    ( updated, Send message ) ->
+      ( Observe updated, config.send message )
+    ( updated, Transition ) ->
+      ( Ready, config.complete )
+    ( updated, _ ) ->
+      badState config <| Observe updated
 
 
 badState : Config msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
