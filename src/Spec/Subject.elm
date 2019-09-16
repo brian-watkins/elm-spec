@@ -3,8 +3,6 @@ module Spec.Subject exposing
   , init
   , initWithModel
   , configure
-  , withEffects
-  , effects
   , withSubscriptions
   , withUpdate
   , withView
@@ -23,8 +21,6 @@ type alias Subject model msg =
   , view: model -> Html msg
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
-  , effects: List Message
-  , conditions: List String
   }
 
 
@@ -36,8 +32,6 @@ init ( model, initialCommand ) =
   , view = \_ -> Html.text ""
   , subscriptions = \_ -> Sub.none
   , configureEnvironment = []
-  , effects = []
-  , conditions = []
   }
 
 
@@ -64,16 +58,6 @@ withView view subject =
 withSubscriptions : (model -> Sub msg) -> Subject model msg -> Subject model msg
 withSubscriptions programSubscriptions subject =
   { subject | subscriptions = programSubscriptions }
-
-
-withEffects : List Message -> Subject model msg -> Subject model msg
-withEffects effectMessages subject =
-  { subject | effects = effectMessages }
-
-
-effects : Subject model msg -> List Message
-effects =
-  .effects
 
 
 subscriptions : Subject model msg -> Sub msg

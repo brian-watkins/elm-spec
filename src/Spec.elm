@@ -27,13 +27,8 @@ type Spec model msg =
 describe : String -> List (Scenario model msg) -> Spec model msg
 describe description scenarios =
   scenarios
-    |> List.map (Scenario.addCondition <| formatSpecDescription description)
+    |> List.map (Scenario.describing description)
     |> Spec
-
-
-formatSpecDescription : String -> String
-formatSpecDescription description =
-  "Describing: " ++ description
 
 
 ---- Program

@@ -30,9 +30,9 @@ type alias Model model msg =
 init : Scenario model msg -> Model model msg
 init scenario =
   { scenario = scenario
-  , conditionsApplied = scenario.subject.conditions
+  , conditionsApplied = [ scenario.describing ]
   , programModel = scenario.subject.model
-  , effects = scenario.subject.effects
+  , effects = []
   , steps = scenario.steps
   }
 

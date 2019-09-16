@@ -17,7 +17,6 @@ witnessPortCommandFromInitSpec =
       Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
         |> Subject.withUpdate testUpdate
         |> Port.observe "sendTestMessageOut"
-        |> Subject.withEffects [ { home = "test", name = "something", body = Encode.null } ]
     )
     |> it "sends the expected message" (
       Port.expect "sendTestMessageOut" Json.string <|

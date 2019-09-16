@@ -34,7 +34,6 @@ testSubject =
   Subject.initWithModel { count = 0 }
     |> Witness.forUpdate (\witness -> testUpdate <| \_ -> Witness.spy "injected" witness)
     |> Subject.withSubscriptions testSubscriptions
-    |> Subject.withEffects [ { home = "test", name = "some-message", body = Encode.null } ]
 
 
 triggerInjectedFunctionWith number =

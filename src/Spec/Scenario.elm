@@ -3,7 +3,7 @@ module Spec.Scenario exposing
   , scenario
   , when
   , it
-  , addCondition
+  , describing
   )
 
 import Spec.Subject as Subject exposing (Subject)
@@ -12,7 +12,8 @@ import Spec.Observation exposing (Observation, Expectation)
 
 
 type alias Scenario model msg =
-  { subject: Subject model msg
+  { describing: String
+  , subject: Subject model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)
   }
@@ -20,7 +21,8 @@ type alias Scenario model msg =
 
 scenario : String -> Subject model msg -> Scenario model msg
 scenario description specSubject =
-  { subject = specSubject
+  { describing = ""
+  , subject = specSubject
   , steps = 
       [ Step.build (formatScenarioDescription description) <|
           \_ ->
@@ -51,14 +53,14 @@ it description expectation scenarioData =
   }
 
 
-addCondition : String -> Scenario model msg -> Scenario model msg
-addCondition condition scenarioData =
-  let
-    subject = scenarioData.subject
-  in
-    { scenarioData
-    | subject = { subject | conditions = subject.conditions ++ [ condition ] }
-    }
+describing : String -> Scenario model msg -> Scenario model msg
+describing description scenarioData =
+  { scenarioData | describing = formatSpecDescription description }
+
+
+formatSpecDescription : String -> String
+formatSpecDescription description =
+  "Describing: " ++ description
 
 
 formatScenarioDescription : String -> String
