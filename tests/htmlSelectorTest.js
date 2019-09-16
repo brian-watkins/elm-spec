@@ -24,4 +24,10 @@ describe("Selectors", () => {
       expectPassingBrowserSpec("SelectorSpec", "attributeName", done)
     })
   })
+
+  describe("descendantsOf", () => {
+    it("selects the elements as expected", (done) => {
+      expectPassingBrowserSpec("SelectorSpec", "descendants", done)
+    })
+  })
 })

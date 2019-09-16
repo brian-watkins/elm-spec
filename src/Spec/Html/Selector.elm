@@ -3,6 +3,7 @@ module Spec.Html.Selector exposing
   , tag
   , attributeName
   , by
+  , descendantsOf
   )
 
 import Spec.Html
@@ -28,3 +29,8 @@ attributeName =
 by : List Spec.Html.Selector -> a -> Spec.Html.Selection
 by selectors _ =
   Spec.Html.By selectors
+
+
+descendantsOf : List Spec.Html.Selector -> Spec.Html.Selection -> Spec.Html.Selection
+descendantsOf =
+  Spec.Html.DescendantsOf

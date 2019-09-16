@@ -5,10 +5,62 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Html as Markup
 import Spec.Html.Selector exposing (..)
+import Spec.Observer as Observer
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Runner
+
+
+descendantsOfSpec : Spec () Msg
+descendantsOfSpec =
+  Spec.describe "an html program"
+  [ scenario "Select descendants" (
+      Subject.initWithModel ()
+        |> Subject.withView descendantsView
+    )
+    |> it "finds all the elements" (
+      Markup.select
+        << descendantsOf [ id "my-part" ]
+        << by [ tag "div" ]
+        |> Markup.expectElements (\elements ->
+          List.length elements
+            |> Observer.isEqual 4
+        )
+    )
+  , scenario "Multiple descendants" (
+      Subject.initWithModel ()
+        |> Subject.withView descendantsView
+    )
+    |> it "finds all the elements" (
+      Markup.select
+        << descendantsOf [ id "my-part" ]
+        << descendantsOf [ attributeName "fun" ]
+        << by [ tag "div" ]
+        |> Markup.expectElements (\elements ->
+          List.length elements
+            |> Observer.isEqual 1
+        )
+    )
+  ]
+
+
+descendantsView : () -> Html Msg
+descendantsView _ =
+  Html.div []
+  [ Html.div [ Attr.attribute "fun" "things" ]
+    [ Html.div [] [ Html.text "Fun things" ]
+    ]
+  , Html.div [ Attr.id "my-part" ]
+    [ Html.p [] [ Html.text "Yo!" ]
+    , Html.div []
+      [ Html.div [] [ Html.text "Hey!" ]
+      , Html.div [ Attr.attribute "fun" "stuff" ]
+        [ Html.div [] [ Html.text "FUN!" ]
+        ]
+      ]
+    ]
+  ]
 
 
 attributeNameSelectorSpec : Spec () Msg
@@ -97,6 +149,7 @@ selectSpec name =
     "combinedTag" -> Just combinedTagSelectorSpec
     "onlyOneTag" -> Just onlyOneTagAllowedSpec
     "attributeName" -> Just attributeNameSelectorSpec
+    "descendants" -> Just descendantsOfSpec
     _ -> Nothing
 
 

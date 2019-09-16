@@ -26,6 +26,7 @@ type Selector
 
 type Selection
   = By (List Selector)
+  | DescendantsOf (List Selector) Selection
 
 
 target : Selection -> Step.Command msg
@@ -46,8 +47,15 @@ toString : Selection -> String
 toString selection =
   case selection of
     By selectors ->
-      firstTagSelector selectors
-        |> anyOtherSelectors selectors
+      selectorString selectors
+    DescendantsOf selectors next ->
+      selectorString selectors ++ " " ++ toString next
+
+
+selectorString : List Selector -> String
+selectorString selectors =
+  firstTagSelector selectors
+    |> anyOtherSelectors selectors
 
 
 firstTagSelector : List Selector -> String
