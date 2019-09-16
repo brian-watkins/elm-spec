@@ -1,5 +1,6 @@
 module Spec.Scenario.State.Exercise exposing
   ( Model
+  , init
   , update
   , view
   , subscriptions
@@ -23,6 +24,16 @@ type alias Model model msg =
   , programModel: model
   , effects: List Message
   , steps: List (Step model msg)
+  }
+
+
+init : Scenario model msg -> Model model msg
+init scenario =
+  { scenario = scenario
+  , conditionsApplied = scenario.subject.conditions
+  , programModel = scenario.subject.model
+  , effects = scenario.subject.effects
+  , steps = scenario.steps
   }
 
 

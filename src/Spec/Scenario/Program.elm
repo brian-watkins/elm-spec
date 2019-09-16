@@ -117,8 +117,6 @@ update config msg state =
 
     Continue ->
       case state of
-        Ready ->
-          ( Ready, Cmd.none )
         Start scenario ->
           case Configure.init scenario of
             ( updated, SendMany messages ) ->
@@ -126,11 +124,13 @@ update config msg state =
             ( updated, _ ) ->
               badState config state
         Configure model ->
-          update config Continue <| toExercise model.scenario
+          update config Continue <| Exercise <| Exercise.init model.scenario
         Exercise model ->
           exerciseUpdate config msg model
         Observe model ->
           observeUpdate config msg model
+        Ready ->
+          ( Ready, Cmd.none )
 
     Abort report ->
       case state of
@@ -161,7 +161,7 @@ exerciseUpdate config msg model =
     ( updated, SendMany messages ) ->
       ( Exercise updated, Cmd.batch <| List.map config.send messages )
     ( updated, Transition ) ->
-      update config Continue <| toObserve updated
+      update config Continue <| Observe <| Observe.init updated
 
 
 observeUpdate : Config msg programMsg -> Msg programMsg -> Observe.Model model programMsg -> ( Model model programMsg, Cmd msg )
@@ -202,27 +202,3 @@ toStateMsg specState =
       Continue
     unknown ->
       Abort <| Report.fact "Unknown scenario state" unknown
-
-
-toExercise : Scenario model msg -> State model msg
-toExercise scenarioData =
-  Exercise
-    { scenario = scenarioData
-    , conditionsApplied = scenarioData.subject.conditions
-    , programModel = scenarioData.subject.model
-    , effects = scenarioData.subject.effects
-    , steps = scenarioData.steps
-    }
-
-
-toObserve : Exercise.Model model msg -> State model msg
-toObserve exerciseModel =
-  Observe
-    { scenario = exerciseModel.scenario
-    , conditionsApplied = exerciseModel.conditionsApplied
-    , programModel = exerciseModel.programModel
-    , effects = exerciseModel.effects
-    , observations = exerciseModel.scenario.observations
-    , expectationModel = Expectation.init
-    , currentDescription = ""
-    }

@@ -1,5 +1,6 @@
 module Spec.Scenario.State.Observe exposing
   ( Model
+  , init
   , view
   , update
   )
@@ -10,6 +11,7 @@ import Spec.Message exposing (Message)
 import Spec.Observation.Expectation as Expectation exposing (Judgment(..))
 import Spec.Observation.Message as Message
 import Spec.Observation exposing (Observation)
+import Spec.Scenario.State.Exercise as Exercise
 import Html exposing (Html)
 
 
@@ -21,6 +23,18 @@ type alias Model model msg =
   , observations: List (Observation model)
   , expectationModel: Expectation.Model model
   , currentDescription: String
+  }
+
+
+init : Exercise.Model model msg -> Model model msg
+init exerciseModel =
+  { scenario = exerciseModel.scenario
+  , conditionsApplied = exerciseModel.conditionsApplied
+  , programModel = exerciseModel.programModel
+  , effects = exerciseModel.effects
+  , observations = exerciseModel.scenario.observations
+  , expectationModel = Expectation.init
+  , currentDescription = ""
   }
 
 
