@@ -23,9 +23,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       }
     })
 
-    setTimeout(() => {
-      this.app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
-    }, 0)
+    this.app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
   }
 
   handleMessage(specMessage, out) {
