@@ -29,8 +29,8 @@ type Selection
   | DescendantsOf (List Selector) Selection
 
 
-target : Selection -> Step.Command msg
-target selection =
+target : (Selection, Step.Context model) -> Step.Command msg
+target (selection, context) =
   Step.sendMessage
     { home = "_html"
     , name = "target"
@@ -38,9 +38,9 @@ target selection =
     }
 
 
-select : Selection -> Selection
-select =
-  identity
+select : (Selection, ()) -> Selection
+select (selection, _)=
+  selection
 
 
 toString : Selection -> String
