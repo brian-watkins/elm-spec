@@ -129,3 +129,17 @@ exports.runSpec = (app, plugins, done, matcher) => {
     })
     .run()
 }
+
+exports.expectAccepted = (observation) => {
+  expect(observation.summary).to.equal("ACCEPT")
+}
+
+exports.expectRejected = (observation, report) => {
+  expect(observation.summary).to.equal("REJECT")
+  expect(observation.report).to.deep.equal(report)
+}
+
+exports.reportLine = (statement, detail = null) => ({
+  statement,
+  detail
+})

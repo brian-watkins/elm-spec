@@ -6,6 +6,7 @@ module Spec.Html exposing
   , expectElement
   , expectElements
   , hasText
+  , hasAttribute
   )
 
 import Spec.Observation as Observation exposing (Expectation)
@@ -16,6 +17,7 @@ import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
+import Dict exposing (Dict)
 
 
 type Selector
@@ -133,6 +135,7 @@ type HtmlNode
 
 type alias HtmlElement =
   { tag: String
+  , attributes: Dict String String
   , children: List HtmlNode
   }
 
@@ -140,14 +143,16 @@ type alias HtmlElement =
 emptyElement : HtmlElement
 emptyElement =
   { tag = ""
+  , attributes = Dict.empty
   , children = []
   }
 
 
 htmlDecoder : Json.Decoder HtmlElement
 htmlDecoder =
-  Json.map2 HtmlElement
+  Json.map3 HtmlElement
     ( Json.field "tag" Json.string )
+    ( Json.field "attributes" <| Json.dict Json.string )
     ( Json.field "children" <| Json.list <| 
       Json.oneOf
         [ Json.map Text <| Json.field "text" Json.string
@@ -165,6 +170,36 @@ hasText expectedText element =
       [ Report.fact "Expected text" expectedText
       , Report.fact "but the actual text was" <| String.join ", " <| flattenTexts element.children
       ]
+
+
+hasAttribute : ( String, String ) -> Observer HtmlElement
+hasAttribute ( expectedName, expectedValue ) element =
+  case Dict.get expectedName element.attributes of
+    Just actualValue ->
+      if expectedValue == actualValue then
+        Observer.Accept
+      else
+        Observer.Reject <| Report.batch
+          [ Report.fact "Expected element to have attribute" <| expectedName ++ " = " ++ expectedValue
+          , Report.fact "but it has" <| expectedName ++ " = " ++ actualValue
+          ]
+    Nothing ->
+      if Dict.isEmpty element.attributes then
+        Observer.Reject <| Report.batch
+          [ Report.fact "Expected element to have attribute" expectedName
+          , Report.note "but it has no attributes"
+          ]
+      else
+        Observer.Reject <| Report.batch
+          [ Report.fact "Expected element to have attribute" expectedName
+          , Report.fact "but it has only these attributes" <| attributeNames element.attributes
+          ]
+
+
+attributeNames : Dict String String -> String
+attributeNames attributes =
+  Dict.keys attributes
+    |> String.join ", "
 
 
 flattenTexts : List HtmlNode -> List String

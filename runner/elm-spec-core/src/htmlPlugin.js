@@ -22,7 +22,7 @@ module.exports = class HtmlPlugin {
       case "selectAll": {
         this.clock.runToFrame()
         const selector = specMessage.body.selector
-        const elements = Array.from(this.document.querySelectorAll(selector)).map(this.describeElement)
+        const elements = Array.from(this.document.querySelectorAll(selector)).map(element => this.describeElement(element))
         out(this.selected(elements))
         break
       }
@@ -76,9 +76,19 @@ module.exports = class HtmlPlugin {
   describeElement(element) {
     return {
       tag: element.tagName,
+      attributes: this.getAttributes(element),
       children: [
         { text: element.textContent }
       ]
     }
+  }
+
+  getAttributes(element) {
+    let attributes = {}
+    const attrs = element.attributes
+    for (let i = 0; i < attrs.length; i++) {
+      attributes[attrs[i].name] = attrs[i].value
+    }
+    return attributes
   }
 }
