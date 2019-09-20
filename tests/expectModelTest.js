@@ -1,6 +1,13 @@
 const chai = require('chai')
 const expect = chai.expect
-const { expectSpec, expectFailingSpec, expectPassingSpec } = require('./helpers/SpecHelpers')
+const {
+  expectSpec,
+  expectFailingSpec,
+  expectPassingSpec,
+  expectRejected,
+  reportLine,
+  expectAccepted
+} = require('./helpers/SpecHelpers')
 
 describe("Expect Model", () => {
   
@@ -8,9 +15,9 @@ describe("Expect Model", () => {
     it("sends a failure message", (done) => {
       expectFailingSpec("ExpectModelSpec", "failing", done, (observations) => {
         expect(observations).to.have.length(1)
-        expect(observations[0].report).to.deep.equal([
-          { statement: "Expected", detail: "17" },
-          { statement: "to equal", detail: "99" }
+        expectRejected(observations[0], [
+          reportLine("Expected", "17"),
+          reportLine("to equal", "99")
         ])
       })
     })
@@ -40,14 +47,14 @@ describe("Expect Model", () => {
     it("provides all the observation results", (done) => {
       expectSpec("ExpectModelSpec", "multiple", done, (observations) => {
         expect(observations).to.have.length(2)
-        expect(observations[0].summary).to.equal("ACCEPT")
+        expectAccepted(observations[0])
         expect(observations[0].description).to.equal("It contains the expected number")
-        expect(observations[1].summary).to.equal("REJECT")
-        expect(observations[1].description).to.equal("It contains the expected name")
-        expect(observations[1].report).to.deep.equal([
-          { statement: "Expected", detail: "\"awesome-spec\"" },
-          { statement: "to equal", detail: "\"fun-spec\"" }
+        
+        expectRejected(observations[1], [
+          reportLine("Expected", "\"awesome-spec\""),
+          reportLine("to equal", "\"fun-spec\"")
         ])
+        expect(observations[1].description).to.equal("It contains the expected name")
       })
     })
   })

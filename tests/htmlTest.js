@@ -3,24 +3,25 @@ const expect = chai.expect
 const { 
   expectFailingBrowserSpec,
   expectPassingBrowserSpec,
-  expectBrowserSpec
+  expectBrowserSpec,
+  expectAccepted,
+  expectRejected,
+  reportLine
 } = require("./helpers/SpecHelpers")
 
 describe("html plugin", () => {
   context("when a single element is selected", () => {
     it("selects an existing element", (done) => {
       expectBrowserSpec("HtmlSpec", "single", done, (observations) => {
-        expect(observations[0].summary).to.equal("ACCEPT")
+        expectAccepted(observations[0])
       })
     })
     it("fails when selecting an element that does not exist", (done) => {
       expectBrowserSpec("HtmlSpec", "single", done, (observations) => {
         expect(observations[1].description).to.equal("It does not find an element that is not there")
-        expect(observations[1].summary).to.equal("REJECT")
-        expect(observations[1].report).to.deep.equal([{
-          statement: "No element matches selector",
-          detail: "#something-not-present"
-        }])
+        expectRejected(observations[1], [
+          reportLine("No element matches selector", "#something-not-present")
+        ])
       })
     })
   })
@@ -42,9 +43,9 @@ describe("html plugin", () => {
   context("hasText", () => {
     it("prints the proper error message", (done) => {
       expectFailingBrowserSpec("HtmlSpec", "hasTextFails", done, (observations) => {
-        expect(observations[0].report).to.deep.equal([
-          { statement: "Expected text", detail: "Something not present" }, 
-          { statement: "but the actual text was", detail: "Hello, Cool Dude!" }
+        expectRejected(observations[0], [
+          reportLine("Expected text", "Something not present"),
+          reportLine("but the actual text was", "Hello, Cool Dude!")
         ])
       })
     })
@@ -61,10 +62,9 @@ describe("html plugin", () => {
       it("fails before any observations or other scenarios and reports the reason", (done) => {
         expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
           expect(observations).to.have.length(1)
-          expect(observations[0].report).to.deep.equal([{
-            statement: "No match for selector",
-            detail: "#some-element-that-does-not-exist"
-          }])
+          expectRejected(observations[0], [
+            reportLine("No match for selector", "#some-element-that-does-not-exist")
+          ])
         })
       })
 
