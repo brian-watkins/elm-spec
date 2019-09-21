@@ -11,8 +11,7 @@ describe("Suite Runner", () => {
     process.chdir('./runner/tests/sample')
     
     const compiler = new Compiler({
-      specPath: "./specs/**/*Spec.elm",
-      elmPath: "../../../node_modules/.bin/elm"
+      specPath: "./specs/**/*Spec.elm"
     })
     
     const htmlContext = new HtmlContext(compiler)
