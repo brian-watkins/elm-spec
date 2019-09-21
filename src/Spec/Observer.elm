@@ -2,7 +2,7 @@ module Spec.Observer exposing
   ( Observer
   , Verdict(..)
   , isEqual
-  , hasLength
+  , isListWithLength
   , isList
   )
 
@@ -29,8 +29,8 @@ isEqual expected actual =
       ]
 
 
-hasLength : Int -> Observer (List a)
-hasLength expected actual =
+isListWithLength : Int -> Observer (List a)
+isListWithLength expected actual =
   let
     actualLength = List.length actual
   in

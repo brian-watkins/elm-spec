@@ -1,9 +1,9 @@
 const { expectSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
 
 describe("list observers", () => {
-  describe("hasLength", () => {
-    it("uses the hasLength observer as expected", (done) => {
-      expectSpec("ListObserverSpec", "hasLength", done, (observations) => {
+  describe("isListWithLength", () => {
+    it("uses the isListWithLength observer as expected", (done) => {
+      expectSpec("ListObserverSpec", "isListWithLength", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
           reportLine("Expected list to have length", "3"),

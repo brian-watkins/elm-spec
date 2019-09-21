@@ -10,20 +10,20 @@ import Runner
 
 hasLengthSpec : Spec Model Msg
 hasLengthSpec =
-  Spec.describe "hasLength"
+  Spec.describe "isListWithLength"
   [ scenario "the list has the expected length" (
       Subject.initWithModel [ "a", "b", "c" ]
     )
     |> it "has three items" (
       Observation.selectModel
-        |> Observation.expect (Observer.hasLength 3)
+        |> Observation.expect (Observer.isListWithLength 3)
     )
   , scenario "the list does not have the expected length" (
       Subject.initWithModel [ "a" ]
     )
     |> it "has three items" (
       Observation.selectModel
-        |> Observation.expect (Observer.hasLength 3)
+        |> Observation.expect (Observer.isListWithLength 3)
     )
   ]
 
@@ -84,7 +84,7 @@ type Msg =
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec specName =
   case specName of
-    "hasLength" -> Just hasLengthSpec
+    "isListWithLength" -> Just hasLengthSpec
     "isList" -> Just isListSpec
     _ -> Nothing
 
