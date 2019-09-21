@@ -77,6 +77,20 @@ attributeNameSelectorSpec =
   ]
 
 
+attributeSelectorSpec : Spec () Msg
+attributeSelectorSpec =
+  Spec.describe "attribute selector"
+  [ scenario "select by attribute" (
+      Subject.initWithModel ()
+        |> Subject.withView testView
+    )
+    |> it "finds the element" (
+      Markup.select << by [ attribute ("data-fun", "something fun") ]
+        |> Markup.expectElement (Markup.hasText "This is fun!")
+    )
+  ]
+
+
 onlyOneTagAllowedSpec : Spec () Msg
 onlyOneTagAllowedSpec =
   Spec.describe "an html program"
@@ -137,7 +151,7 @@ testView _ =
   [ Html.p [] []
   , Html.div []
     [ Html.h1 [ Attr.id "fun-id", Attr.attribute "data-tag" "tag" ] [ Html.text "This is an H1 tag" ]
-    , Html.div [ Attr.attribute "data-fun" "something" ] [ Html.text "This is fun!" ]
+    , Html.div [ Attr.attribute "data-fun" "something fun" ] [ Html.text "This is fun!" ]
     ]
   ]
 
@@ -149,6 +163,7 @@ selectSpec name =
     "combinedTag" -> Just combinedTagSelectorSpec
     "onlyOneTag" -> Just onlyOneTagAllowedSpec
     "attributeName" -> Just attributeNameSelectorSpec
+    "attribute" -> Just attributeSelectorSpec
     "descendants" -> Just descendantsOfSpec
     _ -> Nothing
 

@@ -24,6 +24,7 @@ type Selector
   = Id String
   | Tag String
   | AttributeName String
+  | Attribute String String
 
 
 type Selection
@@ -83,6 +84,8 @@ anyOtherSelectors selectors selString =
           output ++ "#" ++ name
         AttributeName name ->
           output ++ "[" ++ name ++ "]"
+        Attribute name value ->
+          output ++ "[" ++ name ++ "='" ++ value ++ "']"
         _ ->
           output  
     ) selString

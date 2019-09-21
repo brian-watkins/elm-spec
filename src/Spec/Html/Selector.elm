@@ -1,6 +1,7 @@
 module Spec.Html.Selector exposing
   ( id
   , tag
+  , attribute
   , attributeName
   , by
   , descendantsOf
@@ -19,6 +20,11 @@ id =
 tag : String -> Spec.Html.Selector
 tag =
   Spec.Html.Tag
+
+
+attribute : (String, String) -> Spec.Html.Selector
+attribute (name, value) =
+  Spec.Html.Attribute name value
 
 
 attributeName : String -> Spec.Html.Selector
