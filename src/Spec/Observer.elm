@@ -1,6 +1,7 @@
 module Spec.Observer exposing
   ( Observer
   , Verdict(..)
+  , satisfying
   , isEqual
   , isListWithLength
   , isList
@@ -16,6 +17,28 @@ type alias Observer a =
 type Verdict
   = Accept
   | Reject Report
+
+
+satisfying : List (Observer a) -> Observer a
+satisfying observers actual =
+  List.foldl (\observer verdict ->
+    case observer actual of
+      Accept ->
+        verdict
+      Reject report ->
+        case verdict of
+          Accept ->
+            Reject <| Report.batch
+              [ Report.note "Expected all observers to be satisfied, but one or more was rejected"
+              , report
+              ]
+          Reject existingReport ->
+            Reject <| Report.batch
+              [ existingReport
+              , Report.note "and"
+              , report
+              ]
+  ) Accept observers
 
 
 isEqual : a -> Observer a
