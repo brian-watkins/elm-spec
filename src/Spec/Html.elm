@@ -1,9 +1,5 @@
 module Spec.Html exposing
-  ( Selector(..)
-  , Selection(..)
-  , select
-  , target
-  , expectElement
+  ( expectElement
   , expectElements
   , expectAbsent
   , hasText
@@ -14,98 +10,12 @@ import Spec.Observation as Observation exposing (Expectation)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report
 import Spec.Subject exposing (Subject)
+import Spec.Html.Selector as Selector exposing (Selection)
 import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
 import Dict exposing (Dict)
-
-
-type Selector
-  = Id String
-  | Tag String
-  | AttributeName String
-  | Attribute String String
-
-
-type Selection
-  = By (List Selector)
-  | DescendantsOf (List Selector) Selection
-
-
-target : (Selection, Step.Context model) -> Step.Command msg
-target (selection, context) =
-  Step.sendMessage
-    { home = "_html"
-    , name = "target"
-    , body = Encode.string <| toString selection
-    }
-
-
-select : (Selection, ()) -> Selection
-select (selection, _)=
-  selection
-
-
-toString : Selection -> String
-toString selection =
-  case selection of
-    By selectors ->
-      selectorString selectors
-    DescendantsOf selectors next ->
-      selectorString selectors ++ " " ++ toString next
-
-
-selectorString : List Selector -> String
-selectorString selectors =
-  firstTagSelector selectors
-    |> anyOtherSelectors selectors
-
-
-firstTagSelector : List Selector -> String
-firstTagSelector selectors =
-  selectors
-    |> List.filterMap (\selector -> 
-      case selector of
-        Tag name ->
-          Just name
-        _ ->
-          Nothing
-    )
-    |> List.head
-    |> Maybe.withDefault ""
-
-
-anyOtherSelectors : List Selector -> String -> String
-anyOtherSelectors selectors selString =
-  selectors
-    |> List.foldl (\selector output ->
-      case selector of
-        Id name ->
-          output ++ "#" ++ name
-        AttributeName name ->
-          output ++ "[" ++ name ++ "]"
-        Attribute name value ->
-          output ++ "[" ++ name ++ "='" ++ value ++ "']"
-        _ ->
-          output  
-    ) selString
-
-
-selectHtml : Selection -> Message
-selectHtml selection =
-  { home = "_html"
-  , name = "select"
-  , body = Encode.object [ ("selector", Encode.string <| toString selection) ]
-  }
-
-
-selectAllHtml : Selection -> Message
-selectAllHtml selection =
-  { home = "_html"
-  , name = "selectAll"
-  , body = Encode.object [ ("selector", Encode.string <| toString selection) ]
-  }
 
 
 expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model
@@ -119,7 +29,7 @@ expectElement observer selectionGenerator =
           Just element ->
             observer element
           Nothing ->
-            Observer.Reject <| Report.fact "No element matches selector" (toString selection)
+            Observer.Reject <| Report.fact "No element matches selector" (Selector.toString selection)
 
 
 expectAbsent : (() -> Selection) -> Expectation model
@@ -132,7 +42,7 @@ expectAbsent selectionGenerator =
         case maybeElement of
           Just _ ->
             Observer.Reject <| Report.batch
-              [ Report.fact "Expected no elements to be selected with" <| toString selection
+              [ Report.fact "Expected no elements to be selected with" <| Selector.toString selection
               , Report.note "but one or more elements were selected"
               ]
           Nothing ->
@@ -152,6 +62,22 @@ expectElements observer selectionGenerator =
     |> Observation.mapSelection (Message.decode <| Json.list htmlDecoder)
     |> Observation.mapSelection (Maybe.withDefault [])
     |> Observation.expect observer
+
+
+selectHtml : Selection -> Message
+selectHtml selection =
+  { home = "_html"
+  , name = "select"
+  , body = Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
+  }
+
+
+selectAllHtml : Selection -> Message
+selectAllHtml selection =
+  { home = "_html"
+  , name = "selectAll"
+  , body = Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
+  }
 
 
 type HtmlNode

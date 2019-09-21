@@ -20,7 +20,7 @@ descendantsOfSpec =
         |> Subject.withView descendantsView
     )
     |> it "finds all the elements" (
-      Markup.select
+      select
         << descendantsOf [ id "my-part" ]
         << by [ tag "div" ]
         |> Markup.expectElements (\elements ->
@@ -33,7 +33,7 @@ descendantsOfSpec =
         |> Subject.withView descendantsView
     )
     |> it "finds all the elements" (
-      Markup.select
+      select
         << descendantsOf [ id "my-part" ]
         << descendantsOf [ attributeName "fun" ]
         << by [ tag "div" ]
@@ -71,7 +71,7 @@ attributeNameSelectorSpec =
         |> Subject.withView testView
     )
     |> it "finds the element" (
-      Markup.select << by [ attributeName "data-fun" ]
+      select << by [ attributeName "data-fun" ]
         |> Markup.expectElement (Markup.hasText "This is fun!")
     )
   ]
@@ -85,7 +85,7 @@ attributeSelectorSpec =
         |> Subject.withView testView
     )
     |> it "finds the element" (
-      Markup.select << by [ attribute ("data-fun", "something fun") ]
+      select << by [ attribute ("data-fun", "something fun") ]
         |> Markup.expectElement (Markup.hasText "This is fun!")
     )
   ]
@@ -99,7 +99,7 @@ onlyOneTagAllowedSpec =
         |> Subject.withView testView
     )
     |> it "uses the first tag only" (
-      Markup.select << by [ tag "h1", tag "div", tag "a" ]
+      select << by [ tag "h1", tag "div", tag "a" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
   ]
@@ -113,7 +113,7 @@ tagSelectorSpec =
         |> Subject.withView testView
     )
     |> it "renders the text on the view" (
-      Markup.select << by [ tag "h1" ]
+      select << by [ tag "h1" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
   ]
@@ -127,7 +127,7 @@ combinedTagSelectorSpec =
         |> Subject.withView testView
     )
     |> it "selects the text on the view" (
-      Markup.select << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
+      select << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
   , scenario "Selects by id and then tag" (
@@ -135,7 +135,7 @@ combinedTagSelectorSpec =
         |> Subject.withView testView
     )
     |> it "selects the text on the view" (
-      Markup.select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
+      select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
         |> Markup.expectElement (Markup.hasText "This is an H1 tag")
     )
   ]

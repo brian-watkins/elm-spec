@@ -26,11 +26,11 @@ htmlSpecSingle =
         |> Subject.withView testView
     )
     |> it "renders the name based on the model" (
-      Markup.select << by [ id "my-name" ]
+      select << by [ id "my-name" ]
         |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
     )
     |> it "does not find an element that is not there" (
-      Markup.select << by [ id "something-not-present" ]
+      select << by [ id "something-not-present" ]
         |> Markup.expectElement (Markup.hasText "I should not be present!")
     )
   ]
@@ -44,11 +44,11 @@ htmlSpecMultiple =
         |> Subject.withView testView
     )
     |> it "renders the name based on the model" (
-      Markup.select << by [ id "my-name" ]
+      select << by [ id "my-name" ]
         |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
     )
     |> it "renders the count based on the model" (
-      Markup.select << by [ id "my-count" ]
+      select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 78!")
     )
   , scenario "multiple observations two" (
@@ -56,11 +56,11 @@ htmlSpecMultiple =
         |> Subject.withView testView
     )
     |> it "finds a third thing" (
-        Markup.select << by [ id "my-label" ]
+        select << by [ id "my-label" ]
           |> Markup.expectElement (Markup.hasText "Here is a label")
       )
     |> it "finds a fourth thing" (
-        Markup.select << by [ id "my-label-2" ]
+        select << by [ id "my-label-2" ]
           |> Markup.expectElement (Markup.hasText "Another label")
       )
   ]
@@ -75,17 +75,17 @@ clickSpec =
         |> Subject.withView testView
     )
     |> when "the button is clicked three times"
-      [ Markup.target << by [ id "my-button" ]
+      [ target << by [ id "my-button" ]
       , Event.click
       , Event.click
       , Event.click
       ]
     |> when "the other button is clicked once"
-      [ Markup.target << by [ id "another-button" ]
+      [ target << by [ id "another-button" ]
       , Event.click
       ]
     |> it "renders the count" (
-      Markup.select << by [ id "my-count" ]
+      select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 30!")
     )
   ]
@@ -100,17 +100,17 @@ targetUnknownSpec =
         |> Subject.withView testView
     )
     |> when "the button is clicked three times"
-      [ Markup.target << by [ id "some-element-that-does-not-exist" ]
+      [ target << by [ id "some-element-that-does-not-exist" ]
       , Event.click
       , Event.click
       , Event.click
       ]
     |> when "the other button is clicked once"
-      [ Markup.target << by [ id "another-button" ]
+      [ target << by [ id "another-button" ]
       , Event.click
       ]
     |> it "renders the count" (
-      Markup.select << by [ id "my-count" ]
+      select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 30!")
     )
   , scenario "Should not run since the spec has been aborted" (
@@ -119,7 +119,7 @@ targetUnknownSpec =
         |> Subject.withView testView
     )
     |> it "should not do this since we've failed already" (
-        Markup.select << by [ id "my-name" ]
+        select << by [ id "my-name" ]
           |> Markup.expectElement (Markup.hasText "Hello, Somebody!")
     )
   ]
@@ -139,7 +139,7 @@ subSpec =
       , Port.send "htmlSpecSub" <| Encode.int 13
       ]
     |> it "renders the count" (
-      Markup.select << by [ id "my-count" ]
+      select << by [ id "my-count" ]
         |> Markup.expectElement (Markup.hasText "The count is 40!")
     )
     |> it "updates the model" (
@@ -159,13 +159,13 @@ manyElementsSpec =
         |> Subject.withView testView
     )
     |> it "selects many elements" (
-      Markup.select << by [ tag "div" ]
+      select << by [ tag "div" ]
         |> Markup.expectElements (\elements ->
           Observer.isEqual 6 (List.length elements)
         )
     )
     |> it "fetchs text for the elements" (
-      Markup.select << by [ tag "div" ]
+      select << by [ tag "div" ]
         |> Markup.expectElements (\elements ->
           List.drop 2 elements
             |> List.head
@@ -184,7 +184,7 @@ expectAbsentSpec =
         |> Subject.withView testView
     )
     |> it "selects nothing" (
-      Markup.select << by [ id "nothing" ]
+      select << by [ id "nothing" ]
         |> Markup.expectAbsent
     )
   , scenario "something is selected" (
@@ -192,7 +192,7 @@ expectAbsentSpec =
         |> Subject.withView testView
     )
     |> it "selects nothing" (
-      Markup.select << by [ id "my-name" ]
+      select << by [ id "my-name" ]
         |> Markup.expectAbsent
     )
   ]

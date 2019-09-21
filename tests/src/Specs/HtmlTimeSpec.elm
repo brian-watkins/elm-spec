@@ -29,7 +29,7 @@ intervalSpec =
       , Spec.Time.tick 1000
       ]
     |> it "updates the count" (
-      Markup.select << by [ id "seconds-passed" ]
+      select << by [ id "seconds-passed" ]
         |> Markup.expectElement (hasText "4 seconds passed")
     )
   ]

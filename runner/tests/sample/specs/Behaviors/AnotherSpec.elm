@@ -19,11 +19,11 @@ eightClicksSpec =
         |> Subject.withView App.view
     )
     |> when "the button is clicked eight times" (
-      (Markup.target << by [ id "my-button" ])
+      (target << by [ id "my-button" ])
       :: (List.repeat 8 Event.click)
     )
     |> it "renders the count" (
-      Markup.select << by [ id "count-results" ]
+      select << by [ id "count-results" ]
         |> Markup.expectElement (Markup.hasText "You clicked the button 8 time(s)")
     )
   ]

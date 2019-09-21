@@ -19,13 +19,13 @@ clickSpec =
         |> Subject.withView App.view
     )
     |> when "the button is clicked three times"
-      [ Markup.target << by [ id "my-button" ]
+      [ target << by [ id "my-button" ]
       , Event.click
       , Event.click
       , Event.click
       ]
     |> it "renders the count" (
-      Markup.select << by [ id "count-results" ]
+      select << by [ id "count-results" ]
         |> Markup.expectElement (Markup.hasText "You clicked the button 3 time(s)")
     )
   ]

@@ -18,11 +18,11 @@ inputSpec =
         |> Subject.withView App.view
     )
     |> when "some text is input"
-      [ Markup.target << by [ id "my-input" ]
+      [ target << by [ id "my-input" ]
       , Event.input "Here is some fun text!"
       ]
     |> it "renders the text on the view" (
-      Markup.select << by [ id "input-results" ]
+      select << by [ id "input-results" ]
         |> Markup.expectElement (Markup.hasText "You typed: Here is some fun text!")
     )
   ]
@@ -37,15 +37,15 @@ differentInputSpec =
         |> Subject.withView App.view
     )
     |> when "some text is input"
-      [ Markup.target << by [ id "my-input" ]
+      [ target << by [ id "my-input" ]
       , Event.input "Here is some awesome text!"
       ]
     |> it "renders the text on the view" (
-      Markup.select << by [ id "input-results" ]
+      select << by [ id "input-results" ]
         |> Markup.expectElement (Markup.hasText "You typed: Here is some awesome text!")
     )
     |> it "does not record any clicks" (
-      Markup.select << by [ id "count-results" ]
+      select << by [ id "count-results" ]
         |> Markup.expectElement (Markup.hasText "You clicked the button 0 time(s)")
     )
   ]

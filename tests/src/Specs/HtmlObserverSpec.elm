@@ -18,7 +18,7 @@ hasTextSpec =
         |> Subject.withView testTextView
     )
     |> it "matches the text" (
-      Markup.select << by [ id "my-activity" ]
+      select << by [ id "my-activity" ]
         |> Markup.expectElement (Markup.hasText "My activity is: running!")
     )
   , scenario "the hasText matcher fails" (
@@ -26,7 +26,7 @@ hasTextSpec =
        |> Subject.withView testTextView
     )
     |> it "renders the name based on the model" (
-      Markup.select << by [ id "my-activity" ]
+      select << by [ id "my-activity" ]
         |> Markup.expectElement (Markup.hasText "Something not present")
     )
   ]
@@ -40,7 +40,7 @@ hasTextContainedSpec =
         |> Subject.withView testTextView
     )
     |> it "matches the text" (
-      Markup.select << by [ id "things" ]
+      select << by [ id "things" ]
         |> Markup.expectElement (Markup.hasText "swimming")
     )
   ]
@@ -66,7 +66,7 @@ hasAttributeSpec =
         |> Subject.withView testAttributeView
     )
     |> it "sets the attribute value based on the model" (
-      Markup.select << by [ id "activity" ]
+      select << by [ id "activity" ]
         |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "bowling"))
     )
   , scenario "when the element does not have the expected attribute" (
@@ -74,7 +74,7 @@ hasAttributeSpec =
         |> Subject.withView testAttributeView
     )
     |> it "sets the attribute value based on the model" (
-      Markup.select << by [ id "activity" ]
+      select << by [ id "activity" ]
         |> Markup.expectElement (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
     )
   , scenario "when the element has the attribute with the wrong value" (
@@ -82,7 +82,7 @@ hasAttributeSpec =
         |> Subject.withView testAttributeView
     )
     |> it "sets the attribute value based on the model" (
-      Markup.select << by [ id "activity" ]
+      select << by [ id "activity" ]
         |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
     )
   , scenario "when the element has no attributes" (
@@ -90,7 +90,7 @@ hasAttributeSpec =
         |> Subject.withView testAttributeView
     )
     |> it "sets the attribute value based on the model" (
-      Markup.select << by [ tag "h1" ]
+      select << by [ tag "h1" ]
         |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
     )
   ]

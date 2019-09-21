@@ -21,11 +21,11 @@ inputSpec =
         |> Subject.withView testView
     )
     |> when "some text is input"
-      [ Markup.target << by [ id "my-field" ]
+      [ target << by [ id "my-field" ]
       , Event.input "Here is some fun text!"
       ]
     |> it "renders the text on the view" (
-      Markup.select << by [ id "my-message" ]
+      select << by [ id "my-message" ]
         |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
     )
   ]
