@@ -5,6 +5,7 @@ module Spec.Html exposing
   , target
   , expectElement
   , expectElements
+  , expectAbsent
   , hasText
   , hasAttribute
   )
@@ -112,15 +113,37 @@ expectElement observer selectionGenerator =
   let
     selection = selectionGenerator ()
   in
-    Observation.inquire (selectHtml selection)
-      |> Observation.mapSelection (Message.decode htmlDecoder)
-      |> Observation.expect (\maybeElement ->
+    observeSelection selection <|
+      \maybeElement ->
         case maybeElement of
           Just element ->
             observer element
           Nothing ->
             Observer.Reject <| Report.fact "No element matches selector" (toString selection)
-      )
+
+
+expectAbsent : (() -> Selection) -> Expectation model
+expectAbsent selectionGenerator =
+  let
+    selection = selectionGenerator ()
+  in
+    observeSelection selection <|
+      \maybeElement ->
+        case maybeElement of
+          Just _ ->
+            Observer.Reject <| Report.batch
+              [ Report.fact "Expected no elements to be selected with" <| toString selection
+              , Report.note "but one or more elements were selected"
+              ]
+          Nothing ->
+            Observer.Accept
+
+
+observeSelection : Selection -> Observer (Maybe HtmlElement) -> Expectation model
+observeSelection selection observer =
+  Observation.inquire (selectHtml selection)
+      |> Observation.mapSelection (Message.decode htmlDecoder)
+      |> Observation.expect observer
 
 
 expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Expectation model

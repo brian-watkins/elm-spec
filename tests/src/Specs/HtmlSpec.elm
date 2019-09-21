@@ -176,6 +176,28 @@ manyElementsSpec =
   ]
 
 
+expectAbsentSpec : Spec Model Msg
+expectAbsentSpec =
+  Spec.describe "expectAbsent"
+  [ scenario "nothing is selected" (
+      Subject.initWithModel { name = "Cool Dude", count = 7 }
+        |> Subject.withView testView
+    )
+    |> it "selects nothing" (
+      Markup.select << by [ id "nothing" ]
+        |> Markup.expectAbsent
+    )
+  , scenario "something is selected" (
+      Subject.initWithModel { name = "Cool Dude", count = 7 }
+        |> Subject.withView testView
+    )
+    |> it "selects nothing" (
+      Markup.select << by [ id "my-name" ]
+        |> Markup.expectAbsent
+    )
+  ]
+
+
 testView : Model -> Html Msg
 testView model =
   Html.div []
@@ -246,6 +268,7 @@ selectSpec name =
     "sub" -> Just subSpec
     "targetUnknown" -> Just targetUnknownSpec
     "manyElements" -> Just manyElementsSpec
+    "expectAbsent" -> Just expectAbsentSpec
     _ -> Nothing
 
 

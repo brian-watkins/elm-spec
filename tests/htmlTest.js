@@ -73,4 +73,17 @@ describe("html plugin", () => {
       expectPassingBrowserSpec("HtmlSpec", "manyElements", done)
     })
   })
+
+  context("expect nothing selected", () => {
+    it("uses the expectAbsent observer as expected", (done) => {
+      expectBrowserSpec("HtmlSpec", "expectAbsent", done, (observations) => {
+        expectAccepted(observations[0])
+
+        expectRejected(observations[1], [
+          reportLine("Expected no elements to be selected with", "#my-name"),
+          reportLine("but one or more elements were selected")
+        ])
+      })
+    })
+  })
 })
