@@ -1,6 +1,29 @@
-const { expectBrowserSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
+const {
+  expectBrowserSpec,
+  expectPassingBrowserSpec,
+  expectAccepted,
+  expectRejected,
+  reportLine
+} = require("./helpers/SpecHelpers")
 
 describe("html observers", () => {
+  describe("hasText", () => {
+    it("observes the text of the selected element", (done) => {
+      expectBrowserSpec("HtmlObserverSpec", "hasText", done, (observations) => {
+        expectAccepted(observations[0])
+
+        expectRejected(observations[1], [
+          reportLine("Expected text", "Something not present"),
+          reportLine("but the actual text was", "My activity is: Running!")
+        ])
+      })
+    })
+
+    it("observes that text is contained in the text content of the element", (done) => {
+      expectPassingBrowserSpec("HtmlObserverSpec", "hasTextContained", done)
+    })
+  })
+
   describe("hasAttribute", () => {
     it("observes attributes of selected elements as expected", (done) => {
       expectBrowserSpec("HtmlObserverSpec", "hasAttribute", done, (observations) => {

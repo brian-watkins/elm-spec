@@ -166,12 +166,12 @@ htmlDecoder =
 
 hasText : String -> Observer HtmlElement
 hasText expectedText element =
-  if List.member expectedText <| flattenTexts element.children then
+  if String.contains expectedText <| flattenTexts element.children then
     Observer.Accept
   else
     Observer.Reject <| Report.batch
       [ Report.fact "Expected text" expectedText
-      , Report.fact "but the actual text was" <| String.join ", " <| flattenTexts element.children
+      , Report.fact "but the actual text was" <| flattenTexts element.children
       ]
 
 
@@ -205,7 +205,7 @@ attributeNames attributes =
     |> String.join ", "
 
 
-flattenTexts : List HtmlNode -> List String
+flattenTexts : List HtmlNode -> String
 flattenTexts children =
   children
     |> List.map (\child ->
@@ -213,6 +213,6 @@ flattenTexts children =
         Element n ->
           flattenTexts n.children
         Text text ->
-          [ text ]
+          text
     )
-    |> List.concat
+    |> String.join " "

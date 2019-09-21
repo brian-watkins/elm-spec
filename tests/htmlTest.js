@@ -40,17 +40,6 @@ describe("html plugin", () => {
     })
   })
 
-  context("hasText", () => {
-    it("prints the proper error message", (done) => {
-      expectFailingBrowserSpec("HtmlSpec", "hasTextFails", done, (observations) => {
-        expectRejected(observations[0], [
-          reportLine("Expected text", "Something not present"),
-          reportLine("but the actual text was", "Hello, Cool Dude!")
-        ])
-      })
-    })
-  })
-
   context("click event", () => {
     it("handles the click event as expected", (done) => {
       expectPassingBrowserSpec("HtmlSpec", "click", done)

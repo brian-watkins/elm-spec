@@ -66,20 +66,6 @@ htmlSpecMultiple =
   ]
 
 
-hasTextFails : Spec Model Msg
-hasTextFails =
-  Spec.describe "an html program"
-  [ scenario "the hasText matcher fails" (
-      Subject.initWithModel { name = "Cool Dude", count = 78 }
-       |> Subject.withView testView
-    )
-    |> it "renders the name based on the model" (
-      Markup.select << by [ id "my-name" ]
-        |> Markup.expectElement (Markup.hasText "Something not present")
-    )
-  ]
-
-
 clickSpec : Spec Model Msg
 clickSpec =
   Spec.describe "an html program"
@@ -256,7 +242,6 @@ selectSpec name =
   case name of
     "single" -> Just htmlSpecSingle
     "multiple" -> Just htmlSpecMultiple
-    "hasTextFails" -> Just hasTextFails
     "click" -> Just clickSpec
     "sub" -> Just subSpec
     "targetUnknown" -> Just targetUnknownSpec
