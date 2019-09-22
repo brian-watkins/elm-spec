@@ -4,41 +4,50 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Message exposing (Message)
+import Spec.Observer as Observer
 import Spec.Port as Port
 import Spec.Witness as Witness exposing (Witness)
 import Json.Encode as Encode
+import Json.Decode as Json
 import Runner
 
 
-spySpec : Spec Model Msg
-spySpec =
-  Spec.describe "a fragment injected with a cmd-generating function"
+recordSpec : Spec Model Msg
+recordSpec =
+  Spec.describe "witness"
   [ scenario "the witness is called the expected number of times" testSubject
       |> triggerInjectedFunctionWith 88
-      |> it "records the call to the injected function" (
-        Witness.expect "injected" (Witness.hasStatements 1)
+      |> triggerInjectedFunctionWith 91
+      |> triggerInjectedFunctionWith 14
+      |> it "records statements about the injected function" (
+        Witness.expect "injected" Json.int (
+          Observer.isList
+            [ Observer.isEqual 88
+            , Observer.isEqual 91
+            , Observer.isEqual 14 
+            ]
+        )
       )
-  , scenario "the witness is never triggered" testSubject
+  , scenario "the witness expectation fails" testSubject
+      |> triggerInjectedFunctionWith 72
       |> it "fails" (
-        Witness.expect "injected" (Witness.hasStatements 1)
-      )
-  , scenario "the witness has too few statements" testSubject
-      |> triggerInjectedFunctionWith 88
-      |> it "fails" (
-        Witness.expect "injected" (Witness.hasStatements 17)
+        Witness.expect "injected" Json.int (Observer.isListWithLength 3)
       )
   ]
 
 
 testSubject =
   Subject.initWithModel { count = 0 }
-    |> Witness.forUpdate (\witness -> testUpdate <| \_ -> Witness.spy "injected" witness)
+    |> Witness.forUpdate (\witness ->
+        testUpdate <| \num -> 
+          Witness.log "injected" (Encode.int num) witness
+      )
     |> Subject.withSubscriptions testSubscriptions
 
 
 triggerInjectedFunctionWith number =
   when "a message is sent that triggers the injected function"
-  [ Port.send "witnessSpecSub" <| Encode.int 88
+  [ Port.send "witnessSpecSub" <| Encode.int number
   ]
 
 
@@ -68,7 +77,7 @@ testSubscriptions _ =
 
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
-  Just spySpec
+  Just recordSpec
 
 
 main =

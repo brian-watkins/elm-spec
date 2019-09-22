@@ -1,31 +1,22 @@
-const chai = require('chai')
-const expect = chai.expect
-const { expectSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
+const {
+  expectSpec,
+  expectAccepted,
+  expectRejected,
+  reportLine
+} = require("./helpers/SpecHelpers")
 
 describe("witness", () => {
-  describe("spy was called", () => {
+  describe("log and expect", () => {
     it("runs the spec as expected", (done) => {
-      expectSpec("WitnessSpec", "spy", done, (observations) => {
-        expect(observations).to.have.length(3)
+      expectSpec("WitnessSpec", "log", done, (observations) => {
         expectAccepted(observations[0])
+
+        expectRejected(observations[1], [
+          reportLine("Observation rejected for witness", "injected"),
+          reportLine("Expected list to have length", "3"),
+          reportLine("but it has length", "1")
+        ])
       })
-    })
-    
-    describe("when the observation is rejected", () => {
-      it("pluralizes the error message as expected", (done) => {
-        expectSpec("WitnessSpec", "spy", done, (observations) => {
-          expectRejected(observations[1], [
-            reportLine("Expected witness", "injected"),
-            reportLine("to have been called", "1 time"),
-            reportLine("but it was called", "0 times")
-          ])
-          expectRejected(observations[2], [
-            reportLine("Expected witness", "injected"),
-            reportLine("to have been called", "17 times"),
-            reportLine("but it was called", "1 time")
-          ])
-        })
-      })
-    })
+    })    
   })
 })
