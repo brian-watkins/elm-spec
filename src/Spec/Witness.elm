@@ -21,7 +21,7 @@ type Witness msg =
 
 type alias Statement =
   { name: String
-  , content: Encode.Value
+  , fact: Encode.Value
   }
 
 
@@ -38,7 +38,7 @@ log name statement (Witness witness) =
     , body =
         Encode.object
           [ ("name", Encode.string name)
-          , ("content", statement)
+          , ("fact", statement)
           ]
     }
 
@@ -67,7 +67,7 @@ filterStatementsFromWitness name decoder messages =
         statement.name == name
     )
     |> List.filterMap (\statement -> 
-        Json.decodeValue decoder statement.content
+        Json.decodeValue decoder statement.fact
           |> Result.toMaybe
     )
     |> List.reverse
@@ -77,4 +77,4 @@ statementDecoder : Json.Decoder (Statement)
 statementDecoder =
   Json.map2 Statement
     ( Json.field "name" Json.string )
-    ( Json.field "content" Json.value )
+    ( Json.field "fact" Json.value )
