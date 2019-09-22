@@ -96,7 +96,7 @@ update outlet msg model =
 
 subscriptions : Model model msg -> Sub msg
 subscriptions model =
-  Subject.subscriptions model.scenario.subject
+  model.scenario.subject.subscriptions model.programModel
 
 
 addIfUnique : List a -> a -> List a

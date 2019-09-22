@@ -6,7 +6,6 @@ module Spec.Subject exposing
   , withSubscriptions
   , withUpdate
   , withView
-  , subscriptions
   )
 
 import Spec.Message as Message exposing (Message)
@@ -58,8 +57,3 @@ withView view subject =
 withSubscriptions : (model -> Sub msg) -> Subject model msg -> Subject model msg
 withSubscriptions programSubscriptions subject =
   { subject | subscriptions = programSubscriptions }
-
-
-subscriptions : Subject model msg -> Sub msg
-subscriptions subject =
-  subject.subscriptions subject.model

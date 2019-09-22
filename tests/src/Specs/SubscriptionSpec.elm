@@ -14,11 +14,28 @@ import Json.Encode as Encode
 sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
   Spec.describe "a worker with subscriptions"
-  [ scenario "the worker receives subscriptions" (
-      Subject.init ( { count = 0 }, Cmd.none )
+  [ scenario "subscriptions are registered always" (
+      Subject.init ( { count = 0, subscribe = True }, Cmd.none )
         |> Subject.withUpdate testUpdate
         |> Subject.withSubscriptions testSubscriptions
     )
+    |> when "some subscription messages are sent"
+      [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
+      , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+      ]
+    |> it "updates the model" (
+      Observation.selectModel
+        |> Observation.mapSelection .count
+        |> Observation.expect (Observer.isEqual 78)
+    )
+  , scenario "subscriptions are registered later depending on the model" (
+      Subject.init ( { count = 0, subscribe = False }, Cmd.none )
+        |> Subject.withUpdate testUpdate
+        |> Subject.withSubscriptions testVariableSubscriptions
+    )
+    |> when "the subscription is enabled"
+      [ Port.send "enableSubscription" (Encode.bool True)
+      ]
     |> when "some subscription messages are sent"
       [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
       , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
@@ -36,6 +53,8 @@ testUpdate msg model =
   case msg of
     ReceivedSuperObject superObject ->
       ( { model | count = superObject.number }, Cmd.none )
+    UpdateSubscription updated ->
+      ( { model | subscribe = updated }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
@@ -50,20 +69,31 @@ type alias SuperObject =
 
 type Msg
   = ReceivedSuperObject SuperObject
+  | UpdateSubscription Bool
 
 
 type alias Model =
   { count: Int
+  , subscribe: Bool
   }
 
 
 port listenForSuperObject : (SuperObject -> msg) -> Sub msg
-
+port enableSubscription : (Bool -> msg) -> Sub msg
 
 testSubscriptions : Model -> Sub Msg
 testSubscriptions model =
   listenForSuperObject ReceivedSuperObject
 
+testVariableSubscriptions : Model -> Sub Msg
+testVariableSubscriptions model =
+  Sub.batch
+  [ enableSubscription UpdateSubscription
+  , if model.subscribe == True then
+      listenForSuperObject ReceivedSuperObject
+    else
+      Sub.none
+  ]
 
 main =
   Runner.program selectSpec
