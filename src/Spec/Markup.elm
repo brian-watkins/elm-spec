@@ -1,4 +1,4 @@
-module Spec.Html exposing
+module Spec.Markup exposing
   ( expectElement
   , expectElements
   , expectAbsent
@@ -10,7 +10,7 @@ import Spec.Observation as Observation exposing (Expectation)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report
 import Spec.Subject exposing (Subject)
-import Spec.Html.Selector as Selector exposing (Selection)
+import Spec.Markup.Selector as Selector exposing (Selection)
 import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode

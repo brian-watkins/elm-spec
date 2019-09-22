@@ -3,8 +3,8 @@ port module Specs.HtmlTimeSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Html as Markup exposing (hasText)
-import Spec.Html.Selector exposing (..)
+import Spec.Markup as Markup exposing (hasText)
+import Spec.Markup.Selector exposing (..)
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr

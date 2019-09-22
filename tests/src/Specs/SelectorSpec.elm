@@ -3,8 +3,8 @@ module Specs.SelectorSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Html as Markup
-import Spec.Html.Selector exposing (..)
+import Spec.Markup as Markup
+import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
 import Html exposing (Html)
 import Html.Attributes as Attr

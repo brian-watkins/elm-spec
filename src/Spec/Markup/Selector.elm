@@ -1,4 +1,4 @@
-module Spec.Html.Selector exposing
+module Spec.Markup.Selector exposing
   ( Selector
   , Selection
   , select

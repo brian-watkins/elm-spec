@@ -1,4 +1,4 @@
-module Spec.Html.Event exposing
+module Spec.Markup.Event exposing
   ( click
   , input
   )

@@ -3,9 +3,9 @@ module Specs.EventSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Html as Markup
-import Spec.Html.Selector exposing (..)
-import Spec.Html.Event as Event
+import Spec.Markup as Markup
+import Spec.Markup.Selector exposing (..)
+import Spec.Markup.Event as Event
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

@@ -3,10 +3,10 @@ port module Specs.HtmlSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Html as Markup
+import Spec.Markup as Markup
 import Spec.Observation as Observation
-import Spec.Html.Selector exposing (..)
-import Spec.Html.Event as Event
+import Spec.Markup.Selector exposing (..)
+import Spec.Markup.Event as Event
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation.Report as Report

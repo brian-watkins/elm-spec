@@ -7,7 +7,9 @@
     "exposed-modules": [
         "Spec",
         "Spec.Command",
-        "Spec.Html",
+        "Spec.Markup",
+        "Spec.Markup.Selector",
+        "Spec.Markup.Event",
         "Spec.Message",
         "Spec.Observer",
         "Spec.Observation",
