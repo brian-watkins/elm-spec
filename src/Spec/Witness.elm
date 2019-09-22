@@ -45,9 +45,10 @@ log name statement (Witness witness) =
 expect : String -> Json.Decoder a -> Observer (List a) -> Expectation model
 expect name decoder observer =
   Observation.selectEffects
-    |> Observation.mapSelection (filterStatementsFromWitness name decoder)
-    |> Observation.expect (\statements ->
-      case observer statements of
+    |> Observation.mapSelection (statementsForWitness name)
+    |> Observation.mapSelection (factsFromStatements decoder)
+    |> Observation.expect (\facts ->
+      case observer facts of
         Observer.Accept ->
           Observer.Accept
         Observer.Reject report ->
@@ -58,18 +59,22 @@ expect name decoder observer =
     )
 
 
-filterStatementsFromWitness : String -> Json.Decoder a -> List Message -> List a
-filterStatementsFromWitness name decoder messages =
+statementsForWitness : String -> List Message -> List Statement
+statementsForWitness name messages =
   List.filter (Message.is "_witness" "log") messages
     |> List.filterMap (Message.decode statementDecoder)
     |> List.filter (\statement -> 
         statement.name == name
     )
-    |> List.filterMap (\statement -> 
-        Json.decodeValue decoder statement.fact
-          |> Result.toMaybe
-    )
     |> List.reverse
+
+
+factsFromStatements : Json.Decoder a -> List Statement -> List a
+factsFromStatements decoder =
+  List.filterMap (\statement ->
+    Json.decodeValue decoder statement.fact
+      |> Result.toMaybe
+  )
 
 
 statementDecoder : Json.Decoder (Statement)
