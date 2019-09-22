@@ -1,6 +1,5 @@
 module Spec.Witness exposing
   ( Witness
-  , Statement
   , forUpdate
   , log
   , expect
