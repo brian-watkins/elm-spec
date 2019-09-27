@@ -131,7 +131,7 @@ exports.runSpec = (app, plugins, done, matcher) => {
 }
 
 exports.expectAccepted = (observation) => {
-  expect(observation.summary).to.equal("ACCEPT")
+  expect(observation.summary).to.equal("ACCEPT", `Rejected: ${JSON.stringify(observation.report)}`)
 }
 
 exports.expectRejected = (observation, report) => {
