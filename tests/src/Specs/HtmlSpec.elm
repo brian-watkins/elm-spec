@@ -10,7 +10,6 @@ import Spec.Markup.Event as Event
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Spec.Observation.Report as Report
-import Spec.Scenario exposing (..)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
