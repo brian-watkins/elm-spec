@@ -23,6 +23,12 @@ module.exports = class ProgramRunner extends EventEmitter {
       }
     })
 
+    Object.values(this.plugins).forEach((plugin) => {
+      plugin.prepareForRun({next: () => {
+        this.app.ports.sendIn.send(this.continue())
+      }})
+    })
+
     setTimeout(() => {
       this.app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
     }, 0)

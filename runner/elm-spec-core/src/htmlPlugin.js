@@ -6,6 +6,14 @@ module.exports = class HtmlPlugin {
     this.clock = clock
   }
 
+  prepareForRun({ next }) {
+    this.window.onbeforeunload = (event) => {
+      next()
+      event.preventDefault()
+      event.returnValue = ''
+    }
+  }
+
   handle(specMessage, out, abort) {
     switch (specMessage.name) {
       case "select": {
@@ -49,6 +57,14 @@ module.exports = class HtmlPlugin {
         element.value = specMessage.body.text
         const event = this.window.eval("new Event('input', {bubbles: true, cancelable: true})")
         element.dispatchEvent(event)
+        break
+      }
+      case "navigation": {
+        out({
+          home: "navigation",
+          name: "current-location",
+          body: this.window._elm_spec.window.location
+        })
         break
       }
       default:

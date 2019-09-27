@@ -1,6 +1,7 @@
 const HtmlPlugin = require('elm-spec-core/src/htmlPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
+const fs = require('fs')
 
 module.exports = class HtmlContext {
   constructor(compiler) {
@@ -13,9 +14,24 @@ module.exports = class HtmlContext {
       }
     )
 
+    this.addFakeWindow()
+
     this.clock = lolex
       .withGlobal(this.dom.window)
       .install({toFake: [ "requestAnimationFrame" ]})
+  }
+
+  addFakeWindow() {
+    this.addJs(__dirname + '/fakeWindow.js')
+    this.dom.window._elm_spec = {}
+    this.dom.window.eval("_elm_spec.window = new FakeWindow()")
+  }
+
+  addJs(file) {
+    const source = fs.readFileSync(file, { encoding: "utf-8" })
+    const script = this.dom.window.document.createElement("script")
+    script.textContent = source
+    this.dom.window.document.body.appendChild(script)
   }
 
   evaluateProgram(program, callback) {
@@ -38,7 +54,7 @@ module.exports = class HtmlContext {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
-          this.dom.window.eval(compiledCode)
+          this.dom.window.eval("(function(){const window = _elm_spec.window; " + compiledCode + "})()")
           callback(this.dom.window.Elm, this.dom.window)
         })
         .catch((err) => {
