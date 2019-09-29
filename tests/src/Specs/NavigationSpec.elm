@@ -34,18 +34,60 @@ loadUrlSpec =
     )
   ]
 
+reloadSpec : Spec Model Msg
+reloadSpec =
+  Spec.describe "a program that reloads the page"
+  [ scenario "Browser.Navigation.reload is used" (
+      Subject.initWithModel ()
+        |> Subject.withView testView
+        |> Subject.withUpdate testUpdate
+    )
+    |> when "a reload is triggered"
+      [ target << by [ id "reload-button" ]
+      , Event.click
+      ]
+    |> it "records the reload" (
+      Navigation.expectReload
+    )
+  , scenario "Browser.Navigation.reloadAndSkipCache is used" (
+      Subject.initWithModel ()
+        |> Subject.withView testView
+        |> Subject.withUpdate testUpdate
+    )
+    |> when "a reload is triggered"
+      [ target << by [ id "reload-skip-cache-button" ]
+      , Event.click
+      ]
+    |> it "records the reload" (
+      Navigation.expectReload
+    )
+  , scenario "the page has not been reloaded" (
+      Subject.initWithModel ()
+        |> Subject.withView testView
+        |> Subject.withUpdate testUpdate
+    )
+    |> it "records the reload" (
+      Navigation.expectReload
+    )
+  ]
 
 type alias Model =
   ()
 
 type Msg
   = ChangeLocation
+  | Reload
+  | ReloadSkipCache
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.button [ Attr.id "load-button", Events.onClick ChangeLocation ]
     [ Html.text "Click to change location!" ]
+  , Html.button [ Attr.id "reload-button", Events.onClick Reload ]
+    [ Html.text "Click to reload!" ]
+  , Html.button [ Attr.id "reload-skip-cache-button", Events.onClick ReloadSkipCache ]
+    [ Html.text "Click to reload and skip cache!" ]
   ]
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
@@ -55,11 +97,21 @@ testUpdate msg model =
       ( model
       , Browser.Navigation.load "/some-fun-place"
       )
+    Reload ->
+      ( model
+      , Browser.Navigation.reload
+      )
+    ReloadSkipCache ->
+      ( model
+      , Browser.Navigation.reloadAndSkipCache
+      )
+
 
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "loadUrl" -> Just loadUrlSpec
+    "reload" -> Just reloadSpec
     _ -> Nothing
 
 

@@ -1,7 +1,7 @@
 const HtmlPlugin = require('elm-spec-core/src/htmlPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
-const fs = require('fs')
+const FakeLocation = require('../fakes/fakeLocation')
 
 module.exports = class HtmlContext {
   constructor(compiler) {
@@ -14,32 +14,30 @@ module.exports = class HtmlContext {
       }
     )
 
-    this.addFakeWindow()
+    this.addFakes()
 
     this.clock = lolex
       .withGlobal(this.dom.window)
       .install({toFake: [ "requestAnimationFrame" ]})
   }
 
-  addFakeWindow() {
-    this.addJs(__dirname + '/fakeWindow.js')
+  addFakes() {
     this.dom.window._elm_spec = {}
-    this.dom.window.eval("_elm_spec.window = new FakeWindow()")
+    const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
+    this.dom.window._elm_spec.window = FakeLocation.forOwner(this.dom.window, fakeLocation)
+    this.dom.window._elm_spec.document = FakeLocation.forOwner(this.dom.window.document, fakeLocation)
   }
 
-  addJs(file) {
-    const source = fs.readFileSync(file, { encoding: "utf-8" })
-    const script = this.dom.window.document.createElement("script")
-    script.textContent = source
-    this.dom.window.document.body.appendChild(script)
+  sendToCurrentApp(msg) {
+    this.dom.window._elm_spec.app.ports.sendIn.send(msg)
   }
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
       const appElement = this.prepareForApp(window)
-      const app = this.initializeApp(program, appElement)
+      this.dom.window._elm_spec.app = this.initializeApp(program, appElement)
       const plugins = this.generatePlugins(window, this.clock)
-      callback(app, plugins)
+      callback(this.dom.window._elm_spec.app, plugins)
     })
   }
 
@@ -54,7 +52,7 @@ module.exports = class HtmlContext {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
-          this.dom.window.eval("(function(){const window = _elm_spec.window; " + compiledCode + "})()")
+          this.dom.window.eval("(function(){const window = _elm_spec.window; const document = _elm_spec.document; " + compiledCode + "})()")
           callback(this.dom.window.Elm, this.dom.window)
         })
         .catch((err) => {

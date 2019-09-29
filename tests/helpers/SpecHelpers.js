@@ -109,6 +109,8 @@ const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
       flags: { specName }
     })
   
+    this.htmlContext.dom.window._elm_spec.app = app
+
     this.runSpec(app, plugins, done, matcher)
   })
 }

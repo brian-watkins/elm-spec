@@ -6,14 +6,6 @@ module.exports = class HtmlPlugin {
     this.clock = clock
   }
 
-  prepareForRun({ next }) {
-    this.window.onbeforeunload = (event) => {
-      next()
-      event.preventDefault()
-      event.returnValue = ''
-    }
-  }
-
   handle(specMessage, out, abort) {
     switch (specMessage.name) {
       case "select": {
@@ -63,7 +55,7 @@ module.exports = class HtmlPlugin {
         out({
           home: "navigation",
           name: "current-location",
-          body: this.window._elm_spec.window.location
+          body: this.window._elm_spec.window.location.href
         })
         break
       }
