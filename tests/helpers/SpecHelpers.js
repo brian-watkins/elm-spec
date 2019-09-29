@@ -5,6 +5,7 @@ const SpecCompiler = require('../../runner/elm-spec-runner/src/spec/compiler')
 const GlobalContext = require('../../runner/elm-spec-runner/src/spec/globalContext')
 const HtmlContext = require('../../runner/elm-spec-runner/src/spec/htmlContext')
 const HtmlPlugin = require('../../runner/elm-spec-core/src/htmlPlugin')
+const HttpPlugin = require('../../runner/elm-spec-core/src/httpPlugin')
 
 exports.expectFailingBrowserSpec = (specProgram, specName, done, matcher) => {
   expectFailure(runBrowserTestSpec, specProgram, specName, done, matcher)
@@ -101,7 +102,8 @@ const runTestSpec = (specProgram, specName, done, matcher) => {
 const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
   this.htmlContext.evaluate((Elm, appElement, clock, window) => {
     const plugins = {
-      "_html": new HtmlPlugin(window, clock)
+      "_html": new HtmlPlugin(window, clock),
+      "_http": new HttpPlugin(window)
     }
 
     var app = Elm.Specs[specProgram].init({

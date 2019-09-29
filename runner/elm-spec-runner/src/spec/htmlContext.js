@@ -1,4 +1,5 @@
 const HtmlPlugin = require('elm-spec-core/src/htmlPlugin')
+const HttpPlugin = require('elm-spec-core/src/httpPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 const FakeLocation = require('../fakes/fakeLocation')
@@ -73,7 +74,8 @@ module.exports = class HtmlContext {
 
   generatePlugins(window, clock) {
     return {
-      "_html": new HtmlPlugin(window, clock)
+      "_html": new HtmlPlugin(window, clock),
+      "_http": new HttpPlugin(window)
     }
   }
 
