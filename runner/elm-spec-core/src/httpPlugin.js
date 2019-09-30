@@ -22,7 +22,7 @@ module.exports = class HttpPlugin {
     switch (specMessage.name) {
       case "stub": {
         const stub = specMessage.body
-        this.server.respondWith(stub.method, stub.url, stub.body)
+        this.server.respondWith(stub.method, stub.url, [ stub.status, {}, stub.body ])
       }
     }
   }

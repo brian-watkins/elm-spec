@@ -23,7 +23,7 @@ getSpec : Spec Model Msg
 getSpec =
   Spec.describe "HTTP GET"
   [ scenario "a successful HTTP GET" (
-      Subject.initWithModel { response = Nothing }
+      Subject.initWithModel defaultModel
         |> Subject.withView testView
         |> Subject.withUpdate testUpdate
         |> Spec.Http.withStubs [ successStub ]
@@ -32,7 +32,7 @@ getSpec =
       [ target << by [ id "trigger" ]
       , Event.click
       ]
-    |> it "received a stubbed response" (
+    |> it "receives a stubbed response" (
       Observation.selectModel
         |> Observation.mapSelection .response
         |> Observation.expect (
@@ -43,14 +43,42 @@ getSpec =
               }
         )
     )
+  , scenario "an unauthorized HTTP GET" (
+      Subject.initWithModel defaultModel
+        |> Subject.withView testView
+        |> Subject.withUpdate testUpdate
+        |> Spec.Http.withStubs [ unauthorizedStub ]
+    )
+    |> when "an http request is triggered"
+      [ target << by [ id "trigger" ]
+      , Event.click
+      ]
+    |> it "receives a stubbed response" (
+      Observation.selectModel
+        |> Observation.mapSelection .error
+        |> Observation.expect (
+          isEqual <|
+            Just <| Http.BadStatus 401
+        )
+    )
   ]
 
 successStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
 
+unauthorizedStub =
+  Stub.for (get "http://fake-api.com/stuff")
+    |> Stub.withStatus 401
+
 type alias Model =
   { response: Maybe ResponseObject
+  , error: Maybe Http.Error
+  }
+
+defaultModel =
+  { response = Nothing
+  , error = Nothing
   }
 
 type alias ResponseObject =
@@ -75,7 +103,11 @@ testUpdate msg model =
     MakeRequest ->
       ( model, requestObject )
     ReceivedResponse response ->
-      ( { model | response = Result.toMaybe response }, Cmd.none )
+      case response of
+        Ok data ->
+          ( { model | response = Just data, error = Nothing }, Cmd.none )
+        Err err ->
+          ( { model | response = Nothing, error = Just err }, Cmd.none )
 
 requestObject : Cmd Msg
 requestObject =

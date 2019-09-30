@@ -24,11 +24,12 @@ encodeStub stub =
   Encode.object
     [ ( "method", Encode.string stub.route.method )
     , ( "url", Encode.string stub.route.url )
-    , ( "body", maybeEncodeString stub.body )
+    , ( "status", Encode.int stub.response.status )
+    , ( "body", maybeEncodeString stub.response.body )
     ]
 
 
 maybeEncodeString : Maybe String -> Encode.Value
 maybeEncodeString maybeString =
-  Maybe.map Encode.string maybeString
-    |> Maybe.withDefault Encode.null
+  Maybe.withDefault "" maybeString
+    |> Encode.string
