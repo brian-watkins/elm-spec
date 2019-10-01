@@ -63,6 +63,41 @@ getSpec =
     )
   ]
 
+expectRequestSpec : Spec Model Msg
+expectRequestSpec =
+  Spec.describe "expect a request"
+  [ scenario "a request is made" (
+      Subject.initWithModel defaultModel
+        |> Subject.withView testView
+        |> Subject.withUpdate testUpdate
+        |> Spec.Http.withStubs [ successStub ]
+    )
+    |> when "an http request is triggered"
+      [ target << by [ id "trigger" ]
+      , Event.click
+      ]
+    |> it "expects the request" (
+      Spec.Http.expect (get "http://fake-api.com/stuff") (
+        isListWithLength 1
+      )
+    )
+    |> it "does not find requests with a different method" (
+      Spec.Http.expect (post "http://fake-api.com/stuff") (
+        isListWithLength 0
+      )
+    )
+    |> it "does not find requests with a different url" (
+      Spec.Http.expect (get "http://fake-api.com/otherStuff") (
+        isListWithLength 0
+      )
+    )
+    |> it "fails" (
+      Spec.Http.expect (get "http://fake-api.com/stuff") (
+        isListWithLength 17
+      )
+    )
+  ]
+
 successStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
@@ -126,6 +161,7 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "get" -> Just getSpec
+    "expectRequest" -> Just expectRequestSpec
     _ -> Nothing
 
 

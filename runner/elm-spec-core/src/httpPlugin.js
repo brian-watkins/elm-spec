@@ -23,7 +23,25 @@ module.exports = class HttpPlugin {
       case "stub": {
         const stub = specMessage.body
         this.server.respondWith(stub.method, stub.url, [ stub.status, {}, stub.body ])
+        break
       }
+      case "fetch-requests": {
+        const route = specMessage.body
+
+        const requests = this.server.requests
+          .filter(request => request.url === route.url && request.method === route.method)
+          .map(request => ({ url: request.url }))
+
+        out({
+          home: "_http",
+          name: "requests",
+          body: requests
+        })
+
+        break
+      }
+      default:
+        console.log("Unknown Http message", specMessage)
     }
   }
 }

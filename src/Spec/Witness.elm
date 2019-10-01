@@ -48,14 +48,11 @@ expect name decoder observer =
     |> Observation.mapSelection (statementsForWitness name)
     |> Observation.mapSelection (factsFromStatements decoder)
     |> Observation.expect (\facts ->
-      case observer facts of
-        Observer.Accept ->
-          Observer.Accept
-        Observer.Reject report ->
-          Observer.Reject <| Report.batch
-            [ Report.fact "Observation rejected for witness" name
-            , report
-            ]
+      observer facts
+        |> Observer.mapRejection (
+          Report.append <|
+            Report.fact "Observation rejected for witness" name
+        )
     )
 
 

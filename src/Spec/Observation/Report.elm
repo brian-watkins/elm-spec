@@ -5,6 +5,7 @@ module Spec.Observation.Report exposing
   , fact
   , encoder
   , decoder
+  , append
   )
 
 import Json.Encode as Encode
@@ -24,6 +25,14 @@ type alias Line =
 batch : List Report -> Report
 batch =
   List.concat
+
+
+append : Report -> Report -> Report
+append first second =
+  batch
+    [ first
+    , second
+    ]
 
 
 note : String -> Report

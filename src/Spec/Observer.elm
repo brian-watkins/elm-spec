@@ -5,6 +5,7 @@ module Spec.Observer exposing
   , isEqual
   , isListWithLength
   , isList
+  , mapRejection
   )
 
 import Spec.Observation.Report as Report exposing (Report)
@@ -17,6 +18,15 @@ type alias Observer a =
 type Verdict
   = Accept
   | Reject Report
+
+
+mapRejection : (Report -> Report) -> Verdict -> Verdict
+mapRejection mapper verdict =
+  case verdict of
+    Accept ->
+      Accept
+    Reject report ->
+      Reject <| mapper report
 
 
 satisfying : List (Observer a) -> Observer a
