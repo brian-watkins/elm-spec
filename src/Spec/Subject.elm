@@ -1,16 +1,23 @@
 module Spec.Subject exposing
   ( Subject
+  , SubjectGenerator
   , init
   , initWithModel
+  , initWithKey
   , configure
   , withSubscriptions
   , withUpdate
   , withView
+  , onUrlChange
+  , mapSubject
   )
 
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer
 import Html exposing (Html)
+import Browser exposing (Document)
+import Browser.Navigation exposing (Key)
+import Url exposing (Url)
 
 
 type alias Subject model msg =
@@ -20,40 +27,82 @@ type alias Subject model msg =
   , view: model -> Html msg
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
+  , onUrlChange: Maybe (Url -> msg)
   }
 
 
-init : (model, Cmd msg) -> Subject model msg
+type alias SubjectGenerator model msg =
+  Maybe Key -> Subject model msg
+
+
+init : (model, Cmd msg) -> SubjectGenerator model msg
 init ( model, initialCommand ) =
-  { model = model
-  , initialCommand = initialCommand
-  , update = \_ _ m -> (m, Cmd.none)
-  , view = \_ -> Html.text ""
-  , subscriptions = \_ -> Sub.none
-  , configureEnvironment = []
-  }
+  \maybeKey ->
+    { model = model
+    , initialCommand = initialCommand
+    , update = \_ _ m -> (m, Cmd.none)
+    , view = \_ -> Html.text ""
+    , subscriptions = \_ -> Sub.none
+    , configureEnvironment = []
+    , onUrlChange = Nothing
+    }
 
 
-initWithModel : model -> Subject model msg
+initWithModel : model -> SubjectGenerator model msg
 initWithModel model =
   init ( model, Cmd.none )
 
 
-configure : Message -> Subject model msg -> Subject model msg
-configure message subject =
-  { subject | configureEnvironment = message :: subject.configureEnvironment }
+initWithKey : (Key -> (model, Cmd msg)) -> SubjectGenerator model msg
+initWithKey generator =
+  \maybeKey ->
+    case maybeKey of
+      Just key ->
+        let
+          ( model, initialCommand ) = generator key
+        in
+          { model = model
+          , initialCommand = initialCommand
+          , update = \_ _ m -> (m, Cmd.none)
+          , view = \_ -> Html.text ""
+          , subscriptions = \_ -> Sub.none
+          , configureEnvironment = []
+          , onUrlChange = Nothing
+          }
+      Nothing ->
+        Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserApplication to run your specs!"
 
 
-withUpdate : (msg -> model -> (model, Cmd msg)) -> Subject model msg -> Subject model msg
-withUpdate programUpdate subject =
-  { subject | update = \_ -> programUpdate }
+configure : Message -> SubjectGenerator model msg -> SubjectGenerator model msg
+configure message =
+  mapSubject <| \subject ->
+    { subject | configureEnvironment = message :: subject.configureEnvironment }
 
 
-withView : (model -> Html msg) -> Subject model msg -> Subject model msg
-withView view subject =
-  { subject | view = view }
+withUpdate : (msg -> model -> (model, Cmd msg)) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withUpdate programUpdate =
+  mapSubject <| \subject ->
+    { subject | update = \_ -> programUpdate }
 
 
-withSubscriptions : (model -> Sub msg) -> Subject model msg -> Subject model msg
-withSubscriptions programSubscriptions subject =
-  { subject | subscriptions = programSubscriptions }
+withView : (model -> Html msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withView view =
+  mapSubject <| \subject ->
+    { subject | view = view }
+
+
+withSubscriptions : (model -> Sub msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withSubscriptions programSubscriptions =
+  mapSubject <| \subject ->
+    { subject | subscriptions = programSubscriptions }
+
+
+onUrlChange : (Url -> msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+onUrlChange handler =
+  mapSubject <| \subject ->
+    { subject | onUrlChange = Just handler }
+
+
+mapSubject : (Subject model msg -> Subject model msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+mapSubject mapper generator =
+  mapper << generator

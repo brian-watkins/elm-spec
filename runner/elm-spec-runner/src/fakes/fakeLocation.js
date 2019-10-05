@@ -20,7 +20,7 @@ module.exports = class FakeLocation {
 
   constructor(sendToProgram) {
     this.sendToProgram = sendToProgram
-    this.href = "http://localhost/"
+    this.href = "http://localhost"
   }
 
   assign(url) {

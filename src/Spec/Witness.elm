@@ -6,7 +6,7 @@ module Spec.Witness exposing
   )
 
 import Spec.Observation as Observation exposing (Expectation)
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report
@@ -24,9 +24,10 @@ type alias Statement =
   }
 
 
-forUpdate : (Witness msg -> msg -> model -> (model, Cmd msg)) -> Subject model msg -> Subject model msg
-forUpdate updateWithWitness subject =
-  { subject | update = \witness -> updateWithWitness <| Witness witness }
+forUpdate : (Witness msg -> msg -> model -> (model, Cmd msg)) -> SubjectGenerator model msg -> SubjectGenerator model msg
+forUpdate updateWithWitness =
+  Subject.mapSubject <| \subject ->
+    { subject | update = \witness -> updateWithWitness <| Witness witness }
 
 
 log : String -> Encode.Value -> Witness msg -> Cmd msg

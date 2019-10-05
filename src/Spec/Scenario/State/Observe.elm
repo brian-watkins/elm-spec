@@ -6,6 +6,7 @@ module Spec.Scenario.State.Observe exposing
   )
 
 import Spec.Scenario exposing (Scenario)
+import Spec.Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Observation.Expectation as Expectation exposing (Judgment(..))
@@ -17,6 +18,7 @@ import Html exposing (Html)
 
 type alias Model model msg =
   { scenario: Scenario model msg
+  , subject: Subject model msg
   , conditionsApplied: List String
   , programModel: model
   , effects: List Message
@@ -29,6 +31,7 @@ type alias Model model msg =
 init : Exercise.Model model msg -> Model model msg
 init exerciseModel =
   { scenario = exerciseModel.scenario
+  , subject = exerciseModel.subject
   , conditionsApplied = exerciseModel.conditionsApplied
   , programModel = exerciseModel.programModel
   , effects = exerciseModel.effects
@@ -40,7 +43,7 @@ init exerciseModel =
 
 view : Model model msg -> Html msg
 view model =
-  model.scenario.subject.view model.programModel
+  model.subject.view model.programModel
 
 
 update : Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )
@@ -71,6 +74,12 @@ update msg model =
           |> mapTuple (\updated command -> ( updated, sendExpectationMessage updated command ))
     
     Abort _ ->
+      ( model, State.Do Cmd.none )
+
+    OnUrlChange url ->
+      ( model, State.Do Cmd.none )
+
+    OnUrlRequest request ->
       ( model, State.Do Cmd.none )
 
 

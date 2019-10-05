@@ -3,11 +3,11 @@ module Spec.Time exposing
   , tick
   )
 
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step
 import Json.Encode as Encode
 
-fake : Subject model msg -> Subject model msg
+fake : SubjectGenerator model msg -> SubjectGenerator model msg
 fake =
   { home = "_time"
   , name = "setup"

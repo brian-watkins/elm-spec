@@ -1,10 +1,14 @@
 module Spec.Scenario.State exposing
   ( Msg(..)
   , Command(..)
+  , updateWith
   )
 
 import Spec.Message exposing (Message)
 import Spec.Observation.Report exposing (Report)
+import Browser exposing (UrlRequest)
+import Url exposing (Url)
+import Task
 
 
 type Msg msg
@@ -12,6 +16,8 @@ type Msg msg
   | ProgramMsg msg
   | Continue
   | Abort Report
+  | OnUrlRequest UrlRequest
+  | OnUrlChange Url
 
 
 type Command msg
@@ -19,3 +25,10 @@ type Command msg
   | Send Message
   | SendMany (List Message)
   | Transition
+
+
+updateWith : (Msg msg) -> Command (Msg msg)
+updateWith msg =
+  Task.succeed never
+    |> Task.perform (always msg)
+    |> Do

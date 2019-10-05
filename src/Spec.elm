@@ -2,9 +2,10 @@ module Spec exposing
   ( Spec
   , describe
   , Model, Msg, Config
-  , update, view, init, subscriptions
+  , update, view, init, initApplication, subscriptions
   , program
   , browserProgram
+  , browserApplication, onUrlRequest, onUrlChange
   )
 
 import Spec.Message as Message exposing (Message)
@@ -15,8 +16,10 @@ import Spec.Scenario.State as ScenarioProgram
 import Spec.Observation.Message as Message
 import Task
 import Html exposing (Html)
-import Browser
+import Browser exposing (UrlRequest)
+import Browser.Navigation exposing (Key)
 import Json.Encode as Encode
+import Url exposing (Url)
 
 
 type Spec model msg =
@@ -51,6 +54,7 @@ type Msg msg
 type alias Model model msg =
   { scenarios: List (Scenario model msg)
   , scenarioModel: ScenarioProgram.Model model msg
+  , key: Maybe Key
   }
 
 
@@ -68,7 +72,7 @@ update config msg model =
         [] ->
           ( model, config.send specComplete )
         scenario :: remaining ->
-          ( { model | scenarioModel = ScenarioProgram.with scenario, scenarios = remaining }
+          ( { model | scenarioModel = ScenarioProgram.with model.key scenario, scenarios = remaining }
           , Cmd.map ScenarioMsg ScenarioProgram.start
           )
     ScenarioMsg scenarioMsg ->
@@ -116,6 +120,7 @@ init config specs _ =
         List.map (\(Spec scenarios) -> scenarios) specs
           |> List.concat
     , scenarioModel = ScenarioProgram.init
+    , key = Nothing
     }
   , Cmd.none
   )
@@ -137,4 +142,38 @@ browserProgram config specs =
     , view = view
     , update = update config
     , subscriptions = subscriptions config
+    }
+
+
+initApplication : Config msg -> List (Spec model msg) -> () -> Url -> Key -> ( Model model msg, Cmd (Msg msg) )
+initApplication config specs flags url key =
+  ( { scenarios =
+        List.map (\(Spec scenarios) -> scenarios) specs
+          |> List.concat
+    , scenarioModel = ScenarioProgram.init
+    , key = Just key
+    }
+  , Cmd.none
+  )
+
+
+onUrlRequest : UrlRequest -> (Msg msg)
+onUrlRequest =
+  ScenarioMsg << ScenarioProgram.OnUrlRequest
+
+
+onUrlChange : Url -> (Msg msg)
+onUrlChange =
+  ScenarioMsg << ScenarioProgram.OnUrlChange
+
+
+browserApplication : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+browserApplication config specs =
+  Browser.application
+    { init = initApplication config specs
+    , view = \model -> { title = "elm-spec", body = [ view model ] }
+    , update = update config
+    , subscriptions = subscriptions config
+    , onUrlRequest = onUrlRequest
+    , onUrlChange = onUrlChange
     }

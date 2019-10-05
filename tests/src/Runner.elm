@@ -1,13 +1,16 @@
 port module Runner exposing
   ( program
   , browserProgram
+  , browserApplication
   , config
   )
 
 import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 import Task
-import Browser
+import Browser exposing (UrlRequest)
+import Browser.Navigation exposing (Key)
+import Url exposing (Url)
 import Html
 
 
@@ -53,4 +56,25 @@ browserProgram specLocator =
     , update = Spec.update config
     , view = Spec.view
     , subscriptions = Spec.subscriptions config
+    }
+
+
+initApplication : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Url -> Key -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
+initApplication specConfig specLocator flags url key =
+  case specLocator flags.specName of
+    Just spec ->
+      Spec.initApplication specConfig [ spec ] () url key
+    Nothing ->
+      Debug.todo <| "Unknown spec: " ++ flags.specName
+
+
+browserApplication : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
+browserApplication specLocator =
+  Browser.application
+    { init = initApplication config specLocator
+    , view = \model -> { title = "elm-spec", body = [ Spec.view model ] }
+    , update = Spec.update config
+    , subscriptions = Spec.subscriptions config
+    , onUrlRequest = Spec.onUrlRequest
+    , onUrlChange = Spec.onUrlChange
     }

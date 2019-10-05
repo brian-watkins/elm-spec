@@ -3,6 +3,7 @@ const HttpPlugin = require('elm-spec-core/src/httpPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 const FakeLocation = require('../fakes/fakeLocation')
+const FakeHistory = require('../fakes/fakeHistory')
 
 module.exports = class HtmlContext {
   constructor(compiler) {
@@ -11,7 +12,8 @@ module.exports = class HtmlContext {
     this.dom = new JSDOM(
       "<html><head></head><body></body></html>",
       { pretendToBeVisual: true,
-        runScripts: "dangerously"
+        runScripts: "dangerously",
+        url: "http://localhost"
       }
     )
 
@@ -27,6 +29,7 @@ module.exports = class HtmlContext {
     const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
     this.dom.window._elm_spec.window = FakeLocation.forOwner(this.dom.window, fakeLocation)
     this.dom.window._elm_spec.document = FakeLocation.forOwner(this.dom.window.document, fakeLocation)
+    this.dom.window._elm_spec.history = new FakeHistory(this.dom.window._elm_spec.window.location)
   }
 
   sendToCurrentApp(msg) {
@@ -53,7 +56,7 @@ module.exports = class HtmlContext {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
-          this.dom.window.eval("(function(){const window = _elm_spec.window; const document = _elm_spec.document; " + compiledCode + "})()")
+          this.dom.window.eval("(function(){const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
           callback(this.dom.window.Elm, this.dom.window)
         })
         .catch((err) => {

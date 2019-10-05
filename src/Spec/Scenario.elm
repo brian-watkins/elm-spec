@@ -6,28 +6,26 @@ module Spec.Scenario exposing
   , describing
   )
 
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step exposing (Step)
 import Spec.Observation exposing (Observation, Expectation)
 
 
 type alias Scenario model msg =
   { describing: String
-  , subject: Subject model msg
+  , description: String
+  , subjectGenerator: SubjectGenerator model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)
   }
 
 
-scenario : String -> Subject model msg -> Scenario model msg
-scenario description specSubject =
+scenario : String -> SubjectGenerator model msg -> Scenario model msg
+scenario description subjectGenerator =
   { describing = ""
-  , subject = specSubject
-  , steps = 
-      [ Step.build (formatScenarioDescription description) <|
-          \_ ->
-            Step.sendCommand specSubject.initialCommand
-      ]
+  , description = formatScenarioDescription description
+  , subjectGenerator = subjectGenerator
+  , steps = []
   , observations = []
   }
 

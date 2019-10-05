@@ -4,18 +4,22 @@ module Spec.Scenario.State.Configure exposing
   )
 
 import Spec.Scenario exposing (Scenario)
+import Spec.Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Scenario.Message as Message
 
 
 type alias Model model msg =
   { scenario: Scenario model msg
+  , subject: Subject model msg
   }
 
 
-init : Scenario model msg -> ( Model model msg, Command msg )
-init scenario =
-  ( { scenario = scenario }
-  , List.append scenario.subject.configureEnvironment [ Message.configureComplete ]
+init : Scenario model msg -> Subject model msg -> ( Model model msg, Command msg )
+init scenario subject =
+  ( { scenario = scenario
+    , subject = subject
+    }
+  , List.append subject.configureEnvironment [ Message.configureComplete ]
       |> State.SendMany
   )

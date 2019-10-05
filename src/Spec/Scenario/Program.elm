@@ -5,6 +5,7 @@ module Spec.Scenario.Program exposing
   , receivedMessage
   )
 
+import Spec.Subject exposing (Subject)
 import Spec.Scenario exposing (Scenario)
 import Spec.Scenario.Message as Message
 import Spec.Scenario.State exposing (Msg(..), Command(..))
@@ -19,6 +20,7 @@ import Spec.Observer as Observer
 import Html exposing (Html)
 import Json.Decode as Json
 import Task
+import Browser.Navigation exposing (Key)
 
 
 type alias Model model msg =
@@ -26,7 +28,7 @@ type alias Model model msg =
 
 
 type State model msg
-  = Start (Scenario model msg)
+  = Start (Scenario model msg) (Subject model msg)
   | Configure (Configure.Model model msg)
   | Exercise (Exercise.Model model msg)
   | Observe (Observe.Model model msg)
@@ -42,9 +44,9 @@ type alias Config msg programMsg =
   }
 
 
-with : Scenario model msg -> Model model msg
-with scenario =
-  Start scenario
+with : Maybe Key -> Scenario model msg -> Model model msg
+with maybeKey scenario =
+  Start scenario (scenario.subjectGenerator maybeKey)
 
 
 start : Cmd (Msg msg)
@@ -117,14 +119,14 @@ update config msg state =
 
     Continue ->
       case state of
-        Start scenario ->
-          case Configure.init scenario of
+        Start scenario subject ->
+          case Configure.init scenario subject of
             ( updated, SendMany messages ) ->
               ( Configure updated, Cmd.batch <| List.map config.send messages )
             ( updated, _ ) ->
               badState config state
         Configure model ->
-          update config Continue <| Exercise <| Exercise.init model.scenario
+          update config Continue <| Exercise <| Exercise.init model.scenario model.subject
         Exercise model ->
           exerciseUpdate config msg model
         Observe model ->
@@ -149,6 +151,17 @@ update config msg state =
                 |> config.send 
             ]
           )
+
+    OnUrlChange _ ->
+      case state of
+        Exercise model ->
+          exerciseUpdate config msg model
+        _ ->
+          badState config state
+
+    OnUrlRequest _ ->
+      badState config state
+
 
 
 exerciseUpdate : Config msg programMsg -> Msg programMsg -> Exercise.Model model programMsg -> ( Model model programMsg, Cmd msg )

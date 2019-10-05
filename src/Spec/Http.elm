@@ -4,7 +4,7 @@ module Spec.Http exposing
   , expect
   )
 
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Observation as Observation exposing (Expectation)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report
@@ -15,8 +15,8 @@ import Json.Encode as Encode
 import Json.Decode as Json
 
 
-withStubs : List HttpResponseStub -> Subject model msg -> Subject model msg
-withStubs stubs subject =
+withStubs : List HttpResponseStub -> SubjectGenerator model msg -> SubjectGenerator model msg
+withStubs stubs subjectGenerator =
   List.foldl (\stub updatedSubject ->
     Subject.configure
       { home = "_http"
@@ -24,7 +24,7 @@ withStubs stubs subject =
       , body = encodeStub stub
       }
       updatedSubject
-  ) subject stubs
+  ) subjectGenerator stubs
 
 
 encodeStub : HttpResponseStub -> Encode.Value
