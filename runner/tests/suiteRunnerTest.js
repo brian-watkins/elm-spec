@@ -21,7 +21,10 @@ describe("Suite Runner", () => {
     runner
       .on('complete', () => {
         setTimeout(() => {
-          expect(reporter.observations).to.equal(6)
+          expect(reporter.observations).to.have.length(6)
+          reporter.observations.forEach(observation => {
+            expect(observation.summary).to.equal("ACCEPT")
+          })
           process.chdir(workDir)
           done()  
         }, 0)
@@ -32,11 +35,11 @@ describe("Suite Runner", () => {
 
 const TestReporter = class {
   constructor() {
-    this.observations = 0
+    this.observations = []
   }
 
   record(observation) {
-    this.observations++
+    this.observations.push(observation)
   }
 
   finish() {}

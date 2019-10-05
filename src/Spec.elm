@@ -2,7 +2,7 @@ module Spec exposing
   ( Spec
   , describe
   , Model, Msg, Config
-  , update, view, init, initApplication, subscriptions
+  , update, view, document, init, initApplication, subscriptions
   , program
   , browserProgram
   , browserApplication, onUrlRequest, onUrlChange
@@ -14,9 +14,10 @@ import Spec.Scenario.Message as Message
 import Spec.Scenario.Program as ScenarioProgram
 import Spec.Scenario.State as ScenarioProgram
 import Spec.Observation.Message as Message
+import Spec.Helpers exposing (mapDocument)
 import Task
 import Html exposing (Html)
-import Browser exposing (UrlRequest)
+import Browser exposing (UrlRequest, Document)
 import Browser.Navigation exposing (Key)
 import Json.Encode as Encode
 import Url exposing (Url)
@@ -62,6 +63,12 @@ view : Model model msg -> Html (Msg msg)
 view model =
   ScenarioProgram.view model.scenarioModel
     |> Html.map ScenarioMsg
+
+
+document : Model model msg -> Document (Msg msg)
+document model =
+  ScenarioProgram.document model.scenarioModel
+    |> mapDocument ScenarioMsg
 
 
 update : Config msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
@@ -171,7 +178,7 @@ browserApplication : Config msg -> List (Spec model msg) -> Program () (Model mo
 browserApplication config specs =
   Browser.application
     { init = initApplication config specs
-    , view = \model -> { title = "elm-spec", body = [ view model ] }
+    , view = document
     , update = update config
     , subscriptions = subscriptions config
     , onUrlRequest = onUrlRequest

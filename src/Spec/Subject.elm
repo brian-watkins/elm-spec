@@ -8,6 +8,7 @@ module Spec.Subject exposing
   , withSubscriptions
   , withUpdate
   , withView
+  , withDocument
   , onUrlChange
   , mapSubject
   )
@@ -25,6 +26,7 @@ type alias Subject model msg =
   , initialCommand: Cmd msg
   , update: (Message -> Cmd msg) -> msg -> model -> ( model, Cmd msg )
   , view: model -> Html msg
+  , document: model -> Document msg
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
   , onUrlChange: Maybe (Url -> msg)
@@ -42,6 +44,7 @@ init ( model, initialCommand ) =
     , initialCommand = initialCommand
     , update = \_ _ m -> (m, Cmd.none)
     , view = \_ -> Html.text ""
+    , document = \_ -> { title = "", body = [ Html.text "" ] }
     , subscriptions = \_ -> Sub.none
     , configureEnvironment = []
     , onUrlChange = Nothing
@@ -65,6 +68,7 @@ initWithKey generator =
           , initialCommand = initialCommand
           , update = \_ _ m -> (m, Cmd.none)
           , view = \_ -> Html.text ""
+          , document = \_ -> { title = "", body = [ Html.text "" ] }
           , subscriptions = \_ -> Sub.none
           , configureEnvironment = []
           , onUrlChange = Nothing
@@ -89,6 +93,12 @@ withView : (model -> Html msg) -> SubjectGenerator model msg -> SubjectGenerator
 withView view =
   mapSubject <| \subject ->
     { subject | view = view }
+
+
+withDocument : (model -> Document msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withDocument document =
+  mapSubject <| \subject ->
+    { subject | document = document }
 
 
 withSubscriptions : (model -> Sub msg) -> SubjectGenerator model msg -> SubjectGenerator model msg

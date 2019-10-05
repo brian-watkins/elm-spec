@@ -16,7 +16,7 @@ navigationSpec =
   Spec.describe "on url change"
   [ scenario "use pushUrl to navigate" (
       Subject.initWithKey (Application.init () testUrl)
-        |> Subject.withView Application.view
+        |> Subject.withDocument Application.document
         |> Subject.withUpdate Application.update
         |> Subject.onUrlChange Application.UrlDidChange
     )

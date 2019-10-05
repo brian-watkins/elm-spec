@@ -2,6 +2,7 @@ module Spec.Scenario.State.Observe exposing
   ( Model
   , init
   , view
+  , document
   , update
   )
 
@@ -14,6 +15,7 @@ import Spec.Observation.Message as Message
 import Spec.Observation exposing (Observation)
 import Spec.Scenario.State.Exercise as Exercise
 import Html exposing (Html)
+import Browser exposing (Document)
 
 
 type alias Model model msg =
@@ -44,6 +46,11 @@ init exerciseModel =
 view : Model model msg -> Html msg
 view model =
   model.subject.view model.programModel
+
+
+document : Model model msg -> Document msg
+document model =
+  model.subject.document model.programModel
 
 
 update : Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )

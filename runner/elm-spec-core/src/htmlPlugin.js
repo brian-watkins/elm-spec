@@ -59,6 +59,15 @@ module.exports = class HtmlPlugin {
         })
         break
       }
+      case "application": {
+        this.clock.runToFrame()
+        out({
+          home: "application",
+          name: "current-title",
+          body: this.window.document.title
+        })
+        break
+      }
       default:
         console.log("Unknown message:", specMessage)
         break

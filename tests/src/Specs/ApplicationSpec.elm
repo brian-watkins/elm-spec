@@ -6,10 +6,12 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Observation as Observation
+import Spec.Observer exposing (isEqual)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
-import Browser exposing (UrlRequest)
+import Browser exposing (UrlRequest, Document)
 import Browser.Navigation exposing (Key)
 import Runner
 import Url exposing (Url)
@@ -22,7 +24,7 @@ noChangeHandlerSpec =
   Spec.describe "on url change"
   [ scenario "no url change handler is set" (
       Subject.initWithKey (testInit () testUrl)
-        |> Subject.withView testView
+        |> Subject.withDocument testDocument
         |> Subject.withUpdate testUpdate
     )
     |> when "the url is changed"
@@ -70,9 +72,32 @@ changeUrlSpec =
     )
   ]
 
+titleSpec : Spec Model Msg
+titleSpec =
+  Spec.describe "application title"
+  [ scenario "observing the original title" (
+      testSubject
+    )
+    |> it "displays the title" (
+      Markup.selectTitle
+        |> Observation.expect (isEqual "Some Boring Title")
+    )
+  , scenario "observing the title after a change" (
+      testSubject
+    )
+    |> when "the title is changed"
+      [ target << by [ id "update-title" ]
+      , Event.click
+      ]
+    |> it "updates the title" (
+      Markup.selectTitle
+        |> Observation.expect (isEqual "My Fun Title")
+    )
+  ]
+
 testSubject =
   Subject.initWithKey (testInit () testUrl)
-    |> Subject.withView testView
+    |> Subject.withDocument testDocument
     |> Subject.withUpdate testUpdate
     |> Subject.onUrlChange testOnUrlChange
 
@@ -100,6 +125,7 @@ testInit _ initialUrl key =
 type alias Model =
   { key: Key
   , page: Page
+  , title: String
   }
 
 
@@ -112,6 +138,7 @@ defaultModel : Key -> Model
 defaultModel key =
   { key = key
   , page = Home
+  , title = "Some Boring Title"
   }
 
 
@@ -120,6 +147,7 @@ type Msg
   | DoPushUrl
   | DoReplaceUrl
   | UrlDidChange Url
+  | UpdateTitle
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
@@ -133,6 +161,8 @@ testUpdate msg model =
       ( model, Browser.Navigation.pushUrl model.key <| Url.Builder.absolute [ "fun", "bowling" ] [] )
     DoReplaceUrl ->
       ( model, Browser.Navigation.replaceUrl model.key <| Url.Builder.absolute [ "fun", "swimming" ] []  )
+    UpdateTitle ->
+      ( { model | title = "My Fun Title" }, Cmd.none )
 
 
 toPage : Url -> Page
@@ -144,6 +174,13 @@ toPage url =
       Home
 
 
+testDocument : Model -> Document Msg
+testDocument model =
+  { title = model.title
+  , body = [ testView model ]
+  }
+
+
 testView : Model -> Html Msg
 testView model =
   case model.page of
@@ -151,6 +188,7 @@ testView model =
       Html.div []
       [ Html.button [ Attr.id "push-url-button", Events.onClick DoPushUrl ] [ Html.text "Push!" ]
       , Html.button [ Attr.id "replace-url-button", Events.onClick DoReplaceUrl ] [ Html.text "Replace!" ]
+      , Html.button [ Attr.id "update-title", Events.onClick UpdateTitle ] [ Html.text "Update title!" ]
       ]
     Fun sport ->
       Html.div []
@@ -164,6 +202,7 @@ selectSpec name =
   case name of
     "changeUrl" -> Just changeUrlSpec
     "noChangeUrlHandler" -> Just noChangeHandlerSpec
+    "changeTitle" -> Just titleSpec
     _ -> Nothing
 
 

@@ -1,5 +1,5 @@
 module Spec.Scenario.Program exposing
-  ( Config, Model, init, update, view, subscriptions
+  ( Config, Model, init, update, view, document, subscriptions
   , with
   , start
   , receivedMessage
@@ -17,9 +17,11 @@ import Spec.Scenario.State.Exercise as Exercise
 import Spec.Scenario.State.Configure as Configure
 import Spec.Scenario.State.Observe as Observe
 import Spec.Observer as Observer
+import Spec.Helpers exposing (mapDocument)
 import Html exposing (Html)
 import Json.Decode as Json
 import Task
+import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
 
 
@@ -93,6 +95,19 @@ view state =
         |> Html.map ProgramMsg
     _ ->
       Html.text ""
+
+
+document : Model model programMsg -> Document (Msg programMsg)
+document state =
+  case state of
+    Exercise model ->
+      Exercise.document model
+        |> mapDocument ProgramMsg
+    Observe model ->
+      Observe.document model
+        |> mapDocument ProgramMsg
+    _ ->
+      { title = "", body = [ Html.text "" ] }
 
 
 update : Config msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )

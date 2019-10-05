@@ -22,4 +22,12 @@ describe("application", () => {
       })
     })
   })
+  context("document title", () => {
+    it("observes the title as expected", (done) => {
+      expectBrowserSpec("ApplicationSpec", "changeTitle", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
+  })
 })

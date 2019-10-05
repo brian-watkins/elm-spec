@@ -4,6 +4,7 @@ module Spec.Markup exposing
   , expectAbsent
   , hasText
   , hasAttribute
+  , selectTitle
   )
 
 import Spec.Observation as Observation exposing (Expectation)
@@ -16,6 +17,21 @@ import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
 import Dict exposing (Dict)
+
+
+selectTitle : Observation.Selection model String
+selectTitle =
+  Observation.inquire selectTitleMessage
+    |> Observation.mapSelection (Message.decode Json.string)
+    |> Observation.mapSelection (Maybe.withDefault "FAILED")
+
+
+selectTitleMessage : Message
+selectTitleMessage =
+  { home = "_html"
+  , name = "application"
+  , body = Encode.string "select-title"
+  }
 
 
 expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model

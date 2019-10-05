@@ -72,7 +72,7 @@ browserApplication : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.M
 browserApplication specLocator =
   Browser.application
     { init = initApplication config specLocator
-    , view = \model -> { title = "elm-spec", body = [ Spec.view model ] }
+    , view = Spec.document
     , update = Spec.update config
     , subscriptions = Spec.subscriptions config
     , onUrlRequest = Spec.onUrlRequest
