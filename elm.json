@@ -7,9 +7,13 @@
     "exposed-modules": [
         "Spec",
         "Spec.Command",
+        "Spec.Http",
+        "Spec.Http.Route",
+        "Spec.Http.Stub",
         "Spec.Markup",
         "Spec.Markup.Selector",
         "Spec.Markup.Event",
+        "Spec.Markup.Navigation",
         "Spec.Message",
         "Spec.Observer",
         "Spec.Observation",
