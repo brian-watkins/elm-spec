@@ -21,7 +21,7 @@ describe("Suite Runner", () => {
     runner
       .on('complete', () => {
         setTimeout(() => {
-          expect(reporter.observations).to.equal(5)
+          expect(reporter.observations).to.equal(6)
           process.chdir(workDir)
           done()  
         }, 0)
