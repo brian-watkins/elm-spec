@@ -113,9 +113,7 @@ update outlet msg model =
     OnUrlChange url ->
       case model.subject.onUrlChange of
         Just handler ->
-          ( model
-          , State.updateWith <| ProgramMsg <| handler url
-          )
+          update outlet (ProgramMsg <| handler url) model
         Nothing ->
           ( model
           , State.updateWith <| Abort <| Report.batch
@@ -127,9 +125,7 @@ update outlet msg model =
     OnUrlRequest request ->
       case model.subject.onUrlRequest of
         Just handler ->
-          ( model
-          , State.updateWith <| ProgramMsg <| handler request
-          )
+          update outlet (ProgramMsg <| handler request) model
         Nothing ->
           ( model
           , State.updateWith <| Abort <| Report.batch
