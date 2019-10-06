@@ -56,6 +56,10 @@ changeUrlSpec =
       [ target << by [ id "push-url-button" ]
       , Event.click
       ]
+    |> it "updates the location" (
+      Navigation.selectLocation
+        |> Observation.expect (isEqual "http://localhost/fun/bowling")
+    )
     |> it "shows a different page" (
       select << by [ id "fun-page" ]
         |> Markup.expectElement ( Markup.hasText "bowling" )
@@ -107,6 +111,10 @@ clickLinkSpec =
       [ target << by [ id "internal-link" ]
       , Event.click
       ]
+    |> it "updates the location" (
+      Navigation.selectLocation
+        |> Observation.expect (isEqual "http://localhost/fun/running")
+    )
     |> it "navigates as expected" (
       select << by [ id "fun-page" ]
         |> Markup.expectElement ( Markup.hasText "running" )

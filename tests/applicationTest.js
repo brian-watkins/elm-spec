@@ -19,6 +19,7 @@ describe("application", () => {
           expectAccepted(observations[0])
           expectAccepted(observations[1])
           expectAccepted(observations[2])
+          expectAccepted(observations[3])
         })
       })
     })
@@ -49,6 +50,7 @@ describe("application", () => {
       expectBrowserSpec("ApplicationSpec", "clickLink", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
+        expectAccepted(observations[2])
       })
     })
   })
