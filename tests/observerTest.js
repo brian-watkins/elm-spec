@@ -8,17 +8,17 @@ describe("observer", () => {
         
         expectRejected(observations[1], [
           reportLine("Expected all observers to be satisfied, but one or more was rejected"),
-          reportLine("Expected", "\"bowling\""),
-          reportLine("to equal", "\"running\"")
+          reportLine("Expected", "\"running\""),
+          reportLine("to equal", "\"bowling\"")
         ])
 
         expectRejected(observations[2], [
           reportLine("Expected all observers to be satisfied, but one or more was rejected"),
-          reportLine("Expected", "\"bowling\""),
-          reportLine("to equal", "\"running\""),
+          reportLine("Expected", "\"running\""),
+          reportLine("to equal", "\"bowling\""),
           reportLine("and"),
-          reportLine("Expected", "27"),
-          reportLine("to equal", "19")
+          reportLine("Expected", "19"),
+          reportLine("to equal", "27")
         ])
       })
     })

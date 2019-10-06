@@ -16,8 +16,8 @@ describe("Expect Model", () => {
       expectFailingSpec("ExpectModelSpec", "failing", done, (observations) => {
         expect(observations).to.have.length(1)
         expectRejected(observations[0], [
-          reportLine("Expected", "17"),
-          reportLine("to equal", "99")
+          reportLine("Expected", "99"),
+          reportLine("to equal", "17")
         ])
       })
     })
@@ -51,8 +51,8 @@ describe("Expect Model", () => {
         expect(observations[0].description).to.equal("It contains the expected number")
         
         expectRejected(observations[1], [
-          reportLine("Expected", "\"awesome-spec\""),
-          reportLine("to equal", "\"fun-spec\"")
+          reportLine("Expected", "\"fun-spec\""),
+          reportLine("to equal", "\"awesome-spec\"")
         ])
         expect(observations[1].description).to.equal("It contains the expected name")
       })
