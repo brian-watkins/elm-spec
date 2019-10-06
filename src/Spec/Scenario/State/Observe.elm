@@ -2,12 +2,11 @@ module Spec.Scenario.State.Observe exposing
   ( Model
   , init
   , view
-  , document
   , update
   )
 
 import Spec.Scenario exposing (Scenario)
-import Spec.Subject exposing (Subject)
+import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Observation.Expectation as Expectation exposing (Judgment(..))
@@ -43,14 +42,15 @@ init exerciseModel =
   }
 
 
-view : Model model msg -> Html msg
+view : Model model msg -> Document msg
 view model =
-  model.subject.view model.programModel
-
-
-document : Model model msg -> Document msg
-document model =
-  model.subject.document model.programModel
+  case model.subject.view of
+    Subject.Element elementView ->
+      { title = ""
+      , body = [ elementView model.programModel ]
+      }
+    Subject.Document documentView ->
+      documentView model.programModel
 
 
 update : Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )

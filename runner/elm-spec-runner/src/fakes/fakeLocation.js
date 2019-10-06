@@ -24,7 +24,8 @@ module.exports = class FakeLocation {
   }
 
   assign(url) {
-    this.href = url
+    const updated = new URL(url, this.href)
+    this.href = updated.href
     this.sendToProgram({
       home: '_scenario',
       name: 'state',

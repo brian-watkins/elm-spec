@@ -3,7 +3,6 @@ module Spec.Scenario.State.Exercise exposing
   , init
   , update
   , view
-  , document
   , subscriptions
   )
 
@@ -49,14 +48,15 @@ initialCommandStep scenario subject =
       Step.sendCommand subject.initialCommand
 
 
-view : Model model msg -> Html msg
+view : Model model msg -> Document msg
 view model =
-  model.subject.view model.programModel
-
-
-document : Model model msg -> Document msg
-document model =
-  model.subject.document model.programModel
+  case model.subject.view of
+    Subject.Element elementView ->
+      { title = ""
+      , body = [ elementView model.programModel ]
+      }
+    Subject.Document documentView ->
+      documentView model.programModel
 
 
 update : (Message -> Cmd msg) -> Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )

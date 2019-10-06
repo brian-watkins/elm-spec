@@ -1,5 +1,5 @@
 module Spec.Scenario.Program exposing
-  ( Config, Model, init, update, view, document, subscriptions
+  ( Config, Model, init, update, view, subscriptions
   , with
   , start
   , receivedMessage
@@ -84,27 +84,14 @@ subscriptions state =
       Sub.none
 
 
-view : Model model programMsg -> Html (Msg programMsg)
+view : Model model programMsg -> Document (Msg programMsg)
 view state =
   case state of
     Exercise model ->
       Exercise.view model
-        |> Html.map ProgramMsg
-    Observe model ->
-      Observe.view model
-        |> Html.map ProgramMsg
-    _ ->
-      Html.text ""
-
-
-document : Model model programMsg -> Document (Msg programMsg)
-document state =
-  case state of
-    Exercise model ->
-      Exercise.document model
         |> mapDocument ProgramMsg
     Observe model ->
-      Observe.document model
+      Observe.view model
         |> mapDocument ProgramMsg
     _ ->
       { title = "", body = [ Html.text "" ] }

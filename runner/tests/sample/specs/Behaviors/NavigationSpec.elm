@@ -42,7 +42,7 @@ testUrl =
 
 
 main =
-  Runner.application
+  Runner.program
     [ navigationSpec
     ]
 

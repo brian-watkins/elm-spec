@@ -1,6 +1,7 @@
 module Spec.Subject exposing
   ( Subject
   , SubjectGenerator
+  , ProgramView(..)
   , init
   , initWithModel
   , initWithKey
@@ -25,12 +26,16 @@ type alias Subject model msg =
   { model: model
   , initialCommand: Cmd msg
   , update: (Message -> Cmd msg) -> msg -> model -> ( model, Cmd msg )
-  , view: model -> Html msg
-  , document: model -> Document msg
+  , view: ProgramView model msg
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
   , onUrlChange: Maybe (Url -> msg)
   }
+
+
+type ProgramView model msg
+  = Element (model -> Html msg)
+  | Document (model -> Document msg)
 
 
 type alias SubjectGenerator model msg =
@@ -43,8 +48,7 @@ init ( model, initialCommand ) =
     { model = model
     , initialCommand = initialCommand
     , update = \_ _ m -> (m, Cmd.none)
-    , view = \_ -> Html.text ""
-    , document = \_ -> { title = "", body = [ Html.text "" ] }
+    , view = Element <| \_ -> Html.text ""
     , subscriptions = \_ -> Sub.none
     , configureEnvironment = []
     , onUrlChange = Nothing
@@ -67,14 +71,13 @@ initWithKey generator =
           { model = model
           , initialCommand = initialCommand
           , update = \_ _ m -> (m, Cmd.none)
-          , view = \_ -> Html.text ""
-          , document = \_ -> { title = "", body = [ Html.text "" ] }
+          , view = Document <| \_ -> { title = "", body = [ Html.text "" ] }
           , subscriptions = \_ -> Sub.none
           , configureEnvironment = []
           , onUrlChange = Nothing
           }
       Nothing ->
-        Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserApplication to run your specs!"
+        Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
 
 
 configure : Message -> SubjectGenerator model msg -> SubjectGenerator model msg
@@ -92,13 +95,13 @@ withUpdate programUpdate =
 withView : (model -> Html msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
 withView view =
   mapSubject <| \subject ->
-    { subject | view = view }
+    { subject | view = Element view }
 
 
 withDocument : (model -> Document msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
-withDocument document =
+withDocument view =
   mapSubject <| \subject ->
-    { subject | document = document }
+    { subject | view = Document view }
 
 
 withSubscriptions : (model -> Sub msg) -> SubjectGenerator model msg -> SubjectGenerator model msg

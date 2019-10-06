@@ -18,7 +18,3 @@ config =
 
 program specs =
   Spec.browserProgram config specs
-
-
-application specs =
-  Spec.browserApplication config specs

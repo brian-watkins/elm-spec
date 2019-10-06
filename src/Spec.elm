@@ -2,10 +2,10 @@ module Spec exposing
   ( Spec
   , describe
   , Model, Msg, Config
-  , update, view, document, init, initApplication, subscriptions
+  , update, view, init, initBrowserProgram, subscriptions
   , program
   , browserProgram
-  , browserApplication, onUrlRequest, onUrlChange
+  , onUrlRequest, onUrlChange
   )
 
 import Spec.Message as Message exposing (Message)
@@ -59,15 +59,9 @@ type alias Model model msg =
   }
 
 
-view : Model model msg -> Html (Msg msg)
+view : Model model msg -> Document (Msg msg)
 view model =
   ScenarioProgram.view model.scenarioModel
-    |> Html.map ScenarioMsg
-
-
-document : Model model msg -> Document (Msg msg)
-document model =
-  ScenarioProgram.document model.scenarioModel
     |> mapDocument ScenarioMsg
 
 
@@ -142,18 +136,8 @@ program config specs =
     }
 
 
-browserProgram : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
-browserProgram config specs =
-  Browser.element
-    { init = init config specs
-    , view = view
-    , update = update config
-    , subscriptions = subscriptions config
-    }
-
-
-initApplication : Config msg -> List (Spec model msg) -> () -> Url -> Key -> ( Model model msg, Cmd (Msg msg) )
-initApplication config specs flags url key =
+initBrowserProgram : Config msg -> List (Spec model msg) -> () -> Url -> Key -> ( Model model msg, Cmd (Msg msg) )
+initBrowserProgram config specs flags url key =
   ( { scenarios =
         List.map (\(Spec scenarios) -> scenarios) specs
           |> List.concat
@@ -174,11 +158,11 @@ onUrlChange =
   ScenarioMsg << ScenarioProgram.OnUrlChange
 
 
-browserApplication : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
-browserApplication config specs =
+browserProgram : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+browserProgram config specs =
   Browser.application
-    { init = initApplication config specs
-    , view = document
+    { init = initBrowserProgram config specs
+    , view = view
     , update = update config
     , subscriptions = subscriptions config
     , onUrlRequest = onUrlRequest

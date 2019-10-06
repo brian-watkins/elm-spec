@@ -207,4 +207,4 @@ selectSpec name =
 
 
 main =
-  Runner.browserApplication selectSpec
+  Runner.browserProgram selectSpec

@@ -1,7 +1,6 @@
 port module Runner exposing
   ( program
   , browserProgram
-  , browserApplication
   , config
   )
 
@@ -49,30 +48,20 @@ program specLocator =
     }
   
 
-browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
-browserProgram specLocator =
-  Browser.element
-    { init = init config specLocator
-    , update = Spec.update config
-    , view = Spec.view
-    , subscriptions = Spec.subscriptions config
-    }
-
-
-initApplication : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Url -> Key -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
-initApplication specConfig specLocator flags url key =
+initBrowserProgram : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Url -> Key -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
+initBrowserProgram specConfig specLocator flags url key =
   case specLocator flags.specName of
     Just spec ->
-      Spec.initApplication specConfig [ spec ] () url key
+      Spec.initBrowserProgram specConfig [ spec ] () url key
     Nothing ->
       Debug.todo <| "Unknown spec: " ++ flags.specName
 
 
-browserApplication : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
-browserApplication specLocator =
+browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
+browserProgram specLocator =
   Browser.application
-    { init = initApplication config specLocator
-    , view = Spec.document
+    { init = initBrowserProgram config specLocator
+    , view = Spec.view
     , update = Spec.update config
     , subscriptions = Spec.subscriptions config
     , onUrlRequest = Spec.onUrlRequest

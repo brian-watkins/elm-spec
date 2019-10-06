@@ -30,7 +30,7 @@ loadUrlSpec =
       ]
     |> it "updates the document location" (
       Navigation.selectLocation
-        |> Observation.expect (isEqual "/some-fun-place")
+        |> Observation.expect (isEqual "http://localhost/some-fun-place")
     )
   ]
 
