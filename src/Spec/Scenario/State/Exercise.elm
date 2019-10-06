@@ -125,7 +125,18 @@ update outlet msg model =
           )
 
     OnUrlRequest request ->
-      ( model, State.Do Cmd.none )
+      case model.subject.onUrlRequest of
+        Just handler ->
+          ( model
+          , State.updateWith <| ProgramMsg <| handler request
+          )
+        Nothing ->
+          ( model
+          , State.updateWith <| Abort <| Report.batch
+              [ Report.note "A URL request occurred, but no handler has been provided."
+              , Report.note "Use Spec.Subject.onUrlRequest to set a handler."
+              ]
+          )
 
 
 subscriptions : Model model msg -> Sub msg

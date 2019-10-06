@@ -95,7 +95,7 @@ const runTestSpec = (specProgram, specName, done, matcher) => {
       flags: { specName }
     })
 
-    this.runSpec(app, {}, done, matcher)
+    this.runSpec(app, this.globalContext, {}, done, matcher)
   })
 }
 
@@ -113,14 +113,14 @@ const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
   
     this.htmlContext.dom.window._elm_spec.app = app
 
-    this.runSpec(app, plugins, done, matcher)
+    this.runSpec(app, this.htmlContext, plugins, done, matcher)
   })
 }
 
-exports.runSpec = (app, plugins, done, matcher) => {
+exports.runSpec = (app, context, plugins, done, matcher) => {
   const observations = []
 
-  new SpecRunner(app, plugins)
+  new SpecRunner(app, context, plugins)
     .on('observation', (observation) => {
       observations.push(observation)
     })

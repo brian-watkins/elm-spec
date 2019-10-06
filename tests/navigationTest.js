@@ -7,6 +7,13 @@ describe("Navigation", () => {
         expectAccepted(observations[0])
       })
     })
+
+    it("resets the default location between specs", (done) => {
+      expectBrowserSpec("NavigationSpec", "loadUrl", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
   })
 
   context("when the page is reloaded", () => {

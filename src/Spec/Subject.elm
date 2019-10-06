@@ -10,14 +10,14 @@ module Spec.Subject exposing
   , withUpdate
   , withView
   , withDocument
-  , onUrlChange
+  , onUrlChange, onUrlRequest
   , mapSubject
   )
 
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer
 import Html exposing (Html)
-import Browser exposing (Document)
+import Browser exposing (Document, UrlRequest)
 import Browser.Navigation exposing (Key)
 import Url exposing (Url)
 
@@ -30,6 +30,7 @@ type alias Subject model msg =
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
   , onUrlChange: Maybe (Url -> msg)
+  , onUrlRequest: Maybe (UrlRequest -> msg)
   }
 
 
@@ -52,6 +53,7 @@ init ( model, initialCommand ) =
     , subscriptions = \_ -> Sub.none
     , configureEnvironment = []
     , onUrlChange = Nothing
+    , onUrlRequest = Nothing
     }
 
 
@@ -75,6 +77,7 @@ initWithKey generator =
           , subscriptions = \_ -> Sub.none
           , configureEnvironment = []
           , onUrlChange = Nothing
+          , onUrlRequest = Nothing
           }
       Nothing ->
         Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
@@ -114,6 +117,12 @@ onUrlChange : (Url -> msg) -> SubjectGenerator model msg -> SubjectGenerator mod
 onUrlChange handler =
   mapSubject <| \subject ->
     { subject | onUrlChange = Just handler }
+
+
+onUrlRequest : (UrlRequest -> msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+onUrlRequest handler =
+  mapSubject <| \subject ->
+    { subject | onUrlRequest = Just handler }
 
 
 mapSubject : (Subject model msg -> Subject model msg) -> SubjectGenerator model msg -> SubjectGenerator model msg

@@ -1,6 +1,5 @@
 module Spec.Scenario.Program exposing
   ( Config, Model, init, update, view, subscriptions
-  , with
   , start
   , receivedMessage
   )
@@ -46,15 +45,11 @@ type alias Config msg programMsg =
   }
 
 
-with : Maybe Key -> Scenario model msg -> Model model msg
-with maybeKey scenario =
-  Start scenario (scenario.subjectGenerator maybeKey)
-
-
-start : Cmd (Msg msg)
-start =
-  Task.succeed never
-    |> Task.perform (always Continue)
+start : Config msg programMsg -> Maybe Key -> Scenario model programMsg -> ( Model model programMsg, Cmd msg )
+start config maybeKey scenario =
+  ( Start scenario <| scenario.subjectGenerator maybeKey
+  , config.send Message.startScenario
+  )
 
 
 continue : Config msg programMsg -> Cmd msg
@@ -162,8 +157,11 @@ update config msg state =
           badState config state
 
     OnUrlRequest _ ->
-      badState config state
-
+      case state of
+        Exercise model ->
+          exerciseUpdate config msg model
+        _ ->
+          badState config state
 
 
 exerciseUpdate : Config msg programMsg -> Msg programMsg -> Exercise.Model model programMsg -> ( Model model programMsg, Cmd msg )

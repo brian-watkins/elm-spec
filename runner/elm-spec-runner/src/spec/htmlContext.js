@@ -24,12 +24,16 @@ module.exports = class HtmlContext {
       .install({toFake: [ "requestAnimationFrame" ]})
   }
 
+  prepareForScenario() {
+    this.dom.window._elm_spec.window.location.href = "http://localhost"
+  }
+
   addFakes() {
     this.dom.window._elm_spec = {}
     const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
     this.dom.window._elm_spec.window = FakeLocation.forOwner(this.dom.window, fakeLocation)
     this.dom.window._elm_spec.document = FakeLocation.forOwner(this.dom.window.document, fakeLocation)
-    this.dom.window._elm_spec.history = new FakeHistory(this.dom.window._elm_spec.window.location)
+    this.dom.window._elm_spec.history = new FakeHistory(fakeLocation)
   }
 
   sendToCurrentApp(msg) {

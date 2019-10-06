@@ -20,4 +20,8 @@ module.exports = class GlobalContext {
     
     evaluator(this.Elm)
   }
+
+  prepareForScenario() {
+    //nothing
+  }
 }

@@ -32,7 +32,17 @@ loadUrlSpec =
       Navigation.selectLocation
         |> Observation.expect (isEqual "http://localhost/some-fun-place")
     )
+  , scenario "checking the default location" (
+      Subject.initWithModel ()
+        |> Subject.withView testView
+        |> Subject.withUpdate testUpdate
+    )
+    |> it "shows the default location" (
+      Navigation.selectLocation
+        |> Observation.expect (isEqual "http://localhost")
+    )
   ]
+
 
 reloadSpec : Spec Model Msg
 reloadSpec =

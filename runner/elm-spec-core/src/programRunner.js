@@ -3,9 +3,10 @@ const PortPlugin = require('./portPlugin')
 const TimePlugin = require('./timePlugin')
 
 module.exports = class ProgramRunner extends EventEmitter {
-  constructor(app, plugins) {
+  constructor(app, context, plugins) {
     super()
     this.app = app
+    this.context = context
     this.timer = null
     this.portPlugin = new PortPlugin(app)
     this.timePlugin = new TimePlugin()
@@ -106,6 +107,11 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   handleStateChange(state, out) {
     switch (state) {
+      case "START":
+        this.timePlugin.reset()
+        this.context.prepareForScenario()
+        out(this.continue())
+        break
       case "CONFIGURE_COMPLETE":
         out(this.continue())
         break
@@ -114,10 +120,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.timer = setTimeout(() => {
           out(this.continue())
         }, 0)
-        break
-      case "OBSERVATIONS_COMPLETE":
-        this.timePlugin.reset()
-        out(this.continue())
         break
     }
   }

@@ -1,8 +1,8 @@
 module Spec.Scenario.Message exposing
   ( isScenarioMessage
+  , startScenario
   , configureComplete
   , stepComplete
-  , observationsComplete
   )
 
 import Spec.Message as Message exposing (Message)
@@ -24,9 +24,9 @@ stepComplete =
   scenarioStateMessage "STEP_COMPLETE"
 
 
-observationsComplete : Message
-observationsComplete =
-  scenarioStateMessage "OBSERVATIONS_COMPLETE"
+startScenario : Message
+startScenario =
+  scenarioStateMessage "START"
 
 
 scenarioStateMessage : String -> Message

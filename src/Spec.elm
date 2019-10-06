@@ -73,9 +73,8 @@ update config msg model =
         [] ->
           ( model, config.send specComplete )
         scenario :: remaining ->
-          ( { model | scenarioModel = ScenarioProgram.with model.key scenario, scenarios = remaining }
-          , Cmd.map ScenarioMsg ScenarioProgram.start
-          )
+          ScenarioProgram.start (scenarioConfig config) model.key scenario
+            |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
     ScenarioMsg scenarioMsg ->
       ScenarioProgram.update (scenarioConfig config) scenarioMsg model.scenarioModel
         |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated })

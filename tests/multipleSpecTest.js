@@ -7,7 +7,7 @@ describe("multiple specs", () => {
     globalContext.evaluate((Elm) => {
       var app = Elm.Specs.MultipleSpecSpec.init()
   
-      runSpec(app, {}, done, (observations) => {
+      runSpec(app, globalContext, {}, done, (observations) => {
         expect(observations).to.have.length(4)
       })
     })
