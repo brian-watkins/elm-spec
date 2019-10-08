@@ -64,7 +64,7 @@ noChangeHandlerSpec =
 changeUrlSpec : Spec Model Msg
 changeUrlSpec =
   Spec.describe "on url change"
-  [ scenario "before pushUrl is used" (
+  [ scenario "by default" (
       testSubject
     )
     |> it "does not show anything fun" (
@@ -109,7 +109,7 @@ titleSpec =
       Markup.selectTitle
         |> Observation.expect (isEqual "Some Boring Title")
     )
-  , scenario "observing the title after a change" (
+  , scenario "observing changes to the title" (
       testSubject
     )
     |> when "the title is changed"
