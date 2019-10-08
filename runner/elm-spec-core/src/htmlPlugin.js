@@ -59,6 +59,11 @@ module.exports = class HtmlPlugin {
         })
         break
       }
+      case "set-location": {
+        const location = specMessage.body
+        this.window._elm_spec.window.location.setBase(this.window.document, location)
+        break
+      }
       case "application": {
         this.clock.runToFrame()
         out({

@@ -10,10 +10,10 @@ module.exports = class HtmlContext {
     this.compiler = compiler
 
     this.dom = new JSDOM(
-      "<html><head></head><body></body></html>",
+      "<html><head><base href='http://elm-spec'></head><body></body></html>",
       { pretendToBeVisual: true,
         runScripts: "dangerously",
-        url: "http://localhost"
+        url: "http://elm-spec"
       }
     )
 
@@ -25,7 +25,7 @@ module.exports = class HtmlContext {
   }
 
   prepareForScenario() {
-    this.dom.window._elm_spec.window.location.href = "http://localhost"
+    this.dom.window._elm_spec.window.location.setBase(this.dom.window.document, "http://elm-spec")
   }
 
   addFakes() {

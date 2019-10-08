@@ -23,6 +23,13 @@ module.exports = class FakeLocation {
     this.href = "http://localhost"
   }
 
+  setBase(document, url) {
+    const updated = new URL(url, this.href)
+    this.href = updated.href
+    const base = document.querySelector("base")
+    base.href = updated.protocol + "//" + updated.host
+  }
+
   assign(url) {
     const updated = new URL(url, this.href)
     this.href = updated.href

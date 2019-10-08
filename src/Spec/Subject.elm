@@ -4,14 +4,16 @@ module Spec.Subject exposing
   , ProgramView(..)
   , init
   , initWithModel
-  , initWithKey
+  , initForApplication
   , configure
   , withSubscriptions
   , withUpdate
   , withView
   , withDocument
+  , withLocation
   , onUrlChange, onUrlRequest
   , mapSubject
+  , generate
   )
 
 import Spec.Message as Message exposing (Message)
@@ -20,6 +22,7 @@ import Html exposing (Html)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation exposing (Key)
 import Url exposing (Url)
+import Json.Encode as Encode
 
 
 type alias Subject model msg =
@@ -40,21 +43,17 @@ type ProgramView model msg
 
 
 type alias SubjectGenerator model msg =
-  Maybe Key -> Subject model msg
+  { location: Url
+  , generator: Url -> Maybe Key -> Subject model msg
+  }
 
 
 init : (model, Cmd msg) -> SubjectGenerator model msg
 init ( model, initialCommand ) =
-  \maybeKey ->
-    { model = model
-    , initialCommand = initialCommand
-    , update = \_ _ m -> (m, Cmd.none)
-    , view = Element <| \_ -> Html.text ""
-    , subscriptions = \_ -> Sub.none
-    , configureEnvironment = []
-    , onUrlChange = Nothing
-    , onUrlRequest = Nothing
-    }
+  { location = defaultUrl
+  , generator = \_ _ ->
+      initializeSubject ( model, initialCommand )
+  }
 
 
 initWithModel : model -> SubjectGenerator model msg
@@ -62,25 +61,40 @@ initWithModel model =
   init ( model, Cmd.none )
 
 
-initWithKey : (Key -> (model, Cmd msg)) -> SubjectGenerator model msg
-initWithKey generator =
-  \maybeKey ->
-    case maybeKey of
-      Just key ->
-        let
-          ( model, initialCommand ) = generator key
-        in
-          { model = model
-          , initialCommand = initialCommand
-          , update = \_ _ m -> (m, Cmd.none)
-          , view = Document <| \_ -> { title = "", body = [ Html.text "" ] }
-          , subscriptions = \_ -> Sub.none
-          , configureEnvironment = []
-          , onUrlChange = Nothing
-          , onUrlRequest = Nothing
-          }
-      Nothing ->
-        Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
+initForApplication : (Url -> Key -> (model, Cmd msg)) -> SubjectGenerator model msg
+initForApplication generator =
+  { location = defaultUrl
+  , generator = \url maybeKey ->
+      case maybeKey of
+        Just key ->
+          generator url key
+            |> initializeSubject
+        Nothing ->
+          Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
+  }
+
+
+initializeSubject : ( model, Cmd msg ) -> Subject model msg
+initializeSubject ( model, initialCommand ) =
+  { model = model
+  , initialCommand = initialCommand
+  , update = \_ _ m -> (m, Cmd.none)
+  , view = Document <| \_ -> { title = "", body = [ Html.text "" ] }
+  , subscriptions = \_ -> Sub.none
+  , configureEnvironment = []
+  , onUrlChange = Nothing
+  , onUrlRequest = Nothing
+  }
+
+
+defaultUrl =
+  { protocol = Url.Http
+  , host = "elm-spec"
+  , port_ = Nothing
+  , path = "/"
+  , query = Nothing
+  , fragment = Nothing
+  }
 
 
 configure : Message -> SubjectGenerator model msg -> SubjectGenerator model msg
@@ -125,6 +139,29 @@ onUrlRequest handler =
     { subject | onUrlRequest = Just handler }
 
 
+withLocation : Url -> SubjectGenerator model msg -> SubjectGenerator model msg
+withLocation url generator =
+  { generator | location = url }
+    |> configure (setLocationMessage url)
+
+
+setLocationMessage : Url -> Message
+setLocationMessage location =
+  { home = "_html"
+  , name = "set-location"
+  , body = Encode.string <| Url.toString location
+  }
+
+
 mapSubject : (Subject model msg -> Subject model msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
 mapSubject mapper generator =
-  mapper << generator
+  { location = generator.location
+  , generator = \url maybeKey ->
+      generator.generator url maybeKey
+        |> mapper
+  }
+
+
+generate : SubjectGenerator model msg -> Maybe Key -> Subject model msg
+generate generator maybeKey =
+  generator.generator generator.location maybeKey

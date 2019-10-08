@@ -20,11 +20,33 @@ import Url.Parser exposing ((</>))
 import Url.Builder
 
 
+applyGivenUrlSpec : Spec Model Msg
+applyGivenUrlSpec =
+  Spec.describe "given a url"
+  [ scenario "a url is provided" (
+      Subject.initForApplication (testInit ())
+        |> Subject.withDocument testDocument
+        |> Subject.withUpdate testUpdate
+        |> Subject.onUrlChange UrlDidChange
+        |> Subject.onUrlRequest UrlChangeRequested
+        |> Subject.withLocation (testUrl "/fun/reading")
+    )
+    |> it "sets the location to the given url" (
+      Navigation.selectLocation
+        |> Observation.expect (isEqual "http://my-test-app.com/fun/reading")
+    )
+    |> it "renders the view based on the url" (
+      select << by [ id "fun-page" ]
+        |> Markup.expectElement ( Markup.hasText "reading" )
+    )
+  ]
+
+
 noChangeHandlerSpec : Spec Model Msg
 noChangeHandlerSpec =
   Spec.describe "on url change"
   [ scenario "no url change handler is set" (
-      Subject.initWithKey (testInit () testUrl)
+      Subject.initForApplication (testInit ())
         |> Subject.withDocument testDocument
         |> Subject.withUpdate testUpdate
     )
@@ -58,7 +80,7 @@ changeUrlSpec =
       ]
     |> it "updates the location" (
       Navigation.selectLocation
-        |> Observation.expect (isEqual "http://localhost/fun/bowling")
+        |> Observation.expect (isEqual "http://my-test-app.com/fun/bowling")
     )
     |> it "shows a different page" (
       select << by [ id "fun-page" ]
@@ -113,7 +135,7 @@ clickLinkSpec =
       ]
     |> it "updates the location" (
       Navigation.selectLocation
-        |> Observation.expect (isEqual "http://localhost/fun/running")
+        |> Observation.expect (isEqual "http://my-test-app.com/fun/running")
     )
     |> it "navigates as expected" (
       select << by [ id "fun-page" ]
@@ -137,7 +159,7 @@ noRequestHandlerSpec : Spec Model Msg
 noRequestHandlerSpec =
   Spec.describe "handling a url request"
   [ scenario "no url request handler is set" (
-      Subject.initWithKey (testInit () testUrl)
+      Subject.initForApplication (testInit ())
         |> Subject.withDocument testDocument
         |> Subject.withUpdate testUpdate
     )
@@ -153,18 +175,19 @@ noRequestHandlerSpec =
 
 
 testSubject =
-  Subject.initWithKey (testInit () testUrl)
+  Subject.initForApplication (testInit ())
     |> Subject.withDocument testDocument
     |> Subject.withUpdate testUpdate
     |> Subject.onUrlChange UrlDidChange
     |> Subject.onUrlRequest UrlChangeRequested
+    |> Subject.withLocation (testUrl "/")
 
 
-testUrl =
+testUrl path =
   { protocol = Url.Http
-  , host = "test-app.com"
+  , host = "my-test-app.com"
   , port_ = Nothing
-  , path = "/"
+  , path = path
   , query = Nothing
   , fragment = Nothing
   }
@@ -172,7 +195,7 @@ testUrl =
 
 testInit : () -> Url -> Key -> ( Model, Cmd Msg )
 testInit _ initialUrl key =
-  ( defaultModel key, Cmd.none )
+  ( defaultModel initialUrl key, Cmd.none )
 
 
 type alias Model =
@@ -187,10 +210,10 @@ type Page
   | Fun String
 
 
-defaultModel : Key -> Model
-defaultModel key =
+defaultModel : Url -> Key -> Model
+defaultModel url key =
   { key = key
-  , page = Home
+  , page = toPage url
   , title = "Some Boring Title"
   }
 
@@ -262,6 +285,7 @@ testView model =
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
+    "applyUrl" -> Just applyGivenUrlSpec
     "changeUrl" -> Just changeUrlSpec
     "noChangeUrlHandler" -> Just noChangeHandlerSpec
     "changeTitle" -> Just titleSpec

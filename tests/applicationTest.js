@@ -1,6 +1,14 @@
 const { expectBrowserSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
 
 describe("application", () => {
+  context("given a url", () => {
+    it("sets the location as expected", (done) => {
+      expectBrowserSpec("ApplicationSpec", "applyUrl", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
+  })
   context("when the url is changed", () => {
     context("when no url change handler is set", () => {
       it("fails the test", (done) => {

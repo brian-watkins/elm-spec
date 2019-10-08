@@ -14,6 +14,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Browser.Navigation
 import Runner
+import Url
 
 
 loadUrlSpec : Spec Model Msg
@@ -23,6 +24,7 @@ loadUrlSpec =
       Subject.initWithModel ()
         |> Subject.withView testView
         |> Subject.withUpdate testUpdate
+        |> Subject.withLocation testUrl
     )
     |> when "a new page load is triggered"
       [ target << by [ id "load-button" ]
@@ -30,18 +32,29 @@ loadUrlSpec =
       ]
     |> it "updates the document location" (
       Navigation.selectLocation
-        |> Observation.expect (isEqual "http://localhost/some-fun-place")
+        |> Observation.expect (isEqual "http://navigation-test-app.com/some-fun-place")
     )
   , scenario "checking the default location" (
       Subject.initWithModel ()
         |> Subject.withView testView
         |> Subject.withUpdate testUpdate
+        |> Subject.withLocation testUrl
     )
     |> it "shows the default location" (
       Navigation.selectLocation
-        |> Observation.expect (isEqual "http://localhost")
+        |> Observation.expect (isEqual "http://navigation-test-app.com/")
     )
   ]
+
+
+testUrl =
+  { protocol = Url.Http
+  , host = "navigation-test-app.com"
+  , port_ = Nothing
+  , path = "/"
+  , query = Nothing
+  , fragment = Nothing
+  }
 
 
 reloadSpec : Spec Model Msg

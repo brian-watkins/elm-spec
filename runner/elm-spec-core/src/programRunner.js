@@ -56,7 +56,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         if (plugin) {
           plugin.handle(specMessage, out, this.sendAbortMessage(out))
         } else {
-          console.log("Unknown message:", specMessage)
+          console.log("Message for unknown plugin:", specMessage)
         }
         break
     }

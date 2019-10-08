@@ -4,7 +4,7 @@ module Spec.Scenario.Program exposing
   , receivedMessage
   )
 
-import Spec.Subject exposing (Subject)
+import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario exposing (Scenario)
 import Spec.Scenario.Message as Message
 import Spec.Scenario.State exposing (Msg(..), Command(..))
@@ -47,7 +47,7 @@ type alias Config msg programMsg =
 
 start : Config msg programMsg -> Maybe Key -> Scenario model programMsg -> ( Model model programMsg, Cmd msg )
 start config maybeKey scenario =
-  ( Start scenario <| scenario.subjectGenerator maybeKey
+  ( Start scenario <| Subject.generate scenario.subjectGenerator maybeKey
   , config.send Message.startScenario
   )
 
