@@ -24,7 +24,7 @@ class ElmSpecRunnerCommand extends Command {
       this.error(`No spec modules found matching: ${specPath}`)
     }    
 
-    const tags = flags.tags.split(',')
+    const tags = flags.tag || []
 
     this.runSpecs({
       specPath,
@@ -56,7 +56,7 @@ ElmSpecRunnerCommand.flags = {
   help: flags.help({char: 'h'}),
   elm: flags.string({char: 'e', description: 'path to elm'}),
   specs: flags.string({char: 's', description: 'glob for spec modules', default: './specs/**/*Spec.elm'}),
-  tags: flags.string({char: 't', description: 'execute scenarios with these comma-separated tags only', default: ''})
+  tag: flags.string({char: 't', description: 'execute scenarios with this tag only', multiple: true})
 }
 
 module.exports = ElmSpecRunnerCommand
