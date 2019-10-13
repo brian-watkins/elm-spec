@@ -15,6 +15,7 @@ import Html.Events as Events
 import Browser.Navigation
 import Runner
 import Url
+import Task
 
 
 loadUrlSpec : Spec Model Msg
@@ -104,6 +105,28 @@ reloadSpec =
     )
   ]
 
+
+batchLoadSpec : Spec Model Msg
+batchLoadSpec =
+  Spec.describe "batching load with another command"
+  [ scenario "load and something else" (
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+          |> Subject.withLocation testUrl
+      )
+      |> when "the batch command is triggered"
+        [ target << by [ id "load-and-send" ]
+        , Event.click
+        ]
+      |> it "changes the location" (
+        Navigation.selectLocation
+          |> Observation.expect (isEqual "http://navigation-test-app.com/some-awesome-place")
+      )
+    )
+  ]
+
 type alias Model =
   ()
 
@@ -111,6 +134,8 @@ type Msg
   = ChangeLocation
   | Reload
   | ReloadSkipCache
+  | LoadAndSend
+  | Ignore
 
 testView : Model -> Html Msg
 testView model =
@@ -121,6 +146,8 @@ testView model =
     [ Html.text "Click to reload!" ]
   , Html.button [ Attr.id "reload-skip-cache-button", Events.onClick ReloadSkipCache ]
     [ Html.text "Click to reload and skip cache!" ]
+  , Html.button [ Attr.id "load-and-send", Events.onClick LoadAndSend ]
+    [ Html.text "Click to load and send!" ]
   ]
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
@@ -138,6 +165,15 @@ testUpdate msg model =
       ( model
       , Browser.Navigation.reloadAndSkipCache
       )
+    LoadAndSend ->
+      ( model
+      , Cmd.batch
+        [ Task.succeed never |> Task.perform (always Ignore)
+        , Browser.Navigation.load "/some-awesome-place"
+        ]
+      )
+    Ignore ->
+      ( model, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
@@ -145,6 +181,7 @@ selectSpec name =
   case name of
     "loadUrl" -> Just loadUrlSpec
     "reload" -> Just reloadSpec
+    "batchLoad" -> Just batchLoadSpec
     _ -> Nothing
 
 

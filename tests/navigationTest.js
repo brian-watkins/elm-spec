@@ -14,6 +14,12 @@ describe("Navigation", () => {
         expectAccepted(observations[1])
       })
     })
+
+    it("works fine when batched with other commands", (done) => {
+      expectBrowserSpec("NavigationSpec", "batchLoad", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
   })
 
   context("when the page is reloaded", () => {
