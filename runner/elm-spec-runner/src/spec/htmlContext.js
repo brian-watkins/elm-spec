@@ -4,6 +4,7 @@ const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 const FakeLocation = require('../fakes/fakeLocation')
 const FakeHistory = require('../fakes/fakeHistory')
+const { proxiedConsole } = require('../fakes/proxiedConsole')
 
 module.exports = class HtmlContext {
   constructor(compiler, tags) {
@@ -35,6 +36,7 @@ module.exports = class HtmlContext {
     this.dom.window._elm_spec.window = FakeLocation.forOwner(this.dom.window, fakeLocation)
     this.dom.window._elm_spec.document = FakeLocation.forOwner(this.dom.window.document, fakeLocation)
     this.dom.window._elm_spec.history = new FakeHistory(fakeLocation)
+    this.dom.window._elm_spec.console = proxiedConsole()
   }
 
   sendToCurrentApp(msg) {
@@ -61,7 +63,7 @@ module.exports = class HtmlContext {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
-          this.dom.window.eval("(function(){const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
+          this.dom.window.eval("(function(){const console = _elm_spec.console; const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
           callback(this.dom.window.Elm, this.dom.window)
         })
         .catch((err) => {
