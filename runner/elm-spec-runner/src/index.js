@@ -5,6 +5,7 @@ const HtmlContext = require('./spec/htmlContext')
 const SuiteRunner = require('elm-spec-core')
 const commandExists = require('command-exists').sync
 const glob = require("glob")
+const process = require('process')
 
 class ElmSpecRunnerCommand extends Command {
   async run() {
@@ -37,7 +38,7 @@ class ElmSpecRunnerCommand extends Command {
     const compiler = new Compiler(options)
 
     const htmlContext = new HtmlContext(compiler, options.tags)
-    const reporter = new Reporter(this.log)
+    const reporter = new Reporter((c) => process.stdout.write(c), this.log)
 
     const runner = new SuiteRunner(htmlContext, reporter)
     runner.run()

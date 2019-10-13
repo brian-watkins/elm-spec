@@ -11,6 +11,7 @@
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.13.3",
     "@oclif/plugin-help": "^2.2.1",
+    "chalk": "^2.4.2",
     "command-exists": "^1.2.8",
     "elm-spec-core": "file:../elm-spec-core",
     "glob": "^7.1.4",
