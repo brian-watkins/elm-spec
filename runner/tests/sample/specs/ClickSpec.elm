@@ -13,20 +13,23 @@ import Main as App
 clickSpec : Spec App.Model App.Msg
 clickSpec =
   Spec.describe "an html program"
-  [ scenario "a click event" (
-      Subject.initWithModel App.defaultModel
-        |> Subject.withUpdate App.update
-        |> Subject.withView App.view
-    )
-    |> when "the button is clicked three times"
-      [ target << by [ id "my-button" ]
-      , Event.click
-      , Event.click
-      , Event.click
-      ]
-    |> it "renders the count" (
-      select << by [ id "count-results" ]
-        |> Markup.expectElement (Markup.hasText "You clicked the button 3 time(s)")
+  [ tagged [ "tagged" ] <|
+    scenario "a click event" (
+      given (
+        Subject.initWithModel App.defaultModel
+          |> Subject.withUpdate App.update
+          |> Subject.withView App.view
+      )
+      |> when "the button is clicked three times"
+        [ target << by [ id "my-button" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> it "renders the count" (
+        select << by [ id "count-results" ]
+          |> Markup.expectElement (Markup.hasText "You clicked the button 3 time(s)")
+      )
     )
   ]
 

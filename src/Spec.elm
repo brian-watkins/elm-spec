@@ -135,16 +135,33 @@ program config specs =
     }
 
 
-initBrowserProgram : Config msg -> List (Spec model msg) -> () -> Url -> Key -> ( Model model msg, Cmd (Msg msg) )
+initBrowserProgram : Config msg -> List (Spec model msg) -> Flags -> Url -> Key -> ( Model model msg, Cmd (Msg msg) )
 initBrowserProgram config specs flags url key =
   ( { scenarios =
-        List.map (\(Spec scenarios) -> scenarios) specs
+        List.map (\(Spec scenarios) -> 
+          if List.isEmpty flags.tags then
+            scenarios
+          else
+            List.filter (withTags flags.tags) scenarios
+        ) specs
           |> List.concat
     , scenarioModel = ScenarioProgram.init
     , key = Just key
     }
   , Cmd.none
   )
+
+
+withTags : List String -> Scenario model msg -> Bool
+withTags tags scenario =
+  case tags of
+    [] ->
+      False
+    tag :: remaining ->
+      if List.member tag scenario.tags then
+        True
+      else
+        withTags remaining scenario
 
 
 onUrlRequest : UrlRequest -> (Msg msg)
@@ -157,7 +174,12 @@ onUrlChange =
   ScenarioMsg << ScenarioProgram.OnUrlChange
 
 
-browserProgram : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+type alias Flags =
+  { tags: List String
+  }
+
+
+browserProgram : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
 browserProgram config specs =
   Browser.application
     { init = initBrowserProgram config specs

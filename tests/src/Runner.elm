@@ -52,7 +52,7 @@ initBrowserProgram : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Fl
 initBrowserProgram specConfig specLocator flags url key =
   case specLocator flags.specName of
     Just spec ->
-      Spec.initBrowserProgram specConfig [ spec ] () url key
+      Spec.initBrowserProgram specConfig [ spec ] { tags = [] } url key
     Nothing ->
       Debug.todo <| "Unknown spec: " ++ flags.specName
 

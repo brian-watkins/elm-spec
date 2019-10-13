@@ -19,21 +19,24 @@ class ElmSpecRunnerCommand extends Command {
       }
     }
 
-    const specPath = flags.specs || './specs/**/*Spec.elm'
+    const specPath = flags.specs
     if (glob.sync(specPath).length == 0) {
       this.error(`No spec modules found matching: ${specPath}`)
     }    
 
+    const tags = flags.tags.split(',')
+
     this.runSpecs({
       specPath,
-      elmPath
+      elmPath,
+      tags
     })
   }
 
   runSpecs(options) {
     const compiler = new Compiler(options)
 
-    const htmlContext = new HtmlContext(compiler)
+    const htmlContext = new HtmlContext(compiler, options.tags)
     const reporter = new Reporter(this.log)
 
     const runner = new SuiteRunner(htmlContext, reporter)
@@ -52,7 +55,8 @@ ElmSpecRunnerCommand.flags = {
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
   elm: flags.string({char: 'e', description: 'path to elm'}),
-  specs: flags.string({char: 's', description: 'glob for spec modules'})
+  specs: flags.string({char: 's', description: 'glob for spec modules', default: './specs/**/*Spec.elm'}),
+  tags: flags.string({char: 't', description: 'execute scenarios with these comma-separated tags only', default: ''})
 }
 
 module.exports = ElmSpecRunnerCommand

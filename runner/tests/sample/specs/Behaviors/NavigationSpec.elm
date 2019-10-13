@@ -14,19 +14,23 @@ import Runner
 navigationSpec : Spec Model Msg
 navigationSpec =
   Spec.describe "on url change"
-  [ scenario "use pushUrl to navigate" (
-      Subject.initWithKey (Application.init () testUrl)
-        |> Subject.withDocument Application.document
-        |> Subject.withUpdate Application.update
-        |> Subject.onUrlChange Application.UrlDidChange
-    )
-    |> when "the url is changed"
-      [ target << by [ id "push-url-button" ]
-      , Event.click
-      ]
-    |> it "shows a different page" (
-      select << by [ id "fun-page" ]
-        |> Markup.expectElement ( Markup.hasText "bowling" )
+  [ tagged [ "tagged" ] <|
+    scenario "use pushUrl to navigate" (
+      given (
+        Subject.initForApplication (Application.init ())
+          |> Subject.withDocument Application.document
+          |> Subject.withUpdate Application.update
+          |> Subject.onUrlChange Application.UrlDidChange
+          |> Subject.withLocation testUrl
+      )
+      |> when "the url is changed"
+        [ target << by [ id "push-url-button" ]
+        , Event.click
+        ]
+      |> it "shows a different page" (
+        select << by [ id "fun-page" ]
+          |> Markup.expectElement ( Markup.hasText "bowling" )
+      )
     )
   ]
 

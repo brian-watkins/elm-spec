@@ -6,8 +6,9 @@ const FakeLocation = require('../fakes/fakeLocation')
 const FakeHistory = require('../fakes/fakeHistory')
 
 module.exports = class HtmlContext {
-  constructor(compiler) {
+  constructor(compiler, tags) {
     this.compiler = compiler
+    this.tags = tags
 
     this.dom = new JSDOM(
       "<html><head><base href='http://elm-spec'></head><body></body></html>",
@@ -75,7 +76,10 @@ module.exports = class HtmlContext {
 
   initializeApp(program, element) {
     return program.init({
-      node: element
+      node: element,
+      flags: {
+        tags: this.tags
+      }
     })
   }
 

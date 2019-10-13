@@ -8,6 +8,7 @@ module Spec.Scenario exposing
   , observeThat
   , it
   , describing
+  , tagged
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
@@ -21,6 +22,7 @@ type alias Scenario model msg =
   , subjectGenerator: SubjectGenerator model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)
+  , tags: List String
   }
 
 
@@ -44,7 +46,13 @@ scenario description plan =
   , subjectGenerator = plan.subjectGenerator
   , steps = plan.steps
   , observations = plan.observations
+  , tags = []
   }
+
+
+tagged : List String -> Scenario model msg -> Scenario model msg
+tagged tags scenarioData =
+  { scenarioData | tags = tags }
 
 
 given : SubjectGenerator model msg -> ScenarioAction model msg

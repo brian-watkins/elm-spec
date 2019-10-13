@@ -7,31 +7,39 @@ const process = require('process')
 
 describe("Suite Runner", () => {
   it("runs a suite of tests", (done) => {
-    const workDir = process.cwd()
-    process.chdir('./runner/tests/sample')
-    
-    const compiler = new Compiler({
-      specPath: "./specs/**/*Spec.elm"
-    })
-    
-    const htmlContext = new HtmlContext(compiler)
-    const reporter = new TestReporter()
-    
-    const runner = new SuiteRunner(htmlContext, reporter)
-    runner
-      .on('complete', () => {
-        setTimeout(() => {
-          expect(reporter.observations).to.have.length(6)
-          reporter.observations.forEach(observation => {
-            expect(observation.summary).to.equal("ACCEPT")
-          })
-          process.chdir(workDir)
-          done()  
-        }, 0)
-      })
-      .run()
+    expectPassingScenarios(6, [], done)
+  })
+
+  it("runs only the tagged scenarios", (done) => {
+    expectPassingScenarios(2, [ "tagged" ], done)
   })
 })
+
+const expectPassingScenarios = (number, tags, done) => {
+  const workDir = process.cwd()
+  process.chdir('./runner/tests/sample')
+  
+  const compiler = new Compiler({
+    specPath: "./specs/**/*Spec.elm"
+  })
+  
+  const htmlContext = new HtmlContext(compiler, tags)
+  const reporter = new TestReporter()
+  
+  const runner = new SuiteRunner(htmlContext, reporter)
+  runner
+    .on('complete', () => {
+      setTimeout(() => {
+        process.chdir(workDir)
+        expect(reporter.observations).to.have.length(number)
+        reporter.observations.forEach(observation => {
+          expect(observation.summary).to.equal("ACCEPT")
+        })
+        done()  
+      }, 0)
+    })
+    .run()
+}
 
 const TestReporter = class {
   constructor() {
