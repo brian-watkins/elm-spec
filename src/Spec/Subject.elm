@@ -70,7 +70,7 @@ initForApplication generator =
           generator url key
             |> initializeSubject
         Nothing ->
-          Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
+          Elm.Kernel.Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
   }
 
 
