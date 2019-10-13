@@ -15,13 +15,15 @@ passingSpec : Spec Model Msg
 passingSpec =
   Spec.describe "a fragment"
   [ scenario "the observation is valid" (
-      Subject.initWithModel { count = 99 }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "contains the expected value" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 99)
+      given (
+        Subject.initWithModel { count = 99 }
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "contains the expected value" (
+          Observation.selectModel
+            |> Observation.mapSelection .count
+            |> Observation.expect (Observer.isEqual 99)
+      )
     )
   ]
 
@@ -30,13 +32,15 @@ failingSpec : Spec Model Msg
 failingSpec =
   Spec.describe "another fragment"
   [ scenario "the observation is invalid" (
-      Subject.initWithModel { count = 99 }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "contains the expected value" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 76)
+      given (
+        Subject.initWithModel { count = 99 }
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "contains the expected value" (
+          Observation.selectModel
+            |> Observation.mapSelection .count
+            |> Observation.expect (Observer.isEqual 76)
+      )
     )
   ]
 
@@ -45,22 +49,26 @@ specWithAScenario : Spec Model Msg
 specWithAScenario =
   Spec.describe "a third fragment"
   [ scenario "passing" (
-      Subject.initWithModel { count = 108 }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "contains the expected value" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 108)
+      given (
+        Subject.initWithModel { count = 108 }
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "contains the expected value" (
+          Observation.selectModel
+            |> Observation.mapSelection .count
+            |> Observation.expect (Observer.isEqual 108)
+      )
     )
   , scenario "failing" (
-      Subject.initWithModel { count = 108 }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "contains a different value" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 94)
+      given (
+        Subject.initWithModel { count = 108 }
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "contains a different value" (
+          Observation.selectModel
+            |> Observation.mapSelection .count
+            |> Observation.expect (Observer.isEqual 94)
+      )
     )
   ]
 

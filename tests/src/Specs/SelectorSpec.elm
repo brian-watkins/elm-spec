@@ -16,31 +16,35 @@ descendantsOfSpec : Spec () Msg
 descendantsOfSpec =
   Spec.describe "an html program"
   [ scenario "Select descendants" (
-      Subject.initWithModel ()
-        |> Subject.withView descendantsView
-    )
-    |> it "finds all the elements" (
-      select
-        << descendantsOf [ id "my-part" ]
-        << by [ tag "div" ]
-        |> Markup.expectElements (\elements ->
-          List.length elements
-            |> Observer.isEqual 4
-        )
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView descendantsView
+      )
+      |> it "finds all the elements" (
+        select
+          << descendantsOf [ id "my-part" ]
+          << by [ tag "div" ]
+          |> Markup.expectElements (\elements ->
+            List.length elements
+              |> Observer.isEqual 4
+          )
+      )
     )
   , scenario "Multiple descendants" (
-      Subject.initWithModel ()
-        |> Subject.withView descendantsView
-    )
-    |> it "finds all the elements" (
-      select
-        << descendantsOf [ id "my-part" ]
-        << descendantsOf [ attributeName "fun" ]
-        << by [ tag "div" ]
-        |> Markup.expectElements (\elements ->
-          List.length elements
-            |> Observer.isEqual 1
-        )
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView descendantsView
+      )
+      |> it "finds all the elements" (
+        select
+          << descendantsOf [ id "my-part" ]
+          << descendantsOf [ attributeName "fun" ]
+          << by [ tag "div" ]
+          |> Markup.expectElements (\elements ->
+            List.length elements
+              |> Observer.isEqual 1
+          )
+      )
     )
   ]
 
@@ -67,12 +71,14 @@ attributeNameSelectorSpec : Spec () Msg
 attributeNameSelectorSpec =
   Spec.describe "an html program"
   [ scenario "Select by attribute name" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-    )
-    |> it "finds the element" (
-      select << by [ attributeName "data-fun" ]
-        |> Markup.expectElement (Markup.hasText "This is fun!")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+      )
+      |> it "finds the element" (
+        select << by [ attributeName "data-fun" ]
+          |> Markup.expectElement (Markup.hasText "This is fun!")
+      )
     )
   ]
 
@@ -81,12 +87,14 @@ attributeSelectorSpec : Spec () Msg
 attributeSelectorSpec =
   Spec.describe "attribute selector"
   [ scenario "select by attribute" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-    )
-    |> it "finds the element" (
-      select << by [ attribute ("data-fun", "something fun") ]
-        |> Markup.expectElement (Markup.hasText "This is fun!")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+      )
+      |> it "finds the element" (
+        select << by [ attribute ("data-fun", "something fun") ]
+          |> Markup.expectElement (Markup.hasText "This is fun!")
+      )
     )
   ]
 
@@ -95,12 +103,14 @@ onlyOneTagAllowedSpec : Spec () Msg
 onlyOneTagAllowedSpec =
   Spec.describe "an html program"
   [ scenario "Select by multiple tags" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-    )
-    |> it "uses the first tag only" (
-      select << by [ tag "h1", tag "div", tag "a" ]
-        |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+      )
+      |> it "uses the first tag only" (
+        select << by [ tag "h1", tag "div", tag "a" ]
+          |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      )
     )
   ]
 
@@ -109,12 +119,14 @@ tagSelectorSpec : Spec () Msg
 tagSelectorSpec =
   Spec.describe "an html program"
   [ scenario "Selects elements by tag" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-    )
-    |> it "renders the text on the view" (
-      select << by [ tag "h1" ]
-        |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+      )
+      |> it "renders the text on the view" (
+        select << by [ tag "h1" ]
+          |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      )
     )
   ]
 
@@ -123,20 +135,24 @@ combinedTagSelectorSpec : Spec () Msg
 combinedTagSelectorSpec =
   Spec.describe "an html program"
   [ scenario "Selects by tag and then id" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-    )
-    |> it "selects the text on the view" (
-      select << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
-        |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+      )
+      |> it "selects the text on the view" (
+        select << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
+          |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      )
     )
   , scenario "Selects by id and then tag" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-    )
-    |> it "selects the text on the view" (
-      select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
-        |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+      )
+      |> it "selects the text on the view" (
+        select << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
+          |> Markup.expectElement (Markup.hasText "This is an H1 tag")
+      )
     )
   ]
 

@@ -17,21 +17,23 @@ countTimePassingSpec : Spec Model Msg
 countTimePassingSpec =
   Spec.describe "a worker that subscribes to the time"
   [ scenario "the time passes as expected" (
-      Subject.init ( { count = 0 }, Cmd.none )
-        |> Subject.withUpdate testUpdate
-        |> Subject.withSubscriptions testSubscriptions
-        |> Spec.Time.fake
-    )
-    |> when "time passes"
-      [ Spec.Time.tick 1000
-      , Spec.Time.tick 1000
-      , Spec.Time.tick 1000
-      , Spec.Time.tick 1000
-      ]
-    |> it "updates the model" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 4)
+      given (
+        Subject.init ( { count = 0 }, Cmd.none )
+          |> Subject.withUpdate testUpdate
+          |> Subject.withSubscriptions testSubscriptions
+          |> Spec.Time.fake
+      )
+      |> when "time passes"
+        [ Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        ]
+      |> it "updates the model" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 4)
+      )
     )
   ]
 

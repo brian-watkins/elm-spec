@@ -24,20 +24,24 @@ applyGivenUrlSpec : Spec Model Msg
 applyGivenUrlSpec =
   Spec.describe "given a url"
   [ scenario "a url is provided" (
-      Subject.initForApplication (testInit ())
-        |> Subject.withDocument testDocument
-        |> Subject.withUpdate testUpdate
-        |> Subject.onUrlChange UrlDidChange
-        |> Subject.onUrlRequest UrlChangeRequested
-        |> Subject.withLocation (testUrl "/fun/reading")
-    )
-    |> it "sets the location to the given url" (
-      Navigation.selectLocation
-        |> Observation.expect (isEqual "http://my-test-app.com/fun/reading")
-    )
-    |> it "renders the view based on the url" (
-      select << by [ id "fun-page" ]
-        |> Markup.expectElement ( Markup.hasText "reading" )
+      given (
+        Subject.initForApplication (testInit ())
+          |> Subject.withDocument testDocument
+          |> Subject.withUpdate testUpdate
+          |> Subject.onUrlChange UrlDidChange
+          |> Subject.onUrlRequest UrlChangeRequested
+          |> Subject.withLocation (testUrl "/fun/reading")
+      )
+      |> observeThat
+        [ it "sets the location to the given url" (
+            Navigation.selectLocation
+              |> Observation.expect (isEqual "http://my-test-app.com/fun/reading")
+          )
+        , it "renders the view based on the url" (
+            select << by [ id "fun-page" ]
+              |> Markup.expectElement ( Markup.hasText "reading" )
+          )
+        ]
     )
   ]
 
@@ -46,17 +50,19 @@ noChangeHandlerSpec : Spec Model Msg
 noChangeHandlerSpec =
   Spec.describe "on url change"
   [ scenario "no url change handler is set" (
-      Subject.initForApplication (testInit ())
-        |> Subject.withDocument testDocument
-        |> Subject.withUpdate testUpdate
-    )
-    |> when "the url is changed"
-      [ target << by [ id "push-url-button" ]
-      , Event.click
-      ]
-    |> it "fails" (
-      select << by [ id "no-page" ]
-        |> Markup.expectElement ( Markup.hasText "bowling" )
+      given (
+        Subject.initForApplication (testInit ())
+          |> Subject.withDocument testDocument
+          |> Subject.withUpdate testUpdate
+      )
+      |> when "the url is changed"
+        [ target << by [ id "push-url-button" ]
+        , Event.click
+        ]
+      |> it "fails" (
+          select << by [ id "no-page" ]
+            |> Markup.expectElement ( Markup.hasText "bowling" )
+        )
     )
   ]
 
@@ -65,37 +71,45 @@ changeUrlSpec : Spec Model Msg
 changeUrlSpec =
   Spec.describe "on url change"
   [ scenario "by default" (
-      testSubject
-    )
-    |> it "does not show anything fun" (
-      select << by [ id "fun-page" ]
-        |> Markup.expectAbsent
+      given testSubject
+        |> observeThat
+          [ it "does not show anything fun" (
+              select << by [ id "fun-page" ]
+                |> Markup.expectAbsent
+            )
+          ]
     )
   , scenario "use pushUrl to navigate" (
-      testSubject
-    )
-    |> when "the url is changed"
-      [ target << by [ id "push-url-button" ]
-      , Event.click
-      ]
-    |> it "updates the location" (
-      Navigation.selectLocation
-        |> Observation.expect (isEqual "http://my-test-app.com/fun/bowling")
-    )
-    |> it "shows a different page" (
-      select << by [ id "fun-page" ]
-        |> Markup.expectElement ( Markup.hasText "bowling" )
+      given (
+        testSubject
+      )
+      |> when "the url is changed"
+        [ target << by [ id "push-url-button" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "updates the location" (
+            Navigation.selectLocation
+              |> Observation.expect (isEqual "http://my-test-app.com/fun/bowling")
+          )
+        , it "shows a different page" (
+            select << by [ id "fun-page" ]
+              |> Markup.expectElement ( Markup.hasText "bowling" )
+          )
+        ]
     )
   , scenario "use replaceUrl to navigate" (
-      testSubject
-    )
-    |> when "the url is changed"
-      [ target << by [ id "replace-url-button" ]
-      , Event.click
-      ]
-    |> it "shows a different page" (
-      select << by [ id "fun-page" ]
-        |> Markup.expectElement ( Markup.hasText "swimming" )
+      given testSubject
+        |> when "the url is changed"
+          [ target << by [ id "replace-url-button" ]
+          , Event.click
+          ]
+        |> observeThat
+          [ it "shows a different page" (
+              select << by [ id "fun-page" ]
+                |> Markup.expectElement ( Markup.hasText "swimming" )
+            )
+          ]
     )
   ]
 
@@ -103,23 +117,35 @@ titleSpec : Spec Model Msg
 titleSpec =
   Spec.describe "application title"
   [ scenario "observing the original title" (
-      testSubject
-    )
-    |> it "displays the title" (
-      Markup.selectTitle
-        |> Observation.expect (isEqual "Some Boring Title")
+      given (
+        testSubject
+      )
+      |> observeThat
+        [ it "displays the title" (
+            Markup.selectTitle
+              |> Observation.expect (isEqual "Some Boring Title")
+          )
+        ]
     )
   , scenario "observing changes to the title" (
-      testSubject
-    )
-    |> when "the title is changed"
-      [ target << by [ id "update-title" ]
-      , Event.click
-      ]
-    |> it "updates the title" (
-      Markup.selectTitle
-        |> Observation.expect (isEqual "My Fun Title")
-    )
+      given (
+        testSubject
+      )
+      |> when "the title is changed"
+        [ target << by [ id "update-title" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "updates the title" (
+            Markup.selectTitle
+              |> Observation.expect (isEqual "My Fun Title")
+          )
+        , it "does something else" (
+            Markup.selectTitle
+              |> Observation.expect (isEqual "My Fun Title")
+          )
+        ]
+    ) 
   ]
 
 
@@ -127,30 +153,36 @@ clickLinkSpec : Spec Model Msg
 clickLinkSpec =
   Spec.describe "handling a url request"
   [ scenario "internal url request" (
-      testSubject
-    )
-    |> when "an internal link is clicked"
-      [ target << by [ id "internal-link" ]
-      , Event.click
-      ]
-    |> it "updates the location" (
-      Navigation.selectLocation
-        |> Observation.expect (isEqual "http://my-test-app.com/fun/running")
-    )
-    |> it "navigates as expected" (
-      select << by [ id "fun-page" ]
-        |> Markup.expectElement ( Markup.hasText "running" )
+      given testSubject
+      |> when "an internal link is clicked"
+        [ target << by [ id "internal-link" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "updates the location" (
+            Navigation.selectLocation
+              |> Observation.expect (isEqual "http://my-test-app.com/fun/running")
+          )
+        , it "navigates as expected" (
+            select << by [ id "fun-page" ]
+              |> Markup.expectElement ( Markup.hasText "running" )
+          )
+        ]
     )
   , scenario "external url request" (
-      testSubject
-    )
-    |> when "an external link is clicked"
-      [ target << by [ id "external-link" ]
-      , Event.click
-      ]
-    |> it "navigates as expected" (
-      Navigation.selectLocation
-        |> Observation.expect (isEqual "http://fun-town.org/fun")
+      given (
+        testSubject
+      )
+      |> when "an external link is clicked"
+        [ target << by [ id "external-link" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "navigates as expected" (
+            Navigation.selectLocation
+              |> Observation.expect (isEqual "http://fun-town.org/fun")
+          )
+        ]
     )
   ]
 
@@ -159,17 +191,21 @@ noRequestHandlerSpec : Spec Model Msg
 noRequestHandlerSpec =
   Spec.describe "handling a url request"
   [ scenario "no url request handler is set" (
-      Subject.initForApplication (testInit ())
-        |> Subject.withDocument testDocument
-        |> Subject.withUpdate testUpdate
-    )
-    |> when "the url is changed"
-      [ target << by [ id "internal-link" ]
-      , Event.click
-      ]
-    |> it "fails" (
-      select << by [ id "no-page" ]
-        |> Markup.expectElement ( Markup.hasText "nothing" )
+      given (
+        Subject.initForApplication (testInit ())
+          |> Subject.withDocument testDocument
+          |> Subject.withUpdate testUpdate
+      )
+      |> when "the url is changed"
+        [ target << by [ id "internal-link" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "fails" (
+            select << by [ id "no-page" ]
+              |> Markup.expectElement ( Markup.hasText "nothing" )
+          )
+        ]
     )
   ]
 

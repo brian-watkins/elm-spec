@@ -19,7 +19,8 @@ noScenariosSpec =
 multipleWhenSpec : Spec Model Msg
 multipleWhenSpec =
   Spec.describe "A Spec"
-  [ scenario "multiple when blocks" testSubject
+  [ scenario "multiple when blocks" (
+      given testSubject
       |> when "the first two subs are sent"
         [ sendMessageWith 41
         , sendMessageWith 78
@@ -32,6 +33,7 @@ multipleWhenSpec =
             |> Observation.mapSelection .counts
             |> Observation.expect (Observer.isEqual [ 39, 78, 41 ])
       )
+    )
   ]
 
 
@@ -44,7 +46,8 @@ testSubject =
 multipleScenariosSpec : Spec Model Msg
 multipleScenariosSpec =
   Spec.describe "Multiple scenarios"
-  [ scenario "the happy path" testSubject
+  [ scenario "the happy path" (
+      given testSubject
       |> when "a single message is sent"
         [ sendMessageWith 87
         ]
@@ -53,7 +56,9 @@ multipleScenariosSpec =
           |> Observation.mapSelection .counts
           |> Observation.expect (Observer.isEqual [ 87 ])
       )
-  , scenario "multiple sub messages are sent" testSubject
+    )
+  , scenario "multiple sub messages are sent" (
+      given testSubject
       |> when "multiple messages are sent"
         [ sendMessageWith 87
         , sendMessageWith 65
@@ -63,7 +68,9 @@ multipleScenariosSpec =
           |> Observation.mapSelection .counts
           |> Observation.expect (Observer.isEqual [ 65, 87 ])
       )
-  , scenario "a different message is sent" testSubject
+    )
+  , scenario "a different message is sent" (
+      given testSubject
       |> when "a single message is sent"
         [ sendMessageWith 14
         ]
@@ -72,6 +79,7 @@ multipleScenariosSpec =
           |> Observation.mapSelection .counts
           |> Observation.expect (Observer.isEqual [ 14 ])
       )
+    )
   ]
 
 

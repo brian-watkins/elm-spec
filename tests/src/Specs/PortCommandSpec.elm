@@ -14,13 +14,15 @@ witnessPortCommandFromInitSpec : Spec Model Msg
 witnessPortCommandFromInitSpec =
   Spec.describe "a worker with a port"
   [ scenario "commands sent via a port are observed" (
-      Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
-        |> Subject.withUpdate testUpdate
-        |> Port.observe "sendTestMessageOut"
-    )
-    |> it "sends the expected message" (
-      Port.expect "sendTestMessageOut" Json.string <|
-        Observer.isEqual [ "From init!" ]
+      given (
+        Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
+          |> Subject.withUpdate testUpdate
+          |> Port.observe "sendTestMessageOut"
+      )
+      |> it "sends the expected message" (
+        Port.expect "sendTestMessageOut" Json.string <|
+          Observer.isEqual [ "From init!" ]
+      )
     )
   ]
 
@@ -29,16 +31,18 @@ witnessMultiplePortCommandsFromInitSpec : Spec Model Msg
 witnessMultiplePortCommandsFromInitSpec =
   Spec.describe "a worker with a port"
   [ scenario "multiple port commands are witnessed" (
-      Subject.init
+      given (
+        Subject.init
           ( {count = 0}
           , Cmd.batch [ sendTestMessageOut "One", sendTestMessageOut "Two", sendTestMessageOut "Three" ]
           )
         |> Subject.withUpdate testUpdate
         |> Port.observe "sendTestMessageOut"
-    )
-    |> it "records all the messages sent" (
-      Port.expect "sendTestMessageOut" Json.string <|
-        Observer.isEqual [ "One", "Two", "Three" ]
+      )
+      |> it "records all the messages sent" (
+        Port.expect "sendTestMessageOut" Json.string <|
+          Observer.isEqual [ "One", "Two", "Three" ]
+      )
     )
   ]
 

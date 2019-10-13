@@ -17,23 +17,25 @@ processSpec : Spec Model Msg
 processSpec =
   Spec.describe "a program that uses Process.sleep"
   [ scenario "the program stores up sleeps and processes them when time passes" (
-      Subject.init ( { items = [] }, Cmd.none )
-        |> Subject.withUpdate testUpdate
-        |> Subject.withSubscriptions testSubscriptions
-        |> Time.fake
-    )
-    |> when "subscription messages are received"
-      [ Port.send "processSub" (Encode.string "a")
-      , Port.send "processSub" (Encode.string "b")
-      , Port.send "processSub" (Encode.string "c")
-      , Time.tick 100
-      , Time.tick 100
-      , Time.tick 100
-      ]
-    |> it "receives the delayed messages" (
-      Observation.selectModel
-        |> Observation.mapSelection .items
-        |> Observation.expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
+      given (
+        Subject.init ( { items = [] }, Cmd.none )
+          |> Subject.withUpdate testUpdate
+          |> Subject.withSubscriptions testSubscriptions
+          |> Time.fake
+      )
+      |> when "subscription messages are received"
+        [ Port.send "processSub" (Encode.string "a")
+        , Port.send "processSub" (Encode.string "b")
+        , Port.send "processSub" (Encode.string "c")
+        , Time.tick 100
+        , Time.tick 100
+        , Time.tick 100
+        ]
+      |> it "receives the delayed messages" (
+        Observation.selectModel
+          |> Observation.mapSelection .items
+          |> Observation.expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
+      )
     )
   ]
 
@@ -41,21 +43,23 @@ processOnlyUpToDelaySpec : Spec Model Msg
 processOnlyUpToDelaySpec =
   Spec.describe "a program that uses Process.sleep"
   [ scenario "not enough time passes for everything" (
-      Subject.init ( { items = [] }, Cmd.none )
-        |> Subject.withUpdate testDelayUpdate
-        |> Subject.withSubscriptions testSubscriptions
-        |> Time.fake
-    )
-    |> when "subscription messages are received"
-      [ Port.send "processSub" (Encode.string "a")
-      , Time.tick 100
-      , Port.send "processSub" (Encode.string "b")
-      , Time.tick 50
-      ]
-    |> it "receives the expected messages only" (
-      Observation.selectModel
-        |> Observation.mapSelection .items
-        |> Observation.expect (Observer.isEqual [ "Hey", "a", "Hey" ])
+      given (
+        Subject.init ( { items = [] }, Cmd.none )
+          |> Subject.withUpdate testDelayUpdate
+          |> Subject.withSubscriptions testSubscriptions
+          |> Time.fake
+      )
+      |> when "subscription messages are received"
+        [ Port.send "processSub" (Encode.string "a")
+        , Time.tick 100
+        , Port.send "processSub" (Encode.string "b")
+        , Time.tick 50
+        ]
+      |> it "receives the expected messages only" (
+        Observation.selectModel
+          |> Observation.mapSelection .items
+          |> Observation.expect (Observer.isEqual [ "Hey", "a", "Hey" ])
+      )
     )
   ]
 

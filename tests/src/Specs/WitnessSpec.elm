@@ -15,7 +15,8 @@ import Runner
 recordSpec : Spec Model Msg
 recordSpec =
   Spec.describe "witness"
-  [ scenario "the witness is called the expected number of times" testSubject
+  [ scenario "the witness is called the expected number of times" (
+      given testSubject
       |> triggerInjectedFunctionWith 88
       |> triggerInjectedFunctionWith 91
       |> triggerInjectedFunctionWith 14
@@ -28,11 +29,14 @@ recordSpec =
             ]
         )
       )
-  , scenario "the witness expectation fails" testSubject
+    )
+  , scenario "the witness expectation fails" (
+      given testSubject
       |> triggerInjectedFunctionWith 72
       |> it "fails" (
         Witness.expect "injected" Json.int (Observer.isListWithLength 3)
       )
+    )
   ]
 
 

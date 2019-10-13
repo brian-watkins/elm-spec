@@ -15,35 +15,39 @@ sendsSubscriptionSpec : Spec Model Msg
 sendsSubscriptionSpec =
   Spec.describe "a worker with subscriptions"
   [ scenario "subscriptions are registered always" (
-      Subject.init ( { count = 0, subscribe = True }, Cmd.none )
-        |> Subject.withUpdate testUpdate
-        |> Subject.withSubscriptions testSubscriptions
-    )
-    |> when "some subscription messages are sent"
-      [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
-      , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
-      ]
-    |> it "updates the model" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 78)
+      given (
+        Subject.init ( { count = 0, subscribe = True }, Cmd.none )
+          |> Subject.withUpdate testUpdate
+          |> Subject.withSubscriptions testSubscriptions
+      )
+      |> when "some subscription messages are sent"
+        [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
+        , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+        ]
+      |> it "updates the model" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 78)
+      )
     )
   , scenario "subscriptions are registered later depending on the model" (
-      Subject.init ( { count = 0, subscribe = False }, Cmd.none )
-        |> Subject.withUpdate testUpdate
-        |> Subject.withSubscriptions testVariableSubscriptions
-    )
-    |> when "the subscription is enabled"
-      [ Port.send "enableSubscription" (Encode.bool True)
-      ]
-    |> when "some subscription messages are sent"
-      [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
-      , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
-      ]
-    |> it "updates the model" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 78)
+      given (
+        Subject.init ( { count = 0, subscribe = False }, Cmd.none )
+          |> Subject.withUpdate testUpdate
+          |> Subject.withSubscriptions testVariableSubscriptions
+      )
+      |> when "the subscription is enabled"
+        [ Port.send "enableSubscription" (Encode.bool True)
+        ]
+      |> when "some subscription messages are sent"
+        [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
+        , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+        ]
+      |> it "updates the model" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 78)
+      )
     )
   ]
 

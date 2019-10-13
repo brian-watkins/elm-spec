@@ -16,17 +16,19 @@ inputSpec : Spec Model Msg
 inputSpec =
   Spec.describe "an html program"
   [ scenario "Input event" (
-      Subject.initWithModel { message = "" }
-        |> Subject.withUpdate testUpdate
-        |> Subject.withView testView
-    )
-    |> when "some text is input"
-      [ target << by [ id "my-field" ]
-      , Event.input "Here is some fun text!"
-      ]
-    |> it "renders the text on the view" (
-      select << by [ id "my-message" ]
-        |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
+      given (
+        Subject.initWithModel { message = "" }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+      )
+      |> when "some text is input"
+        [ target << by [ id "my-field" ]
+        , Event.input "Here is some fun text!"
+        ]
+      |> it "renders the text on the view" (
+        select << by [ id "my-message" ]
+          |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
+      )
     )
   ]
 

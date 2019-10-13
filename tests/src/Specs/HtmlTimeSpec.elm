@@ -16,21 +16,23 @@ intervalSpec : Spec Model Msg
 intervalSpec =
   Spec.describe "an Html program that updates the time"
   [ scenario "the expected amount of time passes" (
-      Subject.initWithModel { count = 0 }
-        |> Subject.withUpdate testUpdate
-        |> Subject.withView testView
-        |> Subject.withSubscriptions testSubscriptions
-        |> Spec.Time.fake
-    )
-    |> when "time passes"
-      [ Spec.Time.tick 1000
-      , Spec.Time.tick 1000
-      , Spec.Time.tick 1000
-      , Spec.Time.tick 1000
-      ]
-    |> it "updates the count" (
-      select << by [ id "seconds-passed" ]
-        |> Markup.expectElement (hasText "4 seconds passed")
+      given (
+        Subject.initWithModel { count = 0 }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+          |> Subject.withSubscriptions testSubscriptions
+          |> Spec.Time.fake
+      )
+      |> when "time passes"
+        [ Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        ]
+      |> it "updates the count" (
+        select << by [ id "seconds-passed" ]
+          |> Markup.expectElement (hasText "4 seconds passed")
+      )
     )
   ]
 

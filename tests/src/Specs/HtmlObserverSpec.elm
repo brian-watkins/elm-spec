@@ -14,20 +14,24 @@ hasTextSpec : Spec Model Msg
 hasTextSpec =
   Spec.describe "hasText"
   [ scenario "the hasText matcher is satisfied" (
-      Subject.initWithModel { activity = "running" }
-        |> Subject.withView testTextView
-    )
-    |> it "matches the text" (
-      select << by [ id "my-activity" ]
-        |> Markup.expectElement (Markup.hasText "My activity is: running!")
+      given (
+        Subject.initWithModel { activity = "running" }
+          |> Subject.withView testTextView
+      )
+      |> it "matches the text" (
+        select << by [ id "my-activity" ]
+          |> Markup.expectElement (Markup.hasText "My activity is: running!")
+      )
     )
   , scenario "the hasText matcher fails" (
-      Subject.initWithModel { activity = "Running" }
-       |> Subject.withView testTextView
-    )
-    |> it "renders the name based on the model" (
-      select << by [ id "my-activity" ]
-        |> Markup.expectElement (Markup.hasText "Something not present")
+      given (
+        Subject.initWithModel { activity = "Running" }
+          |> Subject.withView testTextView
+      )
+      |> it "renders the name based on the model" (
+        select << by [ id "my-activity" ]
+          |> Markup.expectElement (Markup.hasText "Something not present")
+      )
     )
   ]
 
@@ -36,12 +40,14 @@ hasTextContainedSpec : Spec Model Msg
 hasTextContainedSpec =
   Spec.describe "hasText"
   [ scenario "the hasText matcher is satisfied" (
-      Subject.initWithModel { activity = "swimming" }
-        |> Subject.withView testTextView
-    )
-    |> it "matches the text" (
-      select << by [ id "things" ]
-        |> Markup.expectElement (Markup.hasText "swimming")
+      given (
+        Subject.initWithModel { activity = "swimming" }
+          |> Subject.withView testTextView
+      )
+      |> it "matches the text" (
+        select << by [ id "things" ]
+          |> Markup.expectElement (Markup.hasText "swimming")
+      )
     )
   ]
 
@@ -62,36 +68,44 @@ hasAttributeSpec : Spec Model Msg
 hasAttributeSpec =
   Spec.describe "hasAttribute"
   [ scenario "when the element has the attribute with the right value" (
-      Subject.initWithModel { activity = "bowling" }
-        |> Subject.withView testAttributeView
-    )
-    |> it "sets the attribute value based on the model" (
-      select << by [ id "activity" ]
-        |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "bowling"))
+      given (
+        Subject.initWithModel { activity = "bowling" }
+          |> Subject.withView testAttributeView
+      )
+      |> it "sets the attribute value based on the model" (
+        select << by [ id "activity" ]
+          |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "bowling"))
+      )
     )
   , scenario "when the element does not have the expected attribute" (
-      Subject.initWithModel { activity = "bowling" }
-        |> Subject.withView testAttributeView
-    )
-    |> it "sets the attribute value based on the model" (
-      select << by [ id "activity" ]
-        |> Markup.expectElement (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
+      given (
+        Subject.initWithModel { activity = "bowling" }
+          |> Subject.withView testAttributeView
+      )
+      |> it "sets the attribute value based on the model" (
+        select << by [ id "activity" ]
+          |> Markup.expectElement (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
+      )
     )
   , scenario "when the element has the attribute with the wrong value" (
-      Subject.initWithModel { activity = "bowling" }
-        |> Subject.withView testAttributeView
-    )
-    |> it "sets the attribute value based on the model" (
-      select << by [ id "activity" ]
-        |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
+      given (
+        Subject.initWithModel { activity = "bowling" }
+          |> Subject.withView testAttributeView
+      )
+      |> it "sets the attribute value based on the model" (
+        select << by [ id "activity" ]
+          |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
+      )
     )
   , scenario "when the element has no attributes" (
-      Subject.initWithModel { activity = "bowling" }
-        |> Subject.withView testAttributeView
-    )
-    |> it "sets the attribute value based on the model" (
-      select << by [ tag "h1" ]
-        |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
+      given (
+        Subject.initWithModel { activity = "bowling" }
+          |> Subject.withView testAttributeView
+      )
+      |> it "sets the attribute value based on the model" (
+        select << by [ tag "h1" ]
+          |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
+      )
     )
   ]
 

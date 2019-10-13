@@ -1,4 +1,4 @@
-module Specs.NavigationSpec exposing (main)
+module Specs.NavigationSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject
@@ -21,28 +21,32 @@ loadUrlSpec : Spec Model Msg
 loadUrlSpec =
   Spec.describe "a program that uses Browser.Navigation.loadUrl"
   [ scenario "a new URL is loaded" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-        |> Subject.withUpdate testUpdate
-        |> Subject.withLocation testUrl
-    )
-    |> when "a new page load is triggered"
-      [ target << by [ id "load-button" ]
-      , Event.click
-      ]
-    |> it "updates the document location" (
-      Navigation.selectLocation
-        |> Observation.expect (isEqual "http://navigation-test-app.com/some-fun-place")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+          |> Subject.withLocation testUrl
+      )
+      |> when "a new page load is triggered"
+        [ target << by [ id "load-button" ]
+        , Event.click
+        ]
+      |> it "updates the document location" (
+        Navigation.selectLocation
+          |> Observation.expect (isEqual "http://navigation-test-app.com/some-fun-place")
+      )
     )
   , scenario "checking the default location" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-        |> Subject.withUpdate testUpdate
-        |> Subject.withLocation testUrl
-    )
-    |> it "shows the default location" (
-      Navigation.selectLocation
-        |> Observation.expect (isEqual "http://navigation-test-app.com/")
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+          |> Subject.withLocation testUrl
+      )
+      |> it "shows the default location" (
+        Navigation.selectLocation
+          |> Observation.expect (isEqual "http://navigation-test-app.com/")
+      )
     )
   ]
 
@@ -61,36 +65,42 @@ reloadSpec : Spec Model Msg
 reloadSpec =
   Spec.describe "a program that reloads the page"
   [ scenario "Browser.Navigation.reload is used" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-        |> Subject.withUpdate testUpdate
-    )
-    |> when "a reload is triggered"
-      [ target << by [ id "reload-button" ]
-      , Event.click
-      ]
-    |> it "records the reload" (
-      Navigation.expectReload
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+      )
+      |> when "a reload is triggered"
+        [ target << by [ id "reload-button" ]
+        , Event.click
+        ]
+      |> it "records the reload" (
+        Navigation.expectReload
+      )
     )
   , scenario "Browser.Navigation.reloadAndSkipCache is used" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-        |> Subject.withUpdate testUpdate
-    )
-    |> when "a reload is triggered"
-      [ target << by [ id "reload-skip-cache-button" ]
-      , Event.click
-      ]
-    |> it "records the reload" (
-      Navigation.expectReload
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+      )
+      |> when "a reload is triggered"
+        [ target << by [ id "reload-skip-cache-button" ]
+        , Event.click
+        ]
+      |> it "records the reload" (
+        Navigation.expectReload
+      )
     )
   , scenario "the page has not been reloaded" (
-      Subject.initWithModel ()
-        |> Subject.withView testView
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "records the reload" (
-      Navigation.expectReload
+      given (
+        Subject.initWithModel ()
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "records the reload" (
+        Navigation.expectReload
+      )
     )
   ]
 

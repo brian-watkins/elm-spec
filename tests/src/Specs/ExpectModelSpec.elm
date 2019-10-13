@@ -12,13 +12,15 @@ failingSpec : Spec Model Msg
 failingSpec =
   Spec.describe "a fragment"
   [ scenario "failing observation" (
-      Subject.initWithModel { count = 99, name = "" }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "fails" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 17)
+      given (
+        Subject.initWithModel { count = 99, name = "" }
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "fails" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 17)
+      )
     )
   ]
 
@@ -27,13 +29,15 @@ passingSpec : Spec Model Msg
 passingSpec =
   Spec.describe "a fragment"
   [ scenario "a valid observation" (
-      Subject.initWithModel { count = 99, name = "" }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "contains the expected value" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 99)
+      given (
+        Subject.initWithModel { count = 99, name = "" }
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "contains the expected value" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 99)
+      )
     )
   ]
 
@@ -42,18 +46,22 @@ multipleObservationsSpec : Spec Model Msg
 multipleObservationsSpec =
   Spec.describe "a fragment"
   [ scenario "multiple observations" (
-      Subject.initWithModel { count = 87, name = "fun-spec" }
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "contains the expected number" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 87)
-    )
-    |> it "contains the expected name" (
-      Observation.selectModel
-        |> Observation.mapSelection .name
-        |> Observation.expect (Observer.isEqual "awesome-spec")
+      given (
+        Subject.initWithModel { count = 87, name = "fun-spec" }
+          |> Subject.withUpdate testUpdate
+      )
+      |> observeThat
+        [ it "contains the expected number" (
+            Observation.selectModel
+              |> Observation.mapSelection .count
+              |> Observation.expect (Observer.isEqual 87)
+          )
+        , it "contains the expected name" (
+            Observation.selectModel
+              |> Observation.mapSelection .name
+              |> Observation.expect (Observer.isEqual "awesome-spec")
+          )
+        ]
     )
   ]
 

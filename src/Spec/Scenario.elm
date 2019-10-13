@@ -1,7 +1,11 @@
 module Spec.Scenario exposing
   ( Scenario
+  , ScenarioPlan
+  , ScenarioAction
   , scenario
+  , given
   , when
+  , observeThat
   , it
   , describing
   )
@@ -20,34 +24,67 @@ type alias Scenario model msg =
   }
 
 
-scenario : String -> SubjectGenerator model msg -> Scenario model msg
-scenario description subjectGenerator =
-  { describing = ""
-  , description = formatScenarioDescription description
-  , subjectGenerator = subjectGenerator
-  , steps = []
-  , observations = []
+type alias ScenarioAction model msg =
+  { subjectGenerator: SubjectGenerator model msg
+  , steps: List (Step model msg)
   }
 
 
-when : String -> List (Step.Context model -> Step.Command msg) -> Scenario model msg -> Scenario model msg
-when condition messageSteps scenarioData =
-  { scenarioData
+type alias ScenarioPlan model msg =
+  { subjectGenerator: SubjectGenerator model msg
+  , steps: List (Step model msg)
+  , observations: List (Observation model)
+  }
+
+
+scenario : String -> ScenarioPlan model msg -> Scenario model msg
+scenario description plan =
+  { describing = ""
+  , description = formatScenarioDescription description
+  , subjectGenerator = plan.subjectGenerator
+  , steps = plan.steps
+  , observations = plan.observations
+  }
+
+
+given : SubjectGenerator model msg -> ScenarioAction model msg
+given generator =
+  { subjectGenerator = generator
+  , steps = []
+  }
+
+
+when : String -> List (Step.Context model -> Step.Command msg) -> ScenarioAction model msg -> ScenarioAction model msg
+when condition messageSteps action =
+  { action
   | steps =
       messageSteps
         |> List.map (Step.build <| formatCondition condition)
-        |> List.append scenarioData.steps
+        |> List.append action.steps
   }
 
 
-it : String -> Expectation model -> Scenario model msg -> Scenario model msg
-it description expectation scenarioData =
-  { scenarioData
-  | observations = List.append scenarioData.observations
-      [ { description = formatObservationDescription description
-        , expectation = expectation
-        }
-      ]
+observeThat : List (ScenarioAction model msg -> ScenarioPlan model msg) -> ScenarioAction model msg -> ScenarioPlan model msg
+observeThat planGenerators action =
+  { subjectGenerator = action.subjectGenerator
+  , steps = action.steps
+  , observations =
+      List.foldl (\planGenerator observations ->
+        planGenerator action
+          |> .observations
+          |> List.append observations
+      ) [] planGenerators
+  }
+
+
+it : String -> Expectation model -> ScenarioAction model msg -> ScenarioPlan model msg
+it description expectation action =
+  { subjectGenerator = action.subjectGenerator
+  , steps = action.steps
+  , observations =
+      { description = formatObservationDescription description
+      , expectation = expectation
+      } :: []
   }
 
 

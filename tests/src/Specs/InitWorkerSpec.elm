@@ -13,13 +13,15 @@ usesModelFromInitSpec : Spec Model Msg
 usesModelFromInitSpec =
   Spec.describe "a worker"
   [ scenario "Uses Model from Init" (
-      Subject.init testInit
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "uses the given model" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 41)
+      given (
+        Subject.init testInit
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "uses the given model" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 41)
+      )
     )
   ]
 
@@ -28,13 +30,15 @@ usesCommandFromInitSpec : Spec Model Msg
 usesCommandFromInitSpec =
   Spec.describe "a worker"
   [ scenario "Uses command from Init" (
-      Subject.init (testInitWithCommand 33)
-        |> Subject.withUpdate testUpdate
-    )
-    |> it "updates the model" (
-      Observation.selectModel
-        |> Observation.mapSelection .count
-        |> Observation.expect (Observer.isEqual 33)
+      given (
+        Subject.init (testInitWithCommand 33)
+          |> Subject.withUpdate testUpdate
+      )
+      |> it "updates the model" (
+        Observation.selectModel
+          |> Observation.mapSelection .count
+          |> Observation.expect (Observer.isEqual 33)
+      )
     )
   ]
 
