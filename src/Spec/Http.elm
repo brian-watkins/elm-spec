@@ -2,6 +2,7 @@ module Spec.Http exposing
   ( HttpRequest
   , withStubs
   , expect
+  , hasHeader
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
@@ -13,6 +14,7 @@ import Spec.Http.Stub exposing (HttpResponseStub)
 import Spec.Http.Route exposing (HttpRoute)
 import Json.Encode as Encode
 import Json.Decode as Json
+import Dict exposing (Dict)
 
 
 withStubs : List HttpResponseStub -> SubjectGenerator model msg -> SubjectGenerator model msg
@@ -45,7 +47,28 @@ maybeEncodeString maybeString =
 
 type alias HttpRequest =
   { url: String
+  , headers: Dict String String
   }
+
+
+hasHeader : (String, String) -> Observer HttpRequest
+hasHeader ( expectedName, expectedValue ) request =
+  case Dict.get expectedName request.headers of
+    Just actualValue ->
+      if actualValue == expectedValue then
+        Observer.Accept
+      else
+        rejectRequestForHeader (expectedName, expectedValue) request
+    Nothing ->
+      rejectRequestForHeader (expectedName, expectedValue) request
+
+
+rejectRequestForHeader : (String, String) -> HttpRequest -> Observer.Verdict
+rejectRequestForHeader ( expectedName, expectedValue ) request =
+  Observer.Reject <| Report.batch
+    [ Report.fact "Expected request to have header" <| expectedName ++ " = " ++ expectedValue
+    , Report.fact "but it has" <| String.join "\n" <| List.map (\(k, v) -> k ++ " = " ++ v) <| Dict.toList request.headers
+    ]
 
 
 expect : HttpRoute -> Observer (List HttpRequest) -> Expectation model
@@ -76,5 +99,6 @@ fetchRequestsFor route =
 
 requestDecoder : Json.Decoder HttpRequest
 requestDecoder =
-  Json.map HttpRequest
+  Json.map2 HttpRequest
     ( Json.field "url" Json.string )
+    ( Json.field "headers" <| Json.dict Json.string )

@@ -5,6 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Observation as Observation
+import Spec.Observation.Report as Report
 import Spec.Observer exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -106,6 +107,55 @@ expectRequestSpec =
     )
   ]
 
+hasHeaderSpec : Spec Model Msg
+hasHeaderSpec =
+  Spec.describe "hasHeader"
+  [ scenario "check headers" (
+      given (
+        Subject.initWithModel defaultModel
+          |> Subject.withView testView
+          |> Subject.withUpdate testUpdate
+          |> Spec.Http.withStubs [ successStub ]
+      )
+      |> when "an http request is triggered"
+        [ target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "has the expected headers" (
+            Spec.Http.expect (get "http://fake-api.com/stuff") (
+              \requests ->
+                List.head requests
+                  |> Maybe.map (
+                    satisfying
+                      [ Spec.Http.hasHeader ("X-Fun-Header", "some-fun-value")
+                      , Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
+                      ]
+                  )
+                  |> Maybe.withDefault (Reject <| Report.note "Expected header")
+            )
+          )
+        , it "fails to find the header" (
+            Spec.Http.expect (get "http://fake-api.com/stuff") (
+              \requests ->
+                List.head requests
+                  |> Maybe.map (Spec.Http.hasHeader ("X-Missing-Header", "some-fun-value"))
+                  |> Maybe.withDefault (Reject <| Report.note "Expected header")
+            )
+          )
+        , it "fails to match the header value" (
+            Spec.Http.expect (get "http://fake-api.com/stuff") (
+              \requests ->
+                List.head requests
+                  |> Maybe.map (Spec.Http.hasHeader ("X-Awesome-Header", "some-fun-value"))
+                  |> Maybe.withDefault (Reject <| Report.note "Expected header")
+            )
+          )
+        ]
+    )
+  ]
+
+
 successStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
@@ -154,9 +204,17 @@ testUpdate msg model =
 
 requestObject : Cmd Msg
 requestObject =
-  Http.get
-    { url = "http://fake-api.com/stuff"
+  Http.request
+    { method = "GET"
+    , headers =
+      [ Http.header "X-Fun-Header" "some-fun-value"
+      , Http.header "X-Awesome-Header" "some-awesome-value"
+      ]
+    , url = "http://fake-api.com/stuff"
+    , body = Http.emptyBody
     , expect = Http.expectJson ReceivedResponse responseDecoder
+    , timeout = Nothing
+    , tracker = Nothing
     }
 
 responseDecoder : Json.Decoder ResponseObject
@@ -170,6 +228,7 @@ selectSpec name =
   case name of
     "get" -> Just getSpec
     "expectRequest" -> Just expectRequestSpec
+    "hasHeader" -> Just hasHeaderSpec
     _ -> Nothing
 
 

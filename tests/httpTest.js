@@ -24,4 +24,22 @@ describe('HTTP', () => {
       })
     })
   })
+
+  context("hasHeader", () => {
+    it("observes request headers as expected", (done) => {
+      expectBrowserSpec("HttpSpec", "hasHeader", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("Observation rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"),
+          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+        ])
+        expectRejected(observations[2], [
+          reportLine("Observation rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"),
+          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+        ])
+      })
+    })
+  })
 })

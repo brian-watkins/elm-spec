@@ -30,7 +30,7 @@ module.exports = class HttpPlugin {
 
         const requests = this.server.requests
           .filter(request => request.url === route.url && request.method === route.method)
-          .map(request => ({ url: request.url }))
+          .map(buildRequest)
 
         out({
           home: "_http",
@@ -43,5 +43,12 @@ module.exports = class HttpPlugin {
       default:
         console.log("Unknown Http message", specMessage)
     }
+  }
+}
+
+const buildRequest = (request) => {
+  return {
+    url: request.url,
+    headers: request.requestHeaders
   }
 }
