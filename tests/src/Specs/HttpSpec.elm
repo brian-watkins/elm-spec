@@ -124,15 +124,10 @@ hasHeaderSpec =
       |> observeThat
         [ it "has the expected headers" (
             Spec.Http.expect (get "http://fake-api.com/stuff") (
-              \requests ->
-                List.head requests
-                  |> Maybe.map (
-                    satisfying
-                      [ Spec.Http.hasHeader ("X-Fun-Header", "some-fun-value")
-                      , Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
-                      ]
-                  )
-                  |> Maybe.withDefault (Reject <| Report.note "Expected header")
+              isListWhereIndex 0 <| satisfying
+                [ Spec.Http.hasHeader ("X-Fun-Header", "some-fun-value")
+                , Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
+                ]
             )
           )
         , it "fails to find the header" (
@@ -140,7 +135,7 @@ hasHeaderSpec =
               \requests ->
                 List.head requests
                   |> Maybe.map (Spec.Http.hasHeader ("X-Missing-Header", "some-fun-value"))
-                  |> Maybe.withDefault (Reject <| Report.note "Expected header")
+                  |> Maybe.withDefault (Reject <| Report.note "SHOULD NOT GET HERE")
             )
           )
         , it "fails to match the header value" (
@@ -148,7 +143,7 @@ hasHeaderSpec =
               \requests ->
                 List.head requests
                   |> Maybe.map (Spec.Http.hasHeader ("X-Awesome-Header", "some-fun-value"))
-                  |> Maybe.withDefault (Reject <| Report.note "Expected header")
+                  |> Maybe.withDefault (Reject <| Report.note "SHOULD NOT GET HERE")
             )
           )
         ]

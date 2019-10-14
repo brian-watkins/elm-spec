@@ -84,6 +84,45 @@ isListSpec =
   ]
 
 
+atIndexSpec : Spec Model Msg
+atIndexSpec =
+  Spec.describe "atIndex"
+  [ scenario "the list has an element that matches" (
+      given (
+        Subject.initWithModel [ "1", "2", "3", "4" ]
+      )
+      |> it "matches" (
+        Observation.selectModel
+          |> Observation.expect (
+            Observer.isListWhereIndex 2 (Observer.isEqual "3")
+          )
+      )
+    )
+  , scenario "the list has an element that does not match" (
+      given (
+        Subject.initWithModel [ "1", "2", "3", "4" ]
+      )
+      |> it "fails to match" (
+        Observation.selectModel
+          |> Observation.expect (
+            Observer.isListWhereIndex 2 (Observer.isEqual "17")
+          )
+      )
+    )
+  , scenario "the list does not have an element at the index" (
+      given (
+        Subject.initWithModel [ "1", "2", "3", "4" ]
+      )
+      |> it "fails to match" (
+        Observation.selectModel
+          |> Observation.expect (
+            Observer.isListWhereIndex 22 (Observer.isEqual "17")
+          )
+      )
+    )
+  ]
+
+
 type alias Model =
   List String
 
@@ -96,6 +135,7 @@ selectSpec specName =
   case specName of
     "isListWithLength" -> Just hasLengthSpec
     "isList" -> Just isListSpec
+    "atIndex" -> Just atIndexSpec
     _ -> Nothing
 
 

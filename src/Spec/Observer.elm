@@ -5,6 +5,7 @@ module Spec.Observer exposing
   , isEqual
   , isListWithLength
   , isList
+  , isListWhereIndex
   , mapRejection
   )
 
@@ -108,6 +109,23 @@ matchList position observers actual =
             ]
     _ ->
       Reject <| Report.note "Something crazy happened"
+
+
+isListWhereIndex : Int -> Observer a -> Observer (List a)
+isListWhereIndex index observer list =
+  case List.head <| List.drop index list of
+    Just actual ->
+      observer actual
+        |> mapRejection (\report -> Report.batch
+            [ Report.note <| "Element at index " ++ String.fromInt index ++ " did not satisfy observer:"
+            , report
+            ]
+        )
+    Nothing ->
+      Reject <| Report.batch
+        [ Report.fact "Expected element at index" <| String.fromInt index
+        , Report.fact "but the list has length" <| String.fromInt <| List.length list
+        ]
 
 
 toString : a -> String
