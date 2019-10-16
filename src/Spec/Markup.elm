@@ -1,15 +1,17 @@
 module Spec.Markup exposing
-  ( expectElement
-  , expectElements
-  , expectAbsent
+  ( MarkupObservation
+  , observeTitle
+  , observeElement
+  , observeElements
+  , query
+  , expectToObserveNothing
   , hasText
   , hasAttribute
-  , selectTitle
   )
 
 import Spec.Observation as Observation exposing (Expectation)
 import Spec.Observer as Observer exposing (Observer)
-import Spec.Observation.Report as Report
+import Spec.Observation.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)
 import Spec.Markup.Selector as Selector exposing (Selection)
 import Spec.Step as Step
@@ -19,8 +21,8 @@ import Json.Decode as Json
 import Dict exposing (Dict)
 
 
-selectTitle : Observation.Selection model String
-selectTitle =
+observeTitle : Observation.Selection model String
+observeTitle =
   Observation.inquire selectTitleMessage
     |> Observation.mapSelection (Message.decode Json.string)
     |> Observation.mapSelection (Maybe.withDefault "FAILED")
@@ -34,50 +36,62 @@ selectTitleMessage =
   }
 
 
-expectElement : Observer HtmlElement -> (() -> Selection) -> Expectation model
-expectElement observer selectionGenerator =
-  let
-    selection = selectionGenerator ()
-  in
-    observeSelection selection <|
-      \maybeElement ->
-        case maybeElement of
+type MarkupObservation a =
+  MarkupObservation
+    (Selection -> Message, Selection -> Message -> Result Report a)
+
+
+observeElement : MarkupObservation HtmlElement
+observeElement =
+  MarkupObservation
+    ( selectHtml
+    , \selection message ->
+        case Message.decode htmlDecoder message of
           Just element ->
-            observer element
+            Ok element
           Nothing ->
-            Observer.Reject <| Report.fact "No element matches selector" (Selector.toString selection)
+            Err <| Report.fact "No element matches selector" (Selector.toString selection)
+    )
 
 
-expectAbsent : (() -> Selection) -> Expectation model
-expectAbsent selectionGenerator =
-  let
-    selection = selectionGenerator ()
-  in
-    observeSelection selection <|
-      \maybeElement ->
-        case maybeElement of
+selectNothing : MarkupObservation ()
+selectNothing =
+  MarkupObservation
+    ( selectHtml
+    , \selection message ->
+        case Message.decode htmlDecoder message of
           Just _ ->
-            Observer.Reject <| Report.batch
+            Err <| Report.batch
               [ Report.fact "Expected no elements to be selected with" <| Selector.toString selection
               , Report.note "but one or more elements were selected"
               ]
           Nothing ->
-            Observer.Accept
+            Ok ()
+    )
 
 
-observeSelection : Selection -> Observer (Maybe HtmlElement) -> Expectation model
-observeSelection selection observer =
-  Observation.inquire (selectHtml selection)
-      |> Observation.mapSelection (Message.decode htmlDecoder)
-      |> Observation.expect observer
+observeElements : MarkupObservation (List HtmlElement)
+observeElements =
+  MarkupObservation
+    ( selectAllHtml
+    , \selection message ->
+        Message.decode (Json.list htmlDecoder) message
+          |> Maybe.withDefault []
+          |> Ok
+    )
 
 
-expectElements : Observer (List HtmlElement) -> (() -> Selection) -> Expectation model
-expectElements observer selectionGenerator =
-  Observation.inquire (selectAllHtml <| selectionGenerator ())
-    |> Observation.mapSelection (Message.decode <| Json.list htmlDecoder)
-    |> Observation.mapSelection (Maybe.withDefault [])
-    |> Observation.expect observer
+expectToObserveNothing : (MarkupObservation () -> Observation.Selection model ()) -> Expectation model
+expectToObserveNothing actualGenerator =
+  let
+    actual = actualGenerator selectNothing
+  in
+    Observation.expect (Observer.isEqual ()) actual
+
+
+query : (Selection, MarkupObservation a) -> Observation.Selection model a
+query (selection, MarkupObservation (messageGenerator, handler)) =
+  Observation.inquireForResult (messageGenerator selection) <| handler selection
 
 
 selectHtml : Selection -> Message

@@ -5,6 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
+import Spec.Observation as Observation
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Runner
@@ -19,8 +20,9 @@ hasTextSpec =
           |> Subject.withView testTextView
       )
       |> it "matches the text" (
-        select << by [ id "my-activity" ]
-          |> Markup.expectElement (Markup.hasText "My activity is: running!")
+        Markup.observeElement
+          |> Markup.query << by [ id "my-activity" ]
+          |> Observation.expect (Markup.hasText "My activity is: running!")
       )
     )
   , scenario "the hasText matcher fails" (
@@ -29,8 +31,9 @@ hasTextSpec =
           |> Subject.withView testTextView
       )
       |> it "renders the name based on the model" (
-        select << by [ id "my-activity" ]
-          |> Markup.expectElement (Markup.hasText "Something not present")
+        Markup.observeElement
+          |> Markup.query << by [ id "my-activity" ]
+          |> Observation.expect (Markup.hasText "Something not present")
       )
     )
   ]
@@ -45,8 +48,9 @@ hasTextContainedSpec =
           |> Subject.withView testTextView
       )
       |> it "matches the text" (
-        select << by [ id "things" ]
-          |> Markup.expectElement (Markup.hasText "swimming")
+        Markup.observeElement
+          |> Markup.query << by [ id "things" ]
+          |> Observation.expect (Markup.hasText "swimming")
       )
     )
   ]
@@ -73,8 +77,9 @@ hasAttributeSpec =
           |> Subject.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
-        select << by [ id "activity" ]
-          |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "bowling"))
+        Markup.observeElement
+          |> Markup.query << by [ id "activity" ]
+          |> Observation.expect (Markup.hasAttribute ("data-fun-activity", "bowling"))
       )
     )
   , scenario "when the element does not have the expected attribute" (
@@ -83,8 +88,9 @@ hasAttributeSpec =
           |> Subject.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
-        select << by [ id "activity" ]
-          |> Markup.expectElement (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
+        Markup.observeElement
+          |> Markup.query << by [ id "activity" ]
+          |> Observation.expect (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
       )
     )
   , scenario "when the element has the attribute with the wrong value" (
@@ -93,8 +99,9 @@ hasAttributeSpec =
           |> Subject.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
-        select << by [ id "activity" ]
-          |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
+        Markup.observeElement
+          |> Markup.query << by [ id "activity" ]
+          |> Observation.expect (Markup.hasAttribute ("data-fun-activity", "running"))
       )
     )
   , scenario "when the element has no attributes" (
@@ -103,8 +110,9 @@ hasAttributeSpec =
           |> Subject.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
-        select << by [ tag "h1" ]
-          |> Markup.expectElement (Markup.hasAttribute ("data-fun-activity", "running"))
+        Markup.observeElement
+          |> Markup.query << by [ tag "h1" ]
+          |> Observation.expect (Markup.hasAttribute ("data-fun-activity", "running"))
       )
     )
   ]

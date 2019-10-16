@@ -5,6 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup exposing (hasText)
 import Spec.Markup.Selector exposing (..)
+import Spec.Observation as Observation
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -30,8 +31,9 @@ intervalSpec =
         , Spec.Time.tick 1000
         ]
       |> it "updates the count" (
-        select << by [ id "seconds-passed" ]
-          |> Markup.expectElement (hasText "4 seconds passed")
+        Markup.observeElement
+          |> Markup.query << by [ id "seconds-passed" ]
+          |> Observation.expect (hasText "4 seconds passed")
       )
     )
   ]

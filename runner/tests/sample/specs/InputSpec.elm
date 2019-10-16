@@ -6,6 +6,7 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Observation as Observation
 import Runner
 import Main as App
 
@@ -23,8 +24,9 @@ inputSpec =
         , Event.input "Here is some fun text!"
         ]
       |> it "renders the text on the view" (
-        select << by [ id "input-results" ]
-          |> Markup.expectElement (Markup.hasText "You typed: Here is some fun text!")
+        Markup.observeElement
+          |> Markup.query << by [ id "input-results" ]
+          |> Observation.expect (Markup.hasText "You typed: Here is some fun text!")
       )
     )
   ]
@@ -45,12 +47,14 @@ differentInputSpec =
         ]
       |> observeThat
         [ it "renders the text on the view" (
-            select << by [ id "input-results" ]
-              |> Markup.expectElement (Markup.hasText "You typed: Here is some awesome text!")
+            Markup.observeElement
+              |> Markup.query << by [ id "input-results" ]
+              |> Observation.expect (Markup.hasText "You typed: Here is some awesome text!")
           )
         , it "does not record any clicks" (
-            select << by [ id "count-results" ]
-              |> Markup.expectElement (Markup.hasText "You clicked the button 0 time(s)")
+            Markup.observeElement
+              |> Markup.query << by [ id "count-results" ]
+              |> Observation.expect (Markup.hasText "You clicked the button 0 time(s)")
           )
         ]
     )

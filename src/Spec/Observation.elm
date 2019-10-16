@@ -4,6 +4,7 @@ module Spec.Observation exposing
   , selectModel
   , selectEffects
   , inquire
+  , inquireForResult
   , mapSelection
   , Expectation
   , expect
@@ -12,6 +13,7 @@ module Spec.Observation exposing
 import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer, Verdict)
 import Spec.Observation.Expectation as Expectation
+import Spec.Observation.Report exposing (Report)
 
 
 type alias Observation model =
@@ -23,7 +25,7 @@ type alias Observation model =
 type Selection model a
   = Model (model -> a)
   | Effects (List Message -> a)
-  | Inquiry Message (Message -> a)
+  | Inquiry Message (Message -> Result Report a)
 
 
 type alias Expectation model =
@@ -42,7 +44,12 @@ selectEffects =
 
 inquire : Message -> Selection model Message
 inquire message =
-  Inquiry message identity
+  Inquiry message Ok
+
+
+inquireForResult : Message -> (Message -> Result Report a) -> Selection model a
+inquireForResult message resultMapper =
+  Inquiry message resultMapper
 
 
 mapSelection : (a -> b) -> Selection model a -> Selection model b
@@ -53,7 +60,7 @@ mapSelection mapper selection =
     Effects generator ->
       Effects (generator >> mapper)
     Inquiry message generator ->
-      Inquiry message (generator >> mapper)
+      Inquiry message (\m -> generator m |> Result.map mapper) -- generator >> mapper)
 
 
 expect : Observer a -> Selection model a -> Expectation model
@@ -72,6 +79,10 @@ expect observer selection =
         Inquiry message mapper ->
           Expectation.Inquire message <|
             \inquiryResult ->
-              mapper inquiryResult
-                |> observer
-                |> Expectation.Complete
+              case mapper inquiryResult of
+                Ok value ->
+                  observer value
+                    |> Expectation.Complete
+                Err report ->
+                  Observer.Reject report
+                    |> Expectation.Complete

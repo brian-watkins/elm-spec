@@ -6,6 +6,7 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Observation as Observation
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -26,8 +27,9 @@ inputSpec =
         , Event.input "Here is some fun text!"
         ]
       |> it "renders the text on the view" (
-        select << by [ id "my-message" ]
-          |> Markup.expectElement (Markup.hasText "You wrote: Here is some fun text!")
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> Observation.expect (Markup.hasText "You wrote: Here is some fun text!")
       )
     )
   ]

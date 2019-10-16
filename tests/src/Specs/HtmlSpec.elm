@@ -27,12 +27,14 @@ htmlSpecSingle =
       )
       |> observeThat
         [ it "renders the name based on the model" (
-            select << by [ id "my-name" ]
-              |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
+            Markup.observeElement
+              |> Markup.query << by [ id "my-name" ]
+              |> Observation.expect (Markup.hasText "Hello, Cool Dude!")
           )
         , it "does not find an element that is not there" (
-            select << by [ id "something-not-present" ]
-              |> Markup.expectElement (Markup.hasText "I should not be present!")
+            Markup.observeElement
+              |> Markup.query << by [ id "something-not-present" ]
+              |> Observation.expect (Markup.hasText "Hello, Cool Dude!")
           )
         ]
     )
@@ -49,12 +51,14 @@ htmlSpecMultiple =
       )
       |> observeThat
         [ it "renders the name based on the model" (
-            select << by [ id "my-name" ]
-              |> Markup.expectElement (Markup.hasText "Hello, Cool Dude!")
+            Markup.observeElement
+              |> Markup.query << by [ id "my-name" ]
+              |> Observation.expect (Markup.hasText "Hello, Cool Dude!")
           )
         , it "renders the count based on the model" (
-            select << by [ id "my-count" ]
-              |> Markup.expectElement (Markup.hasText "The count is 78!")
+            Markup.observeElement
+              |> Markup.query << by [ id "my-count" ]
+              |> Observation.expect (Markup.hasText "The count is 78!")
           )
         ]
     )
@@ -65,12 +69,14 @@ htmlSpecMultiple =
       )
       |> observeThat
         [ it "finds a third thing" (
-            select << by [ id "my-label" ]
-              |> Markup.expectElement (Markup.hasText "Here is a label")
+            Markup.observeElement
+              |> Markup.query << by [ id "my-label" ]
+              |> Observation.expect (Markup.hasText "Here is a label")
           )
         , it "finds a fourth thing" (
-            select << by [ id "my-label-2" ]
-              |> Markup.expectElement (Markup.hasText "Another label")
+            Markup.observeElement
+              |> Markup.query << by [ id "my-label-2" ]
+              |> Observation.expect (Markup.hasText "Another label")
           )
         ]
     )
@@ -97,8 +103,9 @@ clickSpec =
         , Event.click
         ]
       |> it "renders the count" (
-        select << by [ id "my-count" ]
-          |> Markup.expectElement (Markup.hasText "The count is 30!")
+        Markup.observeElement
+          |> Markup.query << by [ id "my-count" ]
+          |> Observation.expect (Markup.hasText "The count is 30!")
       )
     )
   ]
@@ -124,8 +131,9 @@ targetUnknownSpec =
         , Event.click
         ]
       |> it "renders the count" (
-        select << by [ id "my-count" ]
-          |> Markup.expectElement (Markup.hasText "The count is 30!")
+        Markup.observeElement
+          |> Markup.query << by [ id "my-count" ]
+          |> Observation.expect (Markup.hasText "The count is 30!")
       )
     )
   , scenario "Should not run since the spec has been aborted" (
@@ -135,8 +143,9 @@ targetUnknownSpec =
           |> Subject.withView testView
       )
       |> it "should not do this since we've failed already" (
-          select << by [ id "my-name" ]
-            |> Markup.expectElement (Markup.hasText "Hello, Somebody!")
+          Markup.observeElement
+            |> Markup.query << by [ id "my-name" ]
+            |> Observation.expect (Markup.hasText "Hello, Somebody!")
       )
     )
   ]
@@ -158,8 +167,9 @@ subSpec =
         ]
       |> observeThat
         [ it "renders the count" (
-            select << by [ id "my-count" ]
-              |> Markup.expectElement (Markup.hasText "The count is 40!")
+            Markup.observeElement
+              |> Markup.query << by [ id "my-count" ]
+              |> Observation.expect (Markup.hasText "The count is 40!")
           )
         , it "updates the model" (
             Observation.selectModel
@@ -182,14 +192,14 @@ manyElementsSpec =
       )
       |> observeThat
         [ it "selects many elements" (
-            select << by [ tag "div" ]
-              |> Markup.expectElements (\elements ->
-                Observer.isEqual 6 (List.length elements)
-              )
+            Markup.observeElements
+              |> Markup.query << by [ tag "div" ]
+              |> Observation.expect (Observer.isListWithLength 6)
           )
         , it "fetchs text for the elements" (
-            select << by [ tag "div" ]
-              |> Markup.expectElements (\elements ->
+            Markup.observeElements
+              |> Markup.query << by [ tag "div" ]
+              |> Observation.expect (\elements ->
                 List.drop 2 elements
                   |> List.head
                   |> Maybe.map (Markup.hasText "The count is 7!")
@@ -210,8 +220,8 @@ expectAbsentSpec =
           |> Subject.withView testView
       )
       |> it "selects nothing" (
-        select << by [ id "nothing" ]
-          |> Markup.expectAbsent
+        Markup.query << by [ id "nothing" ]
+          |> Markup.expectToObserveNothing
       )
     )
   , scenario "something is selected" (
@@ -220,8 +230,8 @@ expectAbsentSpec =
           |> Subject.withView testView
       )
       |> it "selects nothing" (
-        select << by [ id "my-name" ]
-          |> Markup.expectAbsent
+        Markup.query << by [ id "my-name" ]
+          |> Markup.expectToObserveNothing
       )
     )
   ]

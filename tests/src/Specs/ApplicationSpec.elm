@@ -38,8 +38,9 @@ applyGivenUrlSpec =
               |> Observation.expect (isEqual "http://my-test-app.com/fun/reading")
           )
         , it "renders the view based on the url" (
-            select << by [ id "fun-page" ]
-              |> Markup.expectElement ( Markup.hasText "reading" )
+            Markup.observeElement
+              |> Markup.query << by [ id "fun-page" ]
+              |> Observation.expect ( Markup.hasText "reading" )
           )
         ]
     )
@@ -60,8 +61,9 @@ noChangeHandlerSpec =
         , Event.click
         ]
       |> it "fails" (
-          select << by [ id "no-page" ]
-            |> Markup.expectElement ( Markup.hasText "bowling" )
+          Markup.observeElement
+            |> Markup.query << by [ id "no-page" ]
+            |> Observation.expect ( Markup.hasText "bowling" )
         )
     )
   ]
@@ -74,8 +76,8 @@ changeUrlSpec =
       given testSubject
         |> observeThat
           [ it "does not show anything fun" (
-              select << by [ id "fun-page" ]
-                |> Markup.expectAbsent
+              Markup.query << by [ id "fun-page" ]
+                |> Markup.expectToObserveNothing
             )
           ]
     )
@@ -93,8 +95,9 @@ changeUrlSpec =
               |> Observation.expect (isEqual "http://my-test-app.com/fun/bowling")
           )
         , it "shows a different page" (
-            select << by [ id "fun-page" ]
-              |> Markup.expectElement ( Markup.hasText "bowling" )
+            Markup.observeElement
+              |> Markup.query << by [ id "fun-page" ]
+              |> Observation.expect ( Markup.hasText "bowling" )
           )
         ]
     )
@@ -106,8 +109,9 @@ changeUrlSpec =
           ]
         |> observeThat
           [ it "shows a different page" (
-              select << by [ id "fun-page" ]
-                |> Markup.expectElement ( Markup.hasText "swimming" )
+              Markup.observeElement
+                |> Markup.query << by [ id "fun-page" ]
+                |> Observation.expect ( Markup.hasText "swimming" )
             )
           ]
     )
@@ -122,7 +126,7 @@ titleSpec =
       )
       |> observeThat
         [ it "displays the title" (
-            Markup.selectTitle
+            Markup.observeTitle
               |> Observation.expect (isEqual "Some Boring Title")
           )
         ]
@@ -137,11 +141,7 @@ titleSpec =
         ]
       |> observeThat
         [ it "updates the title" (
-            Markup.selectTitle
-              |> Observation.expect (isEqual "My Fun Title")
-          )
-        , it "does something else" (
-            Markup.selectTitle
+            Markup.observeTitle
               |> Observation.expect (isEqual "My Fun Title")
           )
         ]
@@ -164,8 +164,9 @@ clickLinkSpec =
               |> Observation.expect (isEqual "http://my-test-app.com/fun/running")
           )
         , it "navigates as expected" (
-            select << by [ id "fun-page" ]
-              |> Markup.expectElement ( Markup.hasText "running" )
+            Markup.observeElement
+              |> Markup.query << by [ id "fun-page" ]
+              |> Observation.expect ( Markup.hasText "running" )
           )
         ]
     )
@@ -202,8 +203,9 @@ noRequestHandlerSpec =
         ]
       |> observeThat
         [ it "fails" (
-            select << by [ id "no-page" ]
-              |> Markup.expectElement ( Markup.hasText "nothing" )
+            Markup.observeElement
+              |> Markup.query << by [ id "no-page" ]
+              |> Observation.expect ( Markup.hasText "nothing" )
           )
         ]
     )

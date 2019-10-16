@@ -6,6 +6,7 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Observation as Observation
 import Runner
 import Main as App
 
@@ -27,8 +28,9 @@ clickSpec =
         , Event.click
         ]
       |> it "renders the count" (
-        select << by [ id "count-results" ]
-          |> Markup.expectElement (Markup.hasText "You clicked the button 3 time(s)")
+        Markup.observeElement
+          |> Markup.query << by [ id "count-results" ]
+          |> Observation.expect (Markup.hasText "You clicked the button 3 time(s)")
       )
     )
   ]
