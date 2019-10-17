@@ -2,6 +2,7 @@ module Spec.Scenario exposing
   ( Scenario
   , ScenarioPlan
   , ScenarioAction
+  , Observation
   , scenario
   , given
   , when
@@ -13,7 +14,7 @@ module Spec.Scenario exposing
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step exposing (Step)
-import Spec.Observation exposing (Observation, Expectation)
+import Spec.Observation exposing (Expectation)
 
 
 type alias Scenario model msg =
@@ -36,6 +37,12 @@ type alias ScenarioPlan model msg =
   { subjectGenerator: SubjectGenerator model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)
+  }
+
+
+type alias Observation model =
+  { description: String
+  , expectation: Expectation model
   }
 
 

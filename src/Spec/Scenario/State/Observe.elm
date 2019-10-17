@@ -5,13 +5,12 @@ module Spec.Scenario.State.Observe exposing
   , update
   )
 
-import Spec.Scenario exposing (Scenario)
+import Spec.Scenario exposing (Scenario, Observation)
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Observation.Expectation as Expectation exposing (Judgment(..))
 import Spec.Observation.Message as Message
-import Spec.Observation exposing (Observation)
 import Spec.Scenario.State.Exercise as Exercise
 import Html exposing (Html)
 import Browser exposing (Document)

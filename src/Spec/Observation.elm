@@ -1,6 +1,5 @@
 module Spec.Observation exposing
-  ( Observation
-  , Selection
+  ( Selection
   , selectModel
   , selectEffects
   , inquire
@@ -14,12 +13,6 @@ import Spec.Message as Message exposing (Message)
 import Spec.Observer as Observer exposing (Observer, Verdict)
 import Spec.Observation.Expectation as Expectation
 import Spec.Observation.Report exposing (Report)
-
-
-type alias Observation model =
-  { description: String
-  , expectation: Expectation model
-  }
 
 
 type Selection model a
