@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Runner
 import Task
 
@@ -18,7 +18,7 @@ usesModelFromInitSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "uses the given model" (
-        Observation.selectModel .count
+        Observer.observeModel .count
           |> expect (Claim.isEqual 41)
       )
     )
@@ -34,7 +34,7 @@ usesCommandFromInitSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "updates the model" (
-        Observation.selectModel .count
+        Observer.observeModel .count
           |> expect (Claim.isEqual 33)
       )
     )

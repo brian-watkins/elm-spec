@@ -1,7 +1,7 @@
 module Specs.ObserverSpec exposing (..)
 
 import Spec exposing (Spec)
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
@@ -16,7 +16,7 @@ satisfyingSpec =
         Subject.initWithModel { name = "Cool Dude", sport = "bowling", age = 19 }
       )
       |> it "checks all the attributes of the model" (
-        Observation.selectModel identity
+        Observer.observeModel identity
           |> expect (
               Claim.satisfying
                 [ \model -> Claim.isEqual "Cool Dude" model.name
@@ -31,7 +31,7 @@ satisfyingSpec =
         Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19 }
       )
       |> it "checks all the attributes of the model" (
-        Observation.selectModel identity
+        Observer.observeModel identity
           |> expect (
               Claim.satisfying
                 [ \model -> Claim.isEqual "Cool Dude" model.name
@@ -46,7 +46,7 @@ satisfyingSpec =
         Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19 }
       )
       |> it "checks all the attributes of the model" (
-        Observation.selectModel identity
+        Observer.observeModel identity
           |> expect (
               Claim.satisfying
                 [ \model -> Claim.isEqual "Cool Dude" model.name

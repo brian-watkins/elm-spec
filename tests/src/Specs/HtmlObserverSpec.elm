@@ -5,7 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Runner

@@ -5,7 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Claim as Claim
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -57,7 +57,7 @@ processBatchedTerminatingAndNoCallbackCommands =
                   |> Claim.isEqual 21
           )
         , it "it ends up with the right tally" (
-            Observation.selectModel .num
+            Observer.observeModel .num
               |> expect (Claim.isEqual 35)
           )
         ]

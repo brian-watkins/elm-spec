@@ -12,7 +12,7 @@ describe("witness", () => {
         expectAccepted(observations[0])
 
         expectRejected(observations[1], [
-          reportLine("Observation rejected for witness", "injected"),
+          reportLine("Claim rejected for witness", "injected"),
           reportLine("Expected list to have length", "3"),
           reportLine("but it has length", "1")
         ])

@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Port as Port
@@ -172,7 +172,7 @@ subSpec =
               |> expect (Markup.hasText "The count is 40!")
           )
         , it "updates the model" (
-            Observation.selectModel .count
+            Observer.observeModel .count
               |> expect (Claim.isEqual 40)
           )
         ]

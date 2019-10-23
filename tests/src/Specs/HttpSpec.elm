@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Observation.Report as Report
 import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
@@ -35,7 +35,7 @@ getSpec =
         , Event.click
         ]
       |> it "receives a stubbed response" (
-        Observation.selectModel .response
+        Observer.observeModel .response
           |> expect (
             isEqual <|
               Just 
@@ -57,7 +57,7 @@ getSpec =
         , Event.click
         ]
       |> it "receives a stubbed response" (
-        Observation.selectModel .error
+        Observer.observeModel .error
           |> expect (
             isEqual <|
               Just <| Http.BadStatus 401

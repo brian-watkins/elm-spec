@@ -5,7 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Claim as Claim
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Runner
 import Task
 import Json.Encode as Encode
@@ -25,7 +25,7 @@ sendsSubscriptionSpec =
         , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
         ]
       |> it "updates the model" (
-        Observation.selectModel .count
+        Observer.observeModel .count
           |> expect (Claim.isEqual 78)
       )
     )
@@ -43,7 +43,7 @@ sendsSubscriptionSpec =
         , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
         ]
       |> it "updates the model" (
-        Observation.selectModel .count
+        Observer.observeModel .count
           |> expect (Claim.isEqual 78)
       )
     )

@@ -7,7 +7,7 @@ module Spec.Http exposing
 
 import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Subject as Subject exposing (SubjectGenerator)
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report
 import Spec.Message as Message exposing (Message)
@@ -74,7 +74,7 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
 
 expect : HttpRoute -> Claim (List HttpRequest) -> Expectation model
 expect route claim =
-  Observation.inquire (fetchRequestsFor route) (\message ->
+  Observer.inquire (fetchRequestsFor route) (\message ->
       Message.decode (Json.list requestDecoder) message
         |> Maybe.withDefault []
     )
@@ -82,7 +82,7 @@ expect route claim =
       claim requests
         |> Claim.mapRejection (
           Report.append <|
-            Report.fact  "Observation rejected for route" <| route.method ++ " " ++ route.url
+            Report.fact  "Claim rejected for route" <| route.method ++ " " ++ route.url
         )
     )
 

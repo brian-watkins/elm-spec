@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Command as Command
 import Runner
 import Task
@@ -24,7 +24,7 @@ sendMessageToUpdateSpec =
         , Command.send <| Command.fake <| ReceivedNumber 21
         ]
       |> it "behaves as expected" (
-        Observation.selectModel .numbers
+        Observer.observeModel .numbers
           |> expect (Claim.isEqual [ 21, 4, 8 ])
       )
     )
@@ -39,7 +39,7 @@ sendMessageToUpdateSpec =
         , Command.send <| Command.fake <| ReceivedNumber 21
         ]
       |> it "behaves as expected" (
-        Observation.selectModel .numbers
+        Observer.observeModel .numbers
           |> expect (Claim.isEqual [ 21, 8 ])
       )
     )

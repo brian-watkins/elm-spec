@@ -1,7 +1,7 @@
 module Specs.ExpectModelSpec exposing (..)
 
 import Spec exposing (Spec(..))
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
@@ -17,7 +17,7 @@ failingSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "fails" (
-        Observation.selectModel .count
+        Observer.observeModel .count
           |> expect (Claim.isEqual 17)
       )
     )
@@ -33,7 +33,7 @@ passingSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "contains the expected value" (
-        Observation.selectModel .count
+        Observer.observeModel .count
           |> expect (Claim.isEqual 99)
       )
     )
@@ -50,11 +50,11 @@ multipleObservationsSpec =
       )
       |> observeThat
         [ it "contains the expected number" (
-            Observation.selectModel .count
+            Observer.observeModel .count
               |> expect (Claim.isEqual 87)
           )
         , it "contains the expected name" (
-            Observation.selectModel .name
+            Observer.observeModel .name
               |> expect (Claim.isEqual "awesome-spec")
           )
         ]

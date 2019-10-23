@@ -1,7 +1,7 @@
-module Spec.Observation exposing
-  ( Selection
-  , selectModel
-  , selectEffects
+module Spec.Observer exposing
+  ( Observer
+  , observeModel
+  , observeEffects
   , inquire
   , inquireForResult
   )
@@ -12,33 +12,33 @@ import Spec.Observation.Expectation as Expectation
 import Spec.Observation.Report exposing (Report)
 
 
-type alias Selection model a =
+type alias Observer model a =
   Claim a -> Expectation.Expectation model
 
 
-selectModel : (model -> a) -> Selection model a
-selectModel mapper observer =
+observeModel : (model -> a) -> Observer model a
+observeModel mapper observer =
   Expectation.Expectation <| \context ->
     mapper context.model
       |> observer
       |> Expectation.Complete
 
 
-selectEffects : (List Message -> a) -> Selection model a
-selectEffects mapper observer =
+observeEffects : (List Message -> a) -> Observer model a
+observeEffects mapper observer =
   Expectation.Expectation <| \context ->
     mapper context.effects
       |> observer
       |> Expectation.Complete
 
 
-inquire : Message -> (Message -> a) -> Selection model a
+inquire : Message -> (Message -> a) -> Observer model a
 inquire message mapper =
   inquireForResult message <| \response ->
     Ok <| mapper response
 
 
-inquireForResult : Message -> (Message -> Result Report a) -> Selection model a
+inquireForResult : Message -> (Message -> Result Report a) -> Observer model a
 inquireForResult message resultMapper observer =
   Expectation.Expectation <| \context ->
     Expectation.Inquire message <|

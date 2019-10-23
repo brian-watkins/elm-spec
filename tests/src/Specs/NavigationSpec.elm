@@ -5,7 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Navigation as Navigation
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -33,7 +33,7 @@ loadUrlSpec =
         , Event.click
         ]
       |> it "updates the document location" (
-        Navigation.selectLocation
+        Navigation.observeLocation
           |> expect (isEqual "http://navigation-test-app.com/some-fun-place")
       )
     )
@@ -45,7 +45,7 @@ loadUrlSpec =
           |> Subject.withLocation testUrl
       )
       |> it "shows the default location" (
-        Navigation.selectLocation
+        Navigation.observeLocation
           |> expect (isEqual "http://navigation-test-app.com/")
       )
     )
@@ -121,7 +121,7 @@ batchLoadSpec =
         , Event.click
         ]
       |> it "changes the location" (
-        Navigation.selectLocation
+        Navigation.observeLocation
           |> expect (isEqual "http://navigation-test-app.com/some-awesome-place")
       )
     )

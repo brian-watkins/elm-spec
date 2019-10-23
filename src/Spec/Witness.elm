@@ -6,7 +6,7 @@ module Spec.Witness exposing
   )
 
 import Spec.Scenario as Scenario exposing (Expectation)
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
@@ -46,7 +46,7 @@ log name statement (Witness witness) =
 
 expect : String -> Json.Decoder a -> Claim (List a) -> Expectation model
 expect name decoder claim =
-  Observation.selectEffects (\effects -> 
+  Observer.observeEffects (\effects ->
       statementsForWitness name effects
         |> factsFromStatements decoder
     )
@@ -54,7 +54,7 @@ expect name decoder claim =
       claim facts
         |> Claim.mapRejection (
           Report.append <|
-            Report.fact "Observation rejected for witness" name
+            Report.fact "Claim rejected for witness" name
         )
     )
 

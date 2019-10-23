@@ -7,7 +7,7 @@ import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Markup.Navigation as Navigation
-import Spec.Observation as Observation
+import Spec.Observer as Observer
 import Spec.Claim exposing (isEqual)
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -34,7 +34,7 @@ applyGivenUrlSpec =
       )
       |> observeThat
         [ it "sets the location to the given url" (
-            Navigation.selectLocation
+            Navigation.observeLocation
               |> expect (isEqual "http://my-test-app.com/fun/reading")
           )
         , it "renders the view based on the url" (
@@ -91,7 +91,7 @@ changeUrlSpec =
         ]
       |> observeThat
         [ it "updates the location" (
-            Navigation.selectLocation
+            Navigation.observeLocation
               |> expect (isEqual "http://my-test-app.com/fun/bowling")
           )
         , it "shows a different page" (
@@ -160,7 +160,7 @@ clickLinkSpec =
         ]
       |> observeThat
         [ it "updates the location" (
-            Navigation.selectLocation
+            Navigation.observeLocation
               |> expect (isEqual "http://my-test-app.com/fun/running")
           )
         , it "navigates as expected" (
@@ -180,7 +180,7 @@ clickLinkSpec =
         ]
       |> observeThat
         [ it "navigates as expected" (
-            Navigation.selectLocation
+            Navigation.observeLocation
               |> expect (isEqual "http://fun-town.org/fun")
           )
         ]

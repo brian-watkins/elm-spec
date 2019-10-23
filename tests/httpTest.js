@@ -17,7 +17,7 @@ describe('HTTP', () => {
         expectAccepted(observations[1])
         expectAccepted(observations[2])
         expectRejected(observations[3], [
-          reportLine("Observation rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected list to have length", "17"),
           reportLine("but it has length", "1")
         ])
@@ -30,12 +30,12 @@ describe('HTTP', () => {
       expectBrowserSpec("HttpSpec", "hasHeader", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
-          reportLine("Observation rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"),
           reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
         ])
         expectRejected(observations[2], [
-          reportLine("Observation rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"),
           reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
         ])
