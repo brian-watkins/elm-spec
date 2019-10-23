@@ -6,7 +6,7 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Navigation as Navigation
 import Spec.Observation as Observation
-import Spec.Observer exposing (..)
+import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Html exposing (Html)

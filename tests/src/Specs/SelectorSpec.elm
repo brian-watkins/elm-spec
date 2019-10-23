@@ -6,7 +6,7 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observation as Observation
-import Spec.Observer as Observer exposing (isListWithLength)
+import Spec.Claim as Claim exposing (isListWithLength)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

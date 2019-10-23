@@ -11,7 +11,7 @@ module Spec.Markup exposing
 
 import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Observation as Observation
-import Spec.Observer as Observer exposing (Observer)
+import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)
 import Spec.Markup.Selector as Selector exposing (Selection)
@@ -87,7 +87,7 @@ expectToObserveNothing actualGenerator =
   let
     actual = actualGenerator selectNothing
   in
-    Scenario.expect (Observer.isEqual ()) actual
+    Scenario.expect (Claim.isEqual ()) actual
 
 
 query : (Selection, MarkupObservation a) -> Observation.Selection model a
@@ -144,36 +144,36 @@ htmlDecoder =
     )
 
 
-hasText : String -> Observer HtmlElement
+hasText : String -> Claim HtmlElement
 hasText expectedText element =
   if String.contains expectedText <| flattenTexts element.children then
-    Observer.Accept
+    Claim.Accept
   else
-    Observer.Reject <| Report.batch
+    Claim.Reject <| Report.batch
       [ Report.fact "Expected text" expectedText
       , Report.fact "but the actual text was" <| flattenTexts element.children
       ]
 
 
-hasAttribute : ( String, String ) -> Observer HtmlElement
+hasAttribute : ( String, String ) -> Claim HtmlElement
 hasAttribute ( expectedName, expectedValue ) element =
   case Dict.get expectedName element.attributes of
     Just actualValue ->
       if expectedValue == actualValue then
-        Observer.Accept
+        Claim.Accept
       else
-        Observer.Reject <| Report.batch
+        Claim.Reject <| Report.batch
           [ Report.fact "Expected element to have attribute" <| expectedName ++ " = " ++ expectedValue
           , Report.fact "but it has" <| expectedName ++ " = " ++ actualValue
           ]
     Nothing ->
       if Dict.isEmpty element.attributes then
-        Observer.Reject <| Report.batch
+        Claim.Reject <| Report.batch
           [ Report.fact "Expected element to have attribute" expectedName
           , Report.note "but it has no attributes"
           ]
       else
-        Observer.Reject <| Report.batch
+        Claim.Reject <| Report.batch
           [ Report.fact "Expected element to have attribute" expectedName
           , Report.fact "but it has only these attributes" <| attributeNames element.attributes
           ]

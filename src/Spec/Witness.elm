@@ -9,7 +9,7 @@ import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Observation as Observation
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Message as Message exposing (Message)
-import Spec.Observer as Observer exposing (Observer)
+import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -44,15 +44,15 @@ log name statement (Witness witness) =
     }
 
 
-expect : String -> Json.Decoder a -> Observer (List a) -> Expectation model
-expect name decoder observer =
+expect : String -> Json.Decoder a -> Claim (List a) -> Expectation model
+expect name decoder claim =
   Observation.selectEffects (\effects -> 
       statementsForWitness name effects
         |> factsFromStatements decoder
     )
     |> Scenario.expect (\facts ->
-      observer facts
-        |> Observer.mapRejection (
+      claim facts
+        |> Claim.mapRejection (
           Report.append <|
             Report.fact "Observation rejected for witness" name
         )

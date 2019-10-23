@@ -7,13 +7,13 @@ module Spec.Observation exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Spec.Observer as Observer exposing (Observer)
+import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Expectation as Expectation
 import Spec.Observation.Report exposing (Report)
 
 
 type alias Selection model a =
-  Observer a -> Expectation.Expectation model
+  Claim a -> Expectation.Expectation model
 
 
 selectModel : (model -> a) -> Selection model a
@@ -48,5 +48,5 @@ inquireForResult message resultMapper observer =
             observer value
               |> Expectation.Complete
           Err report ->
-            Observer.Reject report
+            Claim.Reject report
               |> Expectation.Complete

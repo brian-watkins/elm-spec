@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Observation as Observation
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Runner
 
 
@@ -18,10 +18,10 @@ satisfyingSpec =
       |> it "checks all the attributes of the model" (
         Observation.selectModel identity
           |> expect (
-              Observer.satisfying
-                [ \model -> Observer.isEqual "Cool Dude" model.name
-                , \model -> Observer.isEqual "bowling" model.sport
-                , \model -> Observer.isEqual 19 model.age
+              Claim.satisfying
+                [ \model -> Claim.isEqual "Cool Dude" model.name
+                , \model -> Claim.isEqual "bowling" model.sport
+                , \model -> Claim.isEqual 19 model.age
                 ]
             )
       )
@@ -33,10 +33,10 @@ satisfyingSpec =
       |> it "checks all the attributes of the model" (
         Observation.selectModel identity
           |> expect (
-              Observer.satisfying
-                [ \model -> Observer.isEqual "Cool Dude" model.name
-                , \model -> Observer.isEqual "bowling" model.sport
-                , \model -> Observer.isEqual 19 model.age
+              Claim.satisfying
+                [ \model -> Claim.isEqual "Cool Dude" model.name
+                , \model -> Claim.isEqual "bowling" model.sport
+                , \model -> Claim.isEqual 19 model.age
                 ]
             )
       )
@@ -48,10 +48,10 @@ satisfyingSpec =
       |> it "checks all the attributes of the model" (
         Observation.selectModel identity
           |> expect (
-              Observer.satisfying
-                [ \model -> Observer.isEqual "Cool Dude" model.name
-                , \model -> Observer.isEqual "bowling" model.sport
-                , \model -> Observer.isEqual 27 model.age
+              Claim.satisfying
+                [ \model -> Claim.isEqual "Cool Dude" model.name
+                , \model -> Claim.isEqual "bowling" model.sport
+                , \model -> Claim.isEqual 27 model.age
                 ]
             )
       )

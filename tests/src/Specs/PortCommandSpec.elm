@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Runner
 import Json.Decode as Json
 import Json.Encode as Encode
@@ -21,7 +21,7 @@ witnessPortCommandFromInitSpec =
       )
       |> it "sends the expected message" (
         Port.expect "sendTestMessageOut" Json.string <|
-          Observer.isEqual [ "From init!" ]
+          Claim.isEqual [ "From init!" ]
       )
     )
   ]
@@ -41,7 +41,7 @@ witnessMultiplePortCommandsFromInitSpec =
       )
       |> it "records all the messages sent" (
         Port.expect "sendTestMessageOut" Json.string <|
-          Observer.isEqual [ "One", "Two", "Three" ]
+          Claim.isEqual [ "One", "Two", "Three" ]
       )
     )
   ]

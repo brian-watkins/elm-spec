@@ -8,7 +8,7 @@ module Spec.Http exposing
 import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Observation as Observation
-import Spec.Observer as Observer exposing (Observer)
+import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Stub exposing (HttpResponseStub)
@@ -52,35 +52,35 @@ type alias HttpRequest =
   }
 
 
-hasHeader : (String, String) -> Observer HttpRequest
+hasHeader : (String, String) -> Claim HttpRequest
 hasHeader ( expectedName, expectedValue ) request =
   case Dict.get expectedName request.headers of
     Just actualValue ->
       if actualValue == expectedValue then
-        Observer.Accept
+        Claim.Accept
       else
         rejectRequestForHeader (expectedName, expectedValue) request
     Nothing ->
       rejectRequestForHeader (expectedName, expectedValue) request
 
 
-rejectRequestForHeader : (String, String) -> HttpRequest -> Observer.Verdict
+rejectRequestForHeader : (String, String) -> HttpRequest -> Claim.Verdict
 rejectRequestForHeader ( expectedName, expectedValue ) request =
-  Observer.Reject <| Report.batch
+  Claim.Reject <| Report.batch
     [ Report.fact "Expected request to have header" <| expectedName ++ " = " ++ expectedValue
     , Report.fact "but it has" <| String.join "\n" <| List.map (\(k, v) -> k ++ " = " ++ v) <| Dict.toList request.headers
     ]
 
 
-expect : HttpRoute -> Observer (List HttpRequest) -> Expectation model
-expect route observer =
+expect : HttpRoute -> Claim (List HttpRequest) -> Expectation model
+expect route claim =
   Observation.inquire (fetchRequestsFor route) (\message ->
       Message.decode (Json.list requestDecoder) message
         |> Maybe.withDefault []
     )
     |> Scenario.expect (\requests ->
-      observer requests
-        |> Observer.mapRejection (
+      claim requests
+        |> Claim.mapRejection (
           Report.append <|
             Report.fact  "Observation rejected for route" <| route.method ++ " " ++ route.url
         )

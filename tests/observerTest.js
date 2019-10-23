@@ -7,13 +7,13 @@ describe("observer", () => {
         expectAccepted(observations[0])
         
         expectRejected(observations[1], [
-          reportLine("Expected all observers to be satisfied, but one or more was rejected"),
+          reportLine("Expected all claims to be satisfied, but one or more were rejected"),
           reportLine("Expected", "\"running\""),
           reportLine("to equal", "\"bowling\"")
         ])
 
         expectRejected(observations[2], [
-          reportLine("Expected all observers to be satisfied, but one or more was rejected"),
+          reportLine("Expected all claims to be satisfied, but one or more were rejected"),
           reportLine("Expected", "\"running\""),
           reportLine("to equal", "\"bowling\""),
           reportLine("and"),

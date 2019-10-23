@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation as Observation
 import Runner as TestRunner
 import Json.Encode as Encode
@@ -21,7 +21,7 @@ passingSpec =
       )
       |> it "contains the expected value" (
           Observation.selectModel .count
-            |> expect (Observer.isEqual 99)
+            |> expect (Claim.isEqual 99)
       )
     )
   ]
@@ -37,7 +37,7 @@ failingSpec =
       )
       |> it "contains the expected value" (
           Observation.selectModel .count
-            |> expect (Observer.isEqual 76)
+            |> expect (Claim.isEqual 76)
       )
     )
   ]
@@ -53,7 +53,7 @@ specWithAScenario =
       )
       |> it "contains the expected value" (
           Observation.selectModel .count
-            |> expect (Observer.isEqual 108)
+            |> expect (Claim.isEqual 108)
       )
     )
   , scenario "failing" (
@@ -63,7 +63,7 @@ specWithAScenario =
       )
       |> it "contains a different value" (
           Observation.selectModel .count
-            |> expect (Observer.isEqual 94)
+            |> expect (Claim.isEqual 94)
       )
     )
   ]

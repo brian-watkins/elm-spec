@@ -15,7 +15,7 @@ import Spec.Step as Step exposing (Step)
 import Spec.Step.Command as StepCommand
 import Spec.Observation.Message as Message
 import Spec.Observation.Report as Report
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Html exposing (Html)
 import Browser exposing (Document)
 
@@ -105,7 +105,7 @@ update outlet msg model =
 
     Abort report ->
       ( model
-      , Observer.Reject report
+      , Claim.Reject report
           |> Message.observation model.conditionsApplied "A spec step failed"
           |> State.Send
       )

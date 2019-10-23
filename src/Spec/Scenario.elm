@@ -17,7 +17,7 @@ module Spec.Scenario exposing
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step exposing (Step)
 import Spec.Observation exposing (Selection)
-import Spec.Observer exposing (Observer)
+import Spec.Claim exposing (Claim)
 import Spec.Observation.Expectation as Expectation
 
 
@@ -111,9 +111,9 @@ it description expectation action =
   }
 
 
-expect : Observer a -> Selection model a -> Expectation model
-expect observer selection =
-  selection observer
+expect : Claim a -> Selection model a -> Expectation model
+expect claim selection =
+  selection claim
 
 
 describing : String -> Scenario model msg -> Scenario model msg

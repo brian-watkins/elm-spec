@@ -8,7 +8,7 @@ import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step
 import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Observation as Observation
-import Spec.Observer as Observer exposing (Observer)
+import Spec.Claim as Claim exposing (Claim)
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -41,10 +41,10 @@ send name value _ =
   Step.sendMessage <| sendSubscription name value
 
 
-expect : String -> Json.Decoder a -> Observer (List a) -> Expectation model
-expect name decoder observer =
+expect : String -> Json.Decoder a -> Claim (List a) -> Expectation model
+expect name decoder claim =
   Observation.selectEffects (\effects ->
       List.filter (Message.is "_port" "received") effects
         |> List.filterMap (Message.decode decoder)
     )
-    |> Scenario.expect observer
+    |> Scenario.expect claim

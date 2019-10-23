@@ -7,7 +7,7 @@ module Spec.Observation.Expectation exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Spec.Observer as Observer exposing (Verdict)
+import Spec.Claim as Claim exposing (Verdict)
 import Spec.Observation.Report as Report
 import Spec.Observation.Message as Message
 
@@ -39,7 +39,7 @@ type Msg model
 
 init : Model model
 init =
-  { inquiryHandler = (\_ -> Complete <| Observer.Reject <| Report.note "Unknown Inquiry" )
+  { inquiryHandler = (\_ -> Complete <| Claim.Reject <| Report.note "Unknown Inquiry" )
   }
 
 
@@ -75,6 +75,6 @@ handleInquiry message handler =
         Complete verdict ->
           verdict
         Inquire _ _ ->
-          Observer.Reject <| Report.note "Recursive Inquiry not supported!"
+          Claim.Reject <| Report.note "Recursive Inquiry not supported!"
     )
-    |> Maybe.withDefault (Observer.Reject <| Report.note "Unable to decode inquiry result!")
+    |> Maybe.withDefault (Claim.Reject <| Report.note "Unable to decode inquiry result!")

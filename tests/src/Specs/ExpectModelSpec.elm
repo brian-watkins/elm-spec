@@ -4,7 +4,7 @@ import Spec exposing (Spec(..))
 import Spec.Observation as Observation
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Runner
 
 
@@ -18,7 +18,7 @@ failingSpec =
       )
       |> it "fails" (
         Observation.selectModel .count
-          |> expect (Observer.isEqual 17)
+          |> expect (Claim.isEqual 17)
       )
     )
   ]
@@ -34,7 +34,7 @@ passingSpec =
       )
       |> it "contains the expected value" (
         Observation.selectModel .count
-          |> expect (Observer.isEqual 99)
+          |> expect (Claim.isEqual 99)
       )
     )
   ]
@@ -51,11 +51,11 @@ multipleObservationsSpec =
       |> observeThat
         [ it "contains the expected number" (
             Observation.selectModel .count
-              |> expect (Observer.isEqual 87)
+              |> expect (Claim.isEqual 87)
           )
         , it "contains the expected name" (
             Observation.selectModel .name
-              |> expect (Observer.isEqual "awesome-spec")
+              |> expect (Claim.isEqual "awesome-spec")
           )
         ]
     )

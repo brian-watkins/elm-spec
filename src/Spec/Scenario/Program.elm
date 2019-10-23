@@ -15,7 +15,7 @@ import Spec.Observation.Report as Report exposing (Report)
 import Spec.Scenario.State.Exercise as Exercise
 import Spec.Scenario.State.Configure as Configure
 import Spec.Scenario.State.Observe as Observe
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Helpers exposing (mapDocument)
 import Html exposing (Html)
 import Json.Decode as Json
@@ -143,7 +143,7 @@ update config msg state =
           ( Ready
           , Cmd.batch 
             [ config.stop
-            , Observer.Reject report
+            , Claim.Reject report
                 |> Message.observation [] "Scenario Failed"
                 |> config.send 
             ]

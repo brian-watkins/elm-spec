@@ -17,7 +17,6 @@ module Spec.Subject exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Spec.Observer as Observer
 import Html exposing (Html)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation exposing (Key)

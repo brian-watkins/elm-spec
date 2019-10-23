@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Message exposing (Message)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Port as Port
 import Spec.Witness as Witness exposing (Witness)
 import Json.Encode as Encode
@@ -22,10 +22,10 @@ recordSpec =
       |> triggerInjectedFunctionWith 14
       |> it "records statements about the injected function" (
         Witness.expect "injected" Json.int (
-          Observer.isList
-            [ Observer.isEqual 88
-            , Observer.isEqual 91
-            , Observer.isEqual 14 
+          Claim.isList
+            [ Claim.isEqual 88
+            , Claim.isEqual 91
+            , Claim.isEqual 14 
             ]
         )
       )
@@ -34,7 +34,7 @@ recordSpec =
       given testSubject
       |> triggerInjectedFunctionWith 72
       |> it "fails" (
-        Witness.expect "injected" Json.int (Observer.isListWithLength 3)
+        Witness.expect "injected" Json.int (Claim.isListWithLength 3)
       )
     )
   ]

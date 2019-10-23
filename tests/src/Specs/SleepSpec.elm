@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation as Observation
 import Spec.Time as Time
 import Runner
@@ -33,7 +33,7 @@ processSpec =
         ]
       |> it "receives the delayed messages" (
         Observation.selectModel .items
-          |> expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
+          |> expect (Claim.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
       )
     )
   ]
@@ -56,7 +56,7 @@ processOnlyUpToDelaySpec =
         ]
       |> it "receives the expected messages only" (
         Observation.selectModel .items
-          |> expect (Observer.isEqual [ "Hey", "a", "Hey" ])
+          |> expect (Claim.isEqual [ "Hey", "a", "Hey" ])
       )
     )
   ]

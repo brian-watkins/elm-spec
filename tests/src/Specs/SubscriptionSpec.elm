@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation as Observation
 import Runner
 import Task
@@ -26,7 +26,7 @@ sendsSubscriptionSpec =
         ]
       |> it "updates the model" (
         Observation.selectModel .count
-          |> expect (Observer.isEqual 78)
+          |> expect (Claim.isEqual 78)
       )
     )
   , scenario "subscriptions are registered later depending on the model" (
@@ -44,7 +44,7 @@ sendsSubscriptionSpec =
         ]
       |> it "updates the model" (
         Observation.selectModel .count
-          |> expect (Observer.isEqual 78)
+          |> expect (Claim.isEqual 78)
       )
     )
   ]

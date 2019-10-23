@@ -8,7 +8,7 @@ import Spec.Observation as Observation
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Port as Port
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -173,7 +173,7 @@ subSpec =
           )
         , it "updates the model" (
             Observation.selectModel .count
-              |> expect (Observer.isEqual 40)
+              |> expect (Claim.isEqual 40)
           )
         ]
     )
@@ -193,7 +193,7 @@ manyElementsSpec =
         [ it "selects many elements" (
             Markup.observeElements
               |> Markup.query << by [ tag "div" ]
-              |> expect (Observer.isListWithLength 6)
+              |> expect (Claim.isListWithLength 6)
           )
         , it "fetchs text for the elements" (
             Markup.observeElements
@@ -202,7 +202,7 @@ manyElementsSpec =
                 List.drop 2 elements
                   |> List.head
                   |> Maybe.map (Markup.hasText "The count is 7!")
-                  |> Maybe.withDefault (Observer.Reject <| Report.note "Element not found!")
+                  |> Maybe.withDefault (Claim.Reject <| Report.note "Element not found!")
               )
           )
         ]

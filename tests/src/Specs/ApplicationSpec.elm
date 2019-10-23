@@ -8,7 +8,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Markup.Navigation as Navigation
 import Spec.Observation as Observation
-import Spec.Observer exposing (isEqual)
+import Spec.Claim exposing (isEqual)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

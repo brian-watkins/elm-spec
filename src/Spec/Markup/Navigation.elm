@@ -5,7 +5,7 @@ module Spec.Markup.Navigation exposing
 
 import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Observation as Observation exposing (Selection)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation.Report as Report
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -32,7 +32,7 @@ expectReload =
   Observation.selectEffects (List.filter (Message.is "_navigation" "reload"))
     |> Scenario.expect (\messages ->
       if List.length messages > 0 then
-        Observer.Accept
+        Claim.Accept
       else
-        Observer.Reject <| Report.note "Expected Browser.Navigation.reload or Browser.Navigation.reloadAndSkipCache but neither command was executed"
+        Claim.Reject <| Report.note "Expected Browser.Navigation.reload or Browser.Navigation.reloadAndSkipCache but neither command was executed"
     )

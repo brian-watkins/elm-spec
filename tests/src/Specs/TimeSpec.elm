@@ -5,7 +5,7 @@ import Spec.Subject as Subject
 import Spec.Port as Port
 import Spec.Scenario exposing (..)
 import Spec.Time
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation as Observation
 import Runner
 import Task
@@ -31,7 +31,7 @@ countTimePassingSpec =
         ]
       |> it "updates the model" (
         Observation.selectModel .count
-          |> expect (Observer.isEqual 4)
+          |> expect (Claim.isEqual 4)
       )
     )
   ]

@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Observation as Observation
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Runner
 
 
@@ -17,7 +17,7 @@ hasLengthSpec =
       )
       |> it "has three items" (
         Observation.selectModel identity
-          |> expect (Observer.isListWithLength 3)
+          |> expect (Claim.isListWithLength 3)
       )
     )
   , scenario "the list does not have the expected length" (
@@ -26,7 +26,7 @@ hasLengthSpec =
       )
       |> it "has three items" (
         Observation.selectModel identity
-          |> expect (Observer.isListWithLength 3)
+          |> expect (Claim.isListWithLength 3)
       )
     )
   ]
@@ -42,11 +42,11 @@ isListSpec =
       |> it "matches" (
         Observation.selectModel identity
           |> expect (
-            Observer.isList
-              [ Observer.isEqual "1"
-              , Observer.isEqual "2"
-              , Observer.isEqual "3"
-              , Observer.isEqual "4"
+            Claim.isList
+              [ Claim.isEqual "1"
+              , Claim.isEqual "2"
+              , Claim.isEqual "3"
+              , Claim.isEqual "4"
               ]
           )
       )
@@ -58,11 +58,11 @@ isListSpec =
       |> it "matches" (
         Observation.selectModel identity
           |> expect (
-              Observer.isList
-                [ Observer.isEqual "1"
-                , Observer.isEqual "something"
-                , Observer.isEqual "not correct"
-                , Observer.isEqual "4"
+              Claim.isList
+                [ Claim.isEqual "1"
+                , Claim.isEqual "something"
+                , Claim.isEqual "not correct"
+                , Claim.isEqual "4"
                 ]
           )
       )
@@ -74,9 +74,9 @@ isListSpec =
       |> it "matches" (
         Observation.selectModel identity
           |> expect (
-            Observer.isList
-              [ Observer.isEqual "1"
-              , Observer.isEqual "3"
+            Claim.isList
+              [ Claim.isEqual "1"
+              , Claim.isEqual "3"
               ]
           )
       )
@@ -94,7 +94,7 @@ atIndexSpec =
       |> it "matches" (
         Observation.selectModel identity
           |> expect (
-            Observer.isListWhereIndex 2 (Observer.isEqual "3")
+            Claim.isListWhereIndex 2 (Claim.isEqual "3")
           )
       )
     )
@@ -105,7 +105,7 @@ atIndexSpec =
       |> it "fails to match" (
         Observation.selectModel identity
           |> expect (
-            Observer.isListWhereIndex 2 (Observer.isEqual "17")
+            Claim.isListWhereIndex 2 (Claim.isEqual "17")
           )
       )
     )
@@ -116,7 +116,7 @@ atIndexSpec =
       |> it "fails to match" (
         Observation.selectModel identity
           |> expect (
-            Observer.isListWhereIndex 22 (Observer.isEqual "17")
+            Claim.isListWhereIndex 22 (Claim.isEqual "17")
           )
       )
     )

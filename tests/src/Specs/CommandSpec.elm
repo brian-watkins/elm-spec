@@ -3,7 +3,7 @@ module Specs.CommandSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation as Observation
 import Spec.Command as Command
 import Runner
@@ -25,7 +25,7 @@ sendMessageToUpdateSpec =
         ]
       |> it "behaves as expected" (
         Observation.selectModel .numbers
-          |> expect (Observer.isEqual [ 21, 4, 8 ])
+          |> expect (Claim.isEqual [ 21, 4, 8 ])
       )
     )
   , scenario "sending Cmd.none" (
@@ -40,7 +40,7 @@ sendMessageToUpdateSpec =
         ]
       |> it "behaves as expected" (
         Observation.selectModel .numbers
-          |> expect (Observer.isEqual [ 21, 8 ])
+          |> expect (Claim.isEqual [ 21, 8 ])
       )
     )
   ]

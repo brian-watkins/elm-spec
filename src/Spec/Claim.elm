@@ -1,5 +1,5 @@
-module Spec.Observer exposing
-  ( Observer
+module Spec.Claim exposing
+  ( Claim
   , Verdict(..)
   , satisfying
   , isEqual
@@ -12,7 +12,7 @@ module Spec.Observer exposing
 import Spec.Observation.Report as Report exposing (Report)
 
 
-type alias Observer a =
+type alias Claim a =
   a -> Verdict
 
 
@@ -30,17 +30,17 @@ mapRejection mapper verdict =
       Reject <| mapper report
 
 
-satisfying : List (Observer a) -> Observer a
-satisfying observers actual =
-  List.foldl (\observer verdict ->
-    case observer actual of
+satisfying : List (Claim a) -> Claim a
+satisfying claims actual =
+  List.foldl (\claim verdict ->
+    case claim actual of
       Accept ->
         verdict
       Reject report ->
         case verdict of
           Accept ->
             Reject <| Report.batch
-              [ Report.note "Expected all observers to be satisfied, but one or more was rejected"
+              [ Report.note "Expected all claims to be satisfied, but one or more were rejected"
               , report
               ]
           Reject existingReport ->
@@ -49,10 +49,10 @@ satisfying observers actual =
               , Report.note "and"
               , report
               ]
-  ) Accept observers
+  ) Accept claims
 
 
-isEqual : a -> Observer a
+isEqual : a -> Claim a
 isEqual expected actual =
   if expected == actual then
     Accept
@@ -63,7 +63,7 @@ isEqual expected actual =
       ]
 
 
-isListWithLength : Int -> Observer (List a)
+isListWithLength : Int -> Claim (List a)
 isListWithLength expected actual =
   let
     actualLength = List.length actual
@@ -74,14 +74,14 @@ isListWithLength expected actual =
       Reject <| wrongLength expected actualLength
 
 
-isList : List (Observer a) -> Observer (List a)
-isList observers actual =
-  if List.length observers == List.length actual then
-    matchList 1 observers actual
+isList : List (Claim a) -> Claim (List a)
+isList claims actual =
+  if List.length claims == List.length actual then
+    matchList 1 claims actual
   else
     Reject <| Report.batch
       [ Report.note "List failed to match"
-      , wrongLength (List.length observers) (List.length actual)
+      , wrongLength (List.length claims) (List.length actual)
       ]
 
 
@@ -93,9 +93,9 @@ wrongLength expected actual =
   ]
 
 
-matchList : Int -> List (Observer a) -> Observer (List a)
-matchList position observers actual =
-  case ( observers, List.head actual ) of
+matchList : Int -> List (Claim a) -> Claim (List a)
+matchList position claims actual =
+  case ( claims, List.head actual ) of
     ( [], Nothing ) ->
       Accept
     ( next :: remaining, Just head ) ->
@@ -111,7 +111,7 @@ matchList position observers actual =
       Reject <| Report.note "Something crazy happened"
 
 
-isListWhereIndex : Int -> Observer a -> Observer (List a)
+isListWhereIndex : Int -> Claim a -> Claim (List a)
 isListWhereIndex index observer list =
   case List.head <| List.drop index list of
     Just actual ->

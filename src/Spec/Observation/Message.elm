@@ -7,7 +7,7 @@ module Spec.Observation.Message exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Spec.Observer exposing (Verdict(..))
+import Spec.Claim exposing (Verdict(..))
 import Spec.Observation.Report as Report
 import Json.Decode as Json
 import Json.Encode as Encode

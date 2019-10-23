@@ -4,7 +4,7 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
-import Spec.Observer as Observer
+import Spec.Claim as Claim
 import Spec.Observation as Observation
 import Runner
 import Json.Encode as Encode
@@ -30,7 +30,7 @@ multipleWhenSpec =
         ]
       |> it "updates the model with all three subscriptions" (
           Observation.selectModel .counts
-            |> expect (Observer.isEqual [ 39, 78, 41 ])
+            |> expect (Claim.isEqual [ 39, 78, 41 ])
       )
     )
   ]
@@ -52,7 +52,7 @@ multipleScenariosSpec =
         ]
       |> it "records the number" (
         Observation.selectModel .counts
-          |> expect (Observer.isEqual [ 87 ])
+          |> expect (Claim.isEqual [ 87 ])
       )
     )
   , scenario "multiple sub messages are sent" (
@@ -63,7 +63,7 @@ multipleScenariosSpec =
         ]
       |> it "records the numbers" (
         Observation.selectModel .counts
-          |> expect (Observer.isEqual [ 65, 87 ])
+          |> expect (Claim.isEqual [ 65, 87 ])
       )
     )
   , scenario "a different message is sent" (
@@ -73,7 +73,7 @@ multipleScenariosSpec =
         ]
       |> it "records the number" (
         Observation.selectModel .counts
-          |> expect (Observer.isEqual [ 14 ])
+          |> expect (Claim.isEqual [ 14 ])
       )
     )
   ]
