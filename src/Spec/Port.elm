@@ -6,7 +6,8 @@ module Spec.Port exposing
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step
-import Spec.Observation as Observation exposing (Expectation)
+import Spec.Scenario as Scenario exposing (Expectation)
+import Spec.Observation as Observation
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -42,9 +43,8 @@ send name value _ =
 
 expect : String -> Json.Decoder a -> Observer (List a) -> Expectation model
 expect name decoder observer =
-  Observation.selectEffects
-    |> Observation.mapSelection (\messages ->
-      List.filter (Message.is "_port" "received") messages
+  Observation.selectEffects (\effects ->
+      List.filter (Message.is "_port" "received") effects
         |> List.filterMap (Message.decode decoder)
     )
-    |> Observation.expect observer
+    |> Scenario.expect observer

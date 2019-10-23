@@ -22,7 +22,7 @@ hasTextSpec =
       |> it "matches the text" (
         Markup.observeElement
           |> Markup.query << by [ id "my-activity" ]
-          |> Observation.expect (Markup.hasText "My activity is: running!")
+          |> expect (Markup.hasText "My activity is: running!")
       )
     )
   , scenario "the hasText matcher fails" (
@@ -33,7 +33,7 @@ hasTextSpec =
       |> it "renders the name based on the model" (
         Markup.observeElement
           |> Markup.query << by [ id "my-activity" ]
-          |> Observation.expect (Markup.hasText "Something not present")
+          |> expect (Markup.hasText "Something not present")
       )
     )
   ]
@@ -50,7 +50,7 @@ hasTextContainedSpec =
       |> it "matches the text" (
         Markup.observeElement
           |> Markup.query << by [ id "things" ]
-          |> Observation.expect (Markup.hasText "swimming")
+          |> expect (Markup.hasText "swimming")
       )
     )
   ]
@@ -79,7 +79,7 @@ hasAttributeSpec =
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
           |> Markup.query << by [ id "activity" ]
-          |> Observation.expect (Markup.hasAttribute ("data-fun-activity", "bowling"))
+          |> expect (Markup.hasAttribute ("data-fun-activity", "bowling"))
       )
     )
   , scenario "when the element does not have the expected attribute" (
@@ -90,7 +90,7 @@ hasAttributeSpec =
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
           |> Markup.query << by [ id "activity" ]
-          |> Observation.expect (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
+          |> expect (Markup.hasAttribute ("data-unknown-attribute", "bowling"))
       )
     )
   , scenario "when the element has the attribute with the wrong value" (
@@ -101,7 +101,7 @@ hasAttributeSpec =
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
           |> Markup.query << by [ id "activity" ]
-          |> Observation.expect (Markup.hasAttribute ("data-fun-activity", "running"))
+          |> expect (Markup.hasAttribute ("data-fun-activity", "running"))
       )
     )
   , scenario "when the element has no attributes" (
@@ -112,7 +112,7 @@ hasAttributeSpec =
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1" ]
-          |> Observation.expect (Markup.hasAttribute ("data-fun-activity", "running"))
+          |> expect (Markup.hasAttribute ("data-fun-activity", "running"))
       )
     )
   ]

@@ -30,9 +30,8 @@ countTimePassingSpec =
         , Spec.Time.tick 1000
         ]
       |> it "updates the model" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 4)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 4)
       )
     )
   ]

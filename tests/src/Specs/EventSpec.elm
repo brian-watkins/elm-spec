@@ -29,7 +29,7 @@ inputSpec =
       |> it "renders the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> Observation.expect (Markup.hasText "You wrote: Here is some fun text!")
+          |> expect (Markup.hasText "You wrote: Here is some fun text!")
       )
     )
   ]

@@ -16,8 +16,8 @@ hasLengthSpec =
         Subject.initWithModel [ "a", "b", "c" ]
       )
       |> it "has three items" (
-        Observation.selectModel
-          |> Observation.expect (Observer.isListWithLength 3)
+        Observation.selectModel identity
+          |> expect (Observer.isListWithLength 3)
       )
     )
   , scenario "the list does not have the expected length" (
@@ -25,8 +25,8 @@ hasLengthSpec =
         Subject.initWithModel [ "a" ]
       )
       |> it "has three items" (
-        Observation.selectModel
-          |> Observation.expect (Observer.isListWithLength 3)
+        Observation.selectModel identity
+          |> expect (Observer.isListWithLength 3)
       )
     )
   ]
@@ -40,8 +40,8 @@ isListSpec =
         Subject.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
             Observer.isList
               [ Observer.isEqual "1"
               , Observer.isEqual "2"
@@ -56,8 +56,8 @@ isListSpec =
         Subject.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
               Observer.isList
                 [ Observer.isEqual "1"
                 , Observer.isEqual "something"
@@ -72,8 +72,8 @@ isListSpec =
         Subject.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
             Observer.isList
               [ Observer.isEqual "1"
               , Observer.isEqual "3"
@@ -92,8 +92,8 @@ atIndexSpec =
         Subject.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
             Observer.isListWhereIndex 2 (Observer.isEqual "3")
           )
       )
@@ -103,8 +103,8 @@ atIndexSpec =
         Subject.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "fails to match" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
             Observer.isListWhereIndex 2 (Observer.isEqual "17")
           )
       )
@@ -114,8 +114,8 @@ atIndexSpec =
         Subject.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "fails to match" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
             Observer.isListWhereIndex 22 (Observer.isEqual "17")
           )
       )

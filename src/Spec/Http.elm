@@ -5,8 +5,9 @@ module Spec.Http exposing
   , hasHeader
   )
 
+import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Subject as Subject exposing (SubjectGenerator)
-import Spec.Observation as Observation exposing (Expectation)
+import Spec.Observation as Observation
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report
 import Spec.Message as Message exposing (Message)
@@ -73,10 +74,11 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
 
 expect : HttpRoute -> Observer (List HttpRequest) -> Expectation model
 expect route observer =
-  Observation.inquire (fetchRequestsFor route)
-    |> Observation.mapSelection (Message.decode <| Json.list requestDecoder)
-    |> Observation.mapSelection (Maybe.withDefault [])
-    |> Observation.expect (\requests ->
+  Observation.inquire (fetchRequestsFor route) (\message ->
+      Message.decode (Json.list requestDecoder) message
+        |> Maybe.withDefault []
+    )
+    |> Scenario.expect (\requests ->
       observer requests
         |> Observer.mapRejection (
           Report.append <|

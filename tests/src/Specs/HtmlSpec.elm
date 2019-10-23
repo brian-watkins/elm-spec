@@ -29,12 +29,12 @@ htmlSpecSingle =
         [ it "renders the name based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-name" ]
-              |> Observation.expect (Markup.hasText "Hello, Cool Dude!")
+              |> expect (Markup.hasText "Hello, Cool Dude!")
           )
         , it "does not find an element that is not there" (
             Markup.observeElement
               |> Markup.query << by [ id "something-not-present" ]
-              |> Observation.expect (Markup.hasText "Hello, Cool Dude!")
+              |> expect (Markup.hasText "Hello, Cool Dude!")
           )
         ]
     )
@@ -53,12 +53,12 @@ htmlSpecMultiple =
         [ it "renders the name based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-name" ]
-              |> Observation.expect (Markup.hasText "Hello, Cool Dude!")
+              |> expect (Markup.hasText "Hello, Cool Dude!")
           )
         , it "renders the count based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-count" ]
-              |> Observation.expect (Markup.hasText "The count is 78!")
+              |> expect (Markup.hasText "The count is 78!")
           )
         ]
     )
@@ -71,12 +71,12 @@ htmlSpecMultiple =
         [ it "finds a third thing" (
             Markup.observeElement
               |> Markup.query << by [ id "my-label" ]
-              |> Observation.expect (Markup.hasText "Here is a label")
+              |> expect (Markup.hasText "Here is a label")
           )
         , it "finds a fourth thing" (
             Markup.observeElement
               |> Markup.query << by [ id "my-label-2" ]
-              |> Observation.expect (Markup.hasText "Another label")
+              |> expect (Markup.hasText "Another label")
           )
         ]
     )
@@ -105,7 +105,7 @@ clickSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "my-count" ]
-          |> Observation.expect (Markup.hasText "The count is 30!")
+          |> expect (Markup.hasText "The count is 30!")
       )
     )
   ]
@@ -133,7 +133,7 @@ targetUnknownSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "my-count" ]
-          |> Observation.expect (Markup.hasText "The count is 30!")
+          |> expect (Markup.hasText "The count is 30!")
       )
     )
   , scenario "Should not run since the spec has been aborted" (
@@ -145,7 +145,7 @@ targetUnknownSpec =
       |> it "should not do this since we've failed already" (
           Markup.observeElement
             |> Markup.query << by [ id "my-name" ]
-            |> Observation.expect (Markup.hasText "Hello, Somebody!")
+            |> expect (Markup.hasText "Hello, Somebody!")
       )
     )
   ]
@@ -169,12 +169,11 @@ subSpec =
         [ it "renders the count" (
             Markup.observeElement
               |> Markup.query << by [ id "my-count" ]
-              |> Observation.expect (Markup.hasText "The count is 40!")
+              |> expect (Markup.hasText "The count is 40!")
           )
         , it "updates the model" (
-            Observation.selectModel
-              |> Observation.mapSelection .count
-              |> Observation.expect (Observer.isEqual 40)
+            Observation.selectModel .count
+              |> expect (Observer.isEqual 40)
           )
         ]
     )
@@ -194,12 +193,12 @@ manyElementsSpec =
         [ it "selects many elements" (
             Markup.observeElements
               |> Markup.query << by [ tag "div" ]
-              |> Observation.expect (Observer.isListWithLength 6)
+              |> expect (Observer.isListWithLength 6)
           )
         , it "fetchs text for the elements" (
             Markup.observeElements
               |> Markup.query << by [ tag "div" ]
-              |> Observation.expect (\elements ->
+              |> expect (\elements ->
                 List.drop 2 elements
                   |> List.head
                   |> Maybe.map (Markup.hasText "The count is 7!")

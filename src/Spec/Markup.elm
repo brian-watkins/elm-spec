@@ -9,7 +9,8 @@ module Spec.Markup exposing
   , hasAttribute
   )
 
-import Spec.Observation as Observation exposing (Expectation)
+import Spec.Scenario as Scenario exposing (Expectation)
+import Spec.Observation as Observation
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observation.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)
@@ -23,9 +24,9 @@ import Dict exposing (Dict)
 
 observeTitle : Observation.Selection model String
 observeTitle =
-  Observation.inquire selectTitleMessage
-    |> Observation.mapSelection (Message.decode Json.string)
-    |> Observation.mapSelection (Maybe.withDefault "FAILED")
+  Observation.inquire selectTitleMessage <| \message ->
+    Message.decode Json.string message
+      |> Maybe.withDefault "FAILED"
 
 
 selectTitleMessage : Message
@@ -86,7 +87,7 @@ expectToObserveNothing actualGenerator =
   let
     actual = actualGenerator selectNothing
   in
-    Observation.expect (Observer.isEqual ()) actual
+    Scenario.expect (Observer.isEqual ()) actual
 
 
 query : (Selection, MarkupObservation a) -> Observation.Selection model a

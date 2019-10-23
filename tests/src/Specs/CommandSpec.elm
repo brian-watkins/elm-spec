@@ -24,9 +24,8 @@ sendMessageToUpdateSpec =
         , Command.send <| Command.fake <| ReceivedNumber 21
         ]
       |> it "behaves as expected" (
-        Observation.selectModel
-          |> Observation.mapSelection .numbers
-          |> Observation.expect (Observer.isEqual [ 21, 4, 8 ])
+        Observation.selectModel .numbers
+          |> expect (Observer.isEqual [ 21, 4, 8 ])
       )
     )
   , scenario "sending Cmd.none" (
@@ -40,9 +39,8 @@ sendMessageToUpdateSpec =
         , Command.send <| Command.fake <| ReceivedNumber 21
         ]
       |> it "behaves as expected" (
-        Observation.selectModel
-          |> Observation.mapSelection .numbers
-          |> Observation.expect (Observer.isEqual [ 21, 8 ])
+        Observation.selectModel .numbers
+          |> expect (Observer.isEqual [ 21, 8 ])
       )
     )
   ]

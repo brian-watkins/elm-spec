@@ -34,7 +34,7 @@ loadUrlSpec =
         ]
       |> it "updates the document location" (
         Navigation.selectLocation
-          |> Observation.expect (isEqual "http://navigation-test-app.com/some-fun-place")
+          |> expect (isEqual "http://navigation-test-app.com/some-fun-place")
       )
     )
   , scenario "checking the default location" (
@@ -46,7 +46,7 @@ loadUrlSpec =
       )
       |> it "shows the default location" (
         Navigation.selectLocation
-          |> Observation.expect (isEqual "http://navigation-test-app.com/")
+          |> expect (isEqual "http://navigation-test-app.com/")
       )
     )
   ]
@@ -122,7 +122,7 @@ batchLoadSpec =
         ]
       |> it "changes the location" (
         Navigation.selectLocation
-          |> Observation.expect (isEqual "http://navigation-test-app.com/some-awesome-place")
+          |> expect (isEqual "http://navigation-test-app.com/some-awesome-place")
       )
     )
   ]

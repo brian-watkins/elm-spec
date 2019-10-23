@@ -17,9 +17,8 @@ failingSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "fails" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 17)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 17)
       )
     )
   ]
@@ -34,9 +33,8 @@ passingSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "contains the expected value" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 99)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 99)
       )
     )
   ]
@@ -52,14 +50,12 @@ multipleObservationsSpec =
       )
       |> observeThat
         [ it "contains the expected number" (
-            Observation.selectModel
-              |> Observation.mapSelection .count
-              |> Observation.expect (Observer.isEqual 87)
+            Observation.selectModel .count
+              |> expect (Observer.isEqual 87)
           )
         , it "contains the expected name" (
-            Observation.selectModel
-              |> Observation.mapSelection .name
-              |> Observation.expect (Observer.isEqual "awesome-spec")
+            Observation.selectModel .name
+              |> expect (Observer.isEqual "awesome-spec")
           )
         ]
     )

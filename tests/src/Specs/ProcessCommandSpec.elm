@@ -57,9 +57,8 @@ processBatchedTerminatingAndNoCallbackCommands =
                   |> Observer.isEqual 21
           )
         , it "it ends up with the right tally" (
-            Observation.selectModel
-              |> Observation.mapSelection .num
-              |> Observation.expect (Observer.isEqual 35)
+            Observation.selectModel .num
+              |> expect (Observer.isEqual 35)
           )
         ]
     )

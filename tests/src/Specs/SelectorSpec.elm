@@ -26,7 +26,7 @@ descendantsOfSpec =
           |> Markup.query
               << descendantsOf [ id "my-part" ]
               << by [ tag "div" ]
-          |> Observation.expect (isListWithLength 4)
+          |> expect (isListWithLength 4)
       )
     )
   , scenario "Multiple descendants" (
@@ -40,7 +40,7 @@ descendantsOfSpec =
               << descendantsOf [ id "my-part" ]
               << descendantsOf [ attributeName "fun" ]
               << by [ tag "div" ]
-          |> Observation.expect (isListWithLength 1)
+          |> expect (isListWithLength 1)
       )
     )
   ]
@@ -75,7 +75,7 @@ attributeNameSelectorSpec =
       |> it "finds the element" (
         Markup.observeElement
           |> Markup.query << by [ attributeName "data-fun" ]
-          |> Observation.expect (Markup.hasText "This is fun!")
+          |> expect (Markup.hasText "This is fun!")
       )
     )
   ]
@@ -92,7 +92,7 @@ attributeSelectorSpec =
       |> it "finds the element" (
         Markup.observeElement
           |> Markup.query << by [ attribute ("data-fun", "something fun") ]
-          |> Observation.expect (Markup.hasText "This is fun!")
+          |> expect (Markup.hasText "This is fun!")
       )
     )
   ]
@@ -109,7 +109,7 @@ onlyOneTagAllowedSpec =
       |> it "uses the first tag only" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1", tag "div", tag "a" ]
-          |> Observation.expect (Markup.hasText "This is an H1 tag")
+          |> expect (Markup.hasText "This is an H1 tag")
       )
     )
   ]
@@ -126,7 +126,7 @@ tagSelectorSpec =
       |> it "renders the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1" ]
-          |> Observation.expect (Markup.hasText "This is an H1 tag")
+          |> expect (Markup.hasText "This is an H1 tag")
       )
     )
   ]
@@ -143,7 +143,7 @@ combinedTagSelectorSpec =
       |> it "selects the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
-          |> Observation.expect (Markup.hasText "This is an H1 tag")
+          |> expect (Markup.hasText "This is an H1 tag")
       )
     )
   , scenario "Selects by id and then tag" (
@@ -154,7 +154,7 @@ combinedTagSelectorSpec =
       |> it "selects the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
-          |> Observation.expect (Markup.hasText "This is an H1 tag")
+          |> expect (Markup.hasText "This is an H1 tag")
       )
     )
   ]

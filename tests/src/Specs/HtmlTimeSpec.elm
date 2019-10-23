@@ -33,7 +33,7 @@ intervalSpec =
       |> it "updates the count" (
         Markup.observeElement
           |> Markup.query << by [ id "seconds-passed" ]
-          |> Observation.expect (hasText "4 seconds passed")
+          |> expect (hasText "4 seconds passed")
       )
     )
   ]

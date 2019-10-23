@@ -32,9 +32,8 @@ processSpec =
         , Time.tick 100
         ]
       |> it "receives the delayed messages" (
-        Observation.selectModel
-          |> Observation.mapSelection .items
-          |> Observation.expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
+        Observation.selectModel .items
+          |> expect (Observer.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
       )
     )
   ]
@@ -56,9 +55,8 @@ processOnlyUpToDelaySpec =
         , Time.tick 50
         ]
       |> it "receives the expected messages only" (
-        Observation.selectModel
-          |> Observation.mapSelection .items
-          |> Observation.expect (Observer.isEqual [ "Hey", "a", "Hey" ])
+        Observation.selectModel .items
+          |> expect (Observer.isEqual [ "Hey", "a", "Hey" ])
       )
     )
   ]

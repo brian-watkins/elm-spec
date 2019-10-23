@@ -18,9 +18,8 @@ usesModelFromInitSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "uses the given model" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 41)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 41)
       )
     )
   ]
@@ -35,9 +34,8 @@ usesCommandFromInitSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "updates the model" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 33)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 33)
       )
     )
   ]

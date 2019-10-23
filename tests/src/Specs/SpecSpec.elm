@@ -29,9 +29,8 @@ multipleWhenSpec =
         [ sendMessageWith 39
         ]
       |> it "updates the model with all three subscriptions" (
-          Observation.selectModel
-            |> Observation.mapSelection .counts
-            |> Observation.expect (Observer.isEqual [ 39, 78, 41 ])
+          Observation.selectModel .counts
+            |> expect (Observer.isEqual [ 39, 78, 41 ])
       )
     )
   ]
@@ -52,9 +51,8 @@ multipleScenariosSpec =
         [ sendMessageWith 87
         ]
       |> it "records the number" (
-        Observation.selectModel
-          |> Observation.mapSelection .counts
-          |> Observation.expect (Observer.isEqual [ 87 ])
+        Observation.selectModel .counts
+          |> expect (Observer.isEqual [ 87 ])
       )
     )
   , scenario "multiple sub messages are sent" (
@@ -64,9 +62,8 @@ multipleScenariosSpec =
         , sendMessageWith 65
         ]
       |> it "records the numbers" (
-        Observation.selectModel
-          |> Observation.mapSelection .counts
-          |> Observation.expect (Observer.isEqual [ 65, 87 ])
+        Observation.selectModel .counts
+          |> expect (Observer.isEqual [ 65, 87 ])
       )
     )
   , scenario "a different message is sent" (
@@ -75,9 +72,8 @@ multipleScenariosSpec =
         [ sendMessageWith 14
         ]
       |> it "records the number" (
-        Observation.selectModel
-          |> Observation.mapSelection .counts
-          |> Observation.expect (Observer.isEqual [ 14 ])
+        Observation.selectModel .counts
+          |> expect (Observer.isEqual [ 14 ])
       )
     )
   ]

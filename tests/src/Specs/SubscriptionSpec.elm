@@ -25,9 +25,8 @@ sendsSubscriptionSpec =
         , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
         ]
       |> it "updates the model" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 78)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 78)
       )
     )
   , scenario "subscriptions are registered later depending on the model" (
@@ -44,9 +43,8 @@ sendsSubscriptionSpec =
         , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
         ]
       |> it "updates the model" (
-        Observation.selectModel
-          |> Observation.mapSelection .count
-          |> Observation.expect (Observer.isEqual 78)
+        Observation.selectModel .count
+          |> expect (Observer.isEqual 78)
       )
     )
   ]

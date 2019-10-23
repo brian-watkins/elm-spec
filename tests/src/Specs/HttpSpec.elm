@@ -35,9 +35,8 @@ getSpec =
         , Event.click
         ]
       |> it "receives a stubbed response" (
-        Observation.selectModel
-          |> Observation.mapSelection .response
-          |> Observation.expect (
+        Observation.selectModel .response
+          |> expect (
             isEqual <|
               Just 
                 { name = "Cool Dude"
@@ -58,9 +57,8 @@ getSpec =
         , Event.click
         ]
       |> it "receives a stubbed response" (
-        Observation.selectModel
-          |> Observation.mapSelection .error
-          |> Observation.expect (
+        Observation.selectModel .error
+          |> expect (
             isEqual <|
               Just <| Http.BadStatus 401
           )

@@ -3,18 +3,22 @@ module Spec.Scenario exposing
   , ScenarioPlan
   , ScenarioAction
   , Observation
+  , Expectation
   , scenario
   , given
   , when
   , observeThat
   , it
+  , expect
   , describing
   , tagged
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step exposing (Step)
-import Spec.Observation exposing (Expectation)
+import Spec.Observation exposing (Selection)
+import Spec.Observer exposing (Observer)
+import Spec.Observation.Expectation as Expectation
 
 
 type alias Scenario model msg =
@@ -38,6 +42,10 @@ type alias ScenarioPlan model msg =
   , steps: List (Step model msg)
   , observations: List (Observation model)
   }
+
+
+type alias Expectation model =
+  Expectation.Expectation model
 
 
 type alias Observation model =
@@ -101,6 +109,11 @@ it description expectation action =
       , expectation = expectation
       } :: []
   }
+
+
+expect : Observer a -> Selection model a -> Expectation model
+expect observer selection =
+  selection observer
 
 
 describing : String -> Scenario model msg -> Scenario model msg

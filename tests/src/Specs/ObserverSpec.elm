@@ -16,8 +16,8 @@ satisfyingSpec =
         Subject.initWithModel { name = "Cool Dude", sport = "bowling", age = 19 }
       )
       |> it "checks all the attributes of the model" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
               Observer.satisfying
                 [ \model -> Observer.isEqual "Cool Dude" model.name
                 , \model -> Observer.isEqual "bowling" model.sport
@@ -31,8 +31,8 @@ satisfyingSpec =
         Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19 }
       )
       |> it "checks all the attributes of the model" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
               Observer.satisfying
                 [ \model -> Observer.isEqual "Cool Dude" model.name
                 , \model -> Observer.isEqual "bowling" model.sport
@@ -46,8 +46,8 @@ satisfyingSpec =
         Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19 }
       )
       |> it "checks all the attributes of the model" (
-        Observation.selectModel
-          |> Observation.expect (
+        Observation.selectModel identity
+          |> expect (
               Observer.satisfying
                 [ \model -> Observer.isEqual "Cool Dude" model.name
                 , \model -> Observer.isEqual "bowling" model.sport

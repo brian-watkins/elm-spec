@@ -20,9 +20,8 @@ passingSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "contains the expected value" (
-          Observation.selectModel
-            |> Observation.mapSelection .count
-            |> Observation.expect (Observer.isEqual 99)
+          Observation.selectModel .count
+            |> expect (Observer.isEqual 99)
       )
     )
   ]
@@ -37,9 +36,8 @@ failingSpec =
           |> Subject.withUpdate testUpdate
       )
       |> it "contains the expected value" (
-          Observation.selectModel
-            |> Observation.mapSelection .count
-            |> Observation.expect (Observer.isEqual 76)
+          Observation.selectModel .count
+            |> expect (Observer.isEqual 76)
       )
     )
   ]
@@ -54,9 +52,8 @@ specWithAScenario =
           |> Subject.withUpdate testUpdate
       )
       |> it "contains the expected value" (
-          Observation.selectModel
-            |> Observation.mapSelection .count
-            |> Observation.expect (Observer.isEqual 108)
+          Observation.selectModel .count
+            |> expect (Observer.isEqual 108)
       )
     )
   , scenario "failing" (
@@ -65,9 +62,8 @@ specWithAScenario =
           |> Subject.withUpdate testUpdate
       )
       |> it "contains a different value" (
-          Observation.selectModel
-            |> Observation.mapSelection .count
-            |> Observation.expect (Observer.isEqual 94)
+          Observation.selectModel .count
+            |> expect (Observer.isEqual 94)
       )
     )
   ]
