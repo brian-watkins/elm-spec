@@ -6,7 +6,6 @@ module Spec.Claim exposing
   , isListWithLength
   , isList
   , isListWhereIndex
-  , mapRejection
   )
 
 import Spec.Observation.Report as Report exposing (Report)
@@ -19,15 +18,6 @@ type alias Claim a =
 type Verdict
   = Accept
   | Reject Report
-
-
-mapRejection : (Report -> Report) -> Verdict -> Verdict
-mapRejection mapper verdict =
-  case verdict of
-    Accept ->
-      Accept
-    Reject report ->
-      Reject <| mapper report
 
 
 satisfying : List (Claim a) -> Claim a
@@ -126,6 +116,15 @@ isListWhereIndex index claim list =
         [ Report.fact "Expected element at index" <| String.fromInt index
         , Report.fact "but the list has length" <| String.fromInt <| List.length list
         ]
+
+
+mapRejection : (Report -> Report) -> Verdict -> Verdict
+mapRejection mapper verdict =
+  case verdict of
+    Accept ->
+      Accept
+    Reject report ->
+      Reject <| mapper report
 
 
 toString : a -> String

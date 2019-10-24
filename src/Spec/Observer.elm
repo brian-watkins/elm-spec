@@ -57,5 +57,8 @@ mapRejection : (Report -> Report) -> Observer model a -> Observer model a
 mapRejection mapper observer =
   \claim ->
     observer <| \actual ->
-      claim actual
-        |> Claim.mapRejection mapper
+      case claim actual of
+        Claim.Accept ->
+          Claim.Accept
+        Claim.Reject report ->
+          Claim.Reject <| mapper report

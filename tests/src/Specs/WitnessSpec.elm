@@ -21,20 +21,22 @@ recordSpec =
       |> triggerInjectedFunctionWith 91
       |> triggerInjectedFunctionWith 14
       |> it "records statements about the injected function" (
-        Witness.expect "injected" Json.int (
-          Claim.isList
-            [ Claim.isEqual 88
-            , Claim.isEqual 91
-            , Claim.isEqual 14 
-            ]
-        )
+        Witness.observeFacts "injected" Json.int
+          |> expect (
+            Claim.isList
+              [ Claim.isEqual 88
+              , Claim.isEqual 91
+              , Claim.isEqual 14
+              ]  
+          )
       )
     )
   , scenario "the witness expectation fails" (
       given testSubject
       |> triggerInjectedFunctionWith 72
       |> it "fails" (
-        Witness.expect "injected" Json.int (Claim.isListWithLength 3)
+        Witness.observeFacts "injected" Json.int
+          |> expect (Claim.isListWithLength 3)
       )
     )
   ]
