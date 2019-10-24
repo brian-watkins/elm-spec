@@ -24,6 +24,17 @@ witnessPortCommandFromInitSpec =
           |> expect (Claim.isEqual [ "From init!" ])
       )
     )
+  , scenario "observing a port that is not being recorded" (
+      given (
+        Subject.init ( { count = 0 }, sendTestMessageOut "Some message!")
+          |> Subject.withUpdate testUpdate
+          |> Port.record "sendTestMessageOut"
+      )
+      |> it "fails" (
+        Port.observeRecordedValues "some-other-port" Json.string
+          |> expect (Claim.isEqual [ "Unknown!" ])
+      )
+    )
   ]
 
 
