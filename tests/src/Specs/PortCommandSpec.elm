@@ -17,11 +17,11 @@ witnessPortCommandFromInitSpec =
       given (
         Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
           |> Subject.withUpdate testUpdate
-          |> Port.observe "sendTestMessageOut"
+          |> Port.record "sendTestMessageOut"
       )
       |> it "sends the expected message" (
-        Port.expect "sendTestMessageOut" Json.string <|
-          Claim.isEqual [ "From init!" ]
+        Port.observeRecordedValues "sendTestMessageOut" Json.string
+          |> expect (Claim.isEqual [ "From init!" ])
       )
     )
   ]
@@ -37,11 +37,11 @@ witnessMultiplePortCommandsFromInitSpec =
           , Cmd.batch [ sendTestMessageOut "One", sendTestMessageOut "Two", sendTestMessageOut "Three" ]
           )
         |> Subject.withUpdate testUpdate
-        |> Port.observe "sendTestMessageOut"
+        |> Port.record "sendTestMessageOut"
       )
       |> it "records all the messages sent" (
-        Port.expect "sendTestMessageOut" Json.string <|
-          Claim.isEqual [ "One", "Two", "Three" ]
+        Port.observeRecordedValues "sendTestMessageOut" Json.string
+          |> expect (Claim.isEqual [ "One", "Two", "Three" ])
       )
     )
   ]

@@ -1,13 +1,13 @@
 module Spec.Port exposing
-  ( observe
+  ( record
   , send
-  , expect
+  , observeRecordedValues
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step
 import Spec.Scenario as Scenario exposing (Expectation)
-import Spec.Observer as Observer
+import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -30,8 +30,8 @@ observePortCommand name =
   }
 
 
-observe : String -> SubjectGenerator model msg -> SubjectGenerator model msg
-observe portName =
+record : String -> SubjectGenerator model msg -> SubjectGenerator model msg
+record portName =
   observePortCommand portName
     |> Subject.configure
 
@@ -41,10 +41,8 @@ send name value _ =
   Step.sendMessage <| sendSubscription name value
 
 
-expect : String -> Json.Decoder a -> Claim (List a) -> Expectation model
-expect name decoder claim =
-  Observer.observeEffects (\effects ->
-      List.filter (Message.is "_port" "received") effects
-        |> List.filterMap (Message.decode decoder)
-    )
-    |> Scenario.expect claim
+observeRecordedValues : String -> Json.Decoder a -> Observer model (List a)
+observeRecordedValues name decoder =
+  Observer.observeEffects <| \effects ->
+    List.filter (Message.is "_port" "received") effects
+      |> List.filterMap (Message.decode decoder)

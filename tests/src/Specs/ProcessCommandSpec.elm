@@ -20,16 +20,17 @@ processCommandSpec =
         Subject.init ( { count = 0, num = 0 }, Cmd.none )
           |> Subject.withUpdate testUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Port.observe "sendSomethingOut"
+          |> Port.record "sendSomethingOut"
       )
       |> when "a subscription message is sent"
         [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
         ]
       |> it "sends the port command the specified number of times" (
-        Port.expect "sendSomethingOut" Json.string <|
-          \messages ->
+        Port.observeRecordedValues "sendSomethingOut" Json.string
+          |> expect (\messages ->
             List.length messages
               |> Claim.isEqual 42
+          )
       )
     )
   ]
@@ -43,7 +44,7 @@ processBatchedTerminatingAndNoCallbackCommands =
         Subject.init ( { count = 0, num = 0 }, Cmd.none )
           |> Subject.withUpdate testUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Port.observe "sendSomethingOut"
+          |> Port.record "sendSomethingOut"
       )
       |> when "many subscription messages are sent" (
         List.range 0 5
@@ -51,10 +52,11 @@ processBatchedTerminatingAndNoCallbackCommands =
       )
       |> observeThat
         [ it "sends all the commands" (
-            Port.expect "sendSomethingOut" Json.string <|
-              \messages ->
+            Port.observeRecordedValues "sendSomethingOut" Json.string
+              |> expect (\messages ->
                 List.length messages
                   |> Claim.isEqual 21
+              )
           )
         , it "it ends up with the right tally" (
             Observer.observeModel .num
