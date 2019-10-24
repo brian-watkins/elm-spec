@@ -6,7 +6,6 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Observation as Observation
 import Application exposing (Model, Msg)
 import Url
 import Runner
@@ -31,7 +30,7 @@ navigationSpec =
       |> it "shows a different page" (
         Markup.observeElement
           |> Markup.query << by [ id "fun-page" ]
-          |> Observation.expect ( Markup.hasText "bowling" )
+          |> expect ( Markup.hasText "bowling" )
       )
     )
   ]

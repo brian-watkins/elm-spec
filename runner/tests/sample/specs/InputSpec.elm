@@ -6,7 +6,6 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Observation as Observation
 import Runner
 import Main as App
 
@@ -26,7 +25,7 @@ inputSpec =
       |> it "renders the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ id "input-results" ]
-          |> Observation.expect (Markup.hasText "You typed: Here is some fun text!")
+          |> expect (Markup.hasText "You typed: Here is some fun text!")
       )
     )
   ]
@@ -49,12 +48,12 @@ differentInputSpec =
         [ it "renders the text on the view" (
             Markup.observeElement
               |> Markup.query << by [ id "input-results" ]
-              |> Observation.expect (Markup.hasText "You typed: Here is some awesome text!")
+              |> expect (Markup.hasText "You typed: Here is some awesome text!")
           )
         , it "does not record any clicks" (
             Markup.observeElement
               |> Markup.query << by [ id "count-results" ]
-              |> Observation.expect (Markup.hasText "You clicked the button 0 time(s)")
+              |> expect (Markup.hasText "You clicked the button 0 time(s)")
           )
         ]
     )
