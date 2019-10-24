@@ -1,5 +1,6 @@
 module Spec.Observer exposing
   ( Observer
+  , Expectation
   , observeModel
   , observeEffects
   , inquire
@@ -13,8 +14,12 @@ import Spec.Observation.Expectation as Expectation
 import Spec.Observation.Report exposing (Report)
 
 
+type alias Expectation model =
+  Expectation.Expectation model
+
+
 type alias Observer model a =
-  Claim a -> Expectation.Expectation model
+  Claim a -> Expectation model
 
 
 observeModel : (model -> a) -> Observer model a

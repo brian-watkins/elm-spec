@@ -9,8 +9,8 @@ module Spec.Markup exposing
   , hasAttribute
   )
 
-import Spec.Scenario as Scenario exposing (Expectation)
-import Spec.Observer as Observer exposing (Observer)
+import Spec.Scenario as Scenario
+import Spec.Observer as Observer exposing (Observer, Expectation)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)

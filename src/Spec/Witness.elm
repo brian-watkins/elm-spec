@@ -5,7 +5,6 @@ module Spec.Witness exposing
   , observeFacts
   )
 
-import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Message as Message exposing (Message)
