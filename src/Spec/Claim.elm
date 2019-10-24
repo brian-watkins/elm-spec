@@ -112,12 +112,12 @@ matchList position claims actual =
 
 
 isListWhereIndex : Int -> Claim a -> Claim (List a)
-isListWhereIndex index observer list =
+isListWhereIndex index claim list =
   case List.head <| List.drop index list of
     Just actual ->
-      observer actual
+      claim actual
         |> mapRejection (\report -> Report.batch
-            [ Report.note <| "Element at index " ++ String.fromInt index ++ " did not satisfy observer:"
+            [ Report.note <| "Element at index " ++ String.fromInt index ++ " did not satisfy claim:"
             , report
             ]
         )

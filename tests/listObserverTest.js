@@ -39,7 +39,7 @@ describe("list observers", () => {
         expectAccepted(observations[0])
 
         expectRejected(observations[1], [
-          reportLine("Element at index 2 did not satisfy observer:"),
+          reportLine("Element at index 2 did not satisfy claim:"),
           reportLine("Expected", "\"3\""),
           reportLine("to equal", "\"17\"")
         ])

@@ -1,13 +1,12 @@
 module Spec.Http exposing
   ( HttpRequest
   , withStubs
-  , expect
+  , observeRequests
   , hasHeader
   )
 
-import Spec.Scenario as Scenario exposing (Expectation)
 import Spec.Subject as Subject exposing (SubjectGenerator)
-import Spec.Observer as Observer
+import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report
 import Spec.Message as Message exposing (Message)
@@ -72,19 +71,16 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
     ]
 
 
-expect : HttpRoute -> Claim (List HttpRequest) -> Expectation model
-expect route claim =
-  Observer.inquire (fetchRequestsFor route) (\message ->
-      Message.decode (Json.list requestDecoder) message
-        |> Maybe.withDefault []
-    )
-    |> Scenario.expect (\requests ->
-      claim requests
-        |> Claim.mapRejection (
-          Report.append <|
-            Report.fact  "Claim rejected for route" <| route.method ++ " " ++ route.url
-        )
-    )
+observeRequests : HttpRoute -> Observer model (List HttpRequest)
+observeRequests route =
+  Observer.inquire (fetchRequestsFor route) (
+    Message.decode (Json.list requestDecoder)
+      >> Maybe.withDefault []
+  )
+  |> Observer.mapRejection (
+    Report.append <|
+      Report.fact  "Claim rejected for route" <| route.method ++ " " ++ route.url
+  )
 
 
 fetchRequestsFor : HttpRoute -> Message

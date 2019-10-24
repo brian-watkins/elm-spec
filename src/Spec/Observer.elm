@@ -4,6 +4,7 @@ module Spec.Observer exposing
   , observeEffects
   , inquire
   , inquireForResult
+  , mapRejection
   )
 
 import Spec.Message as Message exposing (Message)
@@ -39,14 +40,22 @@ inquire message mapper =
 
 
 inquireForResult : Message -> (Message -> Result Report a) -> Observer model a
-inquireForResult message resultMapper observer =
+inquireForResult message resultMapper claim =
   Expectation.Expectation <| \context ->
     Expectation.Inquire message <|
       \inquiryResult ->
         case resultMapper inquiryResult of
           Ok value ->
-            observer value
+            claim value
               |> Expectation.Complete
           Err report ->
             Claim.Reject report
               |> Expectation.Complete
+
+
+mapRejection : (Report -> Report) -> Observer model a -> Observer model a
+mapRejection mapper observer =
+  \claim ->
+    observer <| \actual ->
+      claim actual
+        |> Claim.mapRejection mapper
