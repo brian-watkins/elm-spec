@@ -4,8 +4,8 @@ module Spec.Observer exposing
   , observeModel
   , observeEffects
   , inquire
-  , inquireForResult
   , mapRejection
+  , observeResult
   )
 
 import Spec.Message as Message exposing (Message)
@@ -23,39 +23,40 @@ type alias Observer model a =
 
 
 observeModel : (model -> a) -> Observer model a
-observeModel mapper observer =
+observeModel mapper claim =
   Expectation.Expectation <| \context ->
     mapper context.model
-      |> observer
+      |> claim
       |> Expectation.Complete
 
 
 observeEffects : (List Message -> a) -> Observer model a
-observeEffects mapper observer =
+observeEffects mapper claim =
   Expectation.Expectation <| \context ->
     mapper context.effects
-      |> observer
+      |> claim
       |> Expectation.Complete
 
 
 inquire : Message -> (Message -> a) -> Observer model a
-inquire message mapper =
-  inquireForResult message <| \response ->
-    Ok <| mapper response
-
-
-inquireForResult : Message -> (Message -> Result Report a) -> Observer model a
-inquireForResult message resultMapper claim =
+inquire message mapper claim =
   Expectation.Expectation <| \context ->
     Expectation.Inquire message <|
-      \inquiryResult ->
-        case resultMapper inquiryResult of
-          Ok value ->
-            claim value
-              |> Expectation.Complete
-          Err report ->
-            Claim.Reject report
-              |> Expectation.Complete
+      \response ->
+        mapper response
+          |> claim
+          |> Expectation.Complete
+
+
+observeResult : Observer model (Result Report a) -> Observer model a
+observeResult observer =
+  \claim ->
+    observer <| \actual ->
+      case actual of
+        Ok value ->
+          claim value
+        Err report ->
+          Claim.Reject report
 
 
 mapRejection : (Report -> Report) -> Observer model a -> Observer model a

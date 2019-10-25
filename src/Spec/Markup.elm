@@ -92,7 +92,8 @@ expectToObserveNothing actualGenerator =
 
 query : (Selection, MarkupObservation a) -> Observer model a
 query (selection, MarkupObservation (messageGenerator, handler)) =
-  Observer.inquireForResult (messageGenerator selection) <| handler selection
+  Observer.inquire (messageGenerator selection) (handler selection)
+    |> Observer.observeResult
 
 
 selectHtml : Selection -> Message

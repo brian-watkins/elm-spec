@@ -9,7 +9,7 @@ import Spec.Step as Step
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Message as Message exposing (Message)
-import Spec.Observation.Report as Report
+import Spec.Observation.Report as Report exposing (Report)
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -56,6 +56,7 @@ observeRecordedValues name decoder =
   |> Observer.mapRejection (
     Report.append <| Report.fact "Claim rejected for port" name
   )
+  |> Observer.observeResult
 
 
 recordsForPort : String -> List Message -> List PortRecord
@@ -65,11 +66,20 @@ recordsForPort name effects =
     |> List.filter (\portRecord -> portRecord.name == name)
 
 
-recordedValues : Json.Decoder a -> List PortRecord -> List a
-recordedValues decoder records =
-  List.map (\portRecord -> Json.decodeValue decoder portRecord.value) records
-    |> List.filterMap Result.toMaybe
+recordedValues : Json.Decoder a -> List PortRecord -> Result Report (List a)
+recordedValues decoder =
+  List.foldl (\portRecord ->
+    Result.andThen (\values ->
+      Json.decodeValue decoder portRecord.value
+        |> Result.map (\value -> List.append values [ value ])
+        |> Result.mapError jsonErrorToReport
+    )
+  ) (Ok [])
 
+
+jsonErrorToReport : Json.Error -> Report
+jsonErrorToReport =
+  Report.fact "Unable to decode value sent through port" << Json.errorToString
 
 recordDecoder : Json.Decoder PortRecord
 recordDecoder =

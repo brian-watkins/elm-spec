@@ -35,6 +35,17 @@ witnessPortCommandFromInitSpec =
           |> expect (Claim.isEqual [ "Unknown!" ])
       )
     )
+  , scenario "decoding a port value with the wrong decoder" (
+      given (
+        Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
+          |> Subject.withUpdate testUpdate
+          |> Port.record "sendTestMessageOut"
+      )
+      |> it "fails" (
+        Port.observeRecordedValues "sendTestMessageOut" Json.int
+          |> expect (Claim.isEqual [ 17 ])
+      )
+    )
   ]
 
 
