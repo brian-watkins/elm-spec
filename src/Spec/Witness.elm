@@ -2,14 +2,14 @@ module Spec.Witness exposing
   ( Witness
   , forUpdate
   , log
-  , observeFacts
+  , observe
   )
 
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observation.Report as Report
+import Spec.Observation.Report as Report exposing (Report)
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -43,8 +43,8 @@ log name statement (Witness witness) =
     }
 
 
-observeFacts : String -> Json.Decoder a -> Observer model (List a)
-observeFacts name decoder =
+observe : String -> Json.Decoder a -> Observer model (List a)
+observe name decoder =
   Observer.observeEffects (\effects ->
     statementsForWitness name effects
         |> factsFromStatements decoder
@@ -53,6 +53,7 @@ observeFacts name decoder =
     Report.append <|
       Report.fact "Claim rejected for witness" name
   )
+  |> Observer.observeResult
 
 
 statementsForWitness : String -> List Message -> List Statement
@@ -65,12 +66,20 @@ statementsForWitness name messages =
     |> List.reverse
 
 
-factsFromStatements : Json.Decoder a -> List Statement -> List a
+factsFromStatements : Json.Decoder a -> List Statement -> Result Report (List a)
 factsFromStatements decoder =
-  List.filterMap (\statement ->
-    Json.decodeValue decoder statement.fact
-      |> Result.toMaybe
-  )
+  List.foldl (\statement ->
+    Result.andThen (\facts ->
+      Json.decodeValue decoder statement.fact
+        |> Result.map (\fact -> List.append facts [ fact ])
+        |> Result.mapError jsonErrorToReport
+    )
+  ) (Ok [])
+
+
+jsonErrorToReport : Json.Error -> Report
+jsonErrorToReport =
+  Report.fact "Unable to decode statement recorded by witness" << Json.errorToString
 
 
 statementDecoder : Json.Decoder (Statement)

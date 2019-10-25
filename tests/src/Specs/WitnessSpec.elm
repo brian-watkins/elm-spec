@@ -21,7 +21,7 @@ recordSpec =
       |> triggerInjectedFunctionWith 91
       |> triggerInjectedFunctionWith 14
       |> it "records statements about the injected function" (
-        Witness.observeFacts "injected" Json.int
+        Witness.observe "injected" Json.int
           |> expect (
             Claim.isList
               [ Claim.isEqual 88
@@ -35,8 +35,16 @@ recordSpec =
       given testSubject
       |> triggerInjectedFunctionWith 72
       |> it "fails" (
-        Witness.observeFacts "injected" Json.int
+        Witness.observe "injected" Json.int
           |> expect (Claim.isListWithLength 3)
+      )
+    )
+  , scenario "the witness statement decoder fails" (
+      given testSubject
+      |> triggerInjectedFunctionWith 72
+      |> it "fails" (
+        Witness.observe "injected" Json.string
+          |> expect (Claim.isListWithLength 1)
       )
     )
   ]
