@@ -43,7 +43,7 @@ type ProgramView model msg
 
 type alias SubjectGenerator model msg =
   { location: Url
-  , generator: Url -> Maybe Key -> Subject model msg
+  , generator: Url -> Maybe Key -> Result String (Subject model msg)
   }
 
 
@@ -51,7 +51,7 @@ init : (model, Cmd msg) -> SubjectGenerator model msg
 init ( model, initialCommand ) =
   { location = defaultUrl
   , generator = \_ _ ->
-      initializeSubject ( model, initialCommand )
+      Ok <| initializeSubject ( model, initialCommand )
   }
 
 
@@ -67,9 +67,9 @@ initForApplication generator =
       case maybeKey of
         Just key ->
           generator url key
-            |> initializeSubject
+            |> Ok << initializeSubject
         Nothing ->
-          Debug.todo "Tried to init with key but there was no key! Make sure to use Spec.browserProgram to run your specs!"
+          Err "Subject.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!"
   }
 
 
@@ -157,10 +157,10 @@ mapSubject mapper generator =
   { location = generator.location
   , generator = \url maybeKey ->
       generator.generator url maybeKey
-        |> mapper
+        |> Result.map mapper
   }
 
 
-generate : SubjectGenerator model msg -> Maybe Key -> Subject model msg
+generate : SubjectGenerator model msg -> Maybe Key -> Result String (Subject model msg)
 generate generator maybeKey =
   generator.generator generator.location maybeKey

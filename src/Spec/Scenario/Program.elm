@@ -47,9 +47,15 @@ type alias Config msg programMsg =
 
 start : Config msg programMsg -> Maybe Key -> Scenario model programMsg -> ( Model model programMsg, Cmd msg )
 start config maybeKey scenario =
-  ( Start scenario <| Subject.generate scenario.subjectGenerator maybeKey
-  , config.send Message.startScenario
-  )
+  case Subject.generate scenario.subjectGenerator maybeKey of
+    Ok subject ->
+      ( Start scenario subject
+      , config.send Message.startScenario
+      )
+    Err error ->
+      ( Ready
+      , abortWith config <| Report.note error
+      )
 
 
 continue : Config msg programMsg -> Cmd msg
@@ -141,12 +147,7 @@ update config msg state =
               badState config state
         _ ->
           ( Ready
-          , Cmd.batch 
-            [ config.stop
-            , Claim.Reject report
-                |> Message.observation [] "Scenario Failed"
-                |> config.send 
-            ]
+          , abortWith config report
           )
 
     OnUrlChange _ ->
@@ -162,6 +163,16 @@ update config msg state =
           exerciseUpdate config msg model
         _ ->
           badState config state
+
+
+abortWith : Config msg programMsg -> Report -> Cmd msg
+abortWith config report =
+  Cmd.batch
+    [ config.stop
+    , Claim.Reject report
+        |> Message.observation [] "Scenario Failed"
+        |> config.send
+    ]
 
 
 exerciseUpdate : Config msg programMsg -> Msg programMsg -> Exercise.Model model programMsg -> ( Model model programMsg, Cmd msg )

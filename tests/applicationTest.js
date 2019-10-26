@@ -1,4 +1,11 @@
-const { expectBrowserSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
+const {
+  globalContext,
+  runSpec,
+  expectBrowserSpec,
+  expectAccepted,
+  expectRejected,
+  reportLine
+} = require("./helpers/SpecHelpers")
 
 describe("application", () => {
   context("given a url", () => {
@@ -59,6 +66,20 @@ describe("application", () => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
+      })
+    })
+  })
+
+  context("when do not use Spec.browserProgram to run the spec", () => {
+    it("fails with a message", (done) => {
+      globalContext.evaluate((Elm) => {
+        var app = Elm.Specs.NoKeySpec.init()
+
+        runSpec(app, globalContext, {}, done, (observations) => {
+          expectRejected(observations[0], [
+            reportLine("Subject.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!")
+          ])
+        })
       })
     })
   })
