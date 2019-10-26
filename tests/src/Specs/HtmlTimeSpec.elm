@@ -1,4 +1,4 @@
-port module Specs.HtmlTimeSpec exposing (..)
+module Specs.HtmlTimeSpec exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Subject as Subject

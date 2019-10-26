@@ -6,6 +6,7 @@
     "version": "0.0.1",
     "exposed-modules": [
         "Spec",
+        "Spec.Claim",
         "Spec.Command",
         "Spec.Http",
         "Spec.Http.Route",
@@ -16,7 +17,6 @@
         "Spec.Markup.Navigation",
         "Spec.Message",
         "Spec.Observer",
-        "Spec.Observation",
         "Spec.Port",
         "Spec.Scenario",
         "Spec.Step",
@@ -24,7 +24,7 @@
         "Spec.Time",
         "Spec.Witness"
     ],
-    "elm-version": "0.19.0 <= v < 0.20.0",
+    "elm-version": "0.19.1 <= v < 0.20.0",
     "dependencies": {
         "elm/browser": "1.0.1 <= v < 2.0.0",
         "elm/core": "1.0.0 <= v < 2.0.0",

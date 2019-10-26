@@ -129,4 +129,4 @@ mapRejection mapper verdict =
 
 toString : a -> String
 toString =
-  Elm.Kernel.Debug.toString
+  Debug.toString

@@ -36,7 +36,7 @@ init specConfig specLocator flags =
     Just spec ->
       Spec.init specConfig [ spec ] ()
     Nothing ->
-      Elm.Kernel.Debug.todo <| "Unknown spec: " ++ flags.specName
+      Debug.todo <| "Unknown spec: " ++ flags.specName
 
 
 program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
@@ -54,7 +54,7 @@ initBrowserProgram specConfig specLocator flags url key =
     Just spec ->
       Spec.initBrowserProgram specConfig [ spec ] { tags = [] } url key
     Nothing ->
-      Elm.Kernel.Debug.todo <| "Unknown spec: " ++ flags.specName
+      Debug.todo <| "Unknown spec: " ++ flags.specName
 
 
 browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
