@@ -26,7 +26,7 @@ processCommandSpec =
         [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
         ]
       |> it "sends the port command the specified number of times" (
-        Port.observeRecordedValues "sendSomethingOut" Json.string
+        Port.observe "sendSomethingOut" Json.string
           |> expect (\messages ->
             List.length messages
               |> Claim.isEqual 42
@@ -52,7 +52,7 @@ processBatchedTerminatingAndNoCallbackCommands =
       )
       |> observeThat
         [ it "sends all the commands" (
-            Port.observeRecordedValues "sendSomethingOut" Json.string
+            Port.observe "sendSomethingOut" Json.string
               |> expect (\messages ->
                 List.length messages
                   |> Claim.isEqual 21

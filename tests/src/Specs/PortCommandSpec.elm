@@ -20,7 +20,7 @@ witnessPortCommandFromInitSpec =
           |> Port.record "sendTestMessageOut"
       )
       |> it "sends the expected message" (
-        Port.observeRecordedValues "sendTestMessageOut" Json.string
+        Port.observe "sendTestMessageOut" Json.string
           |> expect (Claim.isEqual [ "From init!" ])
       )
     )
@@ -31,7 +31,7 @@ witnessPortCommandFromInitSpec =
           |> Port.record "sendTestMessageOut"
       )
       |> it "fails" (
-        Port.observeRecordedValues "some-other-port" Json.string
+        Port.observe "some-other-port" Json.string
           |> expect (Claim.isEqual [ "Unknown!" ])
       )
     )
@@ -42,7 +42,7 @@ witnessPortCommandFromInitSpec =
           |> Port.record "sendTestMessageOut"
       )
       |> it "fails" (
-        Port.observeRecordedValues "sendTestMessageOut" Json.int
+        Port.observe "sendTestMessageOut" Json.int
           |> expect (Claim.isEqual [ 17 ])
       )
     )
@@ -62,7 +62,7 @@ witnessMultiplePortCommandsFromInitSpec =
         |> Port.record "sendTestMessageOut"
       )
       |> it "records all the messages sent" (
-        Port.observeRecordedValues "sendTestMessageOut" Json.string
+        Port.observe "sendTestMessageOut" Json.string
           |> expect (Claim.isEqual [ "One", "Two", "Three" ])
       )
     )

@@ -1,7 +1,7 @@
 module Spec.Port exposing
   ( record
   , send
-  , observeRecordedValues
+  , observe
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
@@ -47,8 +47,8 @@ type alias PortRecord =
   }
 
 
-observeRecordedValues : String -> Json.Decoder a -> Observer model (List a)
-observeRecordedValues name decoder =
+observe : String -> Json.Decoder a -> Observer model (List a)
+observe name decoder =
   Observer.observeEffects (\effects ->
     recordsForPort name effects
       |> recordedValues decoder
