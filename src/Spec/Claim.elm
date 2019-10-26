@@ -78,8 +78,8 @@ isList claims actual =
 wrongLength : Int -> Int -> Report
 wrongLength expected actual =
   Report.batch
-  [ Report.fact "Expected list to have length" <| toString expected
-  , Report.fact "but it has length" <| toString actual
+  [ Report.fact "Expected list to have length" <| String.fromInt expected
+  , Report.fact "but it has length" <| String.fromInt actual
   ]
 
 
