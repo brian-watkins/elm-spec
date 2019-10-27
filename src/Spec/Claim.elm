@@ -2,6 +2,8 @@ module Spec.Claim exposing
   ( Claim
   , Verdict(..)
   , satisfying
+  , isTrue
+  , isFalse
   , isEqual
   , isListWithLength
   , isList
@@ -42,8 +44,26 @@ satisfying claims actual =
   ) Accept claims
 
 
-isEqual : a -> Claim a
-isEqual expected actual =
+isTrue : Claim Bool
+isTrue =
+  isEqual boolWriter True
+
+
+isFalse : Claim Bool
+isFalse =
+  isEqual boolWriter False
+
+
+boolWriter : Bool -> String
+boolWriter b =
+  if b == True then
+    "True"
+  else
+    "False"
+
+
+isEqual : (a -> String) -> a -> Claim a
+isEqual toString expected actual =
   if expected == actual then
     Accept
   else
@@ -102,8 +122,8 @@ matchList position claims actual =
 
 
 isListWhereIndex : Int -> Claim a -> Claim (List a)
-isListWhereIndex index claim list =
-  case List.head <| List.drop index list of
+isListWhereIndex index claim actualList =
+  case List.head <| List.drop index actualList of
     Just actual ->
       claim actual
         |> mapRejection (\report -> Report.batch
@@ -114,7 +134,7 @@ isListWhereIndex index claim list =
     Nothing ->
       Reject <| Report.batch
         [ Report.fact "Expected element at index" <| String.fromInt index
-        , Report.fact "but the list has length" <| String.fromInt <| List.length list
+        , Report.fact "but the list has length" <| String.fromInt <| List.length actualList
         ]
 
 
@@ -125,8 +145,3 @@ mapRejection mapper verdict =
       Accept
     Reject report ->
       Reject <| mapper report
-
-
-toString : a -> String
-toString =
-  Debug.toString

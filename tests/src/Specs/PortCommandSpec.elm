@@ -5,6 +5,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Claim as Claim
+import Specs.Helpers exposing (..)
 import Runner
 import Json.Decode as Json
 import Json.Encode as Encode
@@ -21,7 +22,7 @@ witnessPortCommandFromInitSpec =
       )
       |> it "sends the expected message" (
         Port.observe "sendTestMessageOut" Json.string
-          |> expect (Claim.isEqual [ "From init!" ])
+          |> expect (equals [ "From init!" ])
       )
     )
   , scenario "observing a port that is not being recorded" (
@@ -32,7 +33,7 @@ witnessPortCommandFromInitSpec =
       )
       |> it "fails" (
         Port.observe "some-other-port" Json.string
-          |> expect (Claim.isEqual [ "Unknown!" ])
+          |> expect (equals [ "Unknown!" ])
       )
     )
   , scenario "decoding a port value with the wrong decoder" (
@@ -43,7 +44,7 @@ witnessPortCommandFromInitSpec =
       )
       |> it "fails" (
         Port.observe "sendTestMessageOut" Json.int
-          |> expect (Claim.isEqual [ 17 ])
+          |> expect (equals [ 17 ])
       )
     )
   ]
@@ -63,7 +64,7 @@ witnessMultiplePortCommandsFromInitSpec =
       )
       |> it "records all the messages sent" (
         Port.observe "sendTestMessageOut" Json.string
-          |> expect (Claim.isEqual [ "One", "Two", "Three" ])
+          |> expect (equals [ "One", "Two", "Three" ])
       )
     )
   ]

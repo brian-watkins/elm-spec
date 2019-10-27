@@ -4,11 +4,11 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner
 import Task
 import Json.Encode as Encode
+import Specs.Helpers exposing (..)
 
 
 sendsSubscriptionSpec : Spec Model Msg
@@ -26,7 +26,7 @@ sendsSubscriptionSpec =
         ]
       |> it "updates the model" (
         Observer.observeModel .count
-          |> expect (Claim.isEqual 78)
+          |> expect (equals 78)
       )
     )
   , scenario "subscriptions are registered later depending on the model" (
@@ -44,7 +44,7 @@ sendsSubscriptionSpec =
         ]
       |> it "updates the model" (
         Observer.observeModel .count
-          |> expect (Claim.isEqual 78)
+          |> expect (equals 78)
       )
     )
   ]

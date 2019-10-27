@@ -8,6 +8,7 @@ import Spec.Observer as Observer
 import Spec.Command as Command
 import Runner
 import Task
+import Specs.Helpers exposing (..)
 
 
 sendMessageToUpdateSpec : Spec Model Msg
@@ -25,7 +26,7 @@ sendMessageToUpdateSpec =
         ]
       |> it "behaves as expected" (
         Observer.observeModel .numbers
-          |> expect (Claim.isEqual [ 21, 4, 8 ])
+          |> expect (equals [ 21, 4, 8 ])
       )
     )
   , scenario "sending Cmd.none" (
@@ -40,7 +41,7 @@ sendMessageToUpdateSpec =
         ]
       |> it "behaves as expected" (
         Observer.observeModel .numbers
-          |> expect (Claim.isEqual [ 21, 8 ])
+          |> expect (equals [ 21, 8 ])
       )
     )
   ]

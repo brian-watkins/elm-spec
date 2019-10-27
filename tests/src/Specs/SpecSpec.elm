@@ -9,6 +9,7 @@ import Spec.Observer as Observer
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
+import Specs.Helpers exposing (..)
 
 
 noScenariosSpec : Spec Model Msg
@@ -30,7 +31,7 @@ multipleWhenSpec =
         ]
       |> it "updates the model with all three subscriptions" (
           Observer.observeModel .counts
-            |> expect (Claim.isEqual [ 39, 78, 41 ])
+            |> expect (equals [ 39, 78, 41 ])
       )
     )
   ]
@@ -52,7 +53,7 @@ multipleScenariosSpec =
         ]
       |> it "records the number" (
         Observer.observeModel .counts
-          |> expect (Claim.isEqual [ 87 ])
+          |> expect (equals [ 87 ])
       )
     )
   , scenario "multiple sub messages are sent" (
@@ -63,7 +64,7 @@ multipleScenariosSpec =
         ]
       |> it "records the numbers" (
         Observer.observeModel .counts
-          |> expect (Claim.isEqual [ 65, 87 ])
+          |> expect (equals [ 65, 87 ])
       )
     )
   , scenario "a different message is sent" (
@@ -73,7 +74,7 @@ multipleScenariosSpec =
         ]
       |> it "records the number" (
         Observer.observeModel .counts
-          |> expect (Claim.isEqual [ 14 ])
+          |> expect (equals [ 14 ])
       )
     )
   ]

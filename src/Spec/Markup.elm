@@ -55,7 +55,7 @@ observeElement =
     )
 
 
-selectNothing : MarkupObservation ()
+selectNothing : MarkupObservation Bool
 selectNothing =
   MarkupObservation
     ( selectHtml
@@ -67,7 +67,7 @@ selectNothing =
               , Report.note "but one or more elements were selected"
               ]
           Nothing ->
-            Ok ()
+            Ok True
     )
 
 
@@ -82,12 +82,12 @@ observeElements =
     )
 
 
-expectToObserveNothing : (MarkupObservation () -> Observer model ()) -> Expectation model
+expectToObserveNothing : (MarkupObservation Bool -> Observer model Bool) -> Expectation model
 expectToObserveNothing actualGenerator =
   let
     actual = actualGenerator selectNothing
   in
-    Scenario.expect (Claim.isEqual ()) actual
+    Scenario.expect Claim.isTrue actual
 
 
 query : (Selection, MarkupObservation a) -> Observer model a

@@ -6,6 +6,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
 import Runner
+import Specs.Helpers exposing (..)
 
 
 hasLengthSpec : Spec Model Msg
@@ -43,10 +44,10 @@ isListSpec =
         Observer.observeModel identity
           |> expect (
             Claim.isList
-              [ Claim.isEqual "1"
-              , Claim.isEqual "2"
-              , Claim.isEqual "3"
-              , Claim.isEqual "4"
+              [ equals "1"
+              , equals "2"
+              , equals "3"
+              , equals "4"
               ]
           )
       )
@@ -59,10 +60,10 @@ isListSpec =
         Observer.observeModel identity
           |> expect (
               Claim.isList
-                [ Claim.isEqual "1"
-                , Claim.isEqual "something"
-                , Claim.isEqual "not correct"
-                , Claim.isEqual "4"
+                [ equals "1"
+                , equals "something"
+                , equals "not correct"
+                , equals "4"
                 ]
           )
       )
@@ -75,8 +76,8 @@ isListSpec =
         Observer.observeModel identity
           |> expect (
             Claim.isList
-              [ Claim.isEqual "1"
-              , Claim.isEqual "3"
+              [ equals "1"
+              , equals "3"
               ]
           )
       )
@@ -94,7 +95,7 @@ atIndexSpec =
       |> it "matches" (
         Observer.observeModel identity
           |> expect (
-            Claim.isListWhereIndex 2 (Claim.isEqual "3")
+            Claim.isListWhereIndex 2 (equals "3")
           )
       )
     )
@@ -105,7 +106,7 @@ atIndexSpec =
       |> it "fails to match" (
         Observer.observeModel identity
           |> expect (
-            Claim.isListWhereIndex 2 (Claim.isEqual "17")
+            Claim.isListWhereIndex 2 (equals "17")
           )
       )
     )
@@ -116,7 +117,7 @@ atIndexSpec =
       |> it "fails to match" (
         Observer.observeModel identity
           |> expect (
-            Claim.isListWhereIndex 22 (Claim.isEqual "17")
+            Claim.isListWhereIndex 22 (equals "17")
           )
       )
     )

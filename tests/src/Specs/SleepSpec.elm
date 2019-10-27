@@ -11,6 +11,7 @@ import Runner
 import Json.Encode as Encode
 import Task
 import Process
+import Specs.Helpers exposing (..)
 
 
 processSpec : Spec Model Msg
@@ -33,7 +34,7 @@ processSpec =
         ]
       |> it "receives the delayed messages" (
         Observer.observeModel .items
-          |> expect (Claim.isEqual [ "c", "b", "a", "Hey", "Hey", "Hey" ])
+          |> expect (equals [ "c", "b", "a", "Hey", "Hey", "Hey" ])
       )
     )
   ]
@@ -56,7 +57,7 @@ processOnlyUpToDelaySpec =
         ]
       |> it "receives the expected messages only" (
         Observer.observeModel .items
-          |> expect (Claim.isEqual [ "Hey", "a", "Hey" ])
+          |> expect (equals [ "Hey", "a", "Hey" ])
       )
     )
   ]

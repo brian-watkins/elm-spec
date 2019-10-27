@@ -4,12 +4,12 @@ import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Port as Port
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
 import Task
+import Specs.Helpers exposing (..)
 
 
 processCommandSpec : Spec Model Msg
@@ -29,7 +29,7 @@ processCommandSpec =
         Port.observe "sendSomethingOut" Json.string
           |> expect (\messages ->
             List.length messages
-              |> Claim.isEqual 42
+              |> equals 42
           )
       )
     )
@@ -55,12 +55,12 @@ processBatchedTerminatingAndNoCallbackCommands =
             Port.observe "sendSomethingOut" Json.string
               |> expect (\messages ->
                 List.length messages
-                  |> Claim.isEqual 21
+                  |> equals 21
               )
           )
         , it "it ends up with the right tally" (
             Observer.observeModel .num
-              |> expect (Claim.isEqual 35)
+              |> expect (equals 35)
           )
         ]
     )

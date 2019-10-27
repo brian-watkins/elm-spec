@@ -6,7 +6,6 @@ import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
-import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Html exposing (Html)
@@ -16,6 +15,7 @@ import Browser.Navigation
 import Runner
 import Url
 import Task
+import Specs.Helpers exposing (..)
 
 
 loadUrlSpec : Spec Model Msg
@@ -34,7 +34,7 @@ loadUrlSpec =
         ]
       |> it "updates the document location" (
         Navigation.observeLocation
-          |> expect (isEqual "http://navigation-test-app.com/some-fun-place")
+          |> expect (equals "http://navigation-test-app.com/some-fun-place")
       )
     )
   , scenario "checking the default location" (
@@ -46,7 +46,7 @@ loadUrlSpec =
       )
       |> it "shows the default location" (
         Navigation.observeLocation
-          |> expect (isEqual "http://navigation-test-app.com/")
+          |> expect (equals "http://navigation-test-app.com/")
       )
     )
   ]
@@ -122,7 +122,7 @@ batchLoadSpec =
         ]
       |> it "changes the location" (
         Navigation.observeLocation
-          |> expect (isEqual "http://navigation-test-app.com/some-awesome-place")
+          |> expect (equals "http://navigation-test-app.com/some-awesome-place")
       )
     )
   ]

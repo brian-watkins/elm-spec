@@ -15,6 +15,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Runner
 import Json.Encode as Encode
+import Specs.Helpers exposing (..)
 
 
 htmlSpecSingle : Spec Model Msg
@@ -173,7 +174,7 @@ subSpec =
           )
         , it "updates the model" (
             Observer.observeModel .count
-              |> expect (Claim.isEqual 40)
+              |> expect (equals 40)
           )
         ]
     )

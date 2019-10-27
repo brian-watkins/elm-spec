@@ -18,6 +18,7 @@ import Html.Events as Events
 import Runner
 import Json.Decode as Json
 import Http
+import Specs.Helpers exposing (..)
 
 
 getSpec : Spec Model Msg
@@ -37,7 +38,7 @@ getSpec =
       |> it "receives a stubbed response" (
         Observer.observeModel .response
           |> expect (
-            isEqual <|
+            equals <|
               Just 
                 { name = "Cool Dude"
                 , score = 1034
@@ -59,7 +60,7 @@ getSpec =
       |> it "receives a stubbed response" (
         Observer.observeModel .error
           |> expect (
-            isEqual <|
+            equals <|
               Just <| Http.BadStatus 401
           )
       )

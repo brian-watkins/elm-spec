@@ -8,7 +8,6 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
-import Spec.Claim exposing (isEqual)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -18,6 +17,7 @@ import Runner
 import Url exposing (Url)
 import Url.Parser exposing ((</>))
 import Url.Builder
+import Specs.Helpers exposing (..)
 
 
 applyGivenUrlSpec : Spec Model Msg
@@ -35,7 +35,7 @@ applyGivenUrlSpec =
       |> observeThat
         [ it "sets the location to the given url" (
             Navigation.observeLocation
-              |> expect (isEqual "http://my-test-app.com/fun/reading")
+              |> expect (equals "http://my-test-app.com/fun/reading")
           )
         , it "renders the view based on the url" (
             Markup.observeElement
@@ -92,7 +92,7 @@ changeUrlSpec =
       |> observeThat
         [ it "updates the location" (
             Navigation.observeLocation
-              |> expect (isEqual "http://my-test-app.com/fun/bowling")
+              |> expect (equals "http://my-test-app.com/fun/bowling")
           )
         , it "shows a different page" (
             Markup.observeElement
@@ -127,7 +127,7 @@ titleSpec =
       |> observeThat
         [ it "displays the title" (
             Markup.observeTitle
-              |> expect (isEqual "Some Boring Title")
+              |> expect (equals "Some Boring Title")
           )
         ]
     )
@@ -142,7 +142,7 @@ titleSpec =
       |> observeThat
         [ it "updates the title" (
             Markup.observeTitle
-              |> expect (isEqual "My Fun Title")
+              |> expect (equals "My Fun Title")
           )
         ]
     ) 
@@ -161,7 +161,7 @@ clickLinkSpec =
       |> observeThat
         [ it "updates the location" (
             Navigation.observeLocation
-              |> expect (isEqual "http://my-test-app.com/fun/running")
+              |> expect (equals "http://my-test-app.com/fun/running")
           )
         , it "navigates as expected" (
             Markup.observeElement
@@ -181,7 +181,7 @@ clickLinkSpec =
       |> observeThat
         [ it "navigates as expected" (
             Navigation.observeLocation
-              |> expect (isEqual "http://fun-town.org/fun")
+              |> expect (equals "http://fun-town.org/fun")
           )
         ]
     )

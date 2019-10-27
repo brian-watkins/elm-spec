@@ -10,6 +10,7 @@ import Spec.Witness as Witness exposing (Witness)
 import Json.Encode as Encode
 import Json.Decode as Json
 import Runner
+import Specs.Helpers exposing (..)
 
 
 recordSpec : Spec Model Msg
@@ -24,9 +25,9 @@ recordSpec =
         Witness.observe "injected" Json.int
           |> expect (
             Claim.isList
-              [ Claim.isEqual 88
-              , Claim.isEqual 91
-              , Claim.isEqual 14
+              [ equals 88
+              , equals 91
+              , equals 14
               ]  
           )
       )

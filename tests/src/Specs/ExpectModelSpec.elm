@@ -6,6 +6,7 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
 import Runner
+import Specs.Helpers exposing (..)
 
 
 failingSpec : Spec Model Msg
@@ -18,7 +19,7 @@ failingSpec =
       )
       |> it "fails" (
         Observer.observeModel .count
-          |> expect (Claim.isEqual 17)
+          |> expect (equals 17)
       )
     )
   ]
@@ -34,7 +35,7 @@ passingSpec =
       )
       |> it "contains the expected value" (
         Observer.observeModel .count
-          |> expect (Claim.isEqual 99)
+          |> expect (equals 99)
       )
     )
   ]
@@ -51,11 +52,11 @@ multipleObservationsSpec =
       |> observeThat
         [ it "contains the expected number" (
             Observer.observeModel .count
-              |> expect (Claim.isEqual 87)
+              |> expect (equals 87)
           )
         , it "contains the expected name" (
             Observer.observeModel .name
-              |> expect (Claim.isEqual "awesome-spec")
+              |> expect (equals "awesome-spec")
           )
         ]
     )

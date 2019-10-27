@@ -23,4 +23,17 @@ describe("observer", () => {
       })
     })
   })
+
+  describe("boolean claims", () => {
+    it("handles boolean claims", (done) => {
+      expectSpec("ObserverSpec", "boolean", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectRejected(observations[2], [
+          reportLine("Expected", "True"),
+          reportLine("to equal", "False")
+        ])
+      })
+    })
+  })
 })

@@ -7,6 +7,7 @@ import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner
 import Task
+import Specs.Helpers exposing (..)
 
 
 usesModelFromInitSpec : Spec Model Msg
@@ -19,7 +20,7 @@ usesModelFromInitSpec =
       )
       |> it "uses the given model" (
         Observer.observeModel .count
-          |> expect (Claim.isEqual 41)
+          |> expect (equals 41)
       )
     )
   ]
@@ -35,7 +36,7 @@ usesCommandFromInitSpec =
       )
       |> it "updates the model" (
         Observer.observeModel .count
-          |> expect (Claim.isEqual 33)
+          |> expect (equals 33)
       )
     )
   ]
