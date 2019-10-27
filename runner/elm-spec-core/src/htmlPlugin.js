@@ -44,7 +44,7 @@ module.exports = class HtmlPlugin {
         const props = specMessage.body
         if (props.selector) {
           const element = this.getElement(props.selector)
-          const event = this.window.eval(`new Event('${props.name}')`)
+          const event = this.getEvent(props.name)
           Object.assign(event, props.event)
           element.dispatchEvent(event)
         } else {
@@ -56,6 +56,8 @@ module.exports = class HtmlPlugin {
         const props = specMessage.body
         if (props.selector) {
           const element = this.document.querySelector(specMessage.body.selector)
+          element.dispatchEvent(this.getEvent("mousedown"))
+          element.dispatchEvent(this.getEvent("mouseup"))
           element.click()
         } else {
           this.elementNotTargetedForEvent("click", abort)
@@ -67,7 +69,7 @@ module.exports = class HtmlPlugin {
         if (props.selector) {
           const element = this.document.querySelector(specMessage.body.selector)
           element.value = specMessage.body.text
-          const event = this.window.eval("new Event('input', {bubbles: true, cancelable: true})")
+          const event = this.getEvent("input")
           element.dispatchEvent(event)  
         } else {
           this.elementNotTargetedForEvent("input", abort)
@@ -131,6 +133,10 @@ module.exports = class HtmlPlugin {
     }
 
     return this.document.querySelector(selector)
+  }
+
+  getEvent(name) {
+    return this.window.eval(`new Event('${name}')`)
   }
 
   describeElement(element) {

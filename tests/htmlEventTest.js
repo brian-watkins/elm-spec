@@ -10,7 +10,9 @@ describe("Events", () => {
     it("handles the click event as expected", (done) => {
       expectBrowserSpec("EventSpec", "click", done, (observations) => {
         expectAccepted(observations[0])
-        expectRejected(observations[1], [
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectRejected(observations[3], [
           reportLine("No element targeted for event", "click")
         ])
       })

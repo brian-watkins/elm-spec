@@ -8,6 +8,7 @@ import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Observer as Observer
+import Specs.Helpers exposing (equals)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -38,6 +39,26 @@ clickSpec =
           |> Markup.query << by [ id "my-count" ]
           |> expect (Markup.hasText "The count is 30!")
       )
+    )
+  , scenario "mousedown and mouseup events" (
+      given (
+        testSubject
+      )
+      |> when "an element is clicked"
+        [ Markup.target << by [ id "my-button" ]
+        , Event.click
+        , Event.click
+        ]
+      |> observeThat
+        [ it "fires a mouseup event" (
+            Observer.observeModel .mouseUp
+              |> expect (equals 2)
+          )
+        , it "fires a mousedown event" (
+            Observer.observeModel .mouseDown
+              |> expect (equals 2)
+          )
+        ]
     )
   , scenario "no element targeted for click" (
       given (
@@ -190,7 +211,7 @@ customEventSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", count = 0 }
+  Subject.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0 }
     |> Subject.withUpdate testUpdate
     |> Subject.withView testView
 
@@ -214,6 +235,8 @@ type Msg
 
 type alias Model =
   { message: String
+  , mouseUp: Int
+  , mouseDown: Int
   , count: Int
   }
 
@@ -228,9 +251,9 @@ testUpdate msg model =
     GotText message ->
       ( { model | message = message }, Cmd.none )
     MouseDown ->
-      ( { model | message = "MOUSE DOWN" }, Cmd.none )
+      ( { model | mouseDown = model.mouseDown + 1, message = "MOUSE DOWN" }, Cmd.none )
     MouseUp ->
-      ( { model | message = "MOUSE UP" }, Cmd.none )
+      ( { model | mouseUp = model.mouseUp + 1, message = "MOUSE UP" }, Cmd.none )
     GotKey key ->
       let
         letter =
@@ -245,7 +268,7 @@ testView model =
   Html.div []
   [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
   , Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
-  , Html.button [ Attr.id "my-button", Events.onClick HandleClick ] [ Html.text "Click me!" ]
+  , Html.button [ Attr.id "my-button", Events.onClick HandleClick, Events.onMouseUp MouseUp, Events.onMouseDown MouseDown ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
   , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp ] [ Html.text "Tap Area!" ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
