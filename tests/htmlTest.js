@@ -74,14 +74,23 @@ describe("html plugin", () => {
     })
   })
 
-  context("expect nothing selected", () => {
-    it("uses the expectAbsent observer as expected", (done) => {
-      expectBrowserSpec("HtmlSpec", "expectAbsent", done, (observations) => {
+  context("observe presence", () => {
+    it("observes presence and absence as expected", (done) => {
+      expectBrowserSpec("HtmlSpec", "observePresence", done, (observations) => {
         expectAccepted(observations[0])
 
         expectRejected(observations[1], [
-          reportLine("Expected no elements to be selected with", "#my-name"),
-          reportLine("but one or more elements were selected")
+          reportLine("Claim rejected for selector", "#my-name"),
+          reportLine("Expected", "nothing"),
+          reportLine("but found", "something")
+        ])
+
+        expectAccepted(observations[2])
+
+        expectRejected(observations[3], [
+          reportLine("Claim rejected for selector", "#nothing"),
+          reportLine("Expected", "something"),
+          reportLine("but found", "nothing")
         ])
       })
     })

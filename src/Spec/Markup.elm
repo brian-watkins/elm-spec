@@ -1,16 +1,15 @@
 module Spec.Markup exposing
   ( MarkupObservation
   , observeTitle
+  , observe
   , observeElement
   , observeElements
   , query
-  , expectToObserveNothing
   , hasText
   , hasAttribute
   )
 
-import Spec.Scenario as Scenario
-import Spec.Observer as Observer exposing (Observer, Expectation)
+import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)
@@ -40,6 +39,15 @@ selectTitleMessage =
 type MarkupObservation a =
   MarkupObservation
     (Selection -> Message, Selection -> Message -> Result Report a)
+
+
+observe : MarkupObservation (Maybe HtmlElement)
+observe =
+  MarkupObservation
+    ( selectHtml
+    , \selection message ->
+        Ok <| Message.decode htmlDecoder message
+    )
 
 
 observeElement : MarkupObservation HtmlElement
@@ -82,18 +90,14 @@ observeElements =
     )
 
 
-expectToObserveNothing : (MarkupObservation Bool -> Observer model Bool) -> Expectation model
-expectToObserveNothing actualGenerator =
-  let
-    actual = actualGenerator selectNothing
-  in
-    Scenario.expect Claim.isTrue actual
-
-
 query : (Selection, MarkupObservation a) -> Observer model a
 query (selection, MarkupObservation (messageGenerator, handler)) =
   Observer.inquire (messageGenerator selection) (handler selection)
     |> Observer.observeResult
+    |> Observer.mapRejection (
+      Report.append <|
+        Report.fact "Claim rejected for selector" <| Selector.toString selection
+    )
 
 
 selectHtml : Selection -> Message

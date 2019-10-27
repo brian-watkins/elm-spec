@@ -8,6 +8,8 @@ module Spec.Claim exposing
   , isListWithLength
   , isList
   , isListWhereIndex
+  , isSomething
+  , isNothing
   )
 
 import Spec.Observation.Report as Report exposing (Report)
@@ -145,3 +147,27 @@ mapRejection mapper verdict =
       Accept
     Reject report ->
       Reject <| mapper report
+
+
+isSomething : Claim (Maybe a)
+isSomething actual =
+  case actual of
+    Just _ ->
+      Accept
+    Nothing ->
+      Reject <| Report.batch
+        [ Report.fact "Expected" "something"
+        , Report.fact "but found" "nothing"
+        ]
+
+
+isNothing : Claim (Maybe a)
+isNothing actual =
+  case actual of
+    Just _ ->
+      Reject <| Report.batch
+        [ Report.fact "Expected" "nothing"
+        , Report.fact "but found" "something"
+        ]
+    Nothing ->
+      Accept

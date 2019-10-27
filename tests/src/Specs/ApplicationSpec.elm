@@ -3,6 +3,7 @@ module Specs.ApplicationSpec exposing (..)
 import Spec exposing (Spec)
 import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
+import Spec.Claim as Claim
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -76,8 +77,9 @@ changeUrlSpec =
       given testSubject
         |> observeThat
           [ it "does not show anything fun" (
-              Markup.query << by [ id "fun-page" ]
-                |> Markup.expectToObserveNothing
+              Markup.observe
+                |> Markup.query << by [ id "fun-page" ]
+                |> expect Claim.isNothing
             )
           ]
     )

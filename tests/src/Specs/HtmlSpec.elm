@@ -211,27 +211,51 @@ manyElementsSpec =
   ]
 
 
-expectAbsentSpec : Spec Model Msg
-expectAbsentSpec =
-  Spec.describe "expectAbsent"
-  [ scenario "nothing is selected" (
+observePresenceSpec : Spec Model Msg
+observePresenceSpec =
+  Spec.describe "observe presence"
+  [ scenario "nothing is expected to be found" (
       given (
         Subject.initWithModel { name = "Cool Dude", count = 7 }
           |> Subject.withView testView
       )
       |> it "selects nothing" (
-        Markup.query << by [ id "nothing" ]
-          |> Markup.expectToObserveNothing
+        Markup.observe
+          |> Markup.query << by [ id "nothing" ]
+          |> expect Claim.isNothing
       )
     )
-  , scenario "something is selected" (
+  , scenario "nothing is expected but something is found" (
       given (
         Subject.initWithModel { name = "Cool Dude", count = 7 }
           |> Subject.withView testView
       )
       |> it "selects nothing" (
-        Markup.query << by [ id "my-name" ]
-          |> Markup.expectToObserveNothing
+        Markup.observe
+          |> Markup.query << by [ id "my-name" ]
+          |> expect Claim.isNothing
+      )
+    )
+  , scenario "something is expected and something is found" (
+      given (
+        Subject.initWithModel { name = "Cool Dude", count = 7 }
+          |> Subject.withView testView
+      )
+      |> it "selects nothing" (
+        Markup.observe
+          |> Markup.query << by [ id "my-name" ]
+          |> expect Claim.isSomething
+      )
+    )
+  , scenario "something is expected but nothing is found" (
+      given (
+        Subject.initWithModel { name = "Cool Dude", count = 7 }
+          |> Subject.withView testView
+      )
+      |> it "selects nothing" (
+        Markup.observe
+          |> Markup.query << by [ id "nothing" ]
+          |> expect Claim.isSomething
       )
     )
   ]
@@ -307,7 +331,7 @@ selectSpec name =
     "sub" -> Just subSpec
     "targetUnknown" -> Just targetUnknownSpec
     "manyElements" -> Just manyElementsSpec
-    "expectAbsent" -> Just expectAbsentSpec
+    "observePresence" -> Just observePresenceSpec
     _ -> Nothing
 
 
