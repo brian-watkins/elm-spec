@@ -13,7 +13,7 @@ import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)
-import Spec.Markup.Selector as Selector exposing (Selection)
+import Spec.Markup.Selector as Selector exposing (Selection, Element)
 import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -38,7 +38,7 @@ selectTitleMessage =
 
 type MarkupObservation a =
   MarkupObservation
-    (Selection -> Message, Selection -> Message -> Result Report a)
+    (Selection Element -> Message, Selection Element -> Message -> Result Report a)
 
 
 observe : MarkupObservation (Maybe HtmlElement)
@@ -63,22 +63,6 @@ observeElement =
     )
 
 
-selectNothing : MarkupObservation Bool
-selectNothing =
-  MarkupObservation
-    ( selectHtml
-    , \selection message ->
-        case Message.decode htmlDecoder message of
-          Just _ ->
-            Err <| Report.batch
-              [ Report.fact "Expected no elements to be selected with" <| Selector.toString selection
-              , Report.note "but one or more elements were selected"
-              ]
-          Nothing ->
-            Ok True
-    )
-
-
 observeElements : MarkupObservation (List HtmlElement)
 observeElements =
   MarkupObservation
@@ -90,7 +74,7 @@ observeElements =
     )
 
 
-query : (Selection, MarkupObservation a) -> Observer model a
+query : (Selection Element, MarkupObservation a) -> Observer model a
 query (selection, MarkupObservation (messageGenerator, handler)) =
   Observer.inquire (messageGenerator selection) (handler selection)
     |> Observer.observeResult
@@ -100,7 +84,7 @@ query (selection, MarkupObservation (messageGenerator, handler)) =
     )
 
 
-selectHtml : Selection -> Message
+selectHtml : Selection Element -> Message
 selectHtml selection =
   { home = "_html"
   , name = "select"
@@ -108,7 +92,7 @@ selectHtml selection =
   }
 
 
-selectAllHtml : Selection -> Message
+selectAllHtml : Selection Element -> Message
 selectAllHtml selection =
   { home = "_html"
   , name = "selectAll"

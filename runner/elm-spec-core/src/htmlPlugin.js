@@ -29,7 +29,7 @@ module.exports = class HtmlPlugin {
       }
       case "target": {
         this.clock.runToFrame()
-        const element = this.document.querySelector(specMessage.body)
+        const element = this.getElement(specMessage.body)
         if (element == null) {
           abort([{
             statement: "No match for selector",
@@ -43,10 +43,10 @@ module.exports = class HtmlPlugin {
       case "customEvent": {
         const props = specMessage.body
         if (props.selector) {
-          const element = this.document.querySelector(props.selector)
+          const element = this.getElement(props.selector)
           const event = this.window.eval(`new Event('${props.name}')`)
           Object.assign(event, props.event)
-          element.dispatchEvent(event)  
+          element.dispatchEvent(event)
         } else {
           this.elementNotTargetedForEvent(props.name, abort)
         }
@@ -123,6 +123,14 @@ module.exports = class HtmlPlugin {
       statement: "No element targeted for event",
       detail: event
     }])
+  }
+
+  getElement(selector) {
+    if (selector === "_document_") {
+      return this.document
+    }
+
+    return this.document.querySelector(selector)
   }
 
   describeElement(element) {

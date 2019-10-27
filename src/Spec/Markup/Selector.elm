@@ -1,7 +1,8 @@
 module Spec.Markup.Selector exposing
   ( Selector
   , Selection
-  , select
+  , Element
+  , Object
   , target
   , id
   , tag
@@ -9,6 +10,7 @@ module Spec.Markup.Selector exposing
   , attributeName
   , by
   , descendantsOf
+  , document
   , toString
   )
 
@@ -24,23 +26,27 @@ type Selector
   | Attribute String String
 
 
-type Selection
+type Selection a
   = By (List Selector)
-  | DescendantsOf (List Selector) Selection
+  | DescendantsOf (List Selector) (Selection a)
+  | Document
 
 
-target : (Selection, Step.Context model) -> Step.Command msg
+type Element
+  = Element
+
+
+type Object
+  = Object
+
+
+target : (Selection a, Step.Context model) -> Step.Command msg
 target (selection, context) =
   Step.sendMessage
     { home = "_html"
     , name = "target"
     , body = Encode.string <| toString selection
     }
-
-
-select : (Selection, ()) -> Selection
-select (selection, _)=
-  selection
 
 
 {-| Select Html elements by id.
@@ -65,23 +71,30 @@ attributeName =
   AttributeName
 
 
-by : List Selector -> a -> (Selection, a)
+by : List Selector -> a -> (Selection Element, a)
 by selectors targetable =
   ( By selectors, targetable )
 
 
-descendantsOf : List Selector -> (Selection, a) -> (Selection, a)
+descendantsOf : List Selector -> (Selection Element, a) -> (Selection Element, a)
 descendantsOf selectors ( selection, targetable )=
   ( DescendantsOf selectors selection, targetable )
 
 
-toString : Selection -> String
+document : Step.Context model -> (Selection Object, Step.Context model)
+document context =
+  ( Document, context )
+
+
+toString : Selection a -> String
 toString selection =
   case selection of
     By selectors ->
       selectorString selectors
     DescendantsOf selectors next ->
       selectorString selectors ++ " " ++ toString next
+    Document ->
+      "_document_"
 
 
 --- Private
