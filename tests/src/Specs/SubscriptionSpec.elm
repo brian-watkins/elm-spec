@@ -47,6 +47,20 @@ sendsSubscriptionSpec =
           |> expect (equals 78)
       )
     )
+  , scenario "attempt to send unknown subscription" (
+      given (
+        Subject.init ( { count = 0, subscribe = True }, Cmd.none )
+          |> Subject.withUpdate testUpdate
+          |> Subject.withSubscriptions testSubscriptions
+      )
+      |> when "some subscription messages are sent"
+        [ Port.send "unknown-subscription" (Encode.object [ ("number", Encode.int 41) ])
+        ]
+      |> it "fails" (
+        Observer.observeModel .count
+          |> expect (equals 78)
+      )
+    )
   ]
 
 
