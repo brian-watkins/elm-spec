@@ -1,6 +1,7 @@
 module Spec.Markup.Event exposing
   ( click
   , press
+  , release
   , input
   , trigger
   )
@@ -25,6 +26,11 @@ click context =
 press : Step.Context model -> Step.Command msg
 press =
   trigger "mousedown" <| Encode.object []
+
+
+release : Step.Context model -> Step.Command msg
+release =
+  trigger "mouseup" <| Encode.object []
 
 
 input : String -> Step.Context model -> Step.Command msg

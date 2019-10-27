@@ -17,12 +17,23 @@ describe("Events", () => {
     })
   })
 
-  context.only("press", () => {
+  context("press", () => {
     it("handles the mousedown event as expected", (done) => {
       expectBrowserSpec("EventSpec", "mouseDown", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
           reportLine("No element targeted for event", "mousedown")
+        ])
+      })
+    })
+  })
+
+  context("release", () => {
+    it("handles the mouseup event as expected", (done) => {
+      expectBrowserSpec("EventSpec", "mouseUp", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("No element targeted for event", "mouseup")
         ])
       })
     })

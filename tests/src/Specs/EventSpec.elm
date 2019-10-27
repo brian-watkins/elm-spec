@@ -88,6 +88,39 @@ mouseDownSpec =
   ]
 
 
+mouseUpSpec : Spec Model Msg
+mouseUpSpec =
+  Spec.describe "mouse up"
+  [ scenario "a mouse up event" (
+      given (
+        testSubject
+      )
+      |> when "a mouse up event occurs"
+        [ Markup.target << by [ id "tap-area" ]
+        , Event.release
+        ]
+      |> it "responds to the event" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: MOUSE UP")
+      )
+    )
+  , scenario "no element targeted for mouse up" (
+      given (
+        testSubject
+      )
+      |> when "a mouse up event occurs but no element is targeted"
+        [ Event.release
+        ]
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: MOUSE UP")
+      )
+    )
+  ]
+
+
 inputSpec : Spec Model Msg
 inputSpec =
   Spec.describe "an html program"
@@ -176,6 +209,7 @@ type Msg
   | HandleClick
   | HandleMegaClick
   | MouseDown
+  | MouseUp
 
 
 type alias Model =
@@ -195,6 +229,8 @@ testUpdate msg model =
       ( { model | message = message }, Cmd.none )
     MouseDown ->
       ( { model | message = "MOUSE DOWN" }, Cmd.none )
+    MouseUp ->
+      ( { model | message = "MOUSE UP" }, Cmd.none )
     GotKey key ->
       let
         letter =
@@ -211,7 +247,7 @@ testView model =
   , Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
-  , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown ] [ Html.text "Tap Area!" ]
+  , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp ] [ Html.text "Tap Area!" ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
   ]
@@ -229,6 +265,7 @@ selectSpec name =
     "click" -> Just clickSpec
     "custom" -> Just customEventSpec
     "mouseDown" -> Just mouseDownSpec
+    "mouseUp" -> Just mouseUpSpec
     _ -> Nothing
 
 
