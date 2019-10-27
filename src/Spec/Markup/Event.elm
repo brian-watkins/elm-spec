@@ -1,6 +1,7 @@
 module Spec.Markup.Event exposing
   ( click
   , input
+  , trigger
   )
 
 import Spec.Step as Step
@@ -28,6 +29,19 @@ input text context =
     , body = Encode.object
       [ ( "selector", Encode.string <| targetSelector context )
       , ( "text", Encode.string text )
+      ]
+    }
+
+
+trigger : String -> Encode.Value -> Step.Context model -> Step.Command msg
+trigger name json context =
+  Step.sendMessage
+    { home = "_html"
+    , name = "customEvent"
+    , body = Encode.object
+      [ ( "selector", Encode.string <| targetSelector context )
+      , ( "name", Encode.string name )
+      , ( "event", json )
       ]
     }
 

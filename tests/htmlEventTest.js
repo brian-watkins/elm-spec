@@ -1,10 +1,24 @@
-const { expectPassingBrowserSpec } = require("./helpers/SpecHelpers")
+const {
+  expectPassingBrowserSpec,
+  expectBrowserSpec,
+  expectAccepted
+} = require("./helpers/SpecHelpers")
 
 describe("Events", () => {
   describe("Input", () => {
     context("when text is input to a targeted field", () => {
       it("updates the model and renders the view as expected", (done) => {
         expectPassingBrowserSpec("EventSpec", "input", done)
+      })
+    })
+  })
+
+  describe("custom events", () => {
+    context("when a custom event is triggered", () => {
+      it("updates as expected", (done) => {
+        expectBrowserSpec("EventSpec", "custom", done, (observations) => {
+          expectAccepted(observations[0])
+        })
       })
     })
   })
