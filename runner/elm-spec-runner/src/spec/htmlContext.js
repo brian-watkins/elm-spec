@@ -87,7 +87,7 @@ module.exports = class HtmlContext {
 
   generatePlugins(window, clock) {
     return {
-      "_html": new HtmlPlugin(window, clock),
+      "_html": new HtmlPlugin(this, window, clock),
       "_http": new HttpPlugin(window)
     }
   }
@@ -106,5 +106,15 @@ module.exports = class HtmlContext {
     document.body.appendChild(wrapper)
 
     return wrapper
+  }
+
+  // plugin functions
+
+  get location() {
+    return this.dom.window._elm_spec.window.location
+  }
+
+  setBaseLocation(location) {
+    this.dom.window._elm_spec.window.location.setBase(this.dom.window.document, location)
   }
 }

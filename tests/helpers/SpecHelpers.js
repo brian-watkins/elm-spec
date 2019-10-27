@@ -102,7 +102,7 @@ const runTestSpec = (specProgram, specName, done, matcher) => {
 const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
   this.htmlContext.evaluate((Elm, appElement, clock, window) => {
     const plugins = {
-      "_html": new HtmlPlugin(window, clock),
+      "_html": new HtmlPlugin(this.htmlContext, window, clock),
       "_http": new HttpPlugin(window)
     }
 

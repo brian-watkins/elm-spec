@@ -1,6 +1,7 @@
 
 module.exports = class HtmlPlugin {
-  constructor(window, clock) {
+  constructor(context, window, clock) {
+    this.context = context
     this.window = window
     this.document = window.document
     this.clock = clock
@@ -55,13 +56,13 @@ module.exports = class HtmlPlugin {
         out({
           home: "navigation",
           name: "current-location",
-          body: this.window._elm_spec.window.location.href
+          body: this.context.location.href
         })
         break
       }
       case "set-location": {
         const location = specMessage.body
-        this.window._elm_spec.window.location.setBase(this.window.document, location)
+        this.context.setBaseLocation(location)
         break
       }
       case "application": {
