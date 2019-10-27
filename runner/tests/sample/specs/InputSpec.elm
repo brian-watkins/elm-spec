@@ -19,7 +19,7 @@ inputSpec =
           |> Subject.withView App.view
       )
       |> when "some text is input"
-        [ target << by [ id "my-input" ]
+        [ Markup.target << by [ id "my-input" ]
         , Event.input "Here is some fun text!"
         ]
       |> it "renders the text on the view" (
@@ -41,7 +41,7 @@ differentInputSpec =
           |> Subject.withView App.view
       )
       |> when "some text is input"
-        [ target << by [ id "my-input" ]
+        [ Markup.target << by [ id "my-input" ]
         , Event.input "Here is some awesome text!"
         ]
       |> observeThat

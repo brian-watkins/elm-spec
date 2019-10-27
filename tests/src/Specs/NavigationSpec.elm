@@ -29,7 +29,7 @@ loadUrlSpec =
           |> Subject.withLocation testUrl
       )
       |> when "a new page load is triggered"
-        [ target << by [ id "load-button" ]
+        [ Markup.target << by [ id "load-button" ]
         , Event.click
         ]
       |> it "updates the document location" (
@@ -72,7 +72,7 @@ reloadSpec =
           |> Subject.withUpdate testUpdate
       )
       |> when "a reload is triggered"
-        [ target << by [ id "reload-button" ]
+        [ Markup.target << by [ id "reload-button" ]
         , Event.click
         ]
       |> it "records the reload" (
@@ -86,7 +86,7 @@ reloadSpec =
           |> Subject.withUpdate testUpdate
       )
       |> when "a reload is triggered"
-        [ target << by [ id "reload-skip-cache-button" ]
+        [ Markup.target << by [ id "reload-skip-cache-button" ]
         , Event.click
         ]
       |> it "records the reload" (
@@ -117,7 +117,7 @@ batchLoadSpec =
           |> Subject.withLocation testUrl
       )
       |> when "the batch command is triggered"
-        [ target << by [ id "load-and-send" ]
+        [ Markup.target << by [ id "load-and-send" ]
         , Event.click
         ]
       |> it "changes the location" (

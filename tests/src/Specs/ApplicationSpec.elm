@@ -58,7 +58,7 @@ noChangeHandlerSpec =
           |> Subject.withUpdate testUpdate
       )
       |> when "the url is changed"
-        [ target << by [ id "push-url-button" ]
+        [ Markup.target << by [ id "push-url-button" ]
         , Event.click
         ]
       |> it "fails" (
@@ -88,7 +88,7 @@ changeUrlSpec =
         testSubject
       )
       |> when "the url is changed"
-        [ target << by [ id "push-url-button" ]
+        [ Markup.target << by [ id "push-url-button" ]
         , Event.click
         ]
       |> observeThat
@@ -106,7 +106,7 @@ changeUrlSpec =
   , scenario "use replaceUrl to navigate" (
       given testSubject
         |> when "the url is changed"
-          [ target << by [ id "replace-url-button" ]
+          [ Markup.target << by [ id "replace-url-button" ]
           , Event.click
           ]
         |> observeThat
@@ -138,7 +138,7 @@ titleSpec =
         testSubject
       )
       |> when "the title is changed"
-        [ target << by [ id "update-title" ]
+        [ Markup.target << by [ id "update-title" ]
         , Event.click
         ]
       |> observeThat
@@ -157,7 +157,7 @@ clickLinkSpec =
   [ scenario "internal url request" (
       given testSubject
       |> when "an internal link is clicked"
-        [ target << by [ id "internal-link" ]
+        [ Markup.target << by [ id "internal-link" ]
         , Event.click
         ]
       |> observeThat
@@ -177,7 +177,7 @@ clickLinkSpec =
         testSubject
       )
       |> when "an external link is clicked"
-        [ target << by [ id "external-link" ]
+        [ Markup.target << by [ id "external-link" ]
         , Event.click
         ]
       |> observeThat
@@ -200,7 +200,7 @@ noRequestHandlerSpec =
           |> Subject.withUpdate testUpdate
       )
       |> when "the url is changed"
-        [ target << by [ id "internal-link" ]
+        [ Markup.target << by [ id "internal-link" ]
         , Event.click
         ]
       |> observeThat

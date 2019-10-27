@@ -5,6 +5,7 @@ module Spec.Markup exposing
   , observeElement
   , observeElements
   , query
+  , target
   , hasText
   , hasAttribute
   )
@@ -82,6 +83,15 @@ query (selection, MarkupObservation (messageGenerator, handler)) =
       Report.append <|
         Report.fact "Claim rejected for selector" <| Selector.toString selection
     )
+
+
+target : (Selection a, Step.Context model) -> Step.Command msg
+target (selection, context) =
+  Step.sendMessage
+    { home = "_html"
+    , name = "target"
+    , body = Encode.string <| Selector.toString selection
+    }
 
 
 selectHtml : Selection Element -> Message

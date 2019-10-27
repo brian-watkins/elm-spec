@@ -21,7 +21,7 @@ clickSpec =
           |> Subject.withView App.view
       )
       |> when "the button is clicked three times"
-        [ target << by [ id "my-button" ]
+        [ Markup.target << by [ id "my-button" ]
         , Event.click
         , Event.click
         , Event.click

@@ -32,7 +32,7 @@ getSpec =
           |> Spec.Http.withStubs [ successStub ]
       )
       |> when "an http request is triggered"
-        [ target << by [ id "trigger" ]
+        [ Markup.target << by [ id "trigger" ]
         , Event.click
         ]
       |> it "receives a stubbed response" (
@@ -54,7 +54,7 @@ getSpec =
           |> Spec.Http.withStubs [ unauthorizedStub ]
       )
       |> when "an http request is triggered"
-        [ target << by [ id "trigger" ]
+        [ Markup.target << by [ id "trigger" ]
         , Event.click
         ]
       |> it "receives a stubbed response" (
@@ -78,7 +78,7 @@ expectRequestSpec =
           |> Spec.Http.withStubs [ successStub ]
       )
       |> when "an http request is triggered"
-        [ target << by [ id "trigger" ]
+        [ Markup.target << by [ id "trigger" ]
         , Event.click
         ]
       |> observeThat
@@ -113,7 +113,7 @@ hasHeaderSpec =
           |> Spec.Http.withStubs [ successStub ]
       )
       |> when "an http request is triggered"
-        [ target << by [ id "trigger" ]
+        [ Markup.target << by [ id "trigger" ]
         , Event.click
         ]
       |> observeThat

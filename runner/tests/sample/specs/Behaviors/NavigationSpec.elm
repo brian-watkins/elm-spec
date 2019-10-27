@@ -24,7 +24,7 @@ navigationSpec =
           |> Subject.withLocation testUrl
       )
       |> when "the url is changed"
-        [ target << by [ id "push-url-button" ]
+        [ Markup.target << by [ id "push-url-button" ]
         , Event.click
         ]
       |> it "shows a different page" (

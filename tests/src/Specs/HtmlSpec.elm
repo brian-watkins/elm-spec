@@ -94,13 +94,13 @@ targetUnknownSpec =
           |> Subject.withView testView
       )
       |> when "the button is clicked three times"
-        [ target << by [ id "some-element-that-does-not-exist" ]
+        [ Markup.target << by [ id "some-element-that-does-not-exist" ]
         , Event.click
         , Event.click
         , Event.click
         ]
       |> when "the other button is clicked once"
-        [ target << by [ id "another-button" ]
+        [ Markup.target << by [ id "another-button" ]
         , Event.click
         ]
       |> it "renders the count" (

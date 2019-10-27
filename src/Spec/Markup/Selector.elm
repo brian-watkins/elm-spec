@@ -3,7 +3,6 @@ module Spec.Markup.Selector exposing
   , Selection
   , Element
   , Object
-  , target
   , id
   , tag
   , attribute
@@ -38,15 +37,6 @@ type Element
 
 type Object
   = Object
-
-
-target : (Selection a, Step.Context model) -> Step.Command msg
-target (selection, context) =
-  Step.sendMessage
-    { home = "_html"
-    , name = "target"
-    , body = Encode.string <| toString selection
-    }
 
 
 {-| Select Html elements by id.

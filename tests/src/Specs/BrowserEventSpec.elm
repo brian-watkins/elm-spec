@@ -26,7 +26,7 @@ keyboardEventsSpec =
           |> Subject.withSubscriptions testSubscriptions
       )
       |> when "key presses are triggered"
-        [ target << document
+        [ Markup.target << document
         , keyPressEvent "A"
         , keyPressEvent "B"
         , keyPressEvent "A"

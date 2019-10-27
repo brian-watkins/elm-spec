@@ -24,13 +24,13 @@ clickSpec =
         testSubject
       )
       |> when "the button is clicked three times"
-        [ target << by [ id "my-button" ]
+        [ Markup.target << by [ id "my-button" ]
         , Event.click
         , Event.click
         , Event.click
         ]
       |> when "the other button is clicked once"
-        [ target << by [ id "another-button" ]
+        [ Markup.target << by [ id "another-button" ]
         , Event.click
         ]
       |> it "renders the count" (
@@ -63,7 +63,7 @@ inputSpec =
         testSubject
       )
       |> when "some text is input"
-        [ target << by [ id "my-field" ]
+        [ Markup.target << by [ id "my-field" ]
         , Event.input "Here is some fun text!"
         ]
       |> it "renders the text on the view" (
@@ -96,7 +96,7 @@ customEventSpec =
         testSubject
       )
       |> when "some event is triggered"
-        [ target << by [ id "my-typing-place" ]
+        [ Markup.target << by [ id "my-typing-place" ]
         , keyUpEvent 65
         , keyUpEvent 66
         , keyUpEvent 67
