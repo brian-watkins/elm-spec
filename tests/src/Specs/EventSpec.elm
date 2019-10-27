@@ -141,6 +141,7 @@ mouseUpSpec =
     )
   ]
 
+
 mouseMoveInSpec : Spec Model Msg
 mouseMoveInSpec =
   Spec.describe "mouse move in"
@@ -172,6 +173,43 @@ mouseMoveInSpec =
         ]
       |> it "fails" (
         Observer.observeModel .mouseOver
+          |> expect (equals 2)
+      )
+    )
+  ]
+
+
+mouseMoveOutSpec : Spec Model Msg
+mouseMoveOutSpec =
+  Spec.describe "mouse move out"
+  [ scenario "it triggers mouseOut and mouseLeave events" (
+      given (
+        testSubject
+      )
+      |> when "the mouse moves out of the element"
+        [ Markup.target << by [ id "move-area" ]
+        , Event.mouseMoveOut
+        ]
+      |> observeThat
+        [ it "triggers a mouseOut event, which bubbles" (
+            Observer.observeModel .mouseOut
+              |> expect (equals 2)
+          )
+        , it "triggers a mouseLeave event, which does not bubble" (
+            Observer.observeModel .mouseLeave
+              |> expect (equals 1)
+          )
+        ]
+    )
+  , scenario "no element targeted for mouse move out" (
+      given (
+        testSubject
+      )
+      |> when "no element is targeted for the mouse move out event"
+        [ Event.mouseMoveOut
+        ]
+      |> it "fails" (
+        Observer.observeModel .mouseOut
           |> expect (equals 2)
       )
     )
@@ -247,7 +285,7 @@ customEventSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0 }
+  Subject.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0, mouseOut = 0, mouseLeave = 0 }
     |> Subject.withUpdate testUpdate
     |> Subject.withView testView
 
@@ -269,6 +307,8 @@ type Msg
   | MouseUp
   | MouseOver
   | MouseEnter
+  | MouseOut
+  | MouseLeave
 
 
 type alias Model =
@@ -277,6 +317,8 @@ type alias Model =
   , mouseDown: Int
   , mouseOver: Int
   , mouseEnter: Int
+  , mouseOut: Int
+  , mouseLeave: Int
   , count: Int
   }
 
@@ -294,6 +336,10 @@ testUpdate msg model =
       ( { model | mouseDown = model.mouseDown + 1, message = "MOUSE DOWN" }, Cmd.none )
     MouseUp ->
       ( { model | mouseUp = model.mouseUp + 1, message = "MOUSE UP" }, Cmd.none )
+    MouseOut ->
+      ( { model | mouseOut = model.mouseOut + 1 }, Cmd.none )
+    MouseLeave ->
+      ( { model | mouseLeave = model.mouseLeave + 1 }, Cmd.none )
     MouseEnter ->
       ( { model | mouseEnter = model.mouseEnter + 1 }, Cmd.none )
     MouseOver ->
@@ -315,8 +361,8 @@ testView model =
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick, Events.onMouseUp MouseUp, Events.onMouseDown MouseDown ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
   , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp ] [ Html.text "Tap Area!" ]
-  , Html.div [ Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter ]
-    [ Html.div [ Attr.id "move-area", Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter ] [ Html.text "Move Area!" ]
+  , Html.div [ Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter, Events.onMouseOut MouseOut, Events.onMouseLeave MouseLeave ]
+    [ Html.div [ Attr.id "move-area", Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter, Events.onMouseOut MouseOut, Events.onMouseLeave MouseLeave ] [ Html.text "Move Area!" ]
     ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
@@ -337,6 +383,7 @@ selectSpec name =
     "mouseDown" -> Just mouseDownSpec
     "mouseUp" -> Just mouseUpSpec
     "mouseMoveIn" -> Just mouseMoveInSpec
+    "mouseMoveOut" -> Just mouseMoveOutSpec
     _ -> Nothing
 
 

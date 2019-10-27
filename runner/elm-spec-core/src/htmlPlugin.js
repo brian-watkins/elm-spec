@@ -75,6 +75,17 @@ module.exports = class HtmlPlugin {
         }
         break
       }
+      case "mouseMoveOut": {
+        const props = specMessage.body
+        if (props.selector) {
+          const element = this.document.querySelector(props.selector)
+          element.dispatchEvent(this.getEvent("mouseout"))
+          element.dispatchEvent(this.getEvent("mouseleave", { bubbles: false }))
+        } else {
+          this.elementNotTargetedForEvent("mouseMoveOut", abort)
+        }
+        break
+      }
       case "input": {
         const props = specMessage.body
         if (props.selector) {

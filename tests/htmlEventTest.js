@@ -53,6 +53,18 @@ describe("Events", () => {
     })
   })
 
+  context("mouseMoveOut", () => {
+    it("handles the mouseOut and mouseLeave events as expected", (done) => {
+      expectBrowserSpec("EventSpec", "mouseMoveOut", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectRejected(observations[2], [
+          reportLine("No element targeted for event", "mouseMoveOut")
+        ])
+      })
+    })
+  })
+
   describe("Input", () => {
     context("when text is input to a targeted field", () => {
       it("updates the model and renders the view as expected", (done) => {
