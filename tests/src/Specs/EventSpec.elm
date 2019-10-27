@@ -59,6 +59,21 @@ customEventSpec =
           |> expect (Markup.hasText "You wrote: ABC")
       )
     )
+  , scenario "no element targeted for custom event" (
+      given (
+        Subject.initWithModel { message = "" }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+      )
+      |> when "some event is triggered without targeting an element first"
+        [ keyUpEvent 65
+        ]
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: A")
+      )
+    )
   ]
 
 

@@ -42,10 +42,17 @@ module.exports = class HtmlPlugin {
       }
       case "customEvent": {
         const props = specMessage.body
-        const element = this.document.querySelector(props.selector)
-        const event = this.window.eval(`new Event('${props.name}')`)
-        Object.assign(event, props.event)
-        element.dispatchEvent(event)
+        if (props.selector) {
+          const element = this.document.querySelector(props.selector)
+          const event = this.window.eval(`new Event('${props.name}')`)
+          Object.assign(event, props.event)
+          element.dispatchEvent(event)  
+        } else {
+          abort([{
+            statement: "No element targeted for event",
+            detail: props.name
+          }])
+        }
         break
       }
       case "click": {

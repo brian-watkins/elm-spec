@@ -1,7 +1,9 @@
 const {
   expectPassingBrowserSpec,
   expectBrowserSpec,
-  expectAccepted
+  expectAccepted,
+  expectRejected,
+  reportLine
 } = require("./helpers/SpecHelpers")
 
 describe("Events", () => {
@@ -18,6 +20,9 @@ describe("Events", () => {
       it("updates as expected", (done) => {
         expectBrowserSpec("EventSpec", "custom", done, (observations) => {
           expectAccepted(observations[0])
+          expectRejected(observations[1], [
+            reportLine("No element targeted for event", "keyup")
+          ])
         })
       })
     })
