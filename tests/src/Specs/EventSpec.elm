@@ -141,6 +141,42 @@ mouseUpSpec =
     )
   ]
 
+mouseMoveInSpec : Spec Model Msg
+mouseMoveInSpec =
+  Spec.describe "mouse move in"
+  [ scenario "it triggers mouseOver and mouseEnter events" (
+      given (
+        testSubject
+      )
+      |> when "the mouse moves into the element"
+        [ Markup.target << by [ id "move-area" ]
+        , Event.mouseMoveIn
+        ]
+      |> observeThat
+        [ it "triggers a mouseOver event, which bubbles" (
+            Observer.observeModel .mouseOver
+              |> expect (equals 2)
+          )
+        , it "triggers a mouseEnter event, which does not bubble" (
+            Observer.observeModel .mouseEnter
+              |> expect (equals 1)
+          )
+        ]
+    )
+  , scenario "no element targeted for mouse move in" (
+      given (
+        testSubject
+      )
+      |> when "no element is targeted for the mouse moves in event"
+        [ Event.mouseMoveIn
+        ]
+      |> it "fails" (
+        Observer.observeModel .mouseOver
+          |> expect (equals 2)
+      )
+    )
+  ]
+
 
 inputSpec : Spec Model Msg
 inputSpec =
@@ -211,7 +247,7 @@ customEventSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0 }
+  Subject.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0 }
     |> Subject.withUpdate testUpdate
     |> Subject.withView testView
 
@@ -231,12 +267,16 @@ type Msg
   | HandleMegaClick
   | MouseDown
   | MouseUp
+  | MouseOver
+  | MouseEnter
 
 
 type alias Model =
   { message: String
   , mouseUp: Int
   , mouseDown: Int
+  , mouseOver: Int
+  , mouseEnter: Int
   , count: Int
   }
 
@@ -254,6 +294,10 @@ testUpdate msg model =
       ( { model | mouseDown = model.mouseDown + 1, message = "MOUSE DOWN" }, Cmd.none )
     MouseUp ->
       ( { model | mouseUp = model.mouseUp + 1, message = "MOUSE UP" }, Cmd.none )
+    MouseEnter ->
+      ( { model | mouseEnter = model.mouseEnter + 1 }, Cmd.none )
+    MouseOver ->
+      ( { model | mouseOver = model.mouseOver + 1 }, Cmd.none )
     GotKey key ->
       let
         letter =
@@ -271,6 +315,9 @@ testView model =
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick, Events.onMouseUp MouseUp, Events.onMouseDown MouseDown ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
   , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp ] [ Html.text "Tap Area!" ]
+  , Html.div [ Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter ]
+    [ Html.div [ Attr.id "move-area", Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter ] [ Html.text "Move Area!" ]
+    ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
   ]
@@ -289,6 +336,7 @@ selectSpec name =
     "custom" -> Just customEventSpec
     "mouseDown" -> Just mouseDownSpec
     "mouseUp" -> Just mouseUpSpec
+    "mouseMoveIn" -> Just mouseMoveInSpec
     _ -> Nothing
 
 

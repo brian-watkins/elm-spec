@@ -41,6 +41,18 @@ describe("Events", () => {
     })
   })
 
+  context("mouseMoveIn", () => {
+    it("handles the mouseOver and mouseEnter events as expected", (done) => {
+      expectBrowserSpec("EventSpec", "mouseMoveIn", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectRejected(observations[2], [
+          reportLine("No element targeted for event", "mouseMoveIn")
+        ])
+      })
+    })
+  })
+
   describe("Input", () => {
     context("when text is input to a targeted field", () => {
       it("updates the model and renders the view as expected", (done) => {

@@ -2,6 +2,7 @@ module Spec.Markup.Event exposing
   ( click
   , press
   , release
+  , mouseMoveIn
   , input
   , trigger
   )
@@ -31,6 +32,17 @@ press =
 release : Step.Context model -> Step.Command msg
 release =
   trigger "mouseup" <| Encode.object []
+
+
+mouseMoveIn : Step.Context model -> Step.Command msg
+mouseMoveIn context =
+  Step.sendMessage
+    { home = "_html"
+    , name = "mouseMoveIn"
+    , body = Encode.object
+      [ ( "selector", Encode.string <| targetSelector context )
+      ]
+    }
 
 
 input : String -> Step.Context model -> Step.Command msg

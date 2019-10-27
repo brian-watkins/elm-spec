@@ -55,12 +55,23 @@ module.exports = class HtmlPlugin {
       case "click": {
         const props = specMessage.body
         if (props.selector) {
-          const element = this.document.querySelector(specMessage.body.selector)
+          const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("mousedown"))
           element.dispatchEvent(this.getEvent("mouseup"))
           element.click()
         } else {
           this.elementNotTargetedForEvent("click", abort)
+        }
+        break
+      }
+      case "mouseMoveIn": {
+        const props = specMessage.body
+        if (props.selector) {
+          const element = this.document.querySelector(props.selector)
+          element.dispatchEvent(this.getEvent("mouseover"))
+          element.dispatchEvent(this.getEvent("mouseenter", { bubbles: false }))
+        } else {
+          this.elementNotTargetedForEvent("mouseMoveIn", abort)
         }
         break
       }
@@ -135,8 +146,9 @@ module.exports = class HtmlPlugin {
     return this.document.querySelector(selector)
   }
 
-  getEvent(name) {
-    return this.window.eval(`new Event('${name}')`)
+  getEvent(name, options = {}) {
+    const details = Object.assign({ bubbles: true, cancelable: true }, options)
+    return this.window.eval(`new Event('${name}', ${JSON.stringify(details)})`)
   }
 
   describeElement(element) {
