@@ -55,6 +55,39 @@ clickSpec =
   ]
 
 
+mouseDownSpec : Spec Model Msg
+mouseDownSpec =
+  Spec.describe "mouse down"
+  [ scenario "a mouse down event" (
+      given (
+        testSubject
+      )
+      |> when "a mouse down event occurs"
+        [ Markup.target << by [ id "tap-area" ]
+        , Event.press
+        ]
+      |> it "responds to the event" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: MOUSE DOWN")
+      )
+    )
+  , scenario "no element targeted for mouse down" (
+      given (
+        testSubject
+      )
+      |> when "a mouse down event occurs but no element is targeted"
+        [ Event.press
+        ]
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: MOUSE DOWN")
+      )
+    )
+  ]
+
+
 inputSpec : Spec Model Msg
 inputSpec =
   Spec.describe "an html program"
@@ -142,6 +175,7 @@ type Msg
   | GotKey Int
   | HandleClick
   | HandleMegaClick
+  | MouseDown
 
 
 type alias Model =
@@ -159,6 +193,8 @@ testUpdate msg model =
       ( { model | count = model.count * 10 }, Cmd.none )
     GotText message ->
       ( { model | message = message }, Cmd.none )
+    MouseDown ->
+      ( { model | message = "MOUSE DOWN" }, Cmd.none )
     GotKey key ->
       let
         letter =
@@ -175,6 +211,7 @@ testView model =
   , Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
+  , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown ] [ Html.text "Tap Area!" ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
   ]
@@ -191,6 +228,7 @@ selectSpec name =
     "input" -> Just inputSpec
     "click" -> Just clickSpec
     "custom" -> Just customEventSpec
+    "mouseDown" -> Just mouseDownSpec
     _ -> Nothing
 
 
