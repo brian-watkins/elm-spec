@@ -48,10 +48,7 @@ module.exports = class HtmlPlugin {
           Object.assign(event, props.event)
           element.dispatchEvent(event)  
         } else {
-          abort([{
-            statement: "No element targeted for event",
-            detail: props.name
-          }])
+          this.elementNotTargetedForEvent(props.name, abort)
         }
         break
       }
@@ -61,10 +58,15 @@ module.exports = class HtmlPlugin {
         break
       }
       case "input": {
-        const element = this.document.querySelector(specMessage.body.selector)
-        element.value = specMessage.body.text
-        const event = this.window.eval("new Event('input', {bubbles: true, cancelable: true})")
-        element.dispatchEvent(event)
+        const props = specMessage.body
+        if (props.selector) {
+          const element = this.document.querySelector(specMessage.body.selector)
+          element.value = specMessage.body.text
+          const event = this.window.eval("new Event('input', {bubbles: true, cancelable: true})")
+          element.dispatchEvent(event)  
+        } else {
+          this.elementNotTargetedForEvent("input", abort)
+        }
         break
       }
       case "navigation": {
@@ -109,6 +111,13 @@ module.exports = class HtmlPlugin {
       name: "selected",
       body: null
     }
+  }
+
+  elementNotTargetedForEvent(event, abort) {
+    abort([{
+      statement: "No element targeted for event",
+      detail: event
+    }])
   }
 
   describeElement(element) {

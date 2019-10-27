@@ -35,6 +35,21 @@ inputSpec =
           |> expect (Markup.hasText "You wrote: Here is some fun text!")
       )
     )
+  , scenario "no element targeted for input" (
+      given (
+        Subject.initWithModel { message = "" }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+      )
+      |> when "some text is input without targeting an element"
+        [ Event.input "Here is some fun text!"
+        ]
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: Here is some fun text!")
+      )
+    )
   ]
 
 
