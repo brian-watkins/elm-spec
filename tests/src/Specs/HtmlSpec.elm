@@ -84,34 +84,6 @@ htmlSpecMultiple =
   ]
 
 
-clickSpec : Spec Model Msg
-clickSpec =
-  Spec.describe "an html program"
-  [ scenario "a click event" (
-      given (
-        Subject.initWithModel { name = "Cool Dude", count = 0 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
-      )
-      |> when "the button is clicked three times"
-        [ target << by [ id "my-button" ]
-        , Event.click
-        , Event.click
-        , Event.click
-        ]
-      |> when "the other button is clicked once"
-        [ target << by [ id "another-button" ]
-        , Event.click
-        ]
-      |> it "renders the count" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-count" ]
-          |> expect (Markup.hasText "The count is 30!")
-      )
-    )
-  ]
-
-
 targetUnknownSpec : Spec Model Msg
 targetUnknownSpec =
   Spec.describe "an html program"
@@ -327,7 +299,6 @@ selectSpec name =
   case name of
     "single" -> Just htmlSpecSingle
     "multiple" -> Just htmlSpecMultiple
-    "click" -> Just clickSpec
     "sub" -> Just subSpec
     "targetUnknown" -> Just targetUnknownSpec
     "manyElements" -> Just manyElementsSpec

@@ -53,8 +53,13 @@ module.exports = class HtmlPlugin {
         break
       }
       case "click": {
-        const element = this.document.querySelector(specMessage.body.selector)
-        element.click()
+        const props = specMessage.body
+        if (props.selector) {
+          const element = this.document.querySelector(specMessage.body.selector)
+          element.click()
+        } else {
+          this.elementNotTargetedForEvent("click", abort)
+        }
         break
       }
       case "input": {

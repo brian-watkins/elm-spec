@@ -16,14 +16,51 @@ import Json.Decode as Json
 import Json.Encode as Encode
 
 
+clickSpec : Spec Model Msg
+clickSpec =
+  Spec.describe "an html program"
+  [ scenario "a click event" (
+      given (
+        testSubject
+      )
+      |> when "the button is clicked three times"
+        [ target << by [ id "my-button" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> when "the other button is clicked once"
+        [ target << by [ id "another-button" ]
+        , Event.click
+        ]
+      |> it "renders the count" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-count" ]
+          |> expect (Markup.hasText "The count is 30!")
+      )
+    )
+  , scenario "no element targeted for click" (
+      given (
+        testSubject
+      )
+      |> when "no element is targeted for a click"
+        [ Event.click
+        ]
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-count" ]
+          |> expect (Markup.hasText "The count is 1!")
+      )
+    )
+  ]
+
+
 inputSpec : Spec Model Msg
 inputSpec =
   Spec.describe "an html program"
   [ scenario "Input event" (
       given (
-        Subject.initWithModel { message = "" }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        testSubject
       )
       |> when "some text is input"
         [ target << by [ id "my-field" ]
@@ -37,9 +74,7 @@ inputSpec =
     )
   , scenario "no element targeted for input" (
       given (
-        Subject.initWithModel { message = "" }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        testSubject
       )
       |> when "some text is input without targeting an element"
         [ Event.input "Here is some fun text!"
@@ -58,9 +93,7 @@ customEventSpec =
   Spec.describe "program that uses a custom event"
   [ scenario "trigger a custom event" (
       given (
-        Subject.initWithModel { message = "" }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        testSubject
       )
       |> when "some event is triggered"
         [ target << by [ id "my-typing-place" ]
@@ -76,9 +109,7 @@ customEventSpec =
     )
   , scenario "no element targeted for custom event" (
       given (
-        Subject.initWithModel { message = "" }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        testSubject
       )
       |> when "some event is triggered without targeting an element first"
         [ keyUpEvent 65
@@ -92,6 +123,12 @@ customEventSpec =
   ]
 
 
+testSubject =
+  Subject.initWithModel { message = "", count = 0 }
+    |> Subject.withUpdate testUpdate
+    |> Subject.withView testView
+
+
 keyUpEvent : Int -> Step.Context model -> Step.Command msg
 keyUpEvent code =
   Encode.object
@@ -103,16 +140,23 @@ keyUpEvent code =
 type Msg
   = GotText String
   | GotKey Int
+  | HandleClick
+  | HandleMegaClick
 
 
 type alias Model =
   { message: String
+  , count: Int
   }
 
 
 testUpdate : Msg -> Model -> (Model, Cmd Msg)
 testUpdate msg model =
   case msg of
+    HandleClick ->
+      ( { model | count = model.count + 1 }, Cmd.none )
+    HandleMegaClick ->
+      ( { model | count = model.count * 10 }, Cmd.none )
     GotText message ->
       ( { model | message = message }, Cmd.none )
     GotKey key ->
@@ -129,7 +173,10 @@ testView model =
   Html.div []
   [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
   , Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
+  , Html.button [ Attr.id "my-button", Events.onClick HandleClick ] [ Html.text "Click me!" ]
+  , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
+  , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
   ]
 
 
@@ -142,6 +189,7 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "input" -> Just inputSpec
+    "click" -> Just clickSpec
     "custom" -> Just customEventSpec
     _ -> Nothing
 

@@ -40,12 +40,6 @@ describe("html plugin", () => {
     })
   })
 
-  context("click event", () => {
-    it("handles the click event as expected", (done) => {
-      expectPassingBrowserSpec("HtmlSpec", "click", done)
-    })
-  })
-
   context("target element", () => {
     context("when the target fails to select an element", () => {
       it("fails before any observations or other scenarios and reports the reason", (done) => {
