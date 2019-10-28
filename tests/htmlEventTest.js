@@ -19,6 +19,20 @@ describe("Events", () => {
     })
   })
 
+  context("double click", () => {
+    it("handles the double click event as expected", (done) => {
+      expectBrowserSpec("EventSpec", "doubleClick", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+        expectRejected(observations[4], [
+          reportLine("No element targeted for event", "doubleClick")
+        ])
+      })
+    })
+  })
+
   context("press", () => {
     it("handles the mousedown event as expected", (done) => {
       expectBrowserSpec("EventSpec", "mouseDown", done, (observations) => {

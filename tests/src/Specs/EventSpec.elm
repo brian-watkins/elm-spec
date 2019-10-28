@@ -76,6 +76,53 @@ clickSpec =
   ]
 
 
+doubleClickSpec : Spec Model Msg
+doubleClickSpec =
+  Spec.describe "double click"
+  [ scenario "a double click event" (
+      given (
+        testSubject
+      )
+      |> when "a double click event occurs"
+        [ Markup.target << by [ id "tap-twice-area" ]
+        , Event.doubleClick
+        ]
+      |> observeThat
+        [ it "responds to the event" (
+            Markup.observeElement
+              |> Markup.query << by [ id "my-message" ]
+              |> expect (Markup.hasText "You wrote: DOUBLE CLICK")
+          )
+        , it "records two click events" (
+            Observer.observeModel .count
+              |> expect (equals 2)
+          )
+        , it "fires two mouseup events" (
+            Observer.observeModel .mouseUp
+              |> expect (equals 2)
+          )
+        , it "fires two mousedown events" (
+            Observer.observeModel .mouseDown
+              |> expect (equals 2)
+          )
+        ]
+    )
+  , scenario "no element targeted for double click" (
+      given (
+        testSubject
+      )
+      |> when "a double click event occurs but no element is targeted"
+        [ Event.doubleClick
+        ]
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote: DOUBLE CLICK")
+      )
+    )
+  ]
+
+
 mouseDownSpec : Spec Model Msg
 mouseDownSpec =
   Spec.describe "mouse down"
@@ -309,6 +356,7 @@ type Msg
   | MouseEnter
   | MouseOut
   | MouseLeave
+  | DoubleClick
 
 
 type alias Model =
@@ -330,6 +378,8 @@ testUpdate msg model =
       ( { model | count = model.count + 1 }, Cmd.none )
     HandleMegaClick ->
       ( { model | count = model.count * 10 }, Cmd.none )
+    DoubleClick ->
+      ( { model | message = "DOUBLE CLICK" }, Cmd.none )
     GotText message ->
       ( { model | message = message }, Cmd.none )
     MouseDown ->
@@ -360,6 +410,7 @@ testView model =
   , Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick, Events.onMouseUp MouseUp, Events.onMouseDown MouseDown ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
+  , Html.div [ Attr.id "tap-twice-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp, Events.onClick HandleClick, Events.onDoubleClick DoubleClick ] [ Html.text "Double click!" ]
   , Html.div [ Attr.id "tap-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp ] [ Html.text "Tap Area!" ]
   , Html.div [ Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter, Events.onMouseOut MouseOut, Events.onMouseLeave MouseLeave ]
     [ Html.div [ Attr.id "move-area", Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter, Events.onMouseOut MouseOut, Events.onMouseLeave MouseLeave ] [ Html.text "Move Area!" ]
@@ -379,6 +430,7 @@ selectSpec name =
   case name of
     "input" -> Just inputSpec
     "click" -> Just clickSpec
+    "doubleClick" -> Just doubleClickSpec
     "custom" -> Just customEventSpec
     "mouseDown" -> Just mouseDownSpec
     "mouseUp" -> Just mouseUpSpec

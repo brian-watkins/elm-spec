@@ -41,61 +41,63 @@ module.exports = class HtmlPlugin {
         break
       }
       case "customEvent": {
-        const props = specMessage.body
-        if (props.selector) {
+        this.verifySelector(specMessage.body.name, specMessage.body, abort, (props) => {
           const element = this.getElement(props.selector)
           const event = this.getEvent(props.name)
           Object.assign(event, props.event)
           element.dispatchEvent(event)
-        } else {
-          this.elementNotTargetedForEvent(props.name, abort)
-        }
+        })
         break
       }
       case "click": {
-        const props = specMessage.body
-        if (props.selector) {
+        this.verifySelector("click", specMessage.body, abort, (props) => {
           const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("mousedown"))
           element.dispatchEvent(this.getEvent("mouseup"))
           element.click()
-        } else {
-          this.elementNotTargetedForEvent("click", abort)
-        }
+        })
+        break
+      }
+      case "doubleClick": {
+        this.verifySelector("doubleClick", specMessage.body, abort, (props) => {
+          const clickMessage = {
+            home: "_html",
+            name: "click",
+            body: {
+              selector: props.selector
+            }
+          }
+          this.handle(clickMessage, out, abort)
+          this.handle(clickMessage, out, abort)
+          
+          const element = this.document.querySelector(props.selector)
+          element.dispatchEvent(this.getEvent("dblclick"))
+        })
         break
       }
       case "mouseMoveIn": {
-        const props = specMessage.body
-        if (props.selector) {
+        this.verifySelector("mouseMoveIn", specMessage.body, abort, (props) => {
           const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("mouseover"))
           element.dispatchEvent(this.getEvent("mouseenter", { bubbles: false }))
-        } else {
-          this.elementNotTargetedForEvent("mouseMoveIn", abort)
-        }
+        })
         break
       }
       case "mouseMoveOut": {
-        const props = specMessage.body
-        if (props.selector) {
+        this.verifySelector("mouseMoveOut", specMessage.body, abort, (props) => {
           const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("mouseout"))
           element.dispatchEvent(this.getEvent("mouseleave", { bubbles: false }))
-        } else {
-          this.elementNotTargetedForEvent("mouseMoveOut", abort)
-        }
+        })
         break
       }
       case "input": {
-        const props = specMessage.body
-        if (props.selector) {
+        this.verifySelector("input", specMessage.body, abort, (props) => {
           const element = this.document.querySelector(specMessage.body.selector)
           element.value = specMessage.body.text
           const event = this.getEvent("input")
-          element.dispatchEvent(event)  
-        } else {
-          this.elementNotTargetedForEvent("input", abort)
-        }
+          element.dispatchEvent(event)
+        })
         break
       }
       case "navigation": {
@@ -170,6 +172,15 @@ module.exports = class HtmlPlugin {
         { text: element.textContent }
       ]
     }
+  }
+
+  verifySelector(name, props, abort, handler) {
+    if (props.selector) {
+      handler(props)
+    } else {
+      this.elementNotTargetedForEvent(name, abort)
+    }
+
   }
 
   getAttributes(element) {

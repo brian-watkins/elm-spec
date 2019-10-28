@@ -1,5 +1,6 @@
 module Spec.Markup.Event exposing
   ( click
+  , doubleClick
   , press
   , release
   , mouseMoveIn
@@ -15,14 +16,13 @@ import Json.Decode as Json
 
 
 click : Step.Context model -> Step.Command msg
-click context =
-  Step.sendMessage
-    { home = "_html"
-    , name = "click"
-    , body = Encode.object
-      [ ( "selector", Encode.string <| targetSelector context )
-      ]
-    }
+click =
+  basicEventMessage "click"
+
+
+doubleClick : Step.Context model -> Step.Command msg
+doubleClick =
+  basicEventMessage "doubleClick"
 
 
 press : Step.Context model -> Step.Command msg
@@ -36,21 +36,20 @@ release =
 
 
 mouseMoveIn : Step.Context model -> Step.Command msg
-mouseMoveIn context =
-  Step.sendMessage
-    { home = "_html"
-    , name = "mouseMoveIn"
-    , body = Encode.object
-      [ ( "selector", Encode.string <| targetSelector context )
-      ]
-    }
+mouseMoveIn =
+  basicEventMessage "mouseMoveIn"
 
 
 mouseMoveOut : Step.Context model -> Step.Command msg
-mouseMoveOut context =
+mouseMoveOut =
+  basicEventMessage "mouseMoveOut"
+
+
+basicEventMessage : String -> Step.Context model -> Step.Command msg
+basicEventMessage name context =
   Step.sendMessage
     { home = "_html"
-    , name = "mouseMoveOut"
+    , name = name
     , body = Encode.object
       [ ( "selector", Encode.string <| targetSelector context )
       ]
