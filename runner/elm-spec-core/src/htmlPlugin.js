@@ -51,10 +51,14 @@ module.exports = class HtmlPlugin {
       }
       case "click": {
         this.verifySelector("click", specMessage.body, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+          const element = this.getElement(props.selector)
           element.dispatchEvent(this.getEvent("mousedown"))
           element.dispatchEvent(this.getEvent("mouseup"))
-          element.click()
+          if ('click' in element) {
+            element.click()
+          } else {
+            element.dispatchEvent(this.getEvent("click"))
+          }
         })
         break
       }

@@ -11,4 +11,14 @@ describe("browser events", () => {
       })
     })
   })
+
+  context("click events", () => {
+    it("handles browser click events", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "click", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+      })
+    })
+  })
 })
