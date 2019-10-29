@@ -132,7 +132,7 @@ mouseDownSpec =
       )
       |> when "a mouse down event occurs"
         [ Markup.target << by [ id "tap-area" ]
-        , Event.press
+        , Event.mouseDown
         ]
       |> it "responds to the event" (
         Markup.observeElement
@@ -145,7 +145,7 @@ mouseDownSpec =
         testSubject
       )
       |> when "a mouse down event occurs but no element is targeted"
-        [ Event.press
+        [ Event.mouseDown
         ]
       |> it "fails" (
         Markup.observeElement
@@ -165,7 +165,7 @@ mouseUpSpec =
       )
       |> when "a mouse up event occurs"
         [ Markup.target << by [ id "tap-area" ]
-        , Event.release
+        , Event.mouseUp
         ]
       |> it "responds to the event" (
         Markup.observeElement
@@ -178,7 +178,7 @@ mouseUpSpec =
         testSubject
       )
       |> when "a mouse up event occurs but no element is targeted"
-        [ Event.release
+        [ Event.mouseUp
         ]
       |> it "fails" (
         Markup.observeElement

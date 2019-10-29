@@ -1,8 +1,8 @@
 module Spec.Markup.Event exposing
   ( click
   , doubleClick
-  , press
-  , release
+  , mouseDown
+  , mouseUp
   , mouseMoveIn
   , mouseMoveOut
   , input
@@ -25,13 +25,13 @@ doubleClick =
   basicEventMessage "doubleClick"
 
 
-press : Step.Context model -> Step.Command msg
-press =
+mouseDown : Step.Context model -> Step.Command msg
+mouseDown =
   trigger "mousedown" <| Encode.object []
 
 
-release : Step.Context model -> Step.Command msg
-release =
+mouseUp : Step.Context model -> Step.Command msg
+mouseUp =
   trigger "mouseup" <| Encode.object []
 
 
