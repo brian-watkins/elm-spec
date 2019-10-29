@@ -73,6 +73,44 @@ clickEventSpec =
   ]
 
 
+mouseDownSpec : Spec Model Msg
+mouseDownSpec =
+  Spec.describe "browser mouseDown event"
+  [ scenario "mouseDown event is triggered" (
+      given (
+        testSubject
+      )
+      |> when "a browser mouseDown event occurs"
+        [ Markup.target << document
+        , Event.mouseDown
+        ]
+      |> it "fires a mouse down event" (
+        Observer.observeModel .mouseDown
+          |> expect (equals 1)
+      )
+    )
+  ]
+
+
+mouseUpSpec : Spec Model Msg
+mouseUpSpec =
+  Spec.describe "browser mouseUp event"
+  [ scenario "mouseUp event is triggered" (
+      given (
+        testSubject
+      )
+      |> when "a browser mouseUp event occurs"
+        [ Markup.target << document
+        , Event.mouseUp
+        ]
+      |> it "fires a mouse down event" (
+        Observer.observeModel .mouseUp
+          |> expect (equals 1)
+      )
+    )
+  ]
+
+
 testSubject =
   Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0 }
     |> Subject.withView testView
@@ -87,11 +125,13 @@ keyPressEvent char =
     ]
     |> Event.trigger "keypress"
 
+
 type Msg
   = GotKey String
   | Click
   | MouseUp
   | MouseDown
+
 
 type alias Model =
   { message: String
@@ -100,11 +140,13 @@ type alias Model =
   , mouseDown: Int
   }
 
+
 testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.div [ Attr.id "message" ] [ Html.text <| "You wrote: " ++ model.message ]
   ]
+
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
 testUpdate msg model =
@@ -117,6 +159,7 @@ testUpdate msg model =
       ( { model | mouseUp = model.mouseUp + 1 }, Cmd.none )
     MouseDown ->
       ( { model | mouseDown = model.mouseDown + 1 }, Cmd.none )
+
 
 testSubscriptions : Model -> Sub Msg
 testSubscriptions model =
@@ -138,6 +181,8 @@ selectSpec name =
   case name of
     "keyboard" -> Just keyboardEventsSpec
     "click" -> Just clickEventSpec
+    "mouseDown" -> Just mouseDownSpec
+    "mouseUp" -> Just mouseUpSpec
     _ -> Nothing
 
 

@@ -21,4 +21,20 @@ describe("browser events", () => {
       })
     })
   })
+
+  context("mouseDown events", () => {
+    it("handles browser mouseDown events", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "mouseDown", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
+
+  context("mouseUp events", () => {
+    it("handles browser mouseUp events", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "mouseUp", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
 })
