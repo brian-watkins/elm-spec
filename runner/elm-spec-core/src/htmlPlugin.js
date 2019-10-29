@@ -41,7 +41,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "customEvent": {
-        this.verifySelector(specMessage.body.name, specMessage.body, abort, (props) => {
+        this.verifySelector(specMessage.body.name, { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
           const element = this.getElement(props.selector)
           const event = this.getEvent(props.name)
           Object.assign(event, props.event)
@@ -50,7 +50,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "click": {
-        this.verifySelector("click", specMessage.body, abort, (props) => {
+        this.verifySelector("click", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
           const element = this.getElement(props.selector)
           element.dispatchEvent(this.getEvent("mousedown"))
           element.dispatchEvent(this.getEvent("mouseup"))
@@ -63,7 +63,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "doubleClick": {
-        this.verifySelector("doubleClick", specMessage.body, abort, (props) => {
+        this.verifySelector("doubleClick", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
           const clickMessage = {
             home: "_html",
             name: "click",
@@ -80,7 +80,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "mouseMoveIn": {
-        this.verifySelector("mouseMoveIn", specMessage.body, abort, (props) => {
+        this.verifySelector("mouseMoveIn", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
           const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("mouseover"))
           element.dispatchEvent(this.getEvent("mouseenter", { bubbles: false }))
@@ -88,7 +88,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "mouseMoveOut": {
-        this.verifySelector("mouseMoveOut", specMessage.body, abort, (props) => {
+        this.verifySelector("mouseMoveOut", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
           const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("mouseout"))
           element.dispatchEvent(this.getEvent("mouseleave", { bubbles: false }))
@@ -96,7 +96,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "input": {
-        this.verifySelector("input", specMessage.body, abort, (props) => {
+        this.verifySelector("input", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
           const element = this.document.querySelector(specMessage.body.selector)
           element.value = specMessage.body.text
           const event = this.getEvent("input")
@@ -178,13 +178,21 @@ module.exports = class HtmlPlugin {
     }
   }
 
-  verifySelector(name, props, abort, handler) {
-    if (props.selector) {
-      handler(props)
-    } else {
+  verifySelector(name, { props, forElementsOnly }, abort, handler) {
+    if (!props.selector) {
       this.elementNotTargetedForEvent(name, abort)
+      return
     }
 
+    if (forElementsOnly && props.selector === "_document_") {
+      abort([{
+        statement: "Event not supported when document is targeted",
+        detail: name
+      }])
+      return
+    }
+
+    handler(props)
   }
 
   getAttributes(element) {

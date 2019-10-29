@@ -109,16 +109,16 @@ targetUnknownSpec =
           |> expect (Markup.hasText "The count is 30!")
       )
     )
-  , scenario "Should not run since the spec has been aborted" (
+  , scenario "Should run even though previous spec was rejected" (
       given (
         Subject.initWithModel { name = "Cool Dude", count = 0 }
           |> Subject.withUpdate testUpdate
           |> Subject.withView testView
       )
-      |> it "should not do this since we've failed already" (
+      |> it "should pass" (
           Markup.observeElement
             |> Markup.query << by [ id "my-name" ]
-            |> expect (Markup.hasText "Hello, Somebody!")
+            |> expect (Markup.hasText "Hello, Cool Dude!")
       )
     )
   ]

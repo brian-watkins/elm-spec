@@ -42,17 +42,17 @@ describe("html plugin", () => {
 
   context("target element", () => {
     context("when the target fails to select an element", () => {
-      it("fails before any observations or other scenarios and reports the reason", (done) => {
-        expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
-          expect(observations).to.have.length(1)
+      it("fails and reports the reason and runs the next scenario", (done) => {
+        expectBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
           expectRejected(observations[0], [
             reportLine("No match for selector", "#some-element-that-does-not-exist")
           ])
+          expectAccepted(observations[1])
         })
       })
 
       it("shows only the steps that have been completed or attempted", (done) => {
-        expectFailingBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
+        expectBrowserSpec("HtmlSpec", "targetUnknown", done, (observations) => {
           expect(observations[0].conditions).to.have.length(3)
           expect(observations[0].conditions[0]).to.equal("Describing: an html program")
           expect(observations[0].conditions[1]).to.equal("Scenario: targeting an unknown element")

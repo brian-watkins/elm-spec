@@ -41,7 +41,6 @@ type alias Config msg programMsg =
   , send: Message -> Cmd msg
   , sendToSelf: Msg programMsg -> msg
   , outlet: Message -> Cmd programMsg
-  , stop: Cmd msg
   }
 
 
@@ -135,14 +134,14 @@ update config msg state =
         Observe model ->
           observeUpdate config msg model
         Ready ->
-          ( Ready, Cmd.none )
+          ( Ready, config.complete )
 
     Abort report ->
       case state of
         Exercise model ->
           case Exercise.update config.outlet msg model of
             ( updated, Send message ) ->
-              ( Ready, Cmd.batch [ config.stop, config.send message ])
+              ( Ready, Cmd.batch [ config.send message ])
             ( updated, _ ) ->
               badState config state
         _ ->
@@ -167,12 +166,9 @@ update config msg state =
 
 abortWith : Config msg programMsg -> Report -> Cmd msg
 abortWith config report =
-  Cmd.batch
-    [ config.stop
-    , Claim.Reject report
-        |> Message.observation [] "Scenario Failed"
-        |> config.send
-    ]
+  Claim.Reject report
+    |> Message.observation [] "Scenario Failed"
+    |> config.send
 
 
 exerciseUpdate : Config msg programMsg -> Msg programMsg -> Exercise.Model model programMsg -> ( Model model programMsg, Cmd msg )

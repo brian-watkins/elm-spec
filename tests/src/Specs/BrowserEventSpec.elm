@@ -137,6 +137,37 @@ mouseMove (x, y) =
   Event.trigger "mousemove" <| Encode.object [ ("clientX", Encode.int x), ("clientY", Encode.int y) ]
 
 
+nonBrowserEventsSpec : Spec Model Msg
+nonBrowserEventsSpec =
+  Spec.describe "events that don't work as a browser level event"
+  [ scenario "mouseMoveIn" (
+      given (
+        testSubject
+      )
+      |> when "a mouseMoveIn event is triggered on the document"
+        [ Markup.target << document
+        , Event.mouseMoveIn
+        ]
+      |> it "fails" (
+        Observer.observeModel .mouseDown
+          |> expect (equals 0)
+      )
+    )
+  , scenario "mouseMoveOut" (
+      given (
+        testSubject
+      )
+      |> when "a mouseMoveOut event is triggered on the document"
+        [ Markup.target << document
+        , Event.mouseMoveOut
+        ]
+      |> it "fails" (
+        Observer.observeModel .mouseDown
+          |> expect (equals 0)
+      )
+    )
+  ]
+
 testSubject =
   Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [] }
     |> Subject.withView testView
@@ -220,6 +251,7 @@ selectSpec name =
     "mouseDown" -> Just mouseDownSpec
     "mouseUp" -> Just mouseUpSpec
     "mouseMove" -> Just mouseMoveSpec
+    "nonBrowserEvents" -> Just nonBrowserEventsSpec
     _ -> Nothing
 
 

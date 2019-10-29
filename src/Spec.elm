@@ -101,7 +101,6 @@ scenarioConfig config =
   , outlet = config.outlet
   , sendToSelf = ScenarioMsg
   , complete = Task.succeed never |> Task.perform (always RunNextScenario)
-  , stop = config.send specComplete
   }
 
 

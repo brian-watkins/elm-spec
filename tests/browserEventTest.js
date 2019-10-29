@@ -1,6 +1,8 @@
 const {
   expectBrowserSpec,
-  expectAccepted
+  expectAccepted,
+  expectRejected,
+  reportLine
 } = require("./helpers/SpecHelpers")
 
 describe("browser events", () => {
@@ -38,10 +40,23 @@ describe("browser events", () => {
     })
   })
 
-  context.only("mouseMove events", () => {
+  context("mouseMove events", () => {
     it("handles browser mouseMove events", (done) => {
       expectBrowserSpec("BrowserEventSpec", "mouseMove", done, (observations) => {
         expectAccepted(observations[0])
+      })
+    })
+  })
+
+  context("events that cannot run at the browser level", () => {
+    it("fails the test", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "nonBrowserEvents", done, (observations) => {
+        expectRejected(observations[0], [
+          reportLine("Event not supported when document is targeted", "mouseMoveIn")
+        ])
+        expectRejected(observations[1], [
+          reportLine("Event not supported when document is targeted", "mouseMoveOut")
+        ])
       })
     })
   })
