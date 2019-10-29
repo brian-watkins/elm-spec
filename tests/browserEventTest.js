@@ -37,4 +37,12 @@ describe("browser events", () => {
       })
     })
   })
+
+  context.only("mouseMove events", () => {
+    it("handles browser mouseMove events", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "mouseMove", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
 })

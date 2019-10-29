@@ -111,8 +111,34 @@ mouseUpSpec =
   ]
 
 
+mouseMoveSpec : Spec Model Msg
+mouseMoveSpec =
+  Spec.describe "browser mouseMove event"
+  [ scenario "mouseMove event is triggered" (
+      given (
+        testSubject
+      )
+      |> when "a browser mouseMove event occurs"
+        [ Markup.target << document
+        , mouseMove (17, 26)
+        , mouseMove (20, 31)
+        , mouseMove (24, 33)
+        ]
+      |> it "fires a mouse down event" (
+        Observer.observeModel .mouseMove
+          |> expect (equals [ (17, 26), (20, 31), (24, 33) ])
+      )
+    )
+  ]
+
+
+mouseMove : (Int, Int) -> Step.Context model -> Step.Command msg
+mouseMove (x, y) =
+  Event.trigger "mousemove" <| Encode.object [ ("clientX", Encode.int x), ("clientY", Encode.int y) ]
+
+
 testSubject =
-  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0 }
+  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [] }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
     |> Subject.withSubscriptions testSubscriptions
@@ -131,6 +157,7 @@ type Msg
   | Click
   | MouseUp
   | MouseDown
+  | MouseMove (Int, Int)
 
 
 type alias Model =
@@ -138,6 +165,7 @@ type alias Model =
   , click: Int
   , mouseUp: Int
   , mouseDown: Int
+  , mouseMove: List (Int, Int)
   }
 
 
@@ -159,6 +187,8 @@ testUpdate msg model =
       ( { model | mouseUp = model.mouseUp + 1 }, Cmd.none )
     MouseDown ->
       ( { model | mouseDown = model.mouseDown + 1 }, Cmd.none )
+    MouseMove point ->
+      ( { model | mouseMove = model.mouseMove ++ [ point ] }, Cmd.none )
 
 
 testSubscriptions : Model -> Sub Msg
@@ -168,7 +198,13 @@ testSubscriptions model =
   , Browser.Events.onClick <| Json.succeed Click
   , Browser.Events.onMouseDown <| Json.succeed MouseDown
   , Browser.Events.onMouseUp <| Json.succeed MouseUp
+  , Browser.Events.onMouseMove <| mouseMoveDecoder MouseMove
   ]
+
+
+mouseMoveDecoder : ((Int, Int) -> Msg) -> Decoder Msg
+mouseMoveDecoder tagger =
+  Json.map tagger <| Json.map2 Tuple.pair (Json.field "clientX" Json.int) (Json.field "clientY" Json.int)
 
 
 keyDecoder : (String -> Msg) -> Decoder Msg
@@ -183,6 +219,7 @@ selectSpec name =
     "click" -> Just clickEventSpec
     "mouseDown" -> Just mouseDownSpec
     "mouseUp" -> Just mouseUpSpec
+    "mouseMove" -> Just mouseMoveSpec
     _ -> Nothing
 
 
