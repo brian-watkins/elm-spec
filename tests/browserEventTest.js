@@ -48,6 +48,14 @@ describe("browser events", () => {
     })
   })
 
+  context("window resize", () => {
+    it("handles the window resize as expected", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "windowResize", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
+
   context("events that cannot run at the browser level", () => {
     it("fails the test", (done) => {
       expectBrowserSpec("BrowserEventSpec", "nonBrowserEvents", done, (observations) => {

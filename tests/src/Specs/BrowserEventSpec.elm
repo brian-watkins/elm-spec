@@ -137,6 +137,24 @@ mouseMove (x, y) =
   Event.trigger "mousemove" <| Encode.object [ ("clientX", Encode.int x), ("clientY", Encode.int y) ]
 
 
+windowResizeSpec : Spec Model Msg
+windowResizeSpec =
+  Spec.describe "window resize"
+  [ scenario "simulate window resize event" (
+      given (
+        testSubject
+      )
+      |> when "a window resize occurs"
+        [ Event.resizeWindow (100, 300)
+        ]
+      |> it "triggers the resize event" (
+        Observer.observeModel .resize
+          |> expect (equals [(100, 300)])
+      )
+    )
+  ]
+
+
 nonBrowserEventsSpec : Spec Model Msg
 nonBrowserEventsSpec =
   Spec.describe "events that don't work as a browser level event"
@@ -168,8 +186,9 @@ nonBrowserEventsSpec =
     )
   ]
 
+
 testSubject =
-  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [] }
+  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [] }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
     |> Subject.withSubscriptions testSubscriptions
@@ -189,6 +208,7 @@ type Msg
   | MouseUp
   | MouseDown
   | MouseMove (Int, Int)
+  | Resize Int Int
 
 
 type alias Model =
@@ -197,6 +217,7 @@ type alias Model =
   , mouseUp: Int
   , mouseDown: Int
   , mouseMove: List (Int, Int)
+  , resize: List (Int, Int)
   }
 
 
@@ -220,6 +241,8 @@ testUpdate msg model =
       ( { model | mouseDown = model.mouseDown + 1 }, Cmd.none )
     MouseMove point ->
       ( { model | mouseMove = model.mouseMove ++ [ point ] }, Cmd.none )
+    Resize height width ->
+      ( { model | resize = model.resize ++ [ (height, width) ] }, Cmd.none )
 
 
 testSubscriptions : Model -> Sub Msg
@@ -230,6 +253,7 @@ testSubscriptions model =
   , Browser.Events.onMouseDown <| Json.succeed MouseDown
   , Browser.Events.onMouseUp <| Json.succeed MouseUp
   , Browser.Events.onMouseMove <| mouseMoveDecoder MouseMove
+  , Browser.Events.onResize Resize
   ]
 
 
@@ -251,6 +275,7 @@ selectSpec name =
     "mouseDown" -> Just mouseDownSpec
     "mouseUp" -> Just mouseUpSpec
     "mouseMove" -> Just mouseMoveSpec
+    "windowResize" -> Just windowResizeSpec
     "nonBrowserEvents" -> Just nonBrowserEventsSpec
     _ -> Nothing
 

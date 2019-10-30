@@ -6,6 +6,7 @@ module Spec.Markup.Event exposing
   , mouseMoveIn
   , mouseMoveOut
   , input
+  , resizeWindow
   , trigger
   )
 
@@ -64,6 +65,18 @@ input text context =
     , body = Encode.object
       [ ( "selector", Encode.string <| targetSelector context )
       , ( "text", Encode.string text )
+      ]
+    }
+
+
+resizeWindow : (Int, Int) -> Step.Context model -> Step.Command msg
+resizeWindow (width, height) context =
+  Step.sendMessage
+    { home = "_html"
+    , name = "resize"
+    , body = Encode.object
+      [ ( "width", Encode.int width )
+      , ( "height", Encode.int height )
       ]
     }
 

@@ -5,6 +5,9 @@ const lolex = require('lolex')
 const FakeLocation = require('../fakes/fakeLocation')
 const FakeHistory = require('../fakes/fakeHistory')
 const { proxiedConsole } = require('../fakes/proxiedConsole')
+const { fakeWindow } = require('../fakes/fakeWindow')
+const { fakeDocument } = require('../fakes/fakeDocument')
+
 
 module.exports = class HtmlContext {
   constructor(compiler, tags) {
@@ -33,8 +36,8 @@ module.exports = class HtmlContext {
   addFakes() {
     this.dom.window._elm_spec = {}
     const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
-    this.dom.window._elm_spec.window = FakeLocation.forOwner(this.dom.window, fakeLocation)
-    this.dom.window._elm_spec.document = FakeLocation.forOwner(this.dom.window.document, fakeLocation)
+    this.dom.window._elm_spec.window = fakeWindow(this.dom.window, fakeLocation)
+    this.dom.window._elm_spec.document = fakeDocument(this.dom.window.document, fakeLocation)
     this.dom.window._elm_spec.history = new FakeHistory(fakeLocation)
     this.dom.window._elm_spec.console = proxiedConsole()
   }
@@ -116,5 +119,10 @@ module.exports = class HtmlContext {
 
   setBaseLocation(location) {
     this.dom.window._elm_spec.window.location.setBase(this.dom.window.document, location)
+  }
+
+  resizeTo(width, height) {
+    this.dom.window._elm_spec.innerWidth = width
+    this.dom.window._elm_spec.innerHeight = height
   }
 }

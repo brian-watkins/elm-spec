@@ -104,6 +104,12 @@ module.exports = class HtmlPlugin {
         })
         break
       }
+      case "resize": {
+        const size = specMessage.body
+        this.context.resizeTo(size.width, size.height)
+        this.window.dispatchEvent(this.getEvent("resize"))
+        break
+      }
       case "navigation": {
         out({
           home: "navigation",
