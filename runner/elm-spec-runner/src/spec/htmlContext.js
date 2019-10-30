@@ -37,7 +37,7 @@ module.exports = class HtmlContext {
     this.dom.window._elm_spec = {}
     const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
     this.dom.window._elm_spec.window = fakeWindow(this.dom.window, fakeLocation)
-    this.dom.window._elm_spec.document = fakeDocument(this.dom.window.document, fakeLocation)
+    this.dom.window._elm_spec.document = fakeDocument(this.dom.window, fakeLocation)
     this.dom.window._elm_spec.history = new FakeHistory(fakeLocation)
     this.dom.window._elm_spec.console = proxiedConsole()
   }
@@ -124,5 +124,9 @@ module.exports = class HtmlContext {
   resizeTo(width, height) {
     this.dom.window._elm_spec.innerWidth = width
     this.dom.window._elm_spec.innerHeight = height
+  }
+
+  setVisibility(isVisible) {
+    this.dom.window._elm_spec.isVisible = isVisible
   }
 }

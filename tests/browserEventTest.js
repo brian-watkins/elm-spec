@@ -56,6 +56,14 @@ describe("browser events", () => {
     })
   })
 
+  context("window visibility", () => {
+    it("handles the window visibility change as expected", (done) => {
+      expectBrowserSpec("BrowserEventSpec", "windowVisibility", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
+
   context("events that cannot run at the browser level", () => {
     it("fails the test", (done) => {
       expectBrowserSpec("BrowserEventSpec", "nonBrowserEvents", done, (observations) => {

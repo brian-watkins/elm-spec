@@ -10,7 +10,7 @@ import Spec.Observer as Observer
 import Spec.Step as Step
 import Html exposing (Html)
 import Html.Attributes as Attr
-import Browser.Events
+import Browser.Events exposing (Visibility(..))
 import Runner
 import Json.Decode as Json exposing (Decoder)
 import Json.Encode as Encode
@@ -155,6 +155,25 @@ windowResizeSpec =
   ]
 
 
+windowVisibilitySpec : Spec Model Msg
+windowVisibilitySpec =
+  Spec.describe "window visibility"
+  [ scenario "simulate window visibility change" (
+      given (
+        testSubject
+      )
+      |> when "a window visibility change occurs"
+        [ Event.hideWindow
+        , Event.showWindow
+        , Event.hideWindow
+        ]
+      |> it "triggers the visibility change event" (
+        Observer.observeModel .visibility
+          |> expect (equals [ Hidden, Visible, Hidden ])
+      )
+    )
+  ]
+
 nonBrowserEventsSpec : Spec Model Msg
 nonBrowserEventsSpec =
   Spec.describe "events that don't work as a browser level event"
@@ -188,7 +207,7 @@ nonBrowserEventsSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [] }
+  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [] }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
     |> Subject.withSubscriptions testSubscriptions
@@ -209,6 +228,7 @@ type Msg
   | MouseDown
   | MouseMove (Int, Int)
   | Resize Int Int
+  | VisibilityChange Visibility
 
 
 type alias Model =
@@ -218,6 +238,7 @@ type alias Model =
   , mouseDown: Int
   , mouseMove: List (Int, Int)
   , resize: List (Int, Int)
+  , visibility: List Visibility
   }
 
 
@@ -243,6 +264,8 @@ testUpdate msg model =
       ( { model | mouseMove = model.mouseMove ++ [ point ] }, Cmd.none )
     Resize height width ->
       ( { model | resize = model.resize ++ [ (height, width) ] }, Cmd.none )
+    VisibilityChange visibility ->
+      ( { model | visibility = model.visibility ++ [ visibility ] }, Cmd.none )
 
 
 testSubscriptions : Model -> Sub Msg
@@ -254,6 +277,7 @@ testSubscriptions model =
   , Browser.Events.onMouseUp <| Json.succeed MouseUp
   , Browser.Events.onMouseMove <| mouseMoveDecoder MouseMove
   , Browser.Events.onResize Resize
+  , Browser.Events.onVisibilityChange VisibilityChange
   ]
 
 
@@ -277,6 +301,7 @@ selectSpec name =
     "mouseMove" -> Just mouseMoveSpec
     "windowResize" -> Just windowResizeSpec
     "nonBrowserEvents" -> Just nonBrowserEventsSpec
+    "windowVisibility" -> Just windowVisibilitySpec
     _ -> Nothing
 
 

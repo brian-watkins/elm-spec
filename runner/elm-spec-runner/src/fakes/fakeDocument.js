@@ -1,7 +1,10 @@
 
-exports.fakeDocument = (theDocument, location) => {
-  return new Proxy(theDocument, {
+exports.fakeDocument = (theWindow, location) => {
+  return new Proxy(theWindow.document, {
     get: (target, prop) => {
+      if (prop === 'addEventListener') {
+        return customAddEventListener(theWindow, target)
+      }
       if (prop === 'location') {
         return location
       }
@@ -16,4 +19,14 @@ exports.fakeDocument = (theDocument, location) => {
       return true
     }
   })
+}
+
+const customAddEventListener = (theWindow, target) => (type, handler) => {
+  if (type === "visibilitychange") {
+    target.addEventListener(type, (e) => {
+      handler({ target: { hidden: !theWindow._elm_spec.isVisible } })
+    })
+  } else {
+    target.addEventListener(type, handler)
+  }
 }

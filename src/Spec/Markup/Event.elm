@@ -7,6 +7,8 @@ module Spec.Markup.Event exposing
   , mouseMoveOut
   , input
   , resizeWindow
+  , hideWindow
+  , showWindow
   , trigger
   )
 
@@ -70,13 +72,34 @@ input text context =
 
 
 resizeWindow : (Int, Int) -> Step.Context model -> Step.Command msg
-resizeWindow (width, height) context =
+resizeWindow (width, height) _ =
   Step.sendMessage
     { home = "_html"
     , name = "resize"
     , body = Encode.object
       [ ( "width", Encode.int width )
       , ( "height", Encode.int height )
+      ]
+    }
+
+
+hideWindow : Step.Context model -> Step.Command msg
+hideWindow =
+  setWindowVisible False
+
+
+showWindow : Step.Context model -> Step.Command msg
+showWindow =
+  setWindowVisible True
+
+
+setWindowVisible : Bool -> Step.Context model -> Step.Command msg
+setWindowVisible isVisible _ =
+  Step.sendMessage
+    { home = "_html"
+    , name = "visibilityChange"
+    , body = Encode.object
+      [ ( "isVisible", Encode.bool isVisible )
       ]
     }
 

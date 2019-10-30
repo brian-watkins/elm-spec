@@ -110,6 +110,11 @@ module.exports = class HtmlPlugin {
         this.window.dispatchEvent(this.getEvent("resize"))
         break
       }
+      case "visibilityChange": {
+        this.context.setVisibility(specMessage.body.isVisible)
+        this.document.dispatchEvent(this.getEvent("visibilitychange"))
+        break
+      }
       case "navigation": {
         out({
           home: "navigation",
