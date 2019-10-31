@@ -1,7 +1,7 @@
 const chai = require('chai')
 const expect = chai.expect
 const Compiler = require('../elm-spec-runner/src/spec/compiler')
-const HtmlContext = require('../elm-spec-runner/src/spec/htmlContext')
+const JsdomContext = require('../elm-spec-runner/src/spec/jsdomContext')
 const SuiteRunner = require('../elm-spec-core/src/suiteRunner')
 const process = require('process')
 
@@ -23,10 +23,10 @@ const expectPassingScenarios = (number, tags, done) => {
     specPath: "./specs/**/*Spec.elm"
   })
   
-  const htmlContext = new HtmlContext(compiler, tags)
+  const context = new JsdomContext(compiler, tags)
   const reporter = new TestReporter()
   
-  const runner = new SuiteRunner(htmlContext, reporter, { timeout: 50 })
+  const runner = new SuiteRunner(context, reporter, { timeout: 50 })
   runner
     .on('complete', () => {
       setTimeout(() => {

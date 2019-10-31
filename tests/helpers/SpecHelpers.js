@@ -3,7 +3,7 @@ const expect = chai.expect
 const SpecRunner = require('../../runner/elm-spec-core/src/programRunner')
 const SpecCompiler = require('../../runner/elm-spec-runner/src/spec/compiler')
 const GlobalContext = require('../../runner/elm-spec-runner/src/spec/globalContext')
-const HtmlContext = require('../../runner/elm-spec-runner/src/spec/htmlContext')
+const JsdomContext = require('../../runner/elm-spec-runner/src/spec/jsdomContext')
 const HtmlPlugin = require('../../runner/elm-spec-core/src/htmlPlugin')
 const HttpPlugin = require('../../runner/elm-spec-core/src/httpPlugin')
 
@@ -87,7 +87,7 @@ const testCompiler = {
 
 exports.globalContext = new GlobalContext(testCompiler)
 
-exports.htmlContext = htmlContext = new HtmlContext(testCompiler)
+exports.htmlContext = htmlContext = new JsdomContext(testCompiler)
 
 const runTestSpec = (specProgram, specName, done, matcher) => {
   this.globalContext.evaluate((Elm) => {

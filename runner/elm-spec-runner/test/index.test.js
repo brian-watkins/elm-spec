@@ -39,7 +39,7 @@ describe('elm-spec-runner', () => {
     beforeEach(() => {
       contextSpy = sinon.spy()
       cmd.__set__("Compiler", function() {})
-      cmd.__set__("HtmlContext", contextSpy)
+      cmd.__set__("JsdomContext", contextSpy)
       cmd.__set__("SuiteRunner", function() {
         return { run: function() {} }
       })

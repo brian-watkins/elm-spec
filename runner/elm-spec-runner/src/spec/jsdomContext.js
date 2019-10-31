@@ -9,7 +9,7 @@ const { fakeWindow } = require('../fakes/fakeWindow')
 const { fakeDocument } = require('../fakes/fakeDocument')
 
 
-module.exports = class HtmlContext {
+module.exports = class JsdomContext {
   constructor(compiler, tags) {
     this.compiler = compiler
     this.tags = tags

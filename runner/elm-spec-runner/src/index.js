@@ -1,7 +1,7 @@
 const {Command, flags} = require('@oclif/command')
 const Compiler = require('./spec/compiler')
 const Reporter = require('./spec/consoleReporter')
-const HtmlContext = require('./spec/htmlContext')
+const JsdomContext = require('./spec/jsdomContext')
 const SuiteRunner = require('elm-spec-core')
 const commandExists = require('command-exists').sync
 const glob = require("glob")
@@ -37,10 +37,10 @@ class ElmSpecRunnerCommand extends Command {
   runSpecs(options) {
     const compiler = new Compiler(options)
 
-    const htmlContext = new HtmlContext(compiler, options.tags)
+    const context = new JsdomContext(compiler, options.tags)
     const reporter = new Reporter((c) => process.stdout.write(c), this.log)
 
-    const runner = new SuiteRunner(htmlContext, reporter, { timeout: 500 })
+    const runner = new SuiteRunner(context, reporter, { timeout: 500 })
     runner.run()
   }
 }
