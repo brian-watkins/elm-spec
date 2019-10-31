@@ -115,6 +115,10 @@ module.exports = class HtmlPlugin {
         this.document.dispatchEvent(this.getEvent("visibilitychange"))
         break
       }
+      case "nextAnimationFrame": {
+        this.clock.runToFrame()
+        break
+      }
       case "navigation": {
         out({
           home: "navigation",

@@ -1,6 +1,7 @@
 module Spec.Time exposing
   ( fake
   , tick
+  , nextAnimationFrame
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
@@ -22,4 +23,13 @@ tick duration _ =
     { home = "_time"
     , name = "tick"
     , body = Encode.int duration
+    }
+
+
+nextAnimationFrame : Step.Context model -> Step.Command msg
+nextAnimationFrame _ =
+  Step.sendMessage
+    { home = "_html"
+    , name = "nextAnimationFrame"
+    , body = Encode.null
     }

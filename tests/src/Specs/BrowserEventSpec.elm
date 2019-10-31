@@ -8,6 +8,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Observer as Observer
 import Spec.Step as Step
+import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Browser.Events exposing (Visibility(..))
@@ -15,6 +16,7 @@ import Runner
 import Json.Decode as Json exposing (Decoder)
 import Json.Encode as Encode
 import Specs.Helpers exposing (equals)
+import Time exposing (Posix)
 
 
 keyboardEventsSpec : Spec Model Msg
@@ -174,6 +176,27 @@ windowVisibilitySpec =
     )
   ]
 
+
+animationFrameSpec : Spec Model Msg
+animationFrameSpec =
+  Spec.describe "animationFrame events"
+  [ scenario "simulate animation frame event" (
+      given (
+        testSubject
+      )
+      |> when "the animation frame updates"
+        [ Spec.Time.nextAnimationFrame
+        , Spec.Time.nextAnimationFrame
+        , Spec.Time.nextAnimationFrame
+        ]
+      |> it "triggers the onAnimationFrame event" (
+        Observer.observeModel .animationFrames
+          |> expect (equals 3)
+      )
+    )
+  ]
+
+
 nonBrowserEventsSpec : Spec Model Msg
 nonBrowserEventsSpec =
   Spec.describe "events that don't work as a browser level event"
@@ -207,7 +230,7 @@ nonBrowserEventsSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [] }
+  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [], animationFrames = 0 }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
     |> Subject.withSubscriptions testSubscriptions
@@ -229,6 +252,7 @@ type Msg
   | MouseMove (Int, Int)
   | Resize Int Int
   | VisibilityChange Visibility
+  | AnimationFrame Posix
 
 
 type alias Model =
@@ -239,6 +263,7 @@ type alias Model =
   , mouseMove: List (Int, Int)
   , resize: List (Int, Int)
   , visibility: List Visibility
+  , animationFrames: Int
   }
 
 
@@ -266,6 +291,8 @@ testUpdate msg model =
       ( { model | resize = model.resize ++ [ (height, width) ] }, Cmd.none )
     VisibilityChange visibility ->
       ( { model | visibility = model.visibility ++ [ visibility ] }, Cmd.none )
+    AnimationFrame posix ->
+      ( { model | animationFrames = model.animationFrames + 1 }, Cmd.none )
 
 
 testSubscriptions : Model -> Sub Msg
@@ -278,6 +305,7 @@ testSubscriptions model =
   , Browser.Events.onMouseMove <| mouseMoveDecoder MouseMove
   , Browser.Events.onResize Resize
   , Browser.Events.onVisibilityChange VisibilityChange
+  , Browser.Events.onAnimationFrame AnimationFrame
   ]
 
 
@@ -302,6 +330,7 @@ selectSpec name =
     "windowResize" -> Just windowResizeSpec
     "nonBrowserEvents" -> Just nonBrowserEventsSpec
     "windowVisibility" -> Just windowVisibilitySpec
+    "animationFrame" -> Just animationFrameSpec
     _ -> Nothing
 
 
