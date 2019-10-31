@@ -6,6 +6,7 @@ import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Claim as Claim
 import Spec.Observer as Observer
+import Spec.Command as Command
 import Runner
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -80,6 +81,24 @@ multipleScenariosSpec =
   ]
 
 
+timeoutSpec : Spec Model Msg
+timeoutSpec =
+  Spec.describe "timeout"
+  [ scenario "the scenario step hangs" (
+      given (
+        testSubject
+      )
+      |> when "a step occurs that hangs"
+        [ Command.send <| specSpecOut "I will hang the scenario forever"
+        ]
+      |> it "fails" (
+        Observer.observeModel .counts
+          |> expect (equals [])
+      )
+    )
+  ]
+
+
 sendMessageWith number =
   Port.send "specSpecSub" <| Encode.object [ ("number", Encode.int number) ]
 
@@ -97,6 +116,7 @@ selectSpec name =
     "multipleWhen" -> Just multipleWhenSpec
     "scenarios" -> Just multipleScenariosSpec
     "noScenarios" -> Just noScenariosSpec
+    "timeout" -> Just timeoutSpec
     _ -> Nothing
 
 
@@ -115,6 +135,7 @@ type alias Model =
 
 
 port specSpecSub : (SuperObject -> msg) -> Sub msg
+port specSpecOut : String -> Cmd msg
 
 
 testSubscriptions : Model -> Sub Msg

@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const { expectPassingSpec, expectSpec } = require('./helpers/SpecHelpers')
+const { expectPassingSpec, expectSpec, expectRejected, reportLine } = require('./helpers/SpecHelpers')
 
 describe("spec", () => {
   describe("when there are no scenarios", () => {
@@ -53,6 +53,16 @@ describe("spec", () => {
             "When a single message is sent"
           ]
         )
+      })
+    })
+  })
+
+  describe("when the scenario times out", () => {
+    it("fails the scenario", (done) => {
+      expectSpec("SpecSpec", "timeout", done, (observations) => {
+        expectRejected(observations[0], [
+          reportLine("Scenario timeout of 20ms exceeded!")
+        ])
       })
     })
   })

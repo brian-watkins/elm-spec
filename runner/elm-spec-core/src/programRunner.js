@@ -3,7 +3,7 @@ const PortPlugin = require('./portPlugin')
 const TimePlugin = require('./timePlugin')
 
 module.exports = class ProgramRunner extends EventEmitter {
-  constructor(app, context, plugins) {
+  constructor(app, context, plugins, options) {
     super()
     this.app = app
     this.context = context
@@ -11,6 +11,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.portPlugin = new PortPlugin(app)
     this.timePlugin = new TimePlugin()
     this.plugins = plugins
+    this.options = options
   }
 
   run() {
@@ -49,6 +50,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         out(specMessage)
         break
       case "_observer":
+        this.stopTimeoutTimer()
         this.handleObserverEvent(specMessage, out)
         break
       default:
@@ -110,6 +112,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "START":
         this.timePlugin.reset()
         this.context.prepareForScenario()
+        this.startTimeoutTimer(out)
         out(this.continue())
         break
       case "CONFIGURE_COMPLETE":
@@ -117,11 +120,31 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "STEP_COMPLETE":
         if (this.timer) clearTimeout(this.timer)
-        this.timer = setTimeout(() => {
+        this.timer = this.timePlugin.setTimeout(() => {
           out(this.continue())
         }, 0)
+        this.startTimeoutTimer(out)
         break
     }
+  }
+
+  startTimeoutTimer(out) {
+    this.stopTimeoutTimer()
+    this.scenarioTimeout = this.timePlugin.setTimeout(() => {
+      out({
+        home: "_scenario",
+        name: "abort",
+        body: [
+          { statement: `Scenario timeout of ${this.options.timeout}ms exceeded!`,
+            detail: null
+          }
+        ]
+      })
+    }, this.options.timeout)
+  }
+
+  stopTimeoutTimer() {
+    if (this.scenarioTimeout) clearTimeout(this.scenarioTimeout)
   }
 
   continue () {

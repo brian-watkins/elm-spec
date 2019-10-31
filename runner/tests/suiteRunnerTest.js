@@ -26,7 +26,7 @@ const expectPassingScenarios = (number, tags, done) => {
   const htmlContext = new HtmlContext(compiler, tags)
   const reporter = new TestReporter()
   
-  const runner = new SuiteRunner(htmlContext, reporter)
+  const runner = new SuiteRunner(htmlContext, reporter, { timeout: 50 })
   runner
     .on('complete', () => {
       setTimeout(() => {

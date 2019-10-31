@@ -40,7 +40,7 @@ class ElmSpecRunnerCommand extends Command {
     const htmlContext = new HtmlContext(compiler, options.tags)
     const reporter = new Reporter((c) => process.stdout.write(c), this.log)
 
-    const runner = new SuiteRunner(htmlContext, reporter)
+    const runner = new SuiteRunner(htmlContext, reporter, { timeout: 500 })
     runner.run()
   }
 }

@@ -3,10 +3,11 @@ const ProgramRunner = require('./programRunner')
 const Program = require('./program')
 
 module.exports = class SuiteRunner extends EventEmitter {
-  constructor(context, reporter) {
+  constructor(context, reporter, options) {
     super()
     this.context = context
     this.reporter = reporter
+    this.options = options
   }
 
   run() {
@@ -26,7 +27,7 @@ module.exports = class SuiteRunner extends EventEmitter {
     }
   
     this.context.evaluateProgram(program, (app, plugins) => {
-      new ProgramRunner(app, this.context, plugins)
+      new ProgramRunner(app, this.context, plugins, this.options)
         .on("observation", (observation) => {
           this.reporter.record(observation)
         })

@@ -120,7 +120,7 @@ const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
 exports.runSpec = (app, context, plugins, done, matcher) => {
   const observations = []
 
-  new SpecRunner(app, context, plugins)
+  new SpecRunner(app, context, plugins, { timeout: 20 })
     .on('observation', (observation) => {
       observations.push(observation)
     })

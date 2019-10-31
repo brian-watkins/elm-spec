@@ -64,7 +64,7 @@ describe("browser events", () => {
     })
   })
 
-  context.only("animationFrame events", () => {
+  context("animationFrame events", () => {
     it("handles the animation frame events as expected", (done) => {
       expectBrowserSpec("BrowserEventSpec", "animationFrame", done, (observations) => {
         expectAccepted(observations[0])
