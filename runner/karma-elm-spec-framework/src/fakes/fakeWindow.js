@@ -1,5 +1,16 @@
 
-exports.fakeWindow = (theWindow, location, clock) => {
+let callbacks = []
+
+exports.runAnimationFrame = () => {
+  if (callbacks.length > 0) {
+      for (let i = 0; i < callbacks.length; i++) {
+        callbacks[i]()
+      }
+      callbacks = []
+  }
+}
+
+exports.fakeWindow = (theWindow, location) => {
   return new Proxy(theWindow, {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
@@ -9,7 +20,9 @@ exports.fakeWindow = (theWindow, location, clock) => {
         return location
       }
       if (prop === 'requestAnimationFrame') {
-        return clock.requestAnimationFrame
+        return (callback) => {
+          callbacks.push(callback)
+        }
       }
       return target[prop]
     },

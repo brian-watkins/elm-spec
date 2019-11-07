@@ -1,6 +1,6 @@
 const EventEmitter = require('events')
-const PortPlugin = require('./portPlugin')
-const TimePlugin = require('./timePlugin')
+const PortPlugin = require('./plugin/portPlugin')
+const TimePlugin = require('./plugin/timePlugin')
 
 module.exports = class ProgramRunner extends EventEmitter {
   constructor(app, context, plugins, options) {

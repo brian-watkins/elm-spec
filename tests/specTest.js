@@ -63,7 +63,7 @@ describe("spec", () => {
         expectRejected(observations[0], [
           reportLine("Scenario timeout of 20ms exceeded!")
         ])
-      })
+      }, { timeout: 20 })
     })
   })
 })

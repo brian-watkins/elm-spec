@@ -4,8 +4,8 @@ const SpecRunner = require('../../runner/elm-spec-core/src/programRunner')
 const SpecCompiler = require('../../runner/elm-spec-runner/src/spec/compiler')
 const GlobalContext = require('../../runner/elm-spec-runner/src/spec/globalContext')
 const JsdomContext = require('../../runner/elm-spec-runner/src/spec/jsdomContext')
-const HtmlPlugin = require('../../runner/elm-spec-core/src/htmlPlugin')
-const HttpPlugin = require('../../runner/elm-spec-core/src/httpPlugin')
+const HtmlPlugin = require('../../runner/elm-spec-core/src/plugin/htmlPlugin')
+const HttpPlugin = require('../../runner/elm-spec-core/src/plugin/httpPlugin')
 
 exports.expectFailingBrowserSpec = (specProgram, specName, done, matcher) => {
   expectFailure(runBrowserTestSpec, specProgram, specName, done, matcher)
@@ -58,12 +58,12 @@ const expectPass = (runner, specProgram, specName, done, matcher) => {
   })
 }
 
-exports.expectSpec = (specProgram, specName, done, matcher) => {
-  runTestSpec(specProgram, specName, done, matcher)
+exports.expectSpec = (specProgram, specName, done, matcher, options) => {
+  runTestSpec(specProgram, specName, done, matcher, options)
 }
 
-exports.expectBrowserSpec = (specProgram, specName, done, matcher) => {
-  runBrowserTestSpec(specProgram, specName, done, matcher)
+exports.expectBrowserSpec = (specProgram, specName, done, matcher, options) => {
+  runBrowserTestSpec(specProgram, specName, done, matcher, options)
 }
 
 const compiler = new SpecCompiler({
@@ -89,17 +89,17 @@ exports.globalContext = new GlobalContext(testCompiler)
 
 exports.htmlContext = htmlContext = new JsdomContext(testCompiler)
 
-const runTestSpec = (specProgram, specName, done, matcher) => {
+const runTestSpec = (specProgram, specName, done, matcher, options) => {
   this.globalContext.evaluate((Elm) => {
     var app = Elm.Specs[specProgram].init({
       flags: { specName }
     })
 
-    this.runSpec(app, this.globalContext, {}, done, matcher)
+    this.runSpec(app, this.globalContext, {}, done, matcher, options)
   })
 }
 
-const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
+const runBrowserTestSpec = (specProgram, specName, done, matcher, options) => {
   this.htmlContext.evaluate((Elm, appElement, clock, window) => {
     const plugins = {
       "_html": new HtmlPlugin(this.htmlContext, window, clock),
@@ -113,14 +113,14 @@ const runBrowserTestSpec = (specProgram, specName, done, matcher) => {
   
     this.htmlContext.dom.window._elm_spec.app = app
 
-    this.runSpec(app, this.htmlContext, plugins, done, matcher)
+    this.runSpec(app, this.htmlContext, plugins, done, matcher, options)
   })
 }
 
-exports.runSpec = (app, context, plugins, done, matcher) => {
+exports.runSpec = (app, context, plugins, done, matcher, options) => {
   const observations = []
 
-  new SpecRunner(app, context, plugins, { timeout: 20 })
+  new SpecRunner(app, context, plugins, options || { timeout: 500 })
     .on('observation', (observation) => {
       observations.push(observation)
     })

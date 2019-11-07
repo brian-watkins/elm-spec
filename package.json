@@ -4,10 +4,12 @@
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
     "start": "cd runner/tests/sample && ../../elm-spec-runner/bin/run",
-    "test": "run-s test:elm test:runner test:spec-runner",
+    "test": "run-s test:elm test:runner test:spec-runner build:karma test:karma",
     "test:elm": "cd tests && mocha '*Test.js'",
     "test:runner": "mocha './runner/tests/*Test.js'",
-    "test:spec-runner": "cd runner/elm-spec-runner && npm test"
+    "test:spec-runner": "npm test --prefix runner/elm-spec-runner",
+    "build:karma": "npm run build --prefix runner/karma-elm-spec-framework",
+    "test:karma": "npm test --prefix runner/karma-elm-spec-framework"
   },
   "author": "Brian Watkins",
   "license": "MIT",

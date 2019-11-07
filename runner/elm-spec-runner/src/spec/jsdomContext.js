@@ -1,5 +1,5 @@
-const HtmlPlugin = require('elm-spec-core/src/htmlPlugin')
-const HttpPlugin = require('elm-spec-core/src/httpPlugin')
+const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
+const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 const FakeLocation = require('../fakes/fakeLocation')
@@ -22,11 +22,9 @@ module.exports = class JsdomContext {
       }
     )
 
-    this.addFakes()
+    this.clock = lolex.createClock()
 
-    this.clock = lolex
-      .withGlobal(this.dom.window)
-      .install({toFake: [ "requestAnimationFrame" ]})
+    this.addFakes()
   }
 
   prepareForScenario() {
@@ -36,7 +34,7 @@ module.exports = class JsdomContext {
   addFakes() {
     this.dom.window._elm_spec = {}
     const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
-    this.dom.window._elm_spec.window = fakeWindow(this.dom.window, fakeLocation)
+    this.dom.window._elm_spec.window = fakeWindow(this.dom.window, fakeLocation, this.clock)
     this.dom.window._elm_spec.document = fakeDocument(this.dom.window, fakeLocation)
     this.dom.window._elm_spec.history = new FakeHistory(fakeLocation)
     this.dom.window._elm_spec.console = proxiedConsole()
@@ -50,7 +48,7 @@ module.exports = class JsdomContext {
     this.execute((_, window) => {
       const appElement = this.prepareForApp(window)
       this.dom.window._elm_spec.app = this.initializeApp(program, appElement)
-      const plugins = this.generatePlugins(window, this.clock)
+      const plugins = this.generatePlugins(window)
       callback(this.dom.window._elm_spec.app, plugins)
     })
   }
@@ -58,7 +56,7 @@ module.exports = class JsdomContext {
   evaluate(evaluator) {
     this.execute((Elm, window) => {
       const appElement = this.prepareForApp(window)
-      evaluator(Elm, appElement, this.clock, window)
+      evaluator(Elm, appElement, null, window)
     })
   }
 
@@ -66,7 +64,7 @@ module.exports = class JsdomContext {
     if (!this.dom.window.Elm) {
       this.compiler.compile()
         .then((compiledCode) => {
-          this.dom.window.eval("(function(){const console = _elm_spec.console; const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
+          this.dom.window.eval("(function(){const requestAnimationFrame = _elm_spec.window.requestAnimationFrame; const console = _elm_spec.console; const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
           callback(this.dom.window.Elm, this.dom.window)
         })
         .catch((err) => {
@@ -90,14 +88,12 @@ module.exports = class JsdomContext {
 
   generatePlugins(window, clock) {
     return {
-      "_html": new HtmlPlugin(this, window, clock),
+      "_html": new HtmlPlugin(this, window),
       "_http": new HttpPlugin(window)
     }
   }
 
   prepareForApp(window) {
-    this.clock.reset()
-
     const document = window.document
 
     while (document.body.firstChild) {
@@ -109,6 +105,11 @@ module.exports = class JsdomContext {
     document.body.appendChild(wrapper)
 
     return wrapper
+  }
+
+  update(callback) {
+    this.clock.runToFrame()
+    callback()
   }
 
   // plugin functions

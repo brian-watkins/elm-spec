@@ -2,7 +2,11 @@ const lolex = require('lolex')
 
 module.exports = class TimePlugin {
   constructor() {
-    this.setTimeout = setTimeout
+    if (typeof window === 'undefined') {
+      this.setTimeout = setTimeout
+    } else {
+      this.setTimeout = setTimeout.bind(window)
+    }
   }
 
   handle(specMessage, next) {
