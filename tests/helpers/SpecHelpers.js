@@ -1,9 +1,9 @@
 const chai = require('chai')
 const expect = chai.expect
 const SpecRunner = require('../../runner/elm-spec-core/src/programRunner')
-const SpecCompiler = require('../../runner/elm-spec-runner/src/spec/compiler')
-const GlobalContext = require('../../runner/elm-spec-runner/src/spec/globalContext')
-const JsdomContext = require('../../runner/elm-spec-runner/src/spec/jsdomContext')
+const SpecCompiler = require('elm-spec-core/src/compiler')
+const GlobalContext = require('../../runner/elm-spec-runner/src/globalContext')
+const JsdomContext = require('../../runner/elm-spec-runner/src/jsdomContext')
 const HtmlPlugin = require('../../runner/elm-spec-core/src/plugin/htmlPlugin')
 const HttpPlugin = require('../../runner/elm-spec-core/src/plugin/httpPlugin')
 
@@ -74,13 +74,10 @@ const compiler = new SpecCompiler({
 const testCompiler = {
   compile: () => {
     if (!this.compiledCode) {
-      return compiler.compile()
-        .then((code) => {
-          this.compiledCode = code
-          return code
-        })
+      this.compiledCode = compiler.compile()
+      return this.compiledCode
     } else {
-      return Promise.resolve(this.compiledCode)
+      return this.compiledCode
     }
   }
 }

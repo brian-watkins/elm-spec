@@ -1,10 +1,10 @@
 const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
 const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
-const { runAnimationFrame } = require('./fakes/fakeWindow')
 
 module.exports = class BrowserContext {
-  constructor(window, tags) {
+  constructor(window, clock, tags) {
     this.window = window
+    this.clock = clock
     this.tags = tags
   }
 
@@ -69,7 +69,7 @@ module.exports = class BrowserContext {
   }
 
   update(callback) {
-    runAnimationFrame()
+    this.clock.runToFrame()
     this.window.requestAnimationFrame(callback)
   }
 

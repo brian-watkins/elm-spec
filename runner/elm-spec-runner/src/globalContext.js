@@ -6,15 +6,13 @@ module.exports = class GlobalContext {
 
   evaluate(evaluator) {
     if (!this.Elm) {
-      this.compiler.compile()
-        .then((compiledCode) => {
-          eval(compiledCode)
-          evaluator(this.Elm)
-        })
-        .catch((err) => {
-          console.log(err)
-          process.exit(1)
-        })
+      try {
+        eval(this.compiler.compile())
+        evaluator(this.Elm)
+      } catch (error) {
+        console.log(error)
+        process.exit(1)
+      }
       return
     }
     

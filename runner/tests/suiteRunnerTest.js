@@ -1,8 +1,8 @@
 const chai = require('chai')
 const expect = chai.expect
-const Compiler = require('../elm-spec-runner/src/spec/compiler')
-const JsdomContext = require('../elm-spec-runner/src/spec/jsdomContext')
-const SuiteRunner = require('../elm-spec-core/src/suiteRunner')
+const Compiler = require('elm-spec-core/src/compiler')
+const JsdomContext = require('../elm-spec-runner/src/jsdomContext')
+const SuiteRunner = require('elm-spec-core/src/suiteRunner')
 const process = require('process')
 
 describe("Suite Runner", () => {

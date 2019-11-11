@@ -4,15 +4,17 @@
   const BrowserContext = require('./browserContext')
   const KarmaReporter = require('./karmaReporter')
   const SuiteRunner = require('elm-spec-core')
-  const FakeLocation = require('./fakes/fakeLocation')
-  const FakeHistory = require('./fakes/fakeHistory')
-  const { proxiedConsole } = require('./fakes/proxiedConsole')
-  const { fakeWindow } = require('./fakes/fakeWindow')
-  const { fakeDocument } = require('./fakes/fakeDocument')
+  const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
+  const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
+  const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
+  const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
+  const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
+  const lolex = require('lolex')
 
   window._elm_spec = {}
   const fakeLocation = new FakeLocation((msg) => console.log("send to program", msg))
-  window._elm_spec.window = fakeWindow(window, fakeLocation)
+  const clock = lolex.createClock()
+  window._elm_spec.window = fakeWindow(window, fakeLocation, clock)
   window._elm_spec.document = fakeDocument(window, fakeLocation)
   window._elm_spec.history = new FakeHistory(fakeLocation)
   window._elm_spec.console = proxiedConsole()  
@@ -27,7 +29,7 @@
   
     console.log("elm", Elm)
   
-    const context = new BrowserContext(window, [])
+    const context = new BrowserContext(window, clock, [])
     const reporter = new KarmaReporter(window.__karma__)
   
     const runner = new SuiteRunner(context, reporter, { timeout: 5000 })

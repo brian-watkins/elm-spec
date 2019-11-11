@@ -1,7 +1,7 @@
 const {Command, flags} = require('@oclif/command')
-const Compiler = require('./spec/compiler')
-const Reporter = require('./spec/consoleReporter')
-const JsdomContext = require('./spec/jsdomContext')
+const Compiler = require('elm-spec-core/src/compiler')
+const Reporter = require('./consoleReporter')
+const JsdomContext = require('./jsdomContext')
 const SuiteRunner = require('elm-spec-core')
 const commandExists = require('command-exists').sync
 const glob = require("glob")

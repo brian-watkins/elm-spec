@@ -1,12 +1,12 @@
-const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
-const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
-const FakeLocation = require('../fakes/fakeLocation')
-const FakeHistory = require('../fakes/fakeHistory')
-const { proxiedConsole } = require('../fakes/proxiedConsole')
-const { fakeWindow } = require('../fakes/fakeWindow')
-const { fakeDocument } = require('../fakes/fakeDocument')
+const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
+const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
+const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
+const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
+const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
+const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
+const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
 
 
 module.exports = class JsdomContext {
@@ -62,15 +62,14 @@ module.exports = class JsdomContext {
 
   execute(callback) {
     if (!this.dom.window.Elm) {
-      this.compiler.compile()
-        .then((compiledCode) => {
-          this.dom.window.eval("(function(){const requestAnimationFrame = _elm_spec.window.requestAnimationFrame; const console = _elm_spec.console; const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
-          callback(this.dom.window.Elm, this.dom.window)
-        })
-        .catch((err) => {
-          console.log(err)
-          process.exit(1)
-        })
+      try {
+        const compiledCode = this.compiler.compile()
+        this.dom.window.eval("(function(){const requestAnimationFrame = _elm_spec.window.requestAnimationFrame; const console = _elm_spec.console; const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
+        callback(this.dom.window.Elm, this.dom.window)
+      } catch (error) {
+        console.log(error)
+        process.exit(1)
+      }
     }
     else {
       callback(this.dom.window.Elm, this.dom.window)
