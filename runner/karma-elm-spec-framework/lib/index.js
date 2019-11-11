@@ -1,5 +1,6 @@
 const path = require('path')
 const preprocessor = require('./preprocessor')
+const { ElmSpecReporter } = require('./elmSpecReporter')
 const Compiler = require('elm-spec-core/src/compiler')
 const fs = require('fs')
 
@@ -31,5 +32,6 @@ initElmSpec.$inject = ["config.files", "config"];
 
 module.exports = {
   "framework:elm-spec":["factory", initElmSpec],
-  "preprocessor:elm-spec": ["factory", preprocessor.create]
+  "preprocessor:elm-spec": ["factory", preprocessor.create],
+  "reporter:elm-spec": ['type', ElmSpecReporter]
 };

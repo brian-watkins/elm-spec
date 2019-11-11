@@ -25,10 +25,6 @@
   window.document.head.appendChild(base)
 
   window.__karma__.start = function(config) {
-    console.log("START", config)
-  
-    console.log("elm", Elm)
-  
     const context = new BrowserContext(window, clock, [])
     const reporter = new KarmaReporter(window.__karma__)
   

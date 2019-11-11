@@ -7,7 +7,6 @@ module.exports = class KarmaReporter {
   }
 
   record(observation) {
-    console.log("observation", observation)
     this.karma.result({
       id: "obs-1",
       description: observation.description,

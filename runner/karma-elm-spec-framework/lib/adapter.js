@@ -27994,10 +27994,6 @@ exports.withGlobal = withGlobal;
   window.document.head.appendChild(base)
 
   window.__karma__.start = function(config) {
-    console.log("START", config)
-  
-    console.log("elm", Elm)
-  
     const context = new BrowserContext(window, clock, [])
     const reporter = new KarmaReporter(window.__karma__)
   
@@ -28113,7 +28109,6 @@ module.exports = class KarmaReporter {
   }
 
   record(observation) {
-    console.log("observation", observation)
     this.karma.result({
       id: "obs-1",
       description: observation.description,
