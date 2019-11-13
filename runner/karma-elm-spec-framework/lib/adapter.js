@@ -27973,30 +27973,16 @@ exports.withGlobal = withGlobal;
   const BrowserContext = require('./browserContext')
   const KarmaReporter = require('./karmaReporter')
   const SuiteRunner = require('elm-spec-core')
-  const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
-  const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
-  const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
-  const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
-  const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
-  const lolex = require('lolex')
 
-  window._elm_spec = {}
-  const fakeLocation = new FakeLocation((msg) => console.log("send to program", msg))
-  const clock = lolex.createClock()
-  window._elm_spec.window = fakeWindow(window, fakeLocation, clock)
-  window._elm_spec.document = fakeDocument(window, fakeLocation)
-  window._elm_spec.history = new FakeHistory(fakeLocation)
-  window._elm_spec.console = proxiedConsole()  
+  const context = new BrowserContext(window, [])
 
   const base = document.createElement("base")
   //NOTE: This has to be the right port!
   base.setAttribute("href", "http://localhost:9876")
   window.document.head.appendChild(base)
 
-  window.__karma__.start = function(config) {
-    const context = new BrowserContext(window, clock, [])
+  window.__karma__.start = function() {
     const reporter = new KarmaReporter(window.__karma__)
-  
     const runner = new SuiteRunner(context, reporter, { timeout: 5000 })
     runner.run()
   }
@@ -28004,21 +27990,37 @@ exports.withGlobal = withGlobal;
 })(window)
 
 
-},{"./browserContext":71,"./karmaReporter":72,"elm-spec-core":67,"elm-spec-core/src/fakes/fakeDocument":56,"elm-spec-core/src/fakes/fakeHistory":57,"elm-spec-core/src/fakes/fakeLocation":58,"elm-spec-core/src/fakes/fakeWindow":59,"elm-spec-core/src/fakes/proxiedConsole":60,"lolex":69}],71:[function(require,module,exports){
+},{"./browserContext":71,"./karmaReporter":72,"elm-spec-core":67}],71:[function(require,module,exports){
+const lolex = require('lolex')
 const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
 const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
+const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
+const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
+const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
+const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
+const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
 
 module.exports = class BrowserContext {
-  constructor(window, clock, tags) {
+  constructor(window, tags) {
     this.window = window
-    this.clock = clock
+    this.clock = lolex.createClock()
     this.tags = tags
+
+    this.addFakes()
+  }
+
+  addFakes() {
+    this.window._elm_spec = {}
+    const fakeLocation = new FakeLocation((msg) => console.log("send to program", msg))
+    this.window._elm_spec.window = fakeWindow(this.window, fakeLocation, this.clock)
+    this.window._elm_spec.document = fakeDocument(this.window, fakeLocation)
+    this.window._elm_spec.history = new FakeHistory(fakeLocation)
+    this.window._elm_spec.console = proxiedConsole()
   }
 
   evaluate(evaluator) {
     this.execute((Elm, window) => {
-      const appElement = this.prepareForApp(window)
-      evaluator(Elm, appElement, null, window)
+      evaluator(Elm, window)
     })
   }
 
@@ -28028,16 +28030,14 @@ module.exports = class BrowserContext {
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
-      const appElement = this.prepareForApp(window)
-      this.window._elm_spec.app = this.initializeApp(program, appElement)
+      this.window._elm_spec.app = this.initializeApp(program)
       const plugins = this.generatePlugins(window)
       callback(this.window._elm_spec.app, plugins)
     })
   }
 
-  initializeApp(program, element) {
+  initializeApp(program) {
     return program.init({
-      node: element,
       flags: {
         tags: this.tags
       }
@@ -28049,26 +28049,6 @@ module.exports = class BrowserContext {
       "_html": new HtmlPlugin(this, window),
       "_http": new HttpPlugin(window)
     }
-  }
-
-  prepareForApp(window) {
-    const document = window.document
-    let mountElement = document.querySelector("elm-spec-app")
-    if (!mountElement) {
-      mountElement = document.createElement("div")
-      mountElement.id = "elm-spec-app"
-      document.body.appendChild(mountElement)
-    }
-
-    while (mountElement.firstChild) {
-      mountElement.removeChild(mountElement.firstChild);
-    }
-
-    const wrapper = document.createElement("div")
-    wrapper.id = "app"
-    mountElement.appendChild(wrapper)
-
-    return wrapper
   }
 
   prepareForScenario() {
@@ -28099,7 +28079,7 @@ module.exports = class BrowserContext {
     this.window._elm_spec.isVisible = isVisible
   }
 }
-},{"elm-spec-core/src/plugin/htmlPlugin":61,"elm-spec-core/src/plugin/httpPlugin":62}],72:[function(require,module,exports){
+},{"elm-spec-core/src/fakes/fakeDocument":56,"elm-spec-core/src/fakes/fakeHistory":57,"elm-spec-core/src/fakes/fakeLocation":58,"elm-spec-core/src/fakes/fakeWindow":59,"elm-spec-core/src/fakes/proxiedConsole":60,"elm-spec-core/src/plugin/htmlPlugin":61,"elm-spec-core/src/plugin/httpPlugin":62,"lolex":69}],72:[function(require,module,exports){
 
 module.exports = class KarmaReporter {
 

@@ -1,13 +1,13 @@
 const chai = require('chai')
 const expect = chai.expect
-const { globalContext, runSpec } = require("./helpers/SpecHelpers")
+const { htmlContext, runSpec } = require("./helpers/SpecHelpers")
 
 describe("multiple specs", () => {
   it("runs all the provided specs", (done) => {
-    globalContext.evaluate((Elm) => {
+    htmlContext.evaluate((Elm) => {
       var app = Elm.Specs.MultipleSpecSpec.init()
   
-      runSpec(app, globalContext, {}, done, (observations) => {
+      runSpec(app, htmlContext, {}, done, (observations) => {
         expect(observations).to.have.length(4)
       })
     })

@@ -1,4 +1,4 @@
-const { expectPassingSpec, expectPassingBrowserSpec } = require("./helpers/SpecHelpers")
+const { expectPassingSpec } = require("./helpers/SpecHelpers")
 
 
 describe("time plugin", () => {
@@ -20,7 +20,7 @@ describe("time plugin", () => {
   
   describe("when the program is a browser program", () => {
     it("allows the spec to control Time.every as necessary", (done) => {
-      expectPassingBrowserSpec("HtmlTimeSpec", "interval", done)
+      expectPassingSpec("HtmlTimeSpec", "interval", done)
     })
   })
 })

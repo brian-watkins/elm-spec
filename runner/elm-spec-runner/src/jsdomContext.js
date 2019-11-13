@@ -46,18 +46,14 @@ module.exports = class JsdomContext {
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
-      const appElement = this.prepareForApp(window)
-      this.dom.window._elm_spec.app = this.initializeApp(program, appElement)
+      this.dom.window._elm_spec.app = this.initializeApp(program)
       const plugins = this.generatePlugins(window)
       callback(this.dom.window._elm_spec.app, plugins)
     })
   }
 
   evaluate(evaluator) {
-    this.execute((Elm, window) => {
-      const appElement = this.prepareForApp(window)
-      evaluator(Elm, appElement, null, window)
-    })
+    this.execute(evaluator)
   }
 
   execute(callback) {
@@ -76,9 +72,8 @@ module.exports = class JsdomContext {
     }
   }
 
-  initializeApp(program, element) {
+  initializeApp(program) {
     return program.init({
-      node: element,
       flags: {
         tags: this.tags
       }
@@ -90,20 +85,6 @@ module.exports = class JsdomContext {
       "_html": new HtmlPlugin(this, window),
       "_http": new HttpPlugin(window)
     }
-  }
-
-  prepareForApp(window) {
-    const document = window.document
-
-    while (document.body.firstChild) {
-      document.body.removeChild(document.body.firstChild);
-    }
-
-    const wrapper = document.createElement("div")
-    wrapper.id = "app"
-    document.body.appendChild(wrapper)
-
-    return wrapper
   }
 
   update(callback) {

@@ -1,5 +1,5 @@
 const {
-  expectBrowserSpec,
+  expectSpec,
   expectAccepted,
   expectRejected,
   reportLine
@@ -8,7 +8,7 @@ const {
 describe("Events", () => {
   context("click", () => {
     it("handles the click event as expected", (done) => {
-      expectBrowserSpec("EventSpec", "click", done, (observations) => {
+      expectSpec("EventSpec", "click", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -21,7 +21,7 @@ describe("Events", () => {
 
   context("double click", () => {
     it("handles the double click event as expected", (done) => {
-      expectBrowserSpec("EventSpec", "doubleClick", done, (observations) => {
+      expectSpec("EventSpec", "doubleClick", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -35,7 +35,7 @@ describe("Events", () => {
 
   context("press", () => {
     it("handles the mousedown event as expected", (done) => {
-      expectBrowserSpec("EventSpec", "mouseDown", done, (observations) => {
+      expectSpec("EventSpec", "mouseDown", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
           reportLine("No element targeted for event", "mousedown")
@@ -46,7 +46,7 @@ describe("Events", () => {
 
   context("release", () => {
     it("handles the mouseup event as expected", (done) => {
-      expectBrowserSpec("EventSpec", "mouseUp", done, (observations) => {
+      expectSpec("EventSpec", "mouseUp", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
           reportLine("No element targeted for event", "mouseup")
@@ -57,7 +57,7 @@ describe("Events", () => {
 
   context("mouseMoveIn", () => {
     it("handles the mouseOver and mouseEnter events as expected", (done) => {
-      expectBrowserSpec("EventSpec", "mouseMoveIn", done, (observations) => {
+      expectSpec("EventSpec", "mouseMoveIn", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectRejected(observations[2], [
@@ -69,7 +69,7 @@ describe("Events", () => {
 
   context("mouseMoveOut", () => {
     it("handles the mouseOut and mouseLeave events as expected", (done) => {
-      expectBrowserSpec("EventSpec", "mouseMoveOut", done, (observations) => {
+      expectSpec("EventSpec", "mouseMoveOut", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectRejected(observations[2], [
@@ -82,7 +82,7 @@ describe("Events", () => {
   describe("Input", () => {
     context("when text is input to a targeted field", () => {
       it("updates the model and renders the view as expected", (done) => {
-        expectBrowserSpec("EventSpec", "input", done, (observations) => {
+        expectSpec("EventSpec", "input", done, (observations) => {
           expectAccepted(observations[0])
           expectRejected(observations[1], [
             reportLine("No element targeted for event", "input")
@@ -95,7 +95,7 @@ describe("Events", () => {
   describe("custom events", () => {
     context("when a custom event is triggered", () => {
       it("updates as expected", (done) => {
-        expectBrowserSpec("EventSpec", "custom", done, (observations) => {
+        expectSpec("EventSpec", "custom", done, (observations) => {
           expectAccepted(observations[0])
           expectRejected(observations[1], [
             reportLine("No element targeted for event", "keyup")

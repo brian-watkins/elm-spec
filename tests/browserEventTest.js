@@ -1,5 +1,5 @@
 const {
-  expectBrowserSpec,
+  expectSpec,
   expectAccepted,
   expectRejected,
   reportLine
@@ -8,7 +8,7 @@ const {
 describe("browser events", () => {
   context("keyboard events", () => {
     it("handles browser keyboard events", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "keyboard", done, (observations) => {
+      expectSpec("BrowserEventSpec", "keyboard", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -16,7 +16,7 @@ describe("browser events", () => {
 
   context("click events", () => {
     it("handles browser click events", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "click", done, (observations) => {
+      expectSpec("BrowserEventSpec", "click", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -26,7 +26,7 @@ describe("browser events", () => {
 
   context("mouseDown events", () => {
     it("handles browser mouseDown events", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "mouseDown", done, (observations) => {
+      expectSpec("BrowserEventSpec", "mouseDown", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -34,7 +34,7 @@ describe("browser events", () => {
 
   context("mouseUp events", () => {
     it("handles browser mouseUp events", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "mouseUp", done, (observations) => {
+      expectSpec("BrowserEventSpec", "mouseUp", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -42,7 +42,7 @@ describe("browser events", () => {
 
   context("mouseMove events", () => {
     it("handles browser mouseMove events", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "mouseMove", done, (observations) => {
+      expectSpec("BrowserEventSpec", "mouseMove", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -50,7 +50,7 @@ describe("browser events", () => {
 
   context("window resize", () => {
     it("handles the window resize as expected", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "windowResize", done, (observations) => {
+      expectSpec("BrowserEventSpec", "windowResize", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -58,7 +58,7 @@ describe("browser events", () => {
 
   context("window visibility", () => {
     it("handles the window visibility change as expected", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "windowVisibility", done, (observations) => {
+      expectSpec("BrowserEventSpec", "windowVisibility", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -66,7 +66,7 @@ describe("browser events", () => {
 
   context("animationFrame events", () => {
     it("handles the animation frame events as expected", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "animationFrame", done, (observations) => {
+      expectSpec("BrowserEventSpec", "animationFrame", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
@@ -74,7 +74,7 @@ describe("browser events", () => {
 
   context("events that cannot run at the browser level", () => {
     it("fails the test", (done) => {
-      expectBrowserSpec("BrowserEventSpec", "nonBrowserEvents", done, (observations) => {
+      expectSpec("BrowserEventSpec", "nonBrowserEvents", done, (observations) => {
         expectRejected(observations[0], [
           reportLine("Event not supported when document is targeted", "mouseMoveIn")
         ])

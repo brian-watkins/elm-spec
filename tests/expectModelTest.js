@@ -2,7 +2,6 @@ const chai = require('chai')
 const expect = chai.expect
 const {
   expectSpec,
-  expectFailingSpec,
   expectPassingSpec,
   expectRejected,
   reportLine,
@@ -13,7 +12,7 @@ describe("Expect Model", () => {
   
   describe("When the spec is not observed to be valid", () => {
     it("sends a failure message", (done) => {
-      expectFailingSpec("ExpectModelSpec", "failing", done, (observations) => {
+      expectSpec("ExpectModelSpec", "failing", done, (observations) => {
         expect(observations).to.have.length(1)
         expectRejected(observations[0], [
           reportLine("Expected", "99"),
@@ -23,7 +22,7 @@ describe("Expect Model", () => {
     })
 
     it("provides the spec description", (done) => {
-      expectFailingSpec("ExpectModelSpec", "failing", done, (observations) => {
+      expectSpec("ExpectModelSpec", "failing", done, (observations) => {
         expect(observations).to.have.length(1)
         expect(observations[0].description).to.equal("It fails")
       })

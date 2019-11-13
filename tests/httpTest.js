@@ -1,9 +1,9 @@
-const { expectBrowserSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
+const { expectSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
 
 describe('HTTP', () => {
   context("HTTP GET", () => {
     it("handles an HTTP GET as expected", (done) => {
-      expectBrowserSpec("HttpSpec", "get", done, (observations) => {
+      expectSpec("HttpSpec", "get", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
       })
@@ -12,7 +12,7 @@ describe('HTTP', () => {
 
   context("expectRequest", () => {
     it("counts the number of requests as expected", (done) => {
-      expectBrowserSpec("HttpSpec", "expectRequest", done, (observations) => {
+      expectSpec("HttpSpec", "expectRequest", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -27,7 +27,7 @@ describe('HTTP', () => {
 
   context("hasHeader", () => {
     it("observes request headers as expected", (done) => {
-      expectBrowserSpec("HttpSpec", "hasHeader", done, (observations) => {
+      expectSpec("HttpSpec", "hasHeader", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),

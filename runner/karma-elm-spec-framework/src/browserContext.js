@@ -27,8 +27,7 @@ module.exports = class BrowserContext {
 
   evaluate(evaluator) {
     this.execute((Elm, window) => {
-      const appElement = this.prepareForApp(window)
-      evaluator(Elm, appElement, null, window)
+      evaluator(Elm, window)
     })
   }
 
@@ -38,16 +37,14 @@ module.exports = class BrowserContext {
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
-      const appElement = this.prepareForApp(window)
-      this.window._elm_spec.app = this.initializeApp(program, appElement)
+      this.window._elm_spec.app = this.initializeApp(program)
       const plugins = this.generatePlugins(window)
       callback(this.window._elm_spec.app, plugins)
     })
   }
 
-  initializeApp(program, element) {
+  initializeApp(program) {
     return program.init({
-      node: element,
       flags: {
         tags: this.tags
       }
@@ -59,26 +56,6 @@ module.exports = class BrowserContext {
       "_html": new HtmlPlugin(this, window),
       "_http": new HttpPlugin(window)
     }
-  }
-
-  prepareForApp(window) {
-    const document = window.document
-    let mountElement = document.querySelector("elm-spec-app")
-    if (!mountElement) {
-      mountElement = document.createElement("div")
-      mountElement.id = "elm-spec-app"
-      document.body.appendChild(mountElement)
-    }
-
-    while (mountElement.firstChild) {
-      mountElement.removeChild(mountElement.firstChild);
-    }
-
-    const wrapper = document.createElement("div")
-    wrapper.id = "app"
-    mountElement.appendChild(wrapper)
-
-    return wrapper
   }
 
   prepareForScenario() {

@@ -1,39 +1,39 @@
-const { expectPassingBrowserSpec } = require("./helpers/SpecHelpers")
+const { expectPassingSpec } = require("./helpers/SpecHelpers")
 
 describe("Selectors", () => {
   describe("tag", () => {
     context("when an element is selected by tag name", () => {
       it("selects the element as epxected", (done) => {
-        expectPassingBrowserSpec("SelectorSpec", "tag", done)
+        expectPassingSpec("SelectorSpec", "tag", done)
       })
     })
     context("when more than one tag selector is used in a selection", () => {
       it("uses only the first tag", (done) => {
-        expectPassingBrowserSpec("SelectorSpec", "onlyOneTag", done)
+        expectPassingSpec("SelectorSpec", "onlyOneTag", done)
       })
     })
     context("when a tag selector is combined with other selectors", () => {
       it("selects the element as expected", (done) => {
-        expectPassingBrowserSpec("SelectorSpec", "combinedTag", done)
+        expectPassingSpec("SelectorSpec", "combinedTag", done)
       })
     })
   })
 
   describe("attributeName", () => {
     it("selects the element as expected", (done) => {
-      expectPassingBrowserSpec("SelectorSpec", "attributeName", done)
+      expectPassingSpec("SelectorSpec", "attributeName", done)
     })
   })
 
   describe("attribute", () => {
     it("selects the element as expected", (done) => {
-      expectPassingBrowserSpec("SelectorSpec", "attribute", done)
+      expectPassingSpec("SelectorSpec", "attribute", done)
     })
   })
 
   describe("descendantsOf", () => {
     it("selects the elements as expected", (done) => {
-      expectPassingBrowserSpec("SelectorSpec", "descendants", done)
+      expectPassingSpec("SelectorSpec", "descendants", done)
     })
   })
 })

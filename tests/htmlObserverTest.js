@@ -1,6 +1,6 @@
 const {
-  expectBrowserSpec,
-  expectPassingBrowserSpec,
+  expectSpec,
+  expectPassingSpec,
   expectAccepted,
   expectRejected,
   reportLine
@@ -9,7 +9,7 @@ const {
 describe("html observers", () => {
   describe("hasText", () => {
     it("observes the text of the selected element", (done) => {
-      expectBrowserSpec("HtmlObserverSpec", "hasText", done, (observations) => {
+      expectSpec("HtmlObserverSpec", "hasText", done, (observations) => {
         expectAccepted(observations[0])
 
         expectRejected(observations[1], [
@@ -21,13 +21,13 @@ describe("html observers", () => {
     })
 
     it("observes that text is contained in the text content of the element", (done) => {
-      expectPassingBrowserSpec("HtmlObserverSpec", "hasTextContained", done)
+      expectPassingSpec("HtmlObserverSpec", "hasTextContained", done)
     })
   })
 
   describe("hasAttribute", () => {
     it("observes attributes of selected elements as expected", (done) => {
-      expectBrowserSpec("HtmlObserverSpec", "hasAttribute", done, (observations) => {
+      expectSpec("HtmlObserverSpec", "hasAttribute", done, (observations) => {
         expectAccepted(observations[0])
         
         expectRejected(observations[1], [
