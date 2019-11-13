@@ -1,11 +1,28 @@
+const lolex = require('lolex')
 const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
 const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
+const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
+const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
+const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
+const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
+const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
 
 module.exports = class BrowserContext {
-  constructor(window, clock, tags) {
+  constructor(window, tags) {
     this.window = window
-    this.clock = clock
+    this.clock = lolex.createClock()
     this.tags = tags
+
+    this.addFakes()
+  }
+
+  addFakes() {
+    this.window._elm_spec = {}
+    const fakeLocation = new FakeLocation((msg) => console.log("send to program", msg))
+    this.window._elm_spec.window = fakeWindow(this.window, fakeLocation, this.clock)
+    this.window._elm_spec.document = fakeDocument(this.window, fakeLocation)
+    this.window._elm_spec.history = new FakeHistory(fakeLocation)
+    this.window._elm_spec.console = proxiedConsole()
   }
 
   evaluate(evaluator) {
