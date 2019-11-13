@@ -1,5 +1,6 @@
 const compiler = require("node-elm-compiler/dist/index")
 const glob = require("glob")
+const { injectFakes } = require('./fakes')
 
 module.exports = class Compiler {
   constructor ({ cwd, specPath, elmPath }) {
@@ -11,9 +12,11 @@ module.exports = class Compiler {
   compile() {
     const files = glob.sync(this.specPath)
 
-    return compiler.compileToStringSync(files, {
+    const compiledElm = compiler.compileToStringSync(files, {
       cwd: this.cwd,
       pathToElm: this.elmPath
     })
+
+    return injectFakes(compiledElm)
   }
 }

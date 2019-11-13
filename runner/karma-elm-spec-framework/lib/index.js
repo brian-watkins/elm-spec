@@ -21,9 +21,7 @@ const initElmSpec = function(files, config) {
   })
 
   const compiledCode = compiler.compile()
-  
-  const preparedCode = "(function(actualWindow){const requestAnimationFrame = actualWindow._elm_spec.window.requestAnimationFrame; const console = actualWindow._elm_spec.console; const window = actualWindow._elm_spec.window; const history = actualWindow._elm_spec.history; const document = actualWindow._elm_spec.document; " + compiledCode + "})(window)"
-  fs.writeFileSync("elm.js", preparedCode)
+  fs.writeFileSync("elm.js", compiledCode)
 
   files.unshift(createPattern(path.join(__dirname, '../elm.js')))
   files.unshift(createPattern(path.join(__dirname, 'adapter.js')))

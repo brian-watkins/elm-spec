@@ -1,3 +1,9 @@
+const {
+  getLocation,
+  setBaseLocation,
+  resizeWindowTo,
+  setWindowVisibility
+} = require('../fakes')
 
 module.exports = class HtmlPlugin {
   constructor(context, window) {
@@ -111,12 +117,12 @@ module.exports = class HtmlPlugin {
       }
       case "resize": {
         const size = specMessage.body
-        this.context.resizeTo(size.width, size.height)
+        resizeWindowTo(size.width, size.height, this.context.window)
         this.window.dispatchEvent(this.getEvent("resize"))
         break
       }
       case "visibilityChange": {
-        this.context.setVisibility(specMessage.body.isVisible)
+        setWindowVisibility(specMessage.body.isVisible, this.context.window)
         this.document.dispatchEvent(this.getEvent("visibilitychange"))
         break
       }
@@ -128,13 +134,13 @@ module.exports = class HtmlPlugin {
         out({
           home: "navigation",
           name: "current-location",
-          body: this.context.location.href
+          body: getLocation(this.context.window).href
         })
         break
       }
       case "set-location": {
         const location = specMessage.body
-        this.context.setBaseLocation(location)
+        setBaseLocation(location, this.context.window)
         break
       }
       case "application": {

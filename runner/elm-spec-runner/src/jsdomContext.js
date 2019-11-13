@@ -2,11 +2,7 @@ const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
 const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
 const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
-const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
-const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
-const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
-const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
-const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
+const { registerFakes } = require('elm-spec-core/src/fakes')
 
 
 module.exports = class JsdomContext {
@@ -24,31 +20,18 @@ module.exports = class JsdomContext {
 
     this.clock = lolex.createClock()
 
-    this.addFakes()
+    registerFakes(this.dom.window, this.clock)
   }
 
-  prepareForScenario() {
-    this.dom.window._elm_spec.window.location.setBase(this.dom.window.document, "http://elm-spec")
-  }
-
-  addFakes() {
-    this.dom.window._elm_spec = {}
-    const fakeLocation = new FakeLocation((msg) => this.sendToCurrentApp(msg)) 
-    this.dom.window._elm_spec.window = fakeWindow(this.dom.window, fakeLocation, this.clock)
-    this.dom.window._elm_spec.document = fakeDocument(this.dom.window, fakeLocation)
-    this.dom.window._elm_spec.history = new FakeHistory(fakeLocation)
-    this.dom.window._elm_spec.console = proxiedConsole()
-  }
-
-  sendToCurrentApp(msg) {
-    this.dom.window._elm_spec.app.ports.sendIn.send(msg)
+  get window () {
+    return this.dom.window
   }
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
-      this.dom.window._elm_spec.app = this.initializeApp(program)
+      const app = this.initializeApp(program)
       const plugins = this.generatePlugins(window)
-      callback(this.dom.window._elm_spec.app, plugins)
+      callback(app, plugins)
     })
   }
 
@@ -60,7 +43,7 @@ module.exports = class JsdomContext {
     if (!this.dom.window.Elm) {
       try {
         const compiledCode = this.compiler.compile()
-        this.dom.window.eval("(function(){const requestAnimationFrame = _elm_spec.window.requestAnimationFrame; const console = _elm_spec.console; const window = _elm_spec.window; const history = _elm_spec.history; const document = _elm_spec.document; " + compiledCode + "})()")
+        this.dom.window.eval(compiledCode)
         callback(this.dom.window.Elm, this.dom.window)
       } catch (error) {
         console.log(error)
@@ -92,22 +75,4 @@ module.exports = class JsdomContext {
     callback()
   }
 
-  // plugin functions
-
-  get location() {
-    return this.dom.window._elm_spec.window.location
-  }
-
-  setBaseLocation(location) {
-    this.dom.window._elm_spec.window.location.setBase(this.dom.window.document, location)
-  }
-
-  resizeTo(width, height) {
-    this.dom.window._elm_spec.innerWidth = width
-    this.dom.window._elm_spec.innerHeight = height
-  }
-
-  setVisibility(isVisible) {
-    this.dom.window._elm_spec.isVisible = isVisible
-  }
 }

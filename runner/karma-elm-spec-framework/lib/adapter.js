@@ -25438,6 +25438,57 @@ return typeDetect;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],56:[function(require,module,exports){
+const FakeLocation = require('./fakes/fakeLocation')
+const FakeHistory = require('./fakes/fakeHistory')
+const { proxiedConsole } = require('./fakes/proxiedConsole')
+const { fakeWindow } = require('./fakes/fakeWindow')
+const { fakeDocument } = require('./fakes/fakeDocument')
+
+exports.registerFakes = (window, clock) => {
+    window._elm_spec = {}
+    const fakeLocation = new FakeLocation((msg) => window._elm_spec.app.ports.sendIn.send(msg)) 
+    window._elm_spec.window = fakeWindow(window, fakeLocation, clock)
+    window._elm_spec.document = fakeDocument(window, fakeLocation)
+    window._elm_spec.history = new FakeHistory(fakeLocation)
+    window._elm_spec.console = proxiedConsole()
+}
+
+exports.injectFakes = (code) => {
+    return `
+(function(theWindow){
+  const requestAnimationFrame = theWindow._elm_spec.window.requestAnimationFrame;
+  const console = theWindow._elm_spec.console;
+  const window = theWindow._elm_spec.window;
+  const history = theWindow._elm_spec.history;
+  const document = theWindow._elm_spec.document;
+  ${code}
+})(window)
+`
+}
+
+exports.registerApp = (app, window) => {
+    window._elm_spec.app = app
+}
+
+exports.getLocation = (window) => {
+    return window._elm_spec.window.location
+}
+
+exports.setBaseLocation = (location, window) => {
+    window._elm_spec.window.location.setBase(window.document, location)
+}
+
+exports.resizeWindowTo = (width, height, window) => {
+    window._elm_spec.innerWidth = width
+    window._elm_spec.innerHeight = height
+}
+
+exports.setWindowVisibility = (isVisible, window) => {
+    window._elm_spec.isVisible = isVisible
+}
+
+
+},{"./fakes/fakeDocument":57,"./fakes/fakeHistory":58,"./fakes/fakeLocation":59,"./fakes/fakeWindow":60,"./fakes/proxiedConsole":61}],57:[function(require,module,exports){
 
 exports.fakeDocument = (theWindow, location) => {
   return new Proxy(theWindow.document, {
@@ -25473,7 +25524,7 @@ const customAddEventListener = (theWindow, target) => (type, handler) => {
     target.addEventListener(type, handler)
   }
 }
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module.exports = class FakeHistory {
   constructor(location) {
     this.location = location
@@ -25489,7 +25540,7 @@ module.exports = class FakeHistory {
     this.location.href = updated.href
   }
 }
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 module.exports = class FakeLocation {
   constructor(sendToProgram) {
     this.sendToProgram = sendToProgram
@@ -25521,7 +25572,7 @@ module.exports = class FakeLocation {
     })
   }
 }
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 
 exports.fakeWindow = (theWindow, location, clock) => {
   return new Proxy(theWindow, {
@@ -25557,7 +25608,7 @@ const customAddEventListener = (theWindow, target) => (type, handler) => {
     target.addEventListener(type, handler)
   }
 }
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 
 exports.proxiedConsole = () => {
   return new Proxy(console, {
@@ -25570,7 +25621,13 @@ exports.proxiedConsole = () => {
     }
   })
 }
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
+const {
+  getLocation,
+  setBaseLocation,
+  resizeWindowTo,
+  setWindowVisibility
+} = require('../fakes')
 
 module.exports = class HtmlPlugin {
   constructor(context, window) {
@@ -25684,12 +25741,12 @@ module.exports = class HtmlPlugin {
       }
       case "resize": {
         const size = specMessage.body
-        this.context.resizeTo(size.width, size.height)
+        resizeWindowTo(size.width, size.height, this.context.window)
         this.window.dispatchEvent(this.getEvent("resize"))
         break
       }
       case "visibilityChange": {
-        this.context.setVisibility(specMessage.body.isVisible)
+        setWindowVisibility(specMessage.body.isVisible, this.context.window)
         this.document.dispatchEvent(this.getEvent("visibilitychange"))
         break
       }
@@ -25701,13 +25758,13 @@ module.exports = class HtmlPlugin {
         out({
           home: "navigation",
           name: "current-location",
-          body: this.context.location.href
+          body: getLocation(this.context.window).href
         })
         break
       }
       case "set-location": {
         const location = specMessage.body
-        this.context.setBaseLocation(location)
+        setBaseLocation(location, this.context.window)
         break
       }
       case "application": {
@@ -25798,8 +25855,25 @@ module.exports = class HtmlPlugin {
     }
     return attributes
   }
+
+  // getLocation() {
+  //   return this.context.window._elm_spec.window.location
+  // }
+
+  // setBaseLocation(location) {
+  //   this.context.window._elm_spec.window.location.setBase(this.context.window.document, location)
+  // }
+
+  // resizeTo(width, height) {
+  //   this.context.window._elm_spec.innerWidth = width
+  //   this.context.window._elm_spec.innerHeight = height
+  // }
+
+  // setVisibility(isVisible) {
+  //   this.context.window._elm_spec.isVisible = isVisible
+  // }
 }
-},{}],62:[function(require,module,exports){
+},{"../fakes":56}],63:[function(require,module,exports){
 const nise = require('nise')
 
 const fakeServerForGlobalContext = function(window) {
@@ -25854,7 +25928,7 @@ const buildRequest = (request) => {
     headers: request.requestHeaders
   }
 }
-},{"nise":53}],63:[function(require,module,exports){
+},{"nise":53}],64:[function(require,module,exports){
 module.exports = class PortPlugin {
   constructor(app) {
     this.app = app
@@ -25890,7 +25964,7 @@ module.exports = class PortPlugin {
   }
 }
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function (global){
 const lolex = require('lolex')
 
@@ -25934,7 +26008,7 @@ module.exports = class TimePlugin {
   }
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"lolex":41}],65:[function(require,module,exports){
+},{"lolex":41}],66:[function(require,module,exports){
 
 const discover = (Elm) => {
   return Object.values(Elm).reduce((programs, program) => {
@@ -25949,10 +26023,11 @@ const discover = (Elm) => {
 module.exports = {
   discover
 }
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 const EventEmitter = require('events')
 const PortPlugin = require('./plugin/portPlugin')
 const TimePlugin = require('./plugin/timePlugin')
+const { registerApp } = require('./fakes')
 
 module.exports = class ProgramRunner extends EventEmitter {
   constructor(app, context, plugins, options) {
@@ -25964,6 +26039,8 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.timePlugin = new TimePlugin()
     this.plugins = plugins
     this.options = options
+
+    registerApp(this.app, this.context.window)
   }
 
   run() {
@@ -26063,7 +26140,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     switch (state) {
       case "START":
         this.timePlugin.reset()
-        this.context.prepareForScenario()
+        this.prepareForScenario()
         this.startTimeoutTimer(out)
         out(this.continue())
         break
@@ -26078,6 +26155,10 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.startTimeoutTimer(out)
         break
     }
+  }
+
+  prepareForScenario() {
+    this.context.window._elm_spec.window.location.setBase(this.context.window.document, "http://elm-spec")
   }
 
   startTimeoutTimer(out) {
@@ -26107,7 +26188,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 }
-},{"./plugin/portPlugin":63,"./plugin/timePlugin":64,"events":68}],67:[function(require,module,exports){
+},{"./fakes":56,"./plugin/portPlugin":64,"./plugin/timePlugin":65,"events":69}],68:[function(require,module,exports){
 const EventEmitter = require('events')
 const ProgramRunner = require('./programRunner')
 const Program = require('./program')
@@ -26151,7 +26232,7 @@ module.exports = class SuiteRunner extends EventEmitter {
     })
   }
 }
-},{"./program":65,"./programRunner":66,"events":68}],68:[function(require,module,exports){
+},{"./program":66,"./programRunner":67,"events":69}],69:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26676,7 +26757,7 @@ function functionBindPolyfill(context) {
   };
 }
 
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -27966,7 +28047,7 @@ exports.install = defaultImplementation.install;
 exports.withGlobal = withGlobal;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 
 (function(window) {
 
@@ -27990,15 +28071,11 @@ exports.withGlobal = withGlobal;
 })(window)
 
 
-},{"./browserContext":71,"./karmaReporter":72,"elm-spec-core":67}],71:[function(require,module,exports){
+},{"./browserContext":72,"./karmaReporter":73,"elm-spec-core":68}],72:[function(require,module,exports){
 const lolex = require('lolex')
 const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
 const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
-const FakeLocation = require('elm-spec-core/src/fakes/fakeLocation')
-const FakeHistory = require('elm-spec-core/src/fakes/fakeHistory')
-const { proxiedConsole } = require('elm-spec-core/src/fakes/proxiedConsole')
-const { fakeWindow } = require('elm-spec-core/src/fakes/fakeWindow')
-const { fakeDocument } = require('elm-spec-core/src/fakes/fakeDocument')
+const { registerFakes } = require('elm-spec-core/src/fakes')
 
 module.exports = class BrowserContext {
   constructor(window, tags) {
@@ -28006,16 +28083,7 @@ module.exports = class BrowserContext {
     this.clock = lolex.createClock()
     this.tags = tags
 
-    this.addFakes()
-  }
-
-  addFakes() {
-    this.window._elm_spec = {}
-    const fakeLocation = new FakeLocation((msg) => console.log("send to program", msg))
-    this.window._elm_spec.window = fakeWindow(this.window, fakeLocation, this.clock)
-    this.window._elm_spec.document = fakeDocument(this.window, fakeLocation)
-    this.window._elm_spec.history = new FakeHistory(fakeLocation)
-    this.window._elm_spec.console = proxiedConsole()
+    registerFakes(this.window, this.clock)
   }
 
   evaluate(evaluator) {
@@ -28030,9 +28098,9 @@ module.exports = class BrowserContext {
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
-      this.window._elm_spec.app = this.initializeApp(program)
+      const app = this.initializeApp(program)
       const plugins = this.generatePlugins(window)
-      callback(this.window._elm_spec.app, plugins)
+      callback(app, plugins)
     })
   }
 
@@ -28051,35 +28119,13 @@ module.exports = class BrowserContext {
     }
   }
 
-  prepareForScenario() {
-    this.window._elm_spec.window.location.setBase(this.window.document, "http://elm-spec")
-  }
-
   update(callback) {
     this.clock.runToFrame()
     this.window.requestAnimationFrame(callback)
   }
 
-  // plugin functions
-
-  get location() {
-    return this.window._elm_spec.window.location
-  }
-
-  setBaseLocation(location) {
-    this.window._elm_spec.window.location.setBase(this.window.document, location)
-  }
-
-  resizeTo(width, height) {
-    this.window._elm_spec.innerWidth = width
-    this.window._elm_spec.innerHeight = height
-  }
-
-  setVisibility(isVisible) {
-    this.window._elm_spec.isVisible = isVisible
-  }
 }
-},{"elm-spec-core/src/fakes/fakeDocument":56,"elm-spec-core/src/fakes/fakeHistory":57,"elm-spec-core/src/fakes/fakeLocation":58,"elm-spec-core/src/fakes/fakeWindow":59,"elm-spec-core/src/fakes/proxiedConsole":60,"elm-spec-core/src/plugin/htmlPlugin":61,"elm-spec-core/src/plugin/httpPlugin":62,"lolex":69}],72:[function(require,module,exports){
+},{"elm-spec-core/src/fakes":56,"elm-spec-core/src/plugin/htmlPlugin":62,"elm-spec-core/src/plugin/httpPlugin":63,"lolex":70}],73:[function(require,module,exports){
 
 module.exports = class KarmaReporter {
 
@@ -28107,4 +28153,4 @@ module.exports = class KarmaReporter {
     this.karma.complete()
   }
 }
-},{}]},{},[70]);
+},{}]},{},[71]);

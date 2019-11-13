@@ -49,8 +49,6 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
       flags: { specName }
     })
   
-    this.htmlContext.dom.window._elm_spec.app = app
-
     this.runSpec(app, this.htmlContext, plugins, done, matcher, options)
   })
 }

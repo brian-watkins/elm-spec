@@ -1,6 +1,7 @@
 const EventEmitter = require('events')
 const PortPlugin = require('./plugin/portPlugin')
 const TimePlugin = require('./plugin/timePlugin')
+const { registerApp, setBaseLocation } = require('./fakes')
 
 module.exports = class ProgramRunner extends EventEmitter {
   constructor(app, context, plugins, options) {
@@ -12,6 +13,8 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.timePlugin = new TimePlugin()
     this.plugins = plugins
     this.options = options
+
+    registerApp(this.app, this.context.window)
   }
 
   run() {
@@ -111,7 +114,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     switch (state) {
       case "START":
         this.timePlugin.reset()
-        this.context.prepareForScenario()
+        this.prepareForScenario()
         this.startTimeoutTimer(out)
         out(this.continue())
         break
@@ -126,6 +129,10 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.startTimeoutTimer(out)
         break
     }
+  }
+
+  prepareForScenario() {
+    setBaseLocation("http://elm-spec", this.context.window)
   }
 
   startTimeoutTimer(out) {
