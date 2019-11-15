@@ -47,7 +47,7 @@ module.exports = class BrowserContext {
 
   update(callback) {
     this.clock.runToFrame()
-    this.window.requestAnimationFrame(callback)
+    callback()
   }
 
 }

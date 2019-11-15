@@ -25586,7 +25586,10 @@ exports.fakeWindow = (theWindow, location, clock) => {
       if (prop === 'requestAnimationFrame') {
         return clock.requestAnimationFrame
       }
-      return target[prop]
+      const val = target[prop]
+      return typeof val === "function"
+        ? (...args) => val.apply(target, args)
+        : val;
     },
     set: (target, prop, value) => {
       if (prop === 'location') {
@@ -25742,7 +25745,7 @@ module.exports = class HtmlPlugin {
       case "resize": {
         const size = specMessage.body
         resizeWindowTo(size.width, size.height, this.context.window)
-        this.window.dispatchEvent(this.getEvent("resize"))
+        this.context.window.dispatchEvent(this.getEvent("resize"))
         break
       }
       case "visibilityChange": {
@@ -25855,23 +25858,6 @@ module.exports = class HtmlPlugin {
     }
     return attributes
   }
-
-  // getLocation() {
-  //   return this.context.window._elm_spec.window.location
-  // }
-
-  // setBaseLocation(location) {
-  //   this.context.window._elm_spec.window.location.setBase(this.context.window.document, location)
-  // }
-
-  // resizeTo(width, height) {
-  //   this.context.window._elm_spec.innerWidth = width
-  //   this.context.window._elm_spec.innerHeight = height
-  // }
-
-  // setVisibility(isVisible) {
-  //   this.context.window._elm_spec.isVisible = isVisible
-  // }
 }
 },{"../fakes":56}],63:[function(require,module,exports){
 const nise = require('nise')
@@ -26027,7 +26013,7 @@ module.exports = {
 const EventEmitter = require('events')
 const PortPlugin = require('./plugin/portPlugin')
 const TimePlugin = require('./plugin/timePlugin')
-const { registerApp } = require('./fakes')
+const { registerApp, setBaseLocation } = require('./fakes')
 
 module.exports = class ProgramRunner extends EventEmitter {
   constructor(app, context, plugins, options) {
@@ -26158,7 +26144,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   prepareForScenario() {
-    this.context.window._elm_spec.window.location.setBase(this.context.window.document, "http://elm-spec")
+    setBaseLocation("http://elm-spec", this.context.window)
   }
 
   startTimeoutTimer(out) {
@@ -28121,7 +28107,7 @@ module.exports = class BrowserContext {
 
   update(callback) {
     this.clock.runToFrame()
-    this.window.requestAnimationFrame(callback)
+    callback()
   }
 
 }

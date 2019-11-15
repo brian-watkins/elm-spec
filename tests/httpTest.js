@@ -32,12 +32,12 @@ describe('HTTP', () => {
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"),
-          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+          reportLine("but it has", "Content-Type = text/plain;charset=utf-8\nX-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
         ])
         expectRejected(observations[2], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"),
-          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+          reportLine("but it has", "Content-Type = text/plain;charset=utf-8\nX-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
         ])
       })
     })

@@ -118,7 +118,7 @@ module.exports = class HtmlPlugin {
       case "resize": {
         const size = specMessage.body
         resizeWindowTo(size.width, size.height, this.context.window)
-        this.window.dispatchEvent(this.getEvent("resize"))
+        this.context.window.dispatchEvent(this.getEvent("resize"))
         break
       }
       case "visibilityChange": {

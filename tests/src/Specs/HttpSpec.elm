@@ -204,7 +204,7 @@ requestObject =
       , Http.header "X-Awesome-Header" "some-awesome-value"
       ]
     , url = "http://fake-api.com/stuff"
-    , body = Http.emptyBody
+    , body = Http.stringBody "text/plain;charset=utf-8" ""
     , expect = Http.expectJson ReceivedResponse responseDecoder
     , timeout = Nothing
     , tracker = Nothing

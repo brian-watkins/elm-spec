@@ -11,7 +11,10 @@ exports.fakeWindow = (theWindow, location, clock) => {
       if (prop === 'requestAnimationFrame') {
         return clock.requestAnimationFrame
       }
-      return target[prop]
+      const val = target[prop]
+      return typeof val === "function"
+        ? (...args) => val.apply(target, args)
+        : val;
     },
     set: (target, prop, value) => {
       if (prop === 'location') {
