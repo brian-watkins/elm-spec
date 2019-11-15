@@ -1,6 +1,4 @@
 const lolex = require('lolex')
-const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
-const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
 const { registerFakes } = require('elm-spec-core/src/fakes')
 
 module.exports = class BrowserContext {
@@ -23,11 +21,8 @@ module.exports = class BrowserContext {
   }
 
   evaluateProgram(program, callback) {
-    this.execute((_, window) => {
-      const app = this.initializeApp(program)
-      const plugins = this.generatePlugins(window)
-      callback(app, plugins)
-    })
+    const app = this.initializeApp(program)
+    callback(app)
   }
 
   initializeApp(program) {
@@ -36,13 +31,6 @@ module.exports = class BrowserContext {
         tags: this.tags
       }
     })
-  }
-
-  generatePlugins(window) {
-    return {
-      "_html": new HtmlPlugin(this, window),
-      "_http": new HttpPlugin(window)
-    }
   }
 
   update(callback) {

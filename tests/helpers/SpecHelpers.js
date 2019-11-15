@@ -1,10 +1,8 @@
 const chai = require('chai')
 const expect = chai.expect
-const SpecRunner = require('../../runner/elm-spec-core/src/programRunner')
+const SpecRunner = require('elm-spec-core/src/programRunner')
 const SpecCompiler = require('elm-spec-core/src/compiler')
 const JsdomContext = require('../../runner/elm-spec-runner/src/jsdomContext')
-const HtmlPlugin = require('../../runner/elm-spec-core/src/plugin/htmlPlugin')
-const HttpPlugin = require('../../runner/elm-spec-core/src/plugin/httpPlugin')
 
 
 const elmSpecContext = process.env.ELM_SPEC_CONTEXT
@@ -68,8 +66,8 @@ const jsdomContext = new JsdomContext(testCompiler)
 
 const runProgramInJsdom = (specProgram, done, matcher) => {
   jsdomContext.evaluate((Elm) => {
-    jsdomContext.evaluateProgram(Elm.Specs[specProgram], (app, plugins) => {
-      runSpec(app, jsdomContext, plugins, done, matcher)
+    jsdomContext.evaluateProgram(Elm.Specs[specProgram], (app) => {
+      runSpec(app, jsdomContext, done, matcher)
     })  
   })  
 }
@@ -98,23 +96,18 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
 
 const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
   jsdomContext.evaluate((Elm, window) => {
-    const plugins = {
-      "_html": new HtmlPlugin(jsdomContext, window),
-      "_http": new HttpPlugin(window)
-    }
-
     var app = Elm.Specs[specProgram].init({
       flags: { specName }
     })
   
-    runSpec(app, jsdomContext, plugins, done, matcher, options)
+    runSpec(app, jsdomContext, done, matcher, options)
   })
 }
 
-const runSpec = (app, context, plugins, done, matcher, options) => {
+const runSpec = (app, context, done, matcher, options) => {
   const observations = []
 
-  new SpecRunner(app, context, plugins, options || { timeout: 500 })
+  new SpecRunner(app, context, options || { timeout: 500 })
     .on('observation', (observation) => {
       observations.push(observation)
     })

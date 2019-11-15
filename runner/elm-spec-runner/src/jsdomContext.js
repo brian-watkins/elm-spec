@@ -1,7 +1,5 @@
 const { JSDOM } = require("jsdom");
 const lolex = require('lolex')
-const HtmlPlugin = require('elm-spec-core/src/plugin/htmlPlugin')
-const HttpPlugin = require('elm-spec-core/src/plugin/httpPlugin')
 const { registerFakes } = require('elm-spec-core/src/fakes')
 
 
@@ -30,8 +28,7 @@ module.exports = class JsdomContext {
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
       const app = this.initializeApp(program)
-      const plugins = this.generatePlugins(window)
-      callback(app, plugins)
+      callback(app)
     })
   }
 
@@ -61,13 +58,6 @@ module.exports = class JsdomContext {
         tags: this.tags
       }
     })
-  }
-
-  generatePlugins(window, clock) {
-    return {
-      "_html": new HtmlPlugin(this, window),
-      "_http": new HttpPlugin(window)
-    }
   }
 
   update(callback) {

@@ -1,20 +1,29 @@
 const EventEmitter = require('events')
 const PortPlugin = require('./plugin/portPlugin')
 const TimePlugin = require('./plugin/timePlugin')
+const HtmlPlugin = require('./plugin/htmlPlugin')
+const HttpPlugin = require('./plugin/httpPlugin')
 const { registerApp, setBaseLocation } = require('./fakes')
 
 module.exports = class ProgramRunner extends EventEmitter {
-  constructor(app, context, plugins, options) {
+  constructor(app, context, options) {
     super()
     this.app = app
     this.context = context
     this.timer = null
     this.portPlugin = new PortPlugin(app)
     this.timePlugin = new TimePlugin()
-    this.plugins = plugins
+    this.plugins = this.generatePlugins(this.context.window)
     this.options = options
 
     registerApp(this.app, this.context.window)
+  }
+
+  generatePlugins(window) {
+    return {
+      "_html": new HtmlPlugin(this.context, window),
+      "_http": new HttpPlugin(window)
+    }
   }
 
   run() {

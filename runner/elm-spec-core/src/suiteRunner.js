@@ -26,8 +26,8 @@ module.exports = class SuiteRunner extends EventEmitter {
       return
     }
   
-    this.context.evaluateProgram(program, (app, plugins) => {
-      new ProgramRunner(app, this.context, plugins, this.options)
+    this.context.evaluateProgram(program, (app) => {
+      new ProgramRunner(app, this.context, this.options)
         .on("observation", (observation) => {
           this.reporter.record(observation)
         })
