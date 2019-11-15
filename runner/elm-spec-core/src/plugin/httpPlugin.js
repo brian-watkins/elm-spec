@@ -13,8 +13,8 @@ const fakeServerForGlobalContext = function(window) {
 }
 
 module.exports = class HttpPlugin {
-  constructor(window) {
-    this.server = fakeServerForGlobalContext(window)
+  constructor(context) {
+    this.server = fakeServerForGlobalContext(context.window)
     this.server.respondImmediately = true
   }
 

@@ -13,16 +13,16 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.timer = null
     this.portPlugin = new PortPlugin(app)
     this.timePlugin = new TimePlugin()
-    this.plugins = this.generatePlugins(this.context.window)
+    this.plugins = this.generatePlugins(this.context)
     this.options = options
 
     registerApp(this.app, this.context.window)
   }
 
-  generatePlugins(window) {
+  generatePlugins(context) {
     return {
-      "_html": new HtmlPlugin(this.context, window),
-      "_http": new HttpPlugin(window)
+      "_html": new HtmlPlugin(context),
+      "_http": new HttpPlugin(context)
     }
   }
 
