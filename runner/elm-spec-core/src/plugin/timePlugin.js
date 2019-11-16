@@ -1,28 +1,33 @@
-const lolex = require('lolex')
 
 module.exports = class TimePlugin {
-  constructor() {
-    if (typeof window === 'undefined') {
-      this.setTimeout = setTimeout
-    } else {
-      this.setTimeout = setTimeout.bind(window)
-    }
+  constructor(clock, window) {
+    this.window = window
+    this.nativeSetTimeout = setTimeout.bind(window)
+    this.nativeSetInterval = setInterval.bind(window)
+    this.clock = clock
+    this.timeouts = []
+    this.intervals = []
   }
 
   handle(specMessage, next) {
     switch (specMessage.name) {
       case "setup":
-        global.setTimeout = (fun, delay) => {
+        this.window.setTimeout = (fun, delay) => {
           if (delay === 0) {
-            return this.setTimeout(fun, 0)
-          } else {
-            return this.clock.setTimeout(fun, delay)
+            return this.nativeSetTimeout(fun, 0)
           }
+
+          const id = this.clock.setTimeout(fun, delay)
+          this.timeouts.push(id)
+          return id
         }
 
-        this.clock = lolex.install({
-          toFake: [ "setInterval" ]
-        })
+        this.window.setInterval = (fun, delay) => {
+          const id = this.clock.setInterval(fun, delay)
+          this.intervals.push(id)
+          return id
+        }
+
         break
       case "tick": {
         this.clock.tick(specMessage.body)
@@ -32,10 +37,24 @@ module.exports = class TimePlugin {
     }
   }
 
-  reset() {
-    if (this.clock) {
-      this.clock.uninstall()
-      this.clock = null  
+  clearTimers() {
+    this.clock.runToFrame()
+    
+    for (let i = 0; i < this.timeouts.length; i++) {
+      this.clock.clearTimeout(this.timeouts[i])
     }
+
+    for (let i = 0; i < this.intervals.length; i++) {
+      this.clock.clearInterval(this.intervals[i])
+    }
+
+    this.window.setTimeout = this.nativeSetTimeout
+    this.window.setInterval = this.nativeSetInterval
+  }
+
+  reset() {
+    this.clock.reset()
+    this.window.setTimeout = this.nativeSetTimeout
+    this.window.setInterval = this.nativeSetInterval
   }
 }

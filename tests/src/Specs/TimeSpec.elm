@@ -34,6 +34,22 @@ countTimePassingSpec =
           |> expect (equals 4)
       )
     )
+  , scenario "another scenario runs" (
+      given (
+        Subject.init ( { count = 0 }, Cmd.none )
+          |> Subject.withUpdate testUpdate
+          |> Subject.withSubscriptions testSubscriptions
+          |> Spec.Time.fake
+      )
+      |> when "time passes"
+        [ Spec.Time.tick 1000
+        , Spec.Time.tick 1000
+        ]
+      |> it "updates the model -- and doesn't carry over any intervals from the previous scenario" (
+        Observer.observeModel .count
+          |> expect (equals 2)
+      )
+    )
   ]
 
 

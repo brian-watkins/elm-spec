@@ -15,7 +15,7 @@ describe("time plugin", () => {
       it("processes only tasks that have occured during the ticks", (done) => {
         expectPassingSpec("SleepSpec", "delay", done)
       })
-    })  
+    })
   })
   
   describe("when the program is a browser program", () => {

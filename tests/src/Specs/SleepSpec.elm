@@ -60,6 +60,24 @@ processOnlyUpToDelaySpec =
           |> expect (equals [ "Hey", "a", "Hey" ])
       )
     )
+  , scenario "another scenario runs" (
+      given (
+        Subject.init ( { items = [] }, Cmd.none )
+          |> Subject.withUpdate testDelayUpdate
+          |> Subject.withSubscriptions testSubscriptions
+          |> Time.fake
+      )
+      |> when "subscription messages are received"
+        [ Port.send "processSub" (Encode.string "a")
+        , Time.tick 100
+        , Port.send "processSub" (Encode.string "b")
+        , Time.tick 50
+        ]
+      |> it "receives the expected messages only -- and ignores left over sleeps from the previous scenario" (
+        Observer.observeModel .items
+          |> expect (equals [ "Hey", "a", "Hey" ])
+      )
+    )
   ]
 
 

@@ -68,6 +68,7 @@ describe("browser events", () => {
     it("handles the animation frame events as expected", (done) => {
       expectSpec("BrowserEventSpec", "animationFrame", done, (observations) => {
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
   })

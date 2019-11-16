@@ -194,6 +194,18 @@ animationFrameSpec =
           |> expect (equals 3)
       )
     )
+    , scenario "animation frames during ticks" (
+      given (
+        testSubject
+      )
+      |> when "time passes"
+        [ Spec.Time.tick 1000
+        ]
+      |> it "triggers the onAnimationFrame event only once" (
+        Observer.observeModel .animationFrames
+          |> expect (equals 1)
+      )
+    )
   ]
 
 
