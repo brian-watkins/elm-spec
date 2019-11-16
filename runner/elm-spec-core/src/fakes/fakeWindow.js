@@ -1,5 +1,5 @@
 
-exports.fakeWindow = (theWindow, location, clock) => {
+exports.fakeWindow = (theWindow, location) => {
   return new Proxy(theWindow, {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
@@ -7,9 +7,6 @@ exports.fakeWindow = (theWindow, location, clock) => {
       }
       if (prop === 'location') {
         return location
-      }
-      if (prop === 'requestAnimationFrame') {
-        return clock.requestAnimationFrame
       }
       const val = target[prop]
       return typeof val === "function"
