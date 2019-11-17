@@ -15,7 +15,7 @@ describe("Suite Runner", () => {
 
   context("when the suite should end on the first failure", () => {
     it("stops at the first failure", (done) => {
-      expectScenarios('specsWithFailure', [], { timeout: 50, endOnFailure: true }, done, (observations) => {
+      expectScenarios('specsWithFailure', { tags: [], timeout: 50, endOnFailure: true }, done, (observations) => {
         expect(observations).to.have.length(3)
         expect(observations[0].summary).to.equal("ACCEPT")
         expect(observations[1].summary).to.equal("ACCEPT")
@@ -26,7 +26,7 @@ describe("Suite Runner", () => {
 
   context("when the suite should report all results", () => {
     it("reports all results", (done) => {
-      expectScenarios('specsWithFailure', [], { timeout: 50, endOnFailure: false }, done, (observations) => {
+      expectScenarios('specsWithFailure', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
         expect(observations).to.have.length(4)
         expect(observations[0].summary).to.equal("ACCEPT")
         expect(observations[1].summary).to.equal("ACCEPT")
@@ -39,7 +39,7 @@ describe("Suite Runner", () => {
 })
 
 const expectPassingScenarios = (specDir, number, tags, done) => {
-  expectScenarios(specDir, tags, { timeout: 50, endOnFailure: false }, done, (observations) => {
+  expectScenarios(specDir, { tags: tags, timeout: 50, endOnFailure: false }, done, (observations) => {
     expect(observations).to.have.length(number)
     observations.forEach(observation => {
       expect(observation.summary).to.equal("ACCEPT")
@@ -47,13 +47,13 @@ const expectPassingScenarios = (specDir, number, tags, done) => {
   })
 }
 
-const expectScenarios = (specDir, tags, options, done, matcher) => {
+const expectScenarios = (specDir, options, done, matcher) => {
   const compiler = new Compiler({
     cwd: './runner/tests/sample',
     specPath: `./${specDir}/**/*Spec.elm`
   })
   
-  const context = new JsdomContext(compiler, tags)
+  const context = new JsdomContext(compiler)
   const reporter = new TestReporter()
   
   const runner = new SuiteRunner(context, reporter, options)
@@ -64,7 +64,7 @@ const expectScenarios = (specDir, tags, options, done, matcher) => {
         done()
       }, 0)
     })
-    .run()
+    .runAll()
 }
 
 const TestReporter = class {

@@ -45,7 +45,7 @@ class ElmSpecRunnerCommand extends Command {
     const reporter = new Reporter((c) => process.stdout.write(c), this.log)
 
     const runner = new SuiteRunner(context, reporter, options.runnerOptions)
-    runner.run()
+    runner.runAll()
   }
 }
 

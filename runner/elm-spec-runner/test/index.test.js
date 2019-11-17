@@ -41,7 +41,7 @@ describe('elm-spec-runner', () => {
       cmd.__set__("Compiler", function() {})
       cmd.__set__("JsdomContext", contextSpy)
       cmd.__set__("SuiteRunner", function() {
-        return { run: function() {} }
+        return { runAll: function() {} }
       })
     })
 

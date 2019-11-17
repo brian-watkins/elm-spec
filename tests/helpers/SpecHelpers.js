@@ -1,8 +1,10 @@
 const chai = require('chai')
 const expect = chai.expect
+const SuiteRunner = require('elm-spec-core/src/suiteRunner')
 const ProgramRunner = require('elm-spec-core/src/programRunner')
 const SpecCompiler = require('elm-spec-core/src/compiler')
 const JsdomContext = require('../../runner/elm-spec-runner/src/jsdomContext')
+const TestReporter = require('./testReporter')
 
 
 const elmSpecContext = process.env.ELM_SPEC_CONTEXT
@@ -66,10 +68,23 @@ const jsdomContext = new JsdomContext(testCompiler)
 
 const runProgramInJsdom = (specProgram, done, matcher) => {
   jsdomContext.evaluate((Elm) => {
-    jsdomContext.evaluateProgram(Elm.Specs[specProgram], (app) => {
-      runSpec(app, jsdomContext, done, matcher)
-    })  
-  })  
+    const program = Elm.Specs[specProgram]
+    const reporter = new TestReporter()
+    const options = {
+      tags: [],
+      endOnFailure: false,
+      timeout: 500
+    }
+  
+    new SuiteRunner(jsdomContext, reporter, options)
+      .on('complete', () => {
+        setTimeout(() => {
+          matcher(reporter.observations)
+          done()
+        }, 0)
+      })
+      .run([program])
+  })
 }
 
 const runProgramInBrowser = (specProgram, done, matcher) => {

@@ -4,9 +4,8 @@ const { registerFakes } = require('elm-spec-core/src/fakes')
 
 
 module.exports = class JsdomContext {
-  constructor(compiler, tags) {
+  constructor(compiler) {
     this.compiler = compiler
-    this.tags = tags
 
     this.dom = new JSDOM(
       "<html><head><base href='http://elm-spec'></head><body></body></html>",
@@ -19,51 +18,24 @@ module.exports = class JsdomContext {
     this.clock = lolex.createClock()
 
     registerFakes(this.dom.window, this.clock)
+    this.generateElm()
+  }
+
+  generateElm() {
+    try {
+      const compiledCode = this.compiler.compile()
+      this.dom.window.eval(compiledCode)
+    } catch (error) {
+      console.log(error)
+      process.exit(1)
+    }
   }
 
   get window () {
     return this.dom.window
   }
 
-  evaluateProgram(program, callback) {
-    this.execute((_, window) => {
-      this.clock.reset()
-      const app = this.initializeApp(program)
-      callback(app)
-    })
-  }
-
   evaluate(evaluator) {
-    this.execute(evaluator)
+    evaluator(this.dom.window.Elm)
   }
-
-  execute(callback) {
-    if (!this.dom.window.Elm) {
-      try {
-        const compiledCode = this.compiler.compile()
-        this.dom.window.eval(compiledCode)
-        callback(this.dom.window.Elm, this.dom.window)
-      } catch (error) {
-        console.log(error)
-        process.exit(1)
-      }
-    }
-    else {
-      callback(this.dom.window.Elm, this.dom.window)
-    }
-  }
-
-  initializeApp(program) {
-    return program.init({
-      flags: {
-        tags: this.tags
-      }
-    })
-  }
-
-  update(callback) {
-    this.clock.runToFrame()
-    callback()
-  }
-
 }

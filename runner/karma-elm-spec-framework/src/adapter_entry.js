@@ -6,12 +6,13 @@
   const SuiteRunner = require('elm-spec-core')
 
   const defaultConfig = {
-    tags: []
+    tags: [],
+    endOnFailure: false
   }
 
   const elmSpecConfig = window.__karma__.config.elmSpec || defaultConfig
 
-  const context = new BrowserContext(window, elmSpecConfig.tags)
+  const context = new BrowserContext(window)
 
   const base = document.createElement("base")
   //NOTE: This has to be the right port!
@@ -20,8 +21,8 @@
 
   window.__karma__.start = function() {
     const reporter = new KarmaReporter(window.__karma__)
-    const runner = new SuiteRunner(context, reporter, { endOnFailure: elmSpecConfig.endOnFailure, timeout: 5000 })
-    runner.run()
+    const runner = new SuiteRunner(context, reporter, { tags: elmSpecConfig.tags, endOnFailure: elmSpecConfig.endOnFailure, timeout: 5000 })
+    runner.runAll()
   }
 
 })(window)

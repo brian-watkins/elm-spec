@@ -10,12 +10,15 @@ module.exports = class SuiteRunner extends EventEmitter {
     this.options = options
   }
 
-  run() {
+  runAll() {
     this.context.evaluate((Elm) => {
-      this.reporter.startSuite()
-      let programs = Program.discover(Elm)
-      this.runNextSpecProgram(programs)
+      this.run(Program.discover(Elm))
     })
+  }
+
+  run(programs) {
+    this.reporter.startSuite()
+    this.runNextSpecProgram(programs)
   }
 
   runNextSpecProgram(programs) {
@@ -27,22 +30,35 @@ module.exports = class SuiteRunner extends EventEmitter {
       return
     }
   
-    this.context.evaluateProgram(program, (app) => {
-      new ProgramRunner(app, this.context, this.options)
-        .on("observation", (observation) => {
-          this.reporter.record(observation)
-        })
-        .on("complete", () => {
-          this.runNextSpecProgram(programs)
-        })
-        .on("finished", () => {
-          this.reporter.finish()
-          this.emit('complete')
-        })
-        .on("error", (error) => {
-          this.reporter.error(error)
-        })
-        .run()  
+    this.prepareForApp()
+    const app = this.initializeApp(program)
+
+    new ProgramRunner(app, this.context, this.options)
+      .on("observation", (observation) => {
+        this.reporter.record(observation)
+      })
+      .on("complete", () => {
+        this.runNextSpecProgram(programs)
+      })
+      .on("finished", () => {
+        this.reporter.finish()
+        this.emit('complete')
+      })
+      .on("error", (error) => {
+        this.reporter.error(error)
+      })
+      .run()
+  }
+
+  prepareForApp() {
+    this.context.clock.reset()
+  }
+
+  initializeApp(program) {
+    return program.init({
+      flags: {
+        tags: this.options.tags
+      }
     })
   }
 }

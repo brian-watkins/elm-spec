@@ -15,7 +15,7 @@ module.exports = class HtmlPlugin {
   handle(specMessage, out, abort) {
     switch (specMessage.name) {
       case "select": {
-        this.context.update(() => {
+        this.renderAndThen(() => {
           const selector = specMessage.body.selector
           const element = this.document.querySelector(selector)
           if (element) {
@@ -28,7 +28,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "selectAll": {
-        this.context.update(() => {
+        this.renderAndThen(() => {
           const selector = specMessage.body.selector
           const elements = Array.from(this.document.querySelectorAll(selector)).map(element => this.describeElement(element))
           out(this.selected(elements))
@@ -37,7 +37,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "target": {
-        this.context.update(() => {
+        this.renderAndThen(() => {
           const element = this.getElement(specMessage.body)
           if (element == null) {
             abort([{
@@ -127,7 +127,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "nextAnimationFrame": {
-        this.context.update(() => {})
+        this.renderAndThen(() => {})
         break
       }
       case "navigation": {
@@ -144,7 +144,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "application": {
-        this.context.update(() => {
+        this.renderAndThen(() => {
           out({
             home: "application",
             name: "current-title",
@@ -158,6 +158,11 @@ module.exports = class HtmlPlugin {
         console.log("Unknown message:", specMessage)
         break
     }
+  }
+
+  renderAndThen(callback) {
+    this.context.clock.runToFrame()
+    callback()
   }
 
   selected(body) {
