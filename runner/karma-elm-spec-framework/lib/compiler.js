@@ -2,12 +2,11 @@ const Compiler = require('elm-spec-core/src/compiler')
 const path = require('path')
 const fs = require('fs')
 
-exports.compile = function(specPath) {
+exports.compile = function(config) {
   const compiler = new Compiler({
-    cwd: './sample',
-    specPath,
-    elmPath: '/Users/bwatkins/work/elm-spec/node_modules/.bin/elm',
-    tags: []
+    cwd: config.specRoot,
+    specPath: config.specs,
+    elmPath: config.pathToElm,
   })
 
   const compiledCode = compiler.compile()

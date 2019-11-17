@@ -9,11 +9,7 @@ const createPattern = function (path) {
 }
 
 const initElmSpec = function(files, config) {
-  const specPath = files[0].pattern
-  files[0].included = false
-  files[0].served = false
-
-  const compiledFile = compiler.compile(specPath)
+  const compiledFile = compiler.compile(config.elmSpec)
 
   files.unshift(createPattern(compiledFile))
   files.unshift(createPattern(path.join(__dirname, 'adapter.js')))

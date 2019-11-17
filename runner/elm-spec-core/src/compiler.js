@@ -4,13 +4,13 @@ const { injectFakes } = require('./fakes')
 
 module.exports = class Compiler {
   constructor ({ cwd, specPath, elmPath }) {
-    this.cwd = cwd
+    this.cwd = cwd || process.cwd()
     this.specPath = specPath
     this.elmPath = elmPath
   }
 
   compile() {
-    const files = glob.sync(this.specPath)
+    const files = glob.sync(this.specPath, { cwd: this.cwd })
 
     const compiledElm = compiler.compileToStringSync(files, {
       cwd: this.cwd,

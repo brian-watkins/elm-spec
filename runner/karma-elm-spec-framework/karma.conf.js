@@ -16,10 +16,16 @@ module.exports = function(config) {
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['elm-spec'],
 
+    elmSpec: {
+      specRoot: './sample',
+      specs: './specs/**/*Spec.elm',
+      pathToElm: '/Users/bwatkins/work/elm-spec/node_modules/.bin/elm'
+    },
 
     // list of files / patterns to load in the browser
     files: [
-      'specs/**/*Spec.elm'
+      { pattern: 'src/*.elm', included: false, served: false },
+      { pattern: 'specs/**/*Spec.elm', included: false, served: false }
     ],
 
 
@@ -31,6 +37,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      "src/*.elm": [ "elm-spec" ],
       "specs/**/*Spec.elm": [ "elm-spec" ]
     },
 
