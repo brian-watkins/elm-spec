@@ -15,7 +15,7 @@ module.exports = class KarmaReporter {
       id: "obs-1",
       description: observation.description,
       suite: observation.conditions,
-      log: observation.report,
+      log: observation.report || [],
       success: observation.summary === "ACCEPT",
       skipped: false
     })

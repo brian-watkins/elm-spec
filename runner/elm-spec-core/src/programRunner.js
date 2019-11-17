@@ -105,8 +105,8 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   handleSpecEvent(specMessage) {
     switch (specMessage.body) {
-      case "SPEC_COMPLETE":
-        this.timePlugin.reset()
+      case "COMPLETE":
+        this.timePlugin.resetFakes()
         this.emit('complete')
         break  
     }

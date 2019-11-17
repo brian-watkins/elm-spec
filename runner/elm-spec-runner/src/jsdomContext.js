@@ -27,6 +27,7 @@ module.exports = class JsdomContext {
 
   evaluateProgram(program, callback) {
     this.execute((_, window) => {
+      this.clock.reset()
       const app = this.initializeApp(program)
       callback(app)
     })

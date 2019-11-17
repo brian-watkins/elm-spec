@@ -6,7 +6,9 @@ module Spec.Time exposing
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Step as Step
+import Spec.Markup.Message as Message
 import Json.Encode as Encode
+
 
 fake : SubjectGenerator model msg -> SubjectGenerator model msg
 fake =
@@ -29,7 +31,4 @@ tick duration _ =
 nextAnimationFrame : Step.Context model -> Step.Command msg
 nextAnimationFrame _ =
   Step.sendMessage
-    { home = "_html"
-    , name = "nextAnimationFrame"
-    , body = Encode.null
-    }
+    Message.runToNextAnimationFrame

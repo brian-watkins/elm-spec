@@ -91,7 +91,7 @@ specComplete : Message
 specComplete =
   { home = "_spec"
   , name = "state"
-  , body = Encode.string "SPEC_COMPLETE"
+  , body = Encode.string "COMPLETE"
   }
 
 

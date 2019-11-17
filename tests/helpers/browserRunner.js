@@ -17,6 +17,7 @@ window._elm_spec.runProgram = (specProgram, options) => {
 }
 
 window._elm_spec.runSpec = (specProgram, specName, options) => {
+  context.clock.reset()
   var app = Elm.Specs[specProgram].init({
     flags: { specName }
   })

@@ -96,6 +96,7 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
 
 const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
   jsdomContext.evaluate((Elm, window) => {
+    jsdomContext.clock.reset()
     var app = Elm.Specs[specProgram].init({
       flags: { specName }
     })

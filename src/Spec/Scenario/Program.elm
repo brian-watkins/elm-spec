@@ -15,6 +15,7 @@ import Spec.Observation.Report as Report exposing (Report)
 import Spec.Scenario.State.Exercise as Exercise
 import Spec.Scenario.State.Configure as Configure
 import Spec.Scenario.State.Observe as Observe
+import Spec.Scenario.State.Finished as Finished
 import Spec.Claim as Claim
 import Spec.Helpers exposing (mapDocument)
 import Html exposing (Html)
@@ -29,11 +30,12 @@ type alias Model model msg =
 
 
 type State model msg
-  = Start (Scenario model msg) (Subject model msg)
+  = Ready
+  | Start (Scenario model msg) (Subject model msg)
   | Configure (Configure.Model model msg)
   | Exercise (Exercise.Model model msg)
   | Observe (Observe.Model model msg)
-  | Ready
+  | Finished (Finished.Model model msg)
 
 
 type alias Config msg programMsg =
@@ -93,6 +95,9 @@ view state =
     Observe model ->
       Observe.view model
         |> mapDocument ProgramMsg
+    Finished model ->
+      Finished.view model
+        |> mapDocument ProgramMsg
     _ ->
       { title = "", body = [ Html.text "" ] }
 
@@ -116,6 +121,8 @@ update config msg state =
       case state of
         Exercise model ->
           exerciseUpdate config msg model
+        Finished model ->
+          finishedUpdate config msg model
         _ ->
           badState config state
 
@@ -133,7 +140,7 @@ update config msg state =
           exerciseUpdate config msg model
         Observe model ->
           observeUpdate config msg model
-        Ready ->
+        _ ->
           ( Ready, config.complete )
 
     Abort report ->
@@ -190,9 +197,20 @@ observeUpdate config msg model =
     ( updated, Send message ) ->
       ( Observe updated, config.send message )
     ( updated, Transition ) ->
-      ( Ready, config.complete )
+      ( Finished <| Finished.init model, config.complete )
     ( updated, _ ) ->
       badState config <| Observe updated
+
+
+finishedUpdate : Config msg programMsg -> Msg programMsg -> Finished.Model model programMsg -> ( Model model programMsg, Cmd msg )
+finishedUpdate config msg model =
+  case Finished.update config.outlet msg model of
+    ( updated, Do cmd ) ->
+      ( Finished updated, Cmd.map config.sendToSelf cmd )
+    ( updated, Send message ) ->
+      ( Finished updated, config.send message )
+    ( updated, _ ) ->
+      badState config <| Finished updated
 
 
 badState : Config msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )

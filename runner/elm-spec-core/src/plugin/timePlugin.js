@@ -48,12 +48,10 @@ module.exports = class TimePlugin {
       this.clock.clearInterval(this.intervals[i])
     }
 
-    this.window.setTimeout = this.nativeSetTimeout
-    this.window.setInterval = this.nativeSetInterval
+    this.resetFakes()
   }
 
-  reset() {
-    this.clock.reset()
+  resetFakes() {
     this.window.setTimeout = this.nativeSetTimeout
     this.window.setInterval = this.nativeSetInterval
   }

@@ -21,6 +21,7 @@ module.exports = class BrowserContext {
   }
 
   evaluateProgram(program, callback) {
+    this.clock.reset()
     const app = this.initializeApp(program)
     callback(app)
   }
