@@ -46,6 +46,10 @@ const TestReporter = class {
     this.observations = []
   }
 
+  startSuite() {
+    // Nothing
+  }
+
   record(observation) {
     this.observations.push(observation)
   }

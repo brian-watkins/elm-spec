@@ -12,6 +12,7 @@ module.exports = class SuiteRunner extends EventEmitter {
 
   run() {
     this.context.evaluate((Elm) => {
+      this.reporter.startSuite()
       let programs = Program.discover(Elm)
       this.runNextSpecProgram(programs)
     })

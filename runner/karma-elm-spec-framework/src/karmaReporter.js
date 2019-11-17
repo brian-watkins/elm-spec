@@ -6,6 +6,10 @@ module.exports = class KarmaReporter {
     this.karma.info({total: 1})
   }
 
+  startSuite() {
+    // Nothing
+  }
+
   record(observation) {
     this.karma.result({
       id: "obs-1",

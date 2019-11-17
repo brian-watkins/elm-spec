@@ -11,6 +11,10 @@ module.exports = class ConsoleReporter {
     this.writeLine = writeLine
   }
 
+  startSuite() {
+    this.write("\nRunning specs: ")
+  }
+
   record(observation) {
     if (observation.summary === "ACCEPT") {
       this.accepted += 1
@@ -33,19 +37,33 @@ module.exports = class ConsoleReporter {
     if (this.rejected.length > 0) {
       this.writeLine(error(`Rejected: ${this.rejected.length}`))
       this.rejected.forEach(o => this.printRejection(o))
+    } else {
+      this.writeLine()
     }
+  }
+
+  printConditions(conditions) {
+    this.writeLine(`  ${conditions[0]}`)
+    this.writeLine()
+    this.writeLine(`  ${conditions[1]}`)
+    conditions.slice(2).forEach((condition) => {
+      this.writeLine(`    ${condition}`)
+    })
   }
 
   printRejection(observation) {
     this.writeLine(error("\nFailed to satisfy spec:"))
-    observation.conditions.forEach(c => this.writeLine(error(`  ${c}`)))
-    this.writeLine(error(`  ${observation.description}\n`))
+    this.writeLine()
+    this.printConditions(observation.conditions)
+    this.writeLine(`    ${observation.description}`)
+    this.writeLine()
     observation.report.forEach(report => {
-      this.writeLine(error(`  ${report.statement}`))
+      this.writeLine(error(`    ${report.statement}`))
       if (report.detail) {
-        this.writeLine(error(`    ${report.detail}`))
+        this.writeLine(error(`      ${report.detail}`))
       }
     })
+    this.writeLine()
   }
 }
 

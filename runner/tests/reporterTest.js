@@ -38,7 +38,6 @@ describe("reporter", () => {
 
     it("writes the reason for rejection", () => {
       expectToContain(lines, [
-        "\n",
         "Accepted: 2"
       ])
     })
@@ -65,7 +64,6 @@ describe("reporter", () => {
 
     it("writes the reason for rejection", () => {
       expectToContain(lines, [
-        "\n",
         "Accepted: 0",
         "Rejected: 1",
         "Failed to satisfy spec:",
@@ -76,15 +74,16 @@ describe("reporter", () => {
         "something",
         "to be",
         "something else",
-        "and a final statement"
+        "and a final statement",
       ])
     })
   })
 })
 
 const expectToContain = (actualLines, expectedLines) => {
-  for (var i = 0; i < actualLines.length; i++) {
-    expect(actualLines[i]).to.contain(expectedLines[i])
+  const output = actualLines.join("\n")
+  for (let i = 0; i < expectedLines.length; i++) {
+    expect(output).to.contain(expectedLines[i])
   }
 }
 
