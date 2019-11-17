@@ -19,7 +19,13 @@ module.exports = function(config) {
     elmSpec: {
       specRoot: './sample',
       specs: './specs/**/*Spec.elm',
-      pathToElm: '/Users/bwatkins/work/elm-spec/node_modules/.bin/elm'
+      pathToElm: '../node_modules/.bin/elm'
+    },
+
+    client: {
+      elmSpec: {
+        tags: [ 'fun' ]
+      }
     },
 
     // list of files / patterns to load in the browser

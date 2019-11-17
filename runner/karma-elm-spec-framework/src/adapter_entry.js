@@ -5,7 +5,13 @@
   const KarmaReporter = require('./karmaReporter')
   const SuiteRunner = require('elm-spec-core')
 
-  const context = new BrowserContext(window, [])
+  const defaultConfig = {
+    tags: []
+  }
+
+  const elmSpecConfig = window.__karma__.config.elmSpec || defaultConfig
+
+  const context = new BrowserContext(window, elmSpecConfig.tags)
 
   const base = document.createElement("base")
   //NOTE: This has to be the right port!

@@ -13,7 +13,7 @@ import Main as App
 clickSpec : Spec App.Model App.Msg
 clickSpec =
   Spec.describe "an html program"
-  [ tagged [ "tagged" ] <|
+  [ tagged [ "fun" ] <|
     scenario "a click event" (
       given (
         Subject.initWithModel App.defaultModel
