@@ -25,6 +25,7 @@ type alias Model model msg =
   , observations: List (Observation model)
   , expectationModel: Expectation.Model model
   , currentDescription: String
+  , isFinished: Bool
   }
 
 
@@ -38,6 +39,7 @@ init exerciseModel =
   , observations = exerciseModel.scenario.observations
   , expectationModel = Expectation.init
   , currentDescription = ""
+  , isFinished = False
   }
 
 
@@ -56,9 +58,12 @@ update : Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )
 update msg model =
   case msg of
     ReceivedMessage message ->
-      Expectation.update (Expectation.HandleInquiry message) model.expectationModel
-        |> Tuple.mapFirst (\updated -> { model | currentDescription = "", expectationModel = updated })
-        |> Tuple.mapSecond (sendExpectationMessage model)
+      if message.name == "finish" then
+        ( { model | isFinished = True }, State.Transition )
+      else
+        Expectation.update (Expectation.HandleInquiry message) model.expectationModel
+          |> Tuple.mapFirst (\updated -> { model | currentDescription = "", expectationModel = updated })
+          |> Tuple.mapSecond (sendExpectationMessage model)
 
     ProgramMsg programMsg ->
       ( model, State.Do Cmd.none )

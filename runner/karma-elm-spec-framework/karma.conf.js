@@ -24,7 +24,8 @@ module.exports = function(config) {
 
     client: {
       elmSpec: {
-        tags: [ 'fun' ]
+        tags: [ 'fun' ],
+        endOnFailure: true
       }
     },
 

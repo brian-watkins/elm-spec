@@ -95,12 +95,21 @@ specComplete =
   }
 
 
+specFinished : Message
+specFinished =
+  { home = "_spec"
+  , name = "state"
+  , body = Encode.string "FINISHED"
+  }
+
+
 scenarioConfig : Config msg -> ScenarioProgram.Config (Msg msg) msg
 scenarioConfig config =
   { send = config.send
   , outlet = config.outlet
   , sendToSelf = ScenarioMsg
   , complete = Task.succeed never |> Task.perform (always RunNextScenario)
+  , stop = Task.succeed never |> Task.perform (always <| SendMessage specFinished)
   }
 
 

@@ -30,7 +30,11 @@ class ElmSpecRunnerCommand extends Command {
     this.runSpecs({
       specPath,
       elmPath,
-      tags
+      tags,
+      runnerOptions: {
+        endOnFailure: flags.endOnFailure,
+        timeout: 500
+      }
     })
   }
 
@@ -40,7 +44,7 @@ class ElmSpecRunnerCommand extends Command {
     const context = new JsdomContext(compiler, options.tags)
     const reporter = new Reporter((c) => process.stdout.write(c), this.log)
 
-    const runner = new SuiteRunner(context, reporter, { timeout: 500 })
+    const runner = new SuiteRunner(context, reporter, options.runnerOptions)
     runner.run()
   }
 }
@@ -57,7 +61,8 @@ ElmSpecRunnerCommand.flags = {
   help: flags.help({char: 'h'}),
   elm: flags.string({char: 'e', description: 'path to elm'}),
   specs: flags.string({char: 's', description: 'glob for spec modules', default: './specs/**/*Spec.elm'}),
-  tag: flags.string({char: 't', description: 'execute scenarios with this tag only', multiple: true})
+  tag: flags.string({char: 't', description: 'execute scenarios with this tag only', multiple: true}),
+  endOnFailure: flags.boolean({char: 'f', description: 'end on first failure', default: false})
 }
 
 module.exports = ElmSpecRunnerCommand

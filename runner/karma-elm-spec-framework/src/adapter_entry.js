@@ -20,7 +20,7 @@
 
   window.__karma__.start = function() {
     const reporter = new KarmaReporter(window.__karma__)
-    const runner = new SuiteRunner(context, reporter, { timeout: 5000 })
+    const runner = new SuiteRunner(context, reporter, { endOnFailure: elmSpecConfig.endOnFailure, timeout: 5000 })
     runner.run()
   }
 

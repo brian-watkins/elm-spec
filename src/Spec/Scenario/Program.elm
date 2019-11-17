@@ -43,6 +43,7 @@ type alias Config msg programMsg =
   , send: Message -> Cmd msg
   , sendToSelf: Msg programMsg -> msg
   , outlet: Message -> Cmd programMsg
+  , stop: Cmd msg
   }
 
 
@@ -197,7 +198,12 @@ observeUpdate config msg model =
     ( updated, Send message ) ->
       ( Observe updated, config.send message )
     ( updated, Transition ) ->
-      ( Finished <| Finished.init model, config.complete )
+      ( Finished <| Finished.init model, 
+        if updated.isFinished then
+          config.stop
+        else
+          config.complete 
+      )
     ( updated, _ ) ->
       badState config <| Observe updated
 

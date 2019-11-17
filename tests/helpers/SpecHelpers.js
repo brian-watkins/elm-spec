@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const SpecRunner = require('elm-spec-core/src/programRunner')
+const ProgramRunner = require('elm-spec-core/src/programRunner')
 const SpecCompiler = require('elm-spec-core/src/compiler')
 const JsdomContext = require('../../runner/elm-spec-runner/src/jsdomContext')
 
@@ -108,7 +108,7 @@ const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
 const runSpec = (app, context, done, matcher, options) => {
   const observations = []
 
-  new SpecRunner(app, context, options || { timeout: 500 })
+  new ProgramRunner(app, context, options || { timeout: 500 })
     .on('observation', (observation) => {
       observations.push(observation)
     })

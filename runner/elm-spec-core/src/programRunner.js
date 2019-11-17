@@ -96,10 +96,21 @@ module.exports = class ProgramRunner extends EventEmitter {
           })
         })
         break
-      case "observation":
-        this.emit('observation', specMessage.body)
-        out(this.continue())
+      case "observation": {
+        const observation = specMessage.body
+        this.emit('observation', observation)
+        if (this.options.endOnFailure && observation.summary === "REJECT") {
+          out({
+            home: "_observer",
+            name: "finish",
+            body: null
+          })
+        } else {
+          out(this.continue())
+        }
+
         break
+      }
     }
   }
 
@@ -108,7 +119,11 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "COMPLETE":
         this.timePlugin.resetFakes()
         this.emit('complete')
-        break  
+        break
+      case "FINISHED":
+        this.timePlugin.resetFakes()
+        this.emit('finished')
+        break
     }
   }
 
