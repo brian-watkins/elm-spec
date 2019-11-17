@@ -46,7 +46,6 @@ module.exports = class ConsoleReporter {
         this.writeLine(error(`    ${report.detail}`))
       }
     })
-    console.log()
   }
 }
 
