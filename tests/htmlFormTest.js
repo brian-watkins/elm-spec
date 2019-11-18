@@ -25,6 +25,14 @@ describe("form inputs", () => {
     })
   })
 
+  describe("radio buttons", () => {
+    it("handles input events on radio buttons as expected", (done) => {
+      expectSpec("FormSpec", "radio", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
+
   describe("Submit", () => {
     it("handles the onSubmit event as expected", (done) => {
       expectSpec("FormSpec", "submit", done, (observations) => {

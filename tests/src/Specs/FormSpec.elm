@@ -115,8 +115,27 @@ submitSpec =
   ]
 
 
+radioButtonsSpec : Spec Model Msg
+radioButtonsSpec =
+  Spec.describe "radio buttons"
+  [ scenario "radio buttons are toggled" (
+      given (
+        testSubject
+      )
+      |> when "a radio button is clicked"
+        [ Markup.target << by [ id "second-radio" ]
+        , Event.click
+        ]
+      |> it "records the update" (
+        Observer.observeModel .radioState
+          |> expect (equals "second")
+      )
+    )
+  ]
+
+
 testSubject =
-  Subject.initWithModel { checks = [], checked = False, submitted = False, message = "" }
+  Subject.initWithModel { checks = [], checked = False, submitted = False, message = "", radioState = "" }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
 
@@ -126,11 +145,13 @@ type alias Model =
   , checks: List Bool
   , submitted: Bool
   , message: String
+  , radioState: String
   }
 
 
 type Msg
   = GotText String
+  | GotRadio String
   | Checked Bool
   | DidSubmit
 
@@ -142,6 +163,9 @@ testView model =
     [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
     , Html.input [ Attr.id "my-checkbox", Attr.type_ "checkbox", Attr.checked model.checked, Events.onCheck Checked ]
       [ Html.text "Check me, please!" ]
+    , radioButton "first"
+    , radioButton "second"
+    , radioButton "third"
     , Html.button [ Attr.id "submit-button", Attr.type_ "submit" ] [ Html.text "Submit the form!" ]
     ]
   , Html.hr [] []
@@ -156,6 +180,17 @@ testView model =
   ]
 
 
+radioButton name =
+  Html.input
+    [ Attr.id <| name ++ "-radio"
+    , Attr.type_ "radio"
+    , Attr.name "my-radio"
+    , Attr.value name
+    , Events.onInput GotRadio
+    ]
+    [ Html.text name ]
+
+
 testUpdate : Msg -> Model -> (Model, Cmd Msg)
 testUpdate msg model =
   case msg of
@@ -165,6 +200,8 @@ testUpdate msg model =
       ( { model | checked = value, checks = value :: model.checks }, Cmd.none )
     DidSubmit ->
       ( { model | submitted = True }, Cmd.none )
+    GotRadio value ->
+      ( { model | radioState = value }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
@@ -173,6 +210,7 @@ selectSpec name =
     "input" -> Just inputSpec
     "check" -> Just checkSpec   
     "submit" -> Just submitSpec
+    "radio" -> Just radioButtonsSpec
     _ -> Nothing
 
 
