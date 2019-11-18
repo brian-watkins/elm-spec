@@ -17,21 +17,7 @@ import Html.Events as Events
 checkSpec : Spec Model Msg
 checkSpec =
   Spec.describe "checkboxes"
-  [ scenario "the checkbox is checked" (
-      given (
-        testSubject
-      )
-      |> when "a box is checked"
-        [ Markup.target << by [ id "my-checkbox" ]
-        , Event.toggle
-        ]
-      |> it "updates the view" (
-        Markup.observeElement
-          |> Markup.query << by [ id "checkbox-indicator" ]
-          |> expect (Markup.hasText "the box is checked")
-      )
-    )
-  , scenario "the box is checked multiple times" (
+  [ scenario "the box is checked multiple times" (
       given (
         testSubject
       )
@@ -94,8 +80,43 @@ inputSpec =
     )
   ]
 
+
+submitSpec : Spec Model Msg
+submitSpec =
+  Spec.describe "Submitting a form"
+  [ scenario "the submit button is a child of the form element" (
+      given (
+        testSubject
+      )
+      |> when "the submit button is clicked"
+        [ Markup.target << by [ id "submit-button" ]
+        , Event.click
+        ]
+      |> it "handles the onSubmit event" (
+        Markup.observeElement
+          |> Markup.query << by [ id "submit-indicator" ]
+          |> expect (Markup.hasText "You submitted the form!")
+      )
+    )
+  , scenario "the submit button refers to a form by the form attribute" (
+      given (
+        testSubject
+      )
+      |> when "the submit button is clicked"
+        [ Markup.target << by [ id "alternative-submit" ]
+        , Event.click
+        ]
+      |> it "handles the onSubmit event" (
+        Markup.observeElement
+          |> Markup.query << by [ id "submit-indicator" ]
+          |> expect (Markup.hasText "You submitted the form!")
+      )
+    )
+  ]
+
+
 testSubject =
-  Subject.initWithModel { checks = [], checked = False, message = "" }
+  Subject.initWithModel { checks = [], checked = False, submitted = False, message = "" }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
 
@@ -103,6 +124,7 @@ testSubject =
 type alias Model =
   { checked: Bool
   , checks: List Bool
+  , submitted: Bool
   , message: String
   }
 
@@ -110,21 +132,26 @@ type alias Model =
 type Msg
   = GotText String
   | Checked Bool
+  | DidSubmit
 
 
 testView : Model -> Html Msg
 testView model =
-  Html.form []
-  [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
-  , Html.input [ Attr.id "my-checkbox", Attr.type_ "checkbox", Attr.checked model.checked, Events.onCheck Checked ]
-    [ Html.text "Check me, please!" ]
+  Html.div []
+  [ Html.form [ Attr.id "my-form", Events.onSubmit DidSubmit ]
+    [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
+    , Html.input [ Attr.id "my-checkbox", Attr.type_ "checkbox", Attr.checked model.checked, Events.onCheck Checked ]
+      [ Html.text "Check me, please!" ]
+    , Html.button [ Attr.id "submit-button", Attr.type_ "submit" ] [ Html.text "Submit the form!" ]
+    ]
   , Html.hr [] []
+  , Html.button [ Attr.id "alternative-submit", Attr.form "my-form" ] [ Html.text "Also submit the form!" ]
   , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
-  , Html.div [ Attr.id "checkbox-indicator" ]
-    [ if model.checked then
-        Html.text "the box is checked"
+  , Html.div [ Attr.id "submit-indicator" ]
+    [ if model.submitted then
+        Html.text "You submitted the form!"
       else
-        Html.text "not checked"
+        Html.text "Form not submitted."
     ]
   ]
 
@@ -136,13 +163,16 @@ testUpdate msg model =
       ( { model | message = text }, Cmd.none )
     Checked value ->
       ( { model | checked = value, checks = value :: model.checks }, Cmd.none )
+    DidSubmit ->
+      ( { model | submitted = True }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "input" -> Just inputSpec
-    "check" -> Just checkSpec    
+    "check" -> Just checkSpec   
+    "submit" -> Just submitSpec
     _ -> Nothing
 
 

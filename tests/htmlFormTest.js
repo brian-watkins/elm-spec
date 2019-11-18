@@ -5,8 +5,7 @@ describe("form inputs", () => {
     it("respnds as expected to onCheck events", (done) => {
       expectSpec("FormSpec", "check", done, (observations) => {
         expectAccepted(observations[0])
-        expectAccepted(observations[1])
-        expectRejected(observations[2], [
+        expectRejected(observations[1], [
           reportLine("No element targeted for event", "toggle")
         ])
       })
@@ -22,6 +21,15 @@ describe("form inputs", () => {
             reportLine("No element targeted for event", "input")
           ])
         })
+      })
+    })
+  })
+
+  describe("Submit", () => {
+    it("handles the onSubmit event as expected", (done) => {
+      expectSpec("FormSpec", "submit", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
   })
