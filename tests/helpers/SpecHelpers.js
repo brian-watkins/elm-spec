@@ -64,9 +64,17 @@ const testCompiler = {
   }
 }
 
-const jsdomContext = new JsdomContext(testCompiler)
+let jsdomContext = null
+
+const prepareJsdom = () => {
+  if (!jsdomContext) {
+    jsdomContext = new JsdomContext(testCompiler)
+  }
+}
 
 const runProgramInJsdom = (specProgram, done, matcher) => {
+  prepareJsdom()
+
   jsdomContext.evaluate((Elm) => {
     const program = Elm.Specs[specProgram]
     const reporter = new TestReporter()
@@ -110,6 +118,8 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
 }
 
 const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
+  prepareJsdom()
+
   jsdomContext.evaluate((Elm, window) => {
     jsdomContext.clock.reset()
     var app = Elm.Specs[specProgram].init({
