@@ -108,9 +108,18 @@ module.exports = class HtmlPlugin {
       }
       case "input": {
         this.verifySelector("input", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(specMessage.body.selector)
+          const element = this.document.querySelector(props.selector)
           element.value = specMessage.body.text
           const event = this.getEvent("input")
+          element.dispatchEvent(event)
+        })
+        break
+      }
+      case "toggle": {
+        this.verifySelector("toggle", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
+          const element = this.document.querySelector(props.selector)
+          element.checked = !element.checked
+          const event = this.getEvent("change")
           element.dispatchEvent(event)
         })
         break

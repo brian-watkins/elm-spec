@@ -263,39 +263,6 @@ mouseMoveOutSpec =
   ]
 
 
-inputSpec : Spec Model Msg
-inputSpec =
-  Spec.describe "an html program"
-  [ scenario "Input event" (
-      given (
-        testSubject
-      )
-      |> when "some text is input"
-        [ Markup.target << by [ id "my-field" ]
-        , Event.input "Here is some fun text!"
-        ]
-      |> it "renders the text on the view" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.hasText "You wrote: Here is some fun text!")
-      )
-    )
-  , scenario "no element targeted for input" (
-      given (
-        testSubject
-      )
-      |> when "some text is input without targeting an element"
-        [ Event.input "Here is some fun text!"
-        ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.hasText "You wrote: Here is some fun text!")
-      )
-    )
-  ]
-
-
 customEventSpec : Spec Model Msg
 customEventSpec =
   Spec.describe "program that uses a custom event"
@@ -346,8 +313,7 @@ keyUpEvent code =
 
 
 type Msg
-  = GotText String
-  | GotKey Int
+  = GotKey Int
   | HandleClick
   | HandleMegaClick
   | MouseDown
@@ -380,8 +346,6 @@ testUpdate msg model =
       ( { model | count = model.count * 10 }, Cmd.none )
     DoubleClick ->
       ( { model | message = "DOUBLE CLICK" }, Cmd.none )
-    GotText message ->
-      ( { model | message = message }, Cmd.none )
     MouseDown ->
       ( { model | mouseDown = model.mouseDown + 1, message = "MOUSE DOWN" }, Cmd.none )
     MouseUp ->
@@ -406,8 +370,7 @@ testUpdate msg model =
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
-  , Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
+  [ Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick, Events.onMouseUp MouseUp, Events.onMouseDown MouseDown ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
   , Html.div [ Attr.id "tap-twice-area", Events.onMouseDown MouseDown, Events.onMouseUp MouseUp, Events.onClick HandleClick, Events.onDoubleClick DoubleClick ] [ Html.text "Double click!" ]
@@ -428,7 +391,6 @@ onKeyUp tagger =
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "input" -> Just inputSpec
     "click" -> Just clickSpec
     "doubleClick" -> Just doubleClickSpec
     "custom" -> Just customEventSpec
