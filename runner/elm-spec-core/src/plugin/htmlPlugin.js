@@ -115,15 +115,6 @@ module.exports = class HtmlPlugin {
         })
         break
       }
-      case "toggle": {
-        this.verifySelector("toggle", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
-          element.checked = !element.checked
-          const event = this.getEvent("change")
-          element.dispatchEvent(event)
-        })
-        break
-      }
       case "resize": {
         const size = specMessage.body
         resizeWindowTo(size.width, size.height, this.window)

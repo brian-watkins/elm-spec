@@ -5,9 +5,6 @@ describe("form inputs", () => {
     it("respnds as expected to onCheck events", (done) => {
       expectSpec("FormSpec", "check", done, (observations) => {
         expectAccepted(observations[0])
-        expectRejected(observations[1], [
-          reportLine("No element targeted for event", "toggle")
-        ])
       })
     })
   })

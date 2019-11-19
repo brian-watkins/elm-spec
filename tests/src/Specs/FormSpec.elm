@@ -21,28 +21,15 @@ checkSpec =
       given (
         testSubject
       )
-      |> when "a box is checked multiple times"
+      |> when "a box is clicked multiple times"
         [ Markup.target << by [ id "my-checkbox" ]
-        , Event.toggle
-        , Event.toggle
-        , Event.toggle
+        , Event.click
+        , Event.click
+        , Event.click
         ]
       |> it "toggles the checked property" (
         Observer.observeModel .checks
           |> expect (equals [ True, False, True ])
-      )
-    )
-  , scenario "no element targeted to check" (
-      given (
-        testSubject
-      )
-      |> when "a check occurs without targeting an element"
-        [ Event.toggle
-        ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "checkbox-indicator" ]
-          |> expect (Markup.hasText "the box is checked")
       )
     )
   ]

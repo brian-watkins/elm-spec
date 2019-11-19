@@ -6,7 +6,6 @@ module Spec.Markup.Event exposing
   , mouseMoveIn
   , mouseMoveOut
   , input
-  , toggle
   , resizeWindow
   , hideWindow
   , showWindow
@@ -70,11 +69,6 @@ input text context =
       , ( "text", Encode.string text )
       ]
     }
-
-
-toggle : Step.Context model -> Step.Command msg
-toggle =
-  basicEventMessage "toggle"
 
 
 resizeWindow : (Int, Int) -> Step.Context model -> Step.Command msg
