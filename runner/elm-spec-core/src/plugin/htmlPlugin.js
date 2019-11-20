@@ -14,7 +14,7 @@ module.exports = class HtmlPlugin {
 
   handle(specMessage, out, abort) {
     switch (specMessage.name) {
-      case "select": {
+      case "query": {
         this.renderAndThen(() => {
           const selector = specMessage.body.selector
           const element = this.document.querySelector(selector)
@@ -27,7 +27,7 @@ module.exports = class HtmlPlugin {
 
         break
       }
-      case "selectAll": {
+      case "queryAll": {
         this.renderAndThen(() => {
           const selector = specMessage.body.selector
           const elements = Array.from(this.document.querySelectorAll(selector)).map(element => this.describeElement(element))
@@ -112,6 +112,22 @@ module.exports = class HtmlPlugin {
           element.value = specMessage.body.text
           const event = this.getEvent("input")
           element.dispatchEvent(event)
+        })
+        break
+      }
+      case "select": {
+        this.verifySelector("select", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
+          const element = this.document.querySelector(props.selector)
+          const options = element.querySelectorAll("option")
+          for (let i = 0; i < options.length; i++) {
+            const option = options.item(i)
+            if (option.label === props.text) {
+              option.selected = true
+              element.dispatchEvent(this.getEvent("change"))
+              element.dispatchEvent(this.getEvent("input"))
+              break
+            }
+          }
         })
         break
       }

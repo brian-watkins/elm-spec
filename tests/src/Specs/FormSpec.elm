@@ -12,6 +12,8 @@ import Runner
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
+import Json.Decode as Json
+import Dict
 
 
 checkSpec : Spec Model Msg
@@ -121,8 +123,54 @@ radioButtonsSpec =
   ]
 
 
+selectOptionByTextSpec : Spec Model Msg
+selectOptionByTextSpec =
+  Spec.describe "select option by text"
+  [ scenario "an option is selected by its text" (
+      given (
+        testSubject
+      )
+      |> when "an option is selected"
+        [ Markup.target << by [ id "my-select" ]
+        , Event.selectOption "grape"
+        ]
+      |> it "records the event" (
+        Observer.observeModel .selected
+          |> expect (equals "grape-value")
+      )
+    )
+  , scenario "on option is selected by its label" (
+      given (
+        testSubject
+      )
+      |> when "an option is selected"
+        [ Markup.target << by [ id "my-select-labeled" ]
+        , Event.selectOption "two-label"
+        ]
+      |> it "records the event" (
+        Observer.observeModel .selected
+          |> expect (equals "two-value")
+      )
+    )
+  , scenario "listening for change event" (
+      given (
+        testSubject
+      )
+      |> when "multiple options are selected"
+        [ Markup.target << by [ id "my-multiple-select-labeled" ]
+        , Event.selectOption "two-label"
+        , Event.selectOption "three-label"
+        ]
+      |> it "records the event" (
+        Observer.observeModel .selectedMultiple
+          |> expect (equals [ "two-value", "three-value" ])
+      )
+    )
+  ]
+
+
 testSubject =
-  Subject.initWithModel { checks = [], checked = False, submitted = False, message = "", radioState = "" }
+  Subject.initWithModel { checks = [], checked = False, submitted = False, message = "", radioState = "", selected = "", selectedMultiple = [] }
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
 
@@ -131,6 +179,8 @@ type alias Model =
   { checked: Bool
   , checks: List Bool
   , submitted: Bool
+  , selected: String
+  , selectedMultiple: List String
   , message: String
   , radioState: String
   }
@@ -140,6 +190,8 @@ type Msg
   = GotText String
   | GotRadio String
   | Checked Bool
+  | DidSelect String
+  | DidSelectMultiple (List String)
   | DidSubmit
 
 
@@ -153,6 +205,21 @@ testView model =
     , radioButton "first"
     , radioButton "second"
     , radioButton "third"
+    , Html.select [ Attr.id "my-select", Events.onInput DidSelect ]
+      [ option "apple"
+      , option "pear"
+      , option "grape"
+      ]
+    , Html.select [ Attr.id "my-select-labeled", Events.onInput DidSelect ]
+      [ optionLabeled "one"
+      , optionLabeled "two"
+      , optionLabeled "three"
+      ]
+    , Html.select [ Attr.id "my-multiple-select-labeled", Attr.multiple True, multiSelectEvent DidSelectMultiple ]
+      [ optionLabeled "one"
+      , optionLabeled "two"
+      , optionLabeled "three"
+      ]
     , Html.button [ Attr.id "submit-button", Attr.type_ "submit" ] [ Html.text "Submit the form!" ]
     ]
   , Html.hr [] []
@@ -164,6 +231,31 @@ testView model =
       else
         Html.text "Form not submitted."
     ]
+  ]
+
+
+multiSelectEvent : (List String -> Msg) -> Html.Attribute Msg
+multiSelectEvent tagger =
+  Events.on "change" <|
+    Json.map tagger <|
+    Json.map (List.map Tuple.first) <|
+    Json.map (List.filter Tuple.second) <|
+    Json.map Dict.values <|
+    Json.at [ "target", "options" ] <|
+    Json.dict <|
+    Json.map2 Tuple.pair (Json.field "value" Json.string) (Json.field "selected" Json.bool)
+
+
+option name =
+  Html.option [ Attr.value <| name ++ "-value" ] [ Html.text name ]
+
+
+optionLabeled name =
+  Html.option
+  [ Attr.value <| name ++ "-value"
+  , Attr.attribute "label" <| name ++ "-label"
+  ]
+  [ Html.text <| name ++ "-text"
   ]
 
 
@@ -189,6 +281,10 @@ testUpdate msg model =
       ( { model | submitted = True }, Cmd.none )
     GotRadio value ->
       ( { model | radioState = value }, Cmd.none )
+    DidSelect value ->
+      ( { model | selected = value }, Cmd.none )
+    DidSelectMultiple values ->
+      ( { model | selectedMultiple = values }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
@@ -198,6 +294,7 @@ selectSpec name =
     "check" -> Just checkSpec   
     "submit" -> Just submitSpec
     "radio" -> Just radioButtonsSpec
+    "selectByText" -> Just selectOptionByTextSpec
     _ -> Nothing
 
 

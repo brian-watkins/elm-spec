@@ -6,6 +6,7 @@ module Spec.Markup.Event exposing
   , mouseMoveIn
   , mouseMoveOut
   , input
+  , selectOption
   , resizeWindow
   , hideWindow
   , showWindow
@@ -64,6 +65,18 @@ input text context =
   Step.sendMessage
     { home = "_html"
     , name = "input"
+    , body = Encode.object
+      [ ( "selector", Encode.string <| targetSelector context )
+      , ( "text", Encode.string text )
+      ]
+    }
+
+
+selectOption : String -> Step.Context model -> Step.Command msg
+selectOption text context =
+  Step.sendMessage
+    { home = "_html"
+    , name = "select"
     , body = Encode.object
       [ ( "selector", Encode.string <| targetSelector context )
       , ( "text", Encode.string text )

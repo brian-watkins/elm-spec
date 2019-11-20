@@ -30,6 +30,18 @@ describe("form inputs", () => {
     })
   })
 
+  describe("select", () => {
+    context("by text", () => {
+      it("triggers an event when an option is selected", (done) => {
+        expectSpec("FormSpec", "selectByText", done, (observations) => {
+          expectAccepted(observations[0])
+          expectAccepted(observations[1])
+          expectAccepted(observations[2])
+        })
+      })
+    })
+  })
+
   describe("Submit", () => {
     it("handles the onSubmit event as expected", (done) => {
       expectSpec("FormSpec", "submit", done, (observations) => {

@@ -45,7 +45,7 @@ type MarkupObservation a =
 observe : MarkupObservation (Maybe HtmlElement)
 observe =
   MarkupObservation
-    ( selectHtml
+    ( queryHtml
     , \selection message ->
         Ok <| Message.decode htmlDecoder message
     )
@@ -54,7 +54,7 @@ observe =
 observeElement : MarkupObservation HtmlElement
 observeElement =
   MarkupObservation
-    ( selectHtml
+    ( queryHtml
     , \selection message ->
         case Message.decode htmlDecoder message of
           Just element ->
@@ -67,7 +67,7 @@ observeElement =
 observeElements : MarkupObservation (List HtmlElement)
 observeElements =
   MarkupObservation
-    ( selectAllHtml
+    ( queryAllHtml
     , \selection message ->
         Message.decode (Json.list htmlDecoder) message
           |> Maybe.withDefault []
@@ -94,18 +94,18 @@ target (selection, context) =
     }
 
 
-selectHtml : Selection Element -> Message
-selectHtml selection =
+queryHtml : Selection Element -> Message
+queryHtml selection =
   { home = "_html"
-  , name = "select"
+  , name = "query"
   , body = Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
   }
 
 
-selectAllHtml : Selection Element -> Message
-selectAllHtml selection =
+queryAllHtml : Selection Element -> Message
+queryAllHtml selection =
   { home = "_html"
-  , name = "selectAll"
+  , name = "queryAll"
   , body = Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
   }
 
