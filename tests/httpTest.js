@@ -42,4 +42,18 @@ describe('HTTP', () => {
       })
     })
   })
+
+  context("hasBody", () => {
+    it("observes the request body as expected", (done) => {
+      expectSpec("HttpSpec", "hasBody", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Expected request to have body", "{\"blah\":3}"),
+          reportLine("but it has", "{\"name\":\"fun person\",\"age\":88}")
+        ])
+      })
+    })
+  })
 })

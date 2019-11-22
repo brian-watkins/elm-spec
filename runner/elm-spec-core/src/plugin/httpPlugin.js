@@ -49,6 +49,7 @@ module.exports = class HttpPlugin {
 const buildRequest = (request) => {
   return {
     url: request.url,
-    headers: request.requestHeaders
+    headers: request.requestHeaders,
+    body: request.requestBody
   }
 }

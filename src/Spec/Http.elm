@@ -3,6 +3,7 @@ module Spec.Http exposing
   , withStubs
   , observeRequests
   , hasHeader
+  , hasBody
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
@@ -48,6 +49,7 @@ maybeEncodeString maybeString =
 type alias HttpRequest =
   { url: String
   , headers: Dict String String
+  , body: String
   }
 
 
@@ -69,6 +71,17 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
     [ Report.fact "Expected request to have header" <| expectedName ++ " = " ++ expectedValue
     , Report.fact "but it has" <| String.join "\n" <| List.map (\(k, v) -> k ++ " = " ++ v) <| Dict.toList request.headers
     ]
+
+
+hasBody : String -> Claim HttpRequest
+hasBody expectedBody request =
+  if request.body == expectedBody then
+    Claim.Accept
+  else
+    Claim.Reject <| Report.batch
+      [ Report.fact "Expected request to have body" expectedBody
+      , Report.fact "but it has" request.body
+      ]
 
 
 observeRequests : HttpRoute -> Observer model (List HttpRequest)
@@ -97,6 +110,7 @@ fetchRequestsFor route =
 
 requestDecoder : Json.Decoder HttpRequest
 requestDecoder =
-  Json.map2 HttpRequest
+  Json.map3 HttpRequest
     ( Json.field "url" Json.string )
     ( Json.field "headers" <| Json.dict Json.string )
+    ( Json.field "body" Json.string )

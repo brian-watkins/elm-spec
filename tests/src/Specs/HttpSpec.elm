@@ -17,6 +17,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Runner
 import Json.Decode as Json
+import Json.Encode as Encode
 import Http
 import Specs.Helpers exposing (..)
 
@@ -26,10 +27,7 @@ getSpec =
   Spec.describe "HTTP GET"
   [ scenario "a successful HTTP GET" (
       given (
-        Subject.initWithModel defaultModel
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Spec.Http.withStubs [ successStub ]
+        testSubject getRequest [ successStub ]
       )
       |> when "an http request is triggered"
         [ Markup.target << by [ id "trigger" ]
@@ -48,10 +46,7 @@ getSpec =
     )
   , scenario "an unauthorized HTTP GET" (
       given (
-        Subject.initWithModel defaultModel
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Spec.Http.withStubs [ unauthorizedStub ]
+        testSubject getRequest [ unauthorizedStub ]
       )
       |> when "an http request is triggered"
         [ Markup.target << by [ id "trigger" ]
@@ -67,15 +62,29 @@ getSpec =
     )
   ]
 
+
+getRequest : Cmd Msg
+getRequest =
+  Http.request
+    { method = "GET"
+    , headers =
+      [ Http.header "X-Fun-Header" "some-fun-value"
+      , Http.header "X-Awesome-Header" "some-awesome-value"
+      ]
+    , url = "http://fake-api.com/stuff"
+    , body = Http.stringBody "text/plain;charset=utf-8" ""
+    , expect = Http.expectJson ReceivedResponse responseDecoder
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 expectRequestSpec : Spec Model Msg
 expectRequestSpec =
   Spec.describe "expect a request"
   [ scenario "a request is made" (
       given (
-        Subject.initWithModel defaultModel
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Spec.Http.withStubs [ successStub ]
+        testSubject getRequest [ successStub ]
       )
       |> when "an http request is triggered"
         [ Markup.target << by [ id "trigger" ]
@@ -102,15 +111,13 @@ expectRequestSpec =
     )
   ]
 
+
 hasHeaderSpec : Spec Model Msg
 hasHeaderSpec =
   Spec.describe "hasHeader"
   [ scenario "check headers" (
       given (
-        Subject.initWithModel defaultModel
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Spec.Http.withStubs [ successStub ]
+        testSubject getRequest [ successStub ]
       )
       |> when "an http request is triggered"
         [ Markup.target << by [ id "trigger" ]
@@ -149,6 +156,69 @@ hasHeaderSpec =
   ]
 
 
+hasBodySpec : Spec Model Msg
+hasBodySpec =
+  let
+    postBody =
+      Encode.object
+      [ ( "name", Encode.string "fun person" )
+      , ( "age", Encode.int 88 )
+      ]
+  in
+  Spec.describe "hasBody"
+  [ scenario "check body" (
+      given (
+        testSubject (postRequest postBody) [ successStub ]
+      )
+      |> when "a request is made"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "observes the body of the sent request" (
+          Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+            |> expect (
+              isList
+                [ Spec.Http.hasBody "{\"name\":\"fun person\",\"age\":88}"
+                ]
+            )
+          )
+        , it "fails to find the wrong body" (
+            Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+              |> expect (
+                isList
+                  [ Spec.Http.hasBody "{\"blah\":3}"]
+              )
+          )
+        ]
+    )
+  ]
+
+
+postRequest : Json.Value -> Cmd Msg
+postRequest body =
+  Http.request
+    { method = "POST"
+    , headers =
+      [ Http.header "X-Fun-Header" "some-fun-value"
+      , Http.header "X-Awesome-Header" "some-awesome-value"
+      ]
+    , url = "http://fake-api.com/stuff"
+    , body = Http.jsonBody body
+    , expect = Http.expectJson ReceivedResponse responseDecoder
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
+
+testSubject doRequest stubs =
+  Subject.initWithModel defaultModel
+    |> Subject.withView testView
+    |> Subject.withUpdate (testUpdate doRequest)
+    |> Spec.Http.withStubs stubs
+
+
 successStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
@@ -183,32 +253,17 @@ testView model =
     [ Html.text "Click to make request!" ]
   ]
 
-testUpdate : Msg -> Model -> ( Model, Cmd Msg )
-testUpdate msg model =
+testUpdate : Cmd Msg -> Msg -> Model -> ( Model, Cmd Msg )
+testUpdate doRequest msg model =
   case msg of
     MakeRequest ->
-      ( model, requestObject )
+      ( model, doRequest )
     ReceivedResponse response ->
       case response of
         Ok data ->
           ( { model | response = Just data, error = Nothing }, Cmd.none )
         Err err ->
           ( { model | response = Nothing, error = Just err }, Cmd.none )
-
-requestObject : Cmd Msg
-requestObject =
-  Http.request
-    { method = "GET"
-    , headers =
-      [ Http.header "X-Fun-Header" "some-fun-value"
-      , Http.header "X-Awesome-Header" "some-awesome-value"
-      ]
-    , url = "http://fake-api.com/stuff"
-    , body = Http.stringBody "text/plain;charset=utf-8" ""
-    , expect = Http.expectJson ReceivedResponse responseDecoder
-    , timeout = Nothing
-    , tracker = Nothing
-    }
 
 responseDecoder : Json.Decoder ResponseObject
 responseDecoder =
@@ -222,6 +277,7 @@ selectSpec name =
     "get" -> Just getSpec
     "expectRequest" -> Just expectRequestSpec
     "hasHeader" -> Just hasHeaderSpec
+    "hasBody" -> Just hasBodySpec
     _ -> Nothing
 
 
