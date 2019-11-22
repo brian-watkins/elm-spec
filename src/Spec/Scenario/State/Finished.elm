@@ -58,7 +58,7 @@ update outlet msg model =
             State.Send Message.runToNextAnimationFrame
           else
             Cmd.map ProgramMsg nextCommand
-              |> State.Do
+              |> State.DoAndRender
         )
 
     Continue ->

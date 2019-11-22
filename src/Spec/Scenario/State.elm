@@ -22,6 +22,7 @@ type Msg msg
 
 type Command msg
   = Do (Cmd msg)
+  | DoAndRender (Cmd msg)
   | Send Message
   | SendMany (List Message)
   | Transition

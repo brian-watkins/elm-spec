@@ -143,7 +143,9 @@ module.exports = class HtmlPlugin {
         break
       }
       case "nextAnimationFrame": {
-        this.renderAndThen(() => {})
+        setTimeout(() => {
+          this.renderAndThen(() => {})
+        }, 0)
         break
       }
       case "navigation": {

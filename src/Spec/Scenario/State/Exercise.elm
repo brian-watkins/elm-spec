@@ -75,7 +75,7 @@ update outlet msg model =
             State.Send Message.stepComplete
           else
             Cmd.map ProgramMsg nextCommand
-              |> State.Do
+              |> State.DoAndRender
         )
 
     Continue ->
@@ -98,7 +98,7 @@ update outlet msg model =
               StepCommand.SendCommand cmd ->
                 ( updated
                 , Cmd.map ProgramMsg cmd
-                    |> State.Do
+                    |> State.DoAndRender
                 )
               StepCommand.DoNothing ->
                 update outlet Continue updated

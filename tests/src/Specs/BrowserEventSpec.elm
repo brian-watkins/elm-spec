@@ -44,6 +44,14 @@ keyboardEventsSpec =
   ]
 
 
+keyPressEvent : String -> Step.Context model -> Step.Command msg
+keyPressEvent char =
+  Encode.object
+    [ ( "key", Encode.string char )
+    ]
+    |> Event.trigger "keypress"
+
+
 clickEventSpec : Spec Model Msg
 clickEventSpec =
   Spec.describe "browser click event"
@@ -246,14 +254,6 @@ testSubject =
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
     |> Subject.withSubscriptions testSubscriptions
-
-
-keyPressEvent : String -> Step.Context model -> Step.Command msg
-keyPressEvent char =
-  Encode.object
-    [ ( "key", Encode.string char )
-    ]
-    |> Event.trigger "keypress"
 
 
 type Msg

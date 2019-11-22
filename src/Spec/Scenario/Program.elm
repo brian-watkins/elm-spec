@@ -10,6 +10,7 @@ import Spec.Scenario.Message as Message
 import Spec.Scenario.State exposing (Msg(..), Command(..))
 import Spec.Message as Message exposing (Message)
 import Spec.Observation.Message as Message
+import Spec.Markup.Message as Message
 import Spec.Observation.Expectation as Expectation
 import Spec.Observation.Report as Report exposing (Report)
 import Spec.Scenario.State.Exercise as Exercise
@@ -184,6 +185,13 @@ exerciseUpdate config msg model =
   case Exercise.update config.outlet msg model of
     ( updated, Do cmd ) ->
       ( Exercise updated, Cmd.map config.sendToSelf cmd )
+    ( updated, DoAndRender cmd ) ->
+      ( Exercise updated
+      , Cmd.batch
+        [ Cmd.map config.sendToSelf cmd
+        , config.send Message.runToNextAnimationFrame
+        ]
+      )
     ( updated, Send message ) ->
       ( Exercise updated, config.send message )
     ( updated, SendMany messages ) ->
@@ -213,6 +221,13 @@ finishedUpdate config msg model =
   case Finished.update config.outlet msg model of
     ( updated, Do cmd ) ->
       ( Finished updated, Cmd.map config.sendToSelf cmd )
+    ( updated, DoAndRender cmd ) ->
+      ( Finished updated
+      , Cmd.batch
+        [ Cmd.map config.sendToSelf cmd
+        , config.send Message.runToNextAnimationFrame
+        ]
+      )
     ( updated, Send message ) ->
       ( Finished updated, config.send message )
     ( updated, _ ) ->
