@@ -10,6 +10,7 @@ module Spec.Markup.Event exposing
   , resizeWindow
   , hideWindow
   , showWindow
+  , focus
   , trigger
   )
 
@@ -37,6 +38,11 @@ mouseDown =
 mouseUp : Step.Context model -> Step.Command msg
 mouseUp =
   trigger "mouseup" <| Encode.object []
+
+
+focus : Step.Context model -> Step.Command msg
+focus =
+  basicEventMessage "focus"
 
 
 mouseMoveIn : Step.Context model -> Step.Command msg

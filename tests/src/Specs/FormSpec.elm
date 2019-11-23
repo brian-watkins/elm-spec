@@ -70,6 +70,36 @@ inputSpec =
   ]
 
 
+focusSpec : Spec Model Msg
+focusSpec =
+  Spec.describe "focus"
+  [ scenario "focus on input field" (
+      given (
+        testSubject
+      )
+      |> when "the input field is focused"
+        [ Markup.target << by [ id "my-field" ]
+        , Event.focus
+        ]
+      |> it "fires the focus event" (
+        Observer.observeModel .focused
+          |> expect (equals True)
+      )
+    )
+  , scenario "no element targeted" (
+      given (
+        testSubject
+      )
+      |> when "focus event occurs"
+        [ Event.focus
+        ]
+      |> it "fails" (
+        Observer.observeModel .focused
+          |> expect (equals True)
+      )
+    )
+  ]
+
 submitSpec : Spec Model Msg
 submitSpec =
   Spec.describe "Submitting a form"
@@ -170,7 +200,7 @@ selectOptionByTextSpec =
 
 
 testSubject =
-  Subject.initWithModel { checks = [], checked = False, submitted = False, message = "", radioState = "", selected = "", selectedMultiple = [] }
+  Subject.initWithModel defaultModel
     |> Subject.withView testView
     |> Subject.withUpdate testUpdate
 
@@ -183,6 +213,20 @@ type alias Model =
   , selectedMultiple: List String
   , message: String
   , radioState: String
+  , focused: Bool
+  }
+
+
+defaultModel : Model
+defaultModel =
+  { checks = []
+  , checked = False
+  , submitted = False
+  , message = ""
+  , radioState = ""
+  , selected = ""
+  , selectedMultiple = []
+  , focused = False
   }
 
 
@@ -193,13 +237,14 @@ type Msg
   | DidSelect String
   | DidSelectMultiple (List String)
   | DidSubmit
+  | DidFocus
 
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.form [ Attr.id "my-form", Events.onSubmit DidSubmit ]
-    [ Html.input [ Attr.id "my-field", Events.onInput GotText ] []
+    [ Html.input [ Attr.id "my-field", Events.onInput GotText, Events.onFocus DidFocus ] []
     , Html.input [ Attr.id "my-checkbox", Attr.type_ "checkbox", Attr.checked model.checked, Events.onCheck Checked ]
       [ Html.text "Check me, please!" ]
     , radioButton "first"
@@ -285,12 +330,15 @@ testUpdate msg model =
       ( { model | selected = value }, Cmd.none )
     DidSelectMultiple values ->
       ( { model | selectedMultiple = values }, Cmd.none )
+    DidFocus ->
+      ( { model | focused = True }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "input" -> Just inputSpec
+    "focus" -> Just focusSpec
     "check" -> Just checkSpec   
     "submit" -> Just submitSpec
     "radio" -> Just radioButtonsSpec

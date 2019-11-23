@@ -115,6 +115,13 @@ module.exports = class HtmlPlugin {
         })
         break
       }
+      case "focus": {
+        this.verifySelector("focus", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
+          const element = this.document.querySelector(props.selector)
+          element.focus()
+        })
+        break
+      }
       case "select": {
         this.verifySelector("select", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
           const element = this.document.querySelector(props.selector)

@@ -22,6 +22,19 @@ describe("form inputs", () => {
     })
   })
 
+  describe("focus", () => {
+    context("input field", () => {
+      it("handles focus event as expected", (done) => {
+        expectSpec("FormSpec", "focus", done, (observations) => {
+          expectAccepted(observations[0])
+          expectRejected(observations[1], [
+            reportLine("No element targeted for event", "focus")
+          ])
+        })
+      })
+    })
+  })
+
   describe("radio buttons", () => {
     it("handles input events on radio buttons as expected", (done) => {
       expectSpec("FormSpec", "radio", done, (observations) => {
