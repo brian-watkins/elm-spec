@@ -12,6 +12,7 @@ import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
+import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -81,6 +82,11 @@ getSpec =
 
 getRequest : Cmd Msg
 getRequest =
+  getRequestWithTimeout Nothing
+
+
+getRequestWithTimeout : Maybe Float -> Cmd Msg
+getRequestWithTimeout timeout =
   Http.request
     { method = "GET"
     , headers =
@@ -90,7 +96,7 @@ getRequest =
     , url = "http://fake-api.com/stuff"
     , body = Http.stringBody "text/plain;charset=utf-8" ""
     , expect = Http.expectJson ReceivedResponse responseDecoder
-    , timeout = Nothing
+    , timeout = timeout
     , tracker = Nothing
     }
 
@@ -142,6 +148,49 @@ expectRequestSpec =
         ]
     )
   ]
+
+
+errorStubSpec : Spec Model Msg
+errorStubSpec =
+  Spec.describe "stub an error"
+  [ scenario "the request results in a network error" (
+      given (
+        testSubject getRequest [ networkErrorStub ]
+      )
+      |> when "an http request is triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> it "receives an error" (
+        Observer.observeModel .error
+          |> expect (equals <| Just Http.NetworkError)
+      )
+    )
+  , scenario "the request results in a timeout" (
+      given (
+        testSubject (getRequestWithTimeout <| Just 100) [ timeoutStub ]
+      )
+      |> when "an http request is triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Spec.Time.tick 200
+        ]
+      |> it "receives a timeout error" (
+        Observer.observeModel .error
+          |> expect (equals <| Just Http.Timeout)
+      )
+    )
+  ]
+
+
+networkErrorStub =
+  Stub.for (get "http://fake-api.com/stuff")
+    |> Stub.withNetworkError
+
+
+timeoutStub =
+  Stub.for (get "http://fake-api.com/stuff")
+    |> Stub.withTimeout
 
 
 abstainSpec : Spec Model Msg
@@ -354,6 +403,7 @@ selectSpec name =
     "expectRequest" -> Just expectRequestSpec
     "hasHeader" -> Just hasHeaderSpec
     "hasBody" -> Just hasBodySpec
+    "error" -> Just errorStubSpec
     _ -> Nothing
 
 

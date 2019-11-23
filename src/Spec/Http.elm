@@ -45,6 +45,7 @@ encodeStub stub =
     , ( "url", Encode.string stub.route.url )
     , ( "status", Encode.int stub.response.status )
     , ( "body", maybeEncodeString stub.response.body )
+    , ( "error", maybeEncodeString stub.error )
     , ( "shouldRespond", Encode.bool stub.shouldRespond )
     ]
 

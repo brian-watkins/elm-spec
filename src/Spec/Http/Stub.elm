@@ -4,6 +4,8 @@ module Spec.Http.Stub exposing
   , for
   , withBody
   , withStatus
+  , withNetworkError
+  , withTimeout
   , abstain
   )
 
@@ -14,6 +16,7 @@ type alias HttpResponseStub =
   { route: HttpRoute
   , response: HttpResponse
   , shouldRespond: Bool
+  , error: Maybe String
   }
 
 
@@ -35,6 +38,7 @@ for route =
       , body = Nothing
       }
   , shouldRespond = True
+  , error = Nothing
   }
 
 
@@ -52,6 +56,16 @@ withStatus status stub =
     response = stub.response
   in
     { stub | response = { response | status = status } }
+
+
+withNetworkError : HttpResponseStub -> HttpResponseStub
+withNetworkError stub =
+  { stub | error = Just "network" }
+
+
+withTimeout : HttpResponseStub -> HttpResponseStub
+withTimeout stub =
+  { stub | error = Just "timeout" }
 
 
 abstain : HttpResponseStub -> HttpResponseStub

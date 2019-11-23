@@ -35,6 +35,16 @@ describe('HTTP', () => {
     })
   })
 
+  context("error stub", () => {
+    it("returns an error for the request", (done) => {
+      expectSpec("HttpSpec", "error", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
+  })
+
+
   context("hasHeader", () => {
     it("observes request headers as expected", (done) => {
       expectSpec("HttpSpec", "hasHeader", done, (observations) => {

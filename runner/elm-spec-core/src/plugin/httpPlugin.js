@@ -28,7 +28,14 @@ module.exports = class HttpPlugin {
         const stub = specMessage.body
         this.server.respondWith(stub.method, stub.url, (request) => {
           if (stub.shouldRespond) {
-            request.respond(stub.status, {}, stub.body)
+            if (stub.error === "network") {
+              request.error()
+            } else if (stub.error === "timeout") {
+              request.eventListeners.timeout[1].listener()
+              request.readyState = 4
+            } else {
+              request.respond(stub.status, {}, stub.body)
+            }
           } else {
             request.readyState = 4
             next()
