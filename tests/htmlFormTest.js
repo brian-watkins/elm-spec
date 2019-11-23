@@ -22,13 +22,17 @@ describe("form inputs", () => {
     })
   })
 
-  describe("focus", () => {
+  describe("focus and blur", () => {
     context("input field", () => {
-      it("handles focus event as expected", (done) => {
-        expectSpec("FormSpec", "focus", done, (observations) => {
+      it("handles focus and blur events as expected", (done) => {
+        expectSpec("FormSpec", "focusBlur", done, (observations) => {
           expectAccepted(observations[0])
-          expectRejected(observations[1], [
+          expectAccepted(observations[1])
+          expectRejected(observations[2], [
             reportLine("No element targeted for event", "focus")
+          ])
+          expectRejected(observations[3], [
+            reportLine("No element targeted for event", "blur")
           ])
         })
       })

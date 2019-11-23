@@ -70,9 +70,9 @@ inputSpec =
   ]
 
 
-focusSpec : Spec Model Msg
-focusSpec =
-  Spec.describe "focus"
+focusBlurSpec : Spec Model Msg
+focusBlurSpec =
+  Spec.describe "focus and blur"
   [ scenario "focus on input field" (
       given (
         testSubject
@@ -80,13 +80,20 @@ focusSpec =
       |> when "the input field is focused"
         [ Markup.target << by [ id "my-field" ]
         , Event.focus
+        , Event.blur
         ]
-      |> it "fires the focus event" (
-        Observer.observeModel .focused
-          |> expect (equals True)
-      )
+      |> observeThat
+        [ it "fires the focus event" (
+            Observer.observeModel .focused
+              |> expect (equals True)
+          )
+        , it "fires the blur event" (
+            Observer.observeModel .blurred
+              |> expect (equals True)
+          )
+        ]
     )
-  , scenario "no element targeted" (
+   , scenario "no element targeted for focus" (
       given (
         testSubject
       )
@@ -98,7 +105,20 @@ focusSpec =
           |> expect (equals True)
       )
     )
+    , scenario "no element targeted for blur" (
+      given (
+        testSubject
+      )
+      |> when "blur event occurs"
+        [ Event.blur
+        ]
+      |> it "fails" (
+        Observer.observeModel .blurred
+          |> expect (equals True)
+      )
+    )
   ]
+
 
 submitSpec : Spec Model Msg
 submitSpec =
@@ -214,6 +234,7 @@ type alias Model =
   , message: String
   , radioState: String
   , focused: Bool
+  , blurred: Bool
   }
 
 
@@ -227,6 +248,7 @@ defaultModel =
   , selected = ""
   , selectedMultiple = []
   , focused = False
+  , blurred = False
   }
 
 
@@ -238,13 +260,14 @@ type Msg
   | DidSelectMultiple (List String)
   | DidSubmit
   | DidFocus
+  | DidBlur
 
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.form [ Attr.id "my-form", Events.onSubmit DidSubmit ]
-    [ Html.input [ Attr.id "my-field", Events.onInput GotText, Events.onFocus DidFocus ] []
+    [ Html.input [ Attr.id "my-field", Events.onInput GotText, Events.onFocus DidFocus, Events.onBlur DidBlur ] []
     , Html.input [ Attr.id "my-checkbox", Attr.type_ "checkbox", Attr.checked model.checked, Events.onCheck Checked ]
       [ Html.text "Check me, please!" ]
     , radioButton "first"
@@ -332,13 +355,15 @@ testUpdate msg model =
       ( { model | selectedMultiple = values }, Cmd.none )
     DidFocus ->
       ( { model | focused = True }, Cmd.none )
+    DidBlur ->
+      ( { model | blurred = True }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "input" -> Just inputSpec
-    "focus" -> Just focusSpec
+    "focusBlur" -> Just focusBlurSpec
     "check" -> Just checkSpec   
     "submit" -> Just submitSpec
     "radio" -> Just radioButtonsSpec

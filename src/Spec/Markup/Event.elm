@@ -11,6 +11,7 @@ module Spec.Markup.Event exposing
   , hideWindow
   , showWindow
   , focus
+  , blur
   , trigger
   )
 
@@ -43,6 +44,11 @@ mouseUp =
 focus : Step.Context model -> Step.Command msg
 focus =
   basicEventMessage "focus"
+
+
+blur : Step.Context model -> Step.Command msg
+blur =
+  basicEventMessage "blur"
 
 
 mouseMoveIn : Step.Context model -> Step.Command msg
