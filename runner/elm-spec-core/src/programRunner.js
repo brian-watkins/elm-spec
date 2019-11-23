@@ -68,7 +68,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       default:
         const plugin = this.plugins[specMessage.home]
         if (plugin) {
-          plugin.handle(specMessage, out, this.sendAbortMessage(out))
+          plugin.handle(specMessage, out, () => out(this.continue()), this.sendAbortMessage(out))
         } else {
           console.log("Message for unknown plugin:", specMessage)
         }

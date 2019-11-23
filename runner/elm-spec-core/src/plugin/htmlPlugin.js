@@ -12,7 +12,7 @@ module.exports = class HtmlPlugin {
     this.document = this.window.document
   }
 
-  handle(specMessage, out, abort) {
+  handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
       case "query": {
         this.renderAndThen(() => {
