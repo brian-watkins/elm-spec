@@ -4,6 +4,7 @@ module Spec.Http.Stub exposing
   , for
   , withBody
   , withStatus
+  , abstain
   )
 
 import Spec.Http.Route exposing (HttpRoute)
@@ -12,6 +13,7 @@ import Spec.Http.Route exposing (HttpRoute)
 type alias HttpResponseStub =
   { route: HttpRoute
   , response: HttpResponse
+  , shouldRespond: Bool
   }
 
 
@@ -32,6 +34,7 @@ for route =
       { status = 200
       , body = Nothing
       }
+  , shouldRespond = True
   }
 
 
@@ -49,3 +52,8 @@ withStatus status stub =
     response = stub.response
   in
     { stub | response = { response | status = status } }
+
+
+abstain : HttpResponseStub -> HttpResponseStub
+abstain stub =
+  { stub | shouldRespond = False }

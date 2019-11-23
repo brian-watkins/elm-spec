@@ -27,7 +27,15 @@ withStubs stubs subjectGenerator =
       , body = encodeStub stub
       }
       updatedSubject
-  ) subjectGenerator stubs
+  ) (Subject.configure httpSetupMessage subjectGenerator) stubs
+
+
+httpSetupMessage : Message
+httpSetupMessage =
+  { home = "_http"
+  , name = "setup"
+  , body = Encode.null
+  }
 
 
 encodeStub : HttpResponseStub -> Encode.Value
@@ -37,6 +45,7 @@ encodeStub stub =
     , ( "url", Encode.string stub.route.url )
     , ( "status", Encode.int stub.response.status )
     , ( "body", maybeEncodeString stub.response.body )
+    , ( "shouldRespond", Encode.bool stub.shouldRespond )
     ]
 
 

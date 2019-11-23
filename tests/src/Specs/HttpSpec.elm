@@ -34,13 +34,30 @@ getSpec =
         , Event.click
         ]
       |> it "receives a stubbed response" (
-        Observer.observeModel .response
-          |> expect (
-            equals <|
-              Just 
-                { name = "Cool Dude"
-                , score = 1034
-                }
+        Observer.observeModel .responses
+          |> expect ( isList
+            [ equals 
+              { name = "Cool Dude"
+              , score = 1034
+              }
+            ]
+          )
+      )
+    )
+  , scenario "multiple stubbed requests" (
+      given (
+        testSubject (Cmd.batch [ getRequest, getOtherRequest ]) [ successStub, otherSuccessStub ]
+      )
+      |> when "an http request is triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> it "receives the stubbed responses" (
+        Observer.observeModel .responses
+          |> expect ( isList
+            [ equals { name = "Cool Dude", score = 1034 }
+            , equals { name = "Fun Person", score = 971 }
+            ]
           )
       )
     )
@@ -55,8 +72,7 @@ getSpec =
       |> it "receives a stubbed response" (
         Observer.observeModel .error
           |> expect (
-            equals <|
-              Just <| Http.BadStatus 401
+            equals (Just <| Http.BadStatus 401)
           )
       )
     )
@@ -72,6 +88,22 @@ getRequest =
       , Http.header "X-Awesome-Header" "some-awesome-value"
       ]
     , url = "http://fake-api.com/stuff"
+    , body = Http.stringBody "text/plain;charset=utf-8" ""
+    , expect = Http.expectJson ReceivedResponse responseDecoder
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
+getOtherRequest : Cmd Msg
+getOtherRequest =
+  Http.request
+    { method = "GET"
+    , headers =
+      [ Http.header "X-Super-Header" "some-super-value"
+      , Http.header "X-Awesome-Header" "some-awesome-value"
+      ]
+    , url = "http://fake-api.com/fun"
     , body = Http.stringBody "text/plain;charset=utf-8" ""
     , expect = Http.expectJson ReceivedResponse responseDecoder
     , timeout = Nothing
@@ -110,6 +142,37 @@ expectRequestSpec =
         ]
     )
   ]
+
+
+abstainSpec : Spec Model Msg
+abstainSpec =
+  Spec.describe "abstain"
+  [ scenario "observe what happens while a request is in progress" (
+      given (
+        testSubject getRequest [ abstainedStub ]
+      )
+      |> when "an http request is triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "observes the request" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+              |> expect (isListWithLength 1)
+          )
+        , it "does something while the request is in progress" (
+            Markup.observeElement
+              |> Markup.query << by [ id "request-status" ]
+              |> expect (Markup.hasText "In Progress")
+          )
+        ]
+    )
+  ]
+
+
+abstainedStub =
+  Stub.for (get "http://fake-api.com/stuff")
+    |> Stub.abstain
 
 
 hasHeaderSpec : Spec Model Msg
@@ -168,7 +231,7 @@ hasBodySpec =
   Spec.describe "hasBody"
   [ scenario "check body" (
       given (
-        testSubject (postRequest postBody) [ successStub ]
+        testSubject (postRequest postBody) [ successPostStub ]
       )
       |> when "a request is made"
         [ Markup.target << by [ id "trigger" ]
@@ -223,18 +286,28 @@ successStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
 
+otherSuccessStub =
+  Stub.for (get "http://fake-api.com/fun")
+    |> Stub.withBody "{\"name\":\"Fun Person\",\"score\":971}"
+
+successPostStub =
+  Stub.for (post "http://fake-api.com/stuff")
+    |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
+
 unauthorizedStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withStatus 401
 
 type alias Model =
-  { response: Maybe ResponseObject
+  { responses: List ResponseObject
   , error: Maybe Http.Error
+  , requestStatus: String
   }
 
 defaultModel =
-  { response = Nothing
+  { responses = []
   , error = Nothing
+  , requestStatus = "Idle"
   }
 
 type alias ResponseObject =
@@ -251,19 +324,21 @@ testView model =
   Html.div []
   [ Html.button [ Attr.id "trigger", Events.onClick MakeRequest ]
     [ Html.text "Click to make request!" ]
+  , Html.hr [] []
+  , Html.div [ Attr.id "request-status" ] [ Html.text model.requestStatus ]
   ]
 
 testUpdate : Cmd Msg -> Msg -> Model -> ( Model, Cmd Msg )
 testUpdate doRequest msg model =
   case msg of
     MakeRequest ->
-      ( model, doRequest )
+      ( { model | requestStatus = "In Progress" }, doRequest )
     ReceivedResponse response ->
       case response of
         Ok data ->
-          ( { model | response = Just data, error = Nothing }, Cmd.none )
+          ( { model | requestStatus = "Idle", responses = data :: model.responses, error = Nothing }, Cmd.none )
         Err err ->
-          ( { model | response = Nothing, error = Just err }, Cmd.none )
+          ( { model | requestStatus = "Idle", error = Just err }, Cmd.none )
 
 responseDecoder : Json.Decoder ResponseObject
 responseDecoder =
@@ -275,6 +350,7 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "get" -> Just getSpec
+    "abstain" -> Just abstainSpec
     "expectRequest" -> Just expectRequestSpec
     "hasHeader" -> Just hasHeaderSpec
     "hasBody" -> Just hasBodySpec

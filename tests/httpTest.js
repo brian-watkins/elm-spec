@@ -6,6 +6,7 @@ describe('HTTP', () => {
       expectSpec("HttpSpec", "get", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
+        expectAccepted(observations[2])
       })
     })
   })
@@ -21,6 +22,15 @@ describe('HTTP', () => {
           reportLine("Expected list to have length", "17"),
           reportLine("but it has length", "1")
         ])
+      })
+    })
+  })
+
+  context("abstain from responding", () => {
+    it("abstains from responding as expected", (done) => {
+      expectSpec("HttpSpec", "abstain", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
   })

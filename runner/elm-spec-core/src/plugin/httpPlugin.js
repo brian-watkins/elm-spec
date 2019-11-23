@@ -9,20 +9,32 @@ const fakeServerForGlobalContext = function(window) {
     };
     server.addRequest(xhrObj);
   }
+  server.respondImmediately = true
   return server
 }
 
 module.exports = class HttpPlugin {
   constructor(context) {
     this.server = fakeServerForGlobalContext(context.window)
-    this.server.respondImmediately = true
   }
 
-  handle(specMessage, out, abort) {
+  handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
+      case "setup": {
+        this.server.reset()
+        break
+      }
       case "stub": {
         const stub = specMessage.body
-        this.server.respondWith(stub.method, stub.url, [ stub.status, {}, stub.body ])
+        this.server.respondWith(stub.method, stub.url, (request) => {
+          if (stub.shouldRespond) {
+            request.respond(stub.status, {}, stub.body)
+          } else {
+            request.readyState = 4
+            next()
+          }
+        })
+
         break
       }
       case "fetch-requests": {
