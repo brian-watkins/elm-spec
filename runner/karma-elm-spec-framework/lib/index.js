@@ -9,6 +9,9 @@ const createPattern = function (path) {
 }
 
 const initElmSpec = function(files, config) {
+  config.customContextFile = path.join(__dirname, "static/context.thtml")
+  config.customDebugFile = path.join(__dirname, "static/debug.thtml")
+
   const compiledFile = compiler.compile(config.elmSpec)
 
   files.unshift(createPattern(compiledFile))
