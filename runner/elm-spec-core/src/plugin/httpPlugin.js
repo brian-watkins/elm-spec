@@ -34,7 +34,7 @@ module.exports = class HttpPlugin {
               request.eventListeners.timeout[1].listener()
               request.readyState = 4
             } else {
-              request.respond(stub.status, {}, stub.body)
+              request.respond(stub.status, stub.headers, stub.body)
             }
           } else {
             request.readyState = 4

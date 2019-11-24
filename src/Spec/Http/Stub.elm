@@ -4,12 +4,14 @@ module Spec.Http.Stub exposing
   , for
   , withBody
   , withStatus
+  , withHeader
   , withNetworkError
   , withTimeout
   , abstain
   )
 
 import Spec.Http.Route exposing (HttpRoute)
+import Dict exposing (Dict)
 
 
 type alias HttpResponseStub =
@@ -22,6 +24,7 @@ type alias HttpResponseStub =
 
 type alias HttpResponse =
   { status: HttpStatus
+  , headers: Dict String String
   , body: Maybe String
   }
 
@@ -35,6 +38,7 @@ for route =
   { route = route
   , response =
       { status = 200
+      , headers = Dict.empty
       , body = Nothing
       }
   , shouldRespond = True
@@ -43,19 +47,26 @@ for route =
 
 
 withBody : String -> HttpResponseStub -> HttpResponseStub
-withBody body stub =
-  let
-    response = stub.response
-  in
-    { stub | response = { response | body = Just body } }
+withBody body =
+  mapResponse <| \response ->
+    { response | body = Just body }
 
 
 withStatus : HttpStatus -> HttpResponseStub -> HttpResponseStub
-withStatus status stub =
-  let
-    response = stub.response
-  in
-    { stub | response = { response | status = status } }
+withStatus status  =
+  mapResponse <| \response ->
+    { response | status = status }
+
+
+withHeader : (String, String) -> HttpResponseStub -> HttpResponseStub
+withHeader ( name, value ) =
+  mapResponse <| \response ->
+    { response | headers = Dict.insert name value response.headers }
+
+
+mapResponse : (HttpResponse -> HttpResponse) -> HttpResponseStub -> HttpResponseStub
+mapResponse mapper stub =
+  { stub | response = mapper stub.response }
 
 
 withNetworkError : HttpResponseStub -> HttpResponseStub

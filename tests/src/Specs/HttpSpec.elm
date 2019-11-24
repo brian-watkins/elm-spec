@@ -12,7 +12,8 @@ import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
-import Spec.Time
+import Spec.Claim as Claim
+import Spec.Observation.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -20,6 +21,7 @@ import Runner
 import Json.Decode as Json
 import Json.Encode as Encode
 import Http
+import Dict
 import Specs.Helpers exposing (..)
 
 
@@ -173,7 +175,6 @@ errorStubSpec =
       |> when "an http request is triggered"
         [ Markup.target << by [ id "trigger" ]
         , Event.click
-        , Spec.Time.tick 200
         ]
       |> it "receives a timeout error" (
         Observer.observeModel .error
@@ -191,6 +192,65 @@ networkErrorStub =
 timeoutStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withTimeout
+
+
+headerStubSpec : Spec Model Msg
+headerStubSpec =
+  Spec.describe "stubbed headers"
+  [ scenario "stub headers" (
+      given (
+        testSubject fancyRequest [ headerStub ]
+      )
+      |> when "an http request is triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> it "receives the metadata" (
+        Observer.observeModel .metadata
+          |> expect (\metadata ->
+            case metadata of
+              Just data ->
+                Dict.fromList
+                  [ ("X-Fun-Header", "fun-value" )
+                  , ("X-Super-Header", "super-value" )
+                  , ("Location", "http://fun-place.com/fun")
+                  ]
+                |> equals data.headers
+              Nothing ->
+                Claim.Reject <| Report.note "No Metadata!"
+          )
+      )
+    )
+  ]
+
+
+headerStub =
+  Stub.for (get "http://fake-api.com/fake/stuff")
+    |> Stub.withHeader ( "X-Fun-Header", "fun-value" )
+    |> Stub.withHeader ( "X-Super-Header", "super-value" )
+    |> Stub.withHeader ( "Location", "http://fun-place.com/fun" )
+
+
+fancyRequest : Cmd Msg
+fancyRequest =
+  Http.request
+    { method = "GET"
+    , headers = []
+    , url = "http://fake-api.com/fake/stuff"
+    , body = Http.stringBody "text/plain;charset=utf-8" ""
+    , expect = Http.expectStringResponse ReceivedMetadata responseHandler
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
+responseHandler : Http.Response String -> Result () Http.Metadata
+responseHandler response =
+  case response of
+    Http.GoodStatus_ metadata body ->
+      Ok metadata
+    _ ->
+      Err ()
 
 
 abstainSpec : Spec Model Msg
@@ -351,12 +411,14 @@ type alias Model =
   { responses: List ResponseObject
   , error: Maybe Http.Error
   , requestStatus: String
+  , metadata: Maybe Http.Metadata
   }
 
 defaultModel =
   { responses = []
   , error = Nothing
   , requestStatus = "Idle"
+  , metadata = Nothing
   }
 
 type alias ResponseObject =
@@ -367,6 +429,7 @@ type alias ResponseObject =
 type Msg
   = MakeRequest
   | ReceivedResponse (Result Http.Error ResponseObject)
+  | ReceivedMetadata (Result () Http.Metadata)
 
 testView : Model -> Html Msg
 testView model =
@@ -388,6 +451,12 @@ testUpdate doRequest msg model =
           ( { model | requestStatus = "Idle", responses = data :: model.responses, error = Nothing }, Cmd.none )
         Err err ->
           ( { model | requestStatus = "Idle", error = Just err }, Cmd.none )
+    ReceivedMetadata response ->
+      case response of
+        Ok metadata ->
+          ( { model | requestStatus = "Idle", metadata = Just metadata, error = Nothing }, Cmd.none )
+        Err _ ->
+          ( { model | requestStatus = "Idle", metadata = Nothing }, Cmd.none )
 
 responseDecoder : Json.Decoder ResponseObject
 responseDecoder =
@@ -404,6 +473,7 @@ selectSpec name =
     "hasHeader" -> Just hasHeaderSpec
     "hasBody" -> Just hasBodySpec
     "error" -> Just errorStubSpec
+    "header" -> Just headerStubSpec
     _ -> Nothing
 
 
