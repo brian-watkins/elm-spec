@@ -30,8 +30,8 @@ class ElmSpecRunnerCommand extends Command {
     this.runSpecs({
       specPath,
       elmPath,
-      tags,
       runnerOptions: {
+        tags,
         endOnFailure: flags.endOnFailure,
         timeout: 500
       }
@@ -41,7 +41,7 @@ class ElmSpecRunnerCommand extends Command {
   runSpecs(options) {
     const compiler = new Compiler(options)
 
-    const context = new JsdomContext(compiler, options.tags)
+    const context = new JsdomContext(compiler)
     const reporter = new Reporter((c) => process.stdout.write(c), this.log)
 
     const runner = new SuiteRunner(context, reporter, options.runnerOptions)
