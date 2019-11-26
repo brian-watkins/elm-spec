@@ -25,6 +25,17 @@ witnessPortCommandFromInitSpec =
           |> expect (equals [ "From init!" ])
       )
     )
+  , scenario "observing the same port in another scenario" (
+      given (
+        Subject.init ( { count = 0 }, sendTestMessageOut "From init in another scenario!")
+          |> Subject.withUpdate testUpdate
+          |> Port.record "sendTestMessageOut"
+      )
+      |> it "resets the subscription between scenarios so only one request is observed" (
+        Port.observe "sendTestMessageOut" Json.string
+          |> expect (equals [ "From init in another scenario!" ])
+      )
+    )
   , scenario "observing a port that is not being recorded" (
       given (
         Subject.init ( { count = 0 }, sendTestMessageOut "Some message!")

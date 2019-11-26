@@ -62,7 +62,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         out(specMessage)
         break
       case "_observer":
-        this.stopTimeoutTimer()
         this.handleObserverEvent(specMessage, out)
         break
       default:
@@ -138,8 +137,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   handleStateChange(state, out) {
     switch (state) {
       case "START":
-        this.prepareForScenario()
-        this.startTimeoutTimer(out)
+        this.prepareForScenario(out)
         out(this.continue())
         break
       case "CONFIGURE_COMPLETE":
@@ -152,12 +150,25 @@ module.exports = class ProgramRunner extends EventEmitter {
         }, 0)
         this.startTimeoutTimer(out)
         break
+      case "OBSERVATION_START":
+        this.scenarioExerciseComplete()
+        out(this.continue())
+        break
+      case "ABORT":
+        this.scenarioExerciseComplete()
+        break
     }
   }
 
-  prepareForScenario() {
+  scenarioExerciseComplete() {
+    this.stopTimeoutTimer()
+    this.portPlugin.unsubscribe()
+  }
+
+  prepareForScenario(out) {
     this.timePlugin.clearTimers()
     setBaseLocation("http://elm-spec", this.context.window)
+    this.startTimeoutTimer(out)
   }
 
   startTimeoutTimer(out) {

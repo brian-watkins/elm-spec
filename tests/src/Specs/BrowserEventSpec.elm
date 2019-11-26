@@ -202,7 +202,7 @@ animationFrameSpec =
           |> expect (equals 3)
       )
     )
-    , scenario "animation frames during ticks" (
+  , scenario "animation frames during ticks" (
       given (
         testSubject
       )

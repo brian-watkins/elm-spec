@@ -149,8 +149,8 @@ update config msg state =
       case state of
         Exercise model ->
           case Exercise.update config.outlet msg model of
-            ( updated, Send message ) ->
-              ( Ready, Cmd.batch [ config.send message ])
+            ( updated, SendMany messages ) ->
+              ( Ready, Cmd.batch <| List.map config.send messages )
             ( updated, _ ) ->
               badState config state
         _ ->
@@ -197,7 +197,7 @@ exerciseUpdate config msg model =
     ( updated, SendMany messages ) ->
       ( Exercise updated, Cmd.batch <| List.map config.send messages )
     ( updated, Transition ) ->
-      update config Continue <| Observe <| Observe.init updated
+      ( Observe <| Observe.init updated, config.send Message.startObservation )
 
 
 observeUpdate : Config msg programMsg -> Msg programMsg -> Observe.Model model programMsg -> ( Model model programMsg, Cmd msg )

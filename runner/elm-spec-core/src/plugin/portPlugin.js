@@ -1,6 +1,7 @@
 module.exports = class PortPlugin {
   constructor(app) {
     this.app = app
+    this.subscriptions = []
   }
 
   handle(specMessage, abort) {
@@ -18,17 +19,32 @@ module.exports = class PortPlugin {
         break
       case "receive":
         const port = specMessage.body
-        this.app.ports[port.cmd].subscribe((commandValue) => {
-          const record = {
-            home: "_port",
-            name: "received",
-            body: {
-              name: port.cmd,
-              value: commandValue
-            }
-          }
-          this.app.ports.sendIn.send(record)
-        })
+        port.listener = this.portListener(port)
+        this.subscriptions.push(port)
+        this.app.ports[port.cmd].subscribe(port.listener)
     }
+  }
+
+  portListener(port) {
+    const app = this.app
+    return function (commandValue) {
+      const record = {
+        home: "_port",
+        name: "received",
+        body: {
+          name: port.cmd,
+          value: commandValue
+        }
+      }
+      app.ports.sendIn.send(record)
+    }
+  }
+
+  unsubscribe() {
+    for (let i = 0; i < this.subscriptions.length; i++) {
+      const port = this.subscriptions[i]
+      this.app.ports[port.cmd].unsubscribe(port.listener)
+    }
+    this.subscriptions = []
   }
 }

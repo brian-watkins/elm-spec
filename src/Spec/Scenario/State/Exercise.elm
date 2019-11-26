@@ -105,9 +105,11 @@ update outlet msg model =
 
     Abort report ->
       ( model
-      , Claim.Reject report
+      , State.SendMany
+        [ Claim.Reject report
           |> Message.observation model.conditionsApplied "A spec step failed"
-          |> State.Send
+        , Message.abortScenario
+        ]
       )
 
     OnUrlChange url ->
