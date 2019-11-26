@@ -34,15 +34,16 @@ describe('elm-spec-runner', () => {
   })
 
   context("tags", () => {
-    let contextSpy
+    let suiteRunnerSpy
 
     beforeEach(() => {
-      contextSpy = sinon.spy()
-      cmd.__set__("Compiler", function() {})
-      cmd.__set__("JsdomContext", contextSpy)
-      cmd.__set__("SuiteRunner", function() {
+      suiteRunnerSpy = sinon.fake((context, reporter, options) => {
         return { runAll: function() {} }
       })
+
+      cmd.__set__("Compiler", function() {})
+      cmd.__set__("JsdomContext", function() {})
+      cmd.__set__("SuiteRunner", suiteRunnerSpy)
     })
 
     context("when one tag is specified", () => {
@@ -52,8 +53,9 @@ describe('elm-spec-runner', () => {
         "--specs", "../tests/sample/specs/**/*Spec.elm",
         "--tag", "fun"
       ]))
-      .it('passes the tag to the html context', () => {
-        expect(contextSpy.args[0][1]).to.deep.equal(['fun'])
+      .it('passes the tag to the suite runner', () => {
+        const actualTags = suiteRunnerSpy.args[0][2].tags
+        expect(actualTags).to.deep.equal(['fun'])
       })
     })
 
@@ -66,8 +68,9 @@ describe('elm-spec-runner', () => {
         "--tag", "awesome",
         "--tag", "super"
       ]))
-      .it('passes the tags to the html context', () => {
-        expect(contextSpy.args[0][1]).to.deep.equal(['fun', 'awesome', 'super'])
+      .it('passes the tags to the suite runner', () => {
+        const actualTags = suiteRunnerSpy.args[0][2].tags
+        expect(actualTags).to.deep.equal(['fun', 'awesome', 'super'])
       })
     })
 
@@ -77,8 +80,9 @@ describe('elm-spec-runner', () => {
         "--elm", "../../node_modules/.bin/elm",
         "--specs", "../tests/sample/specs/**/*Spec.elm",
       ]))
-      .it('passes an empty array to the html context', () => {
-        expect(contextSpy.args[0][1]).to.deep.equal([])
+      .it('passes an empty array to the suite runner', () => {
+        const actualTags = suiteRunnerSpy.args[0][2].tags
+        expect(actualTags).to.deep.equal([])
       })
     })
   })
