@@ -10,7 +10,8 @@ exports.compile = function(config) {
   })
 
   const compiledCode = compiler.compile()
-  fs.writeFileSync('elm.js', compiledCode)
 
-  return path.join(__dirname, '../elm.js')
+  const outputPath = path.resolve(config.specRoot, 'elm-stuff', 'elm-spec.js')
+  fs.writeFileSync(outputPath, compiledCode)
+  return outputPath
 }
