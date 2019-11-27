@@ -36,6 +36,14 @@ describe("Suite Runner", () => {
     })
   })
   
+  context("when the code does not compile", () => {
+    it("reports zero tests", (done) => {
+      expectScenarios('specsWithCompilationError', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
+        expect(observations).to.have.length(0)
+      })
+    })
+  })
+
 })
 
 const expectPassingScenarios = (specDir, number, tags, done) => {

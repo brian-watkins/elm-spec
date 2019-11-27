@@ -12,6 +12,11 @@ module.exports = class SuiteRunner extends EventEmitter {
 
   runAll() {
     this.context.evaluate((Elm) => {
+      if (!Elm) {
+        this.finish()
+        return
+      }
+
       this.run(Program.discover(Elm))
     })
   }
@@ -25,8 +30,7 @@ module.exports = class SuiteRunner extends EventEmitter {
     const program = programs.shift()
   
     if (program === undefined) {
-      this.reporter.finish()
-      this.emit('complete')
+      this.finish()
       return
     }
   
@@ -60,5 +64,10 @@ module.exports = class SuiteRunner extends EventEmitter {
         tags: this.options.tags
       }
     })
+  }
+
+  finish() {
+    this.reporter.finish()
+    this.emit('complete')
   }
 }

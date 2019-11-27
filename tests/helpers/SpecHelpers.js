@@ -76,6 +76,8 @@ const runProgramInJsdom = (specProgram, done, matcher) => {
   prepareJsdom()
 
   jsdomContext.evaluate((Elm) => {
+    if (!Elm) process.exit(1)
+
     const program = Elm.Specs[specProgram]
     const reporter = new TestReporter()
     const options = {
@@ -102,7 +104,11 @@ const runProgramInBrowser = (specProgram, done, matcher) => {
     matcher(observations)
     done()
   }).catch((err) => {
-    done(err)
+    if (err.name === "AssertionError") {
+      done(err)
+    } else {
+      process.exit(1)
+    }
   })
 }
 
@@ -113,7 +119,11 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
     matcher(observations)
     done()
   }).catch((err) => {
-    done(err)
+    if (err.name === "AssertionError") {
+      done(err)
+    } else {
+      process.exit(1)
+    }
   })
 }
 
@@ -121,6 +131,8 @@ const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
   prepareJsdom()
 
   jsdomContext.evaluate((Elm, window) => {
+    if (!Elm) process.exit(1)
+    
     jsdomContext.clock.reset()
     var app = Elm.Specs[specProgram].init({
       flags: { specName }

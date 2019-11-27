@@ -12,6 +12,10 @@ window.document.head.appendChild(base)
 
 window._elm_spec.runProgram = (specProgram) => {
   return new Promise((resolve, reject) => {
+    if (!window.Elm) {
+      reject("Elm not compiled?!")
+    }
+
     const program = Elm.Specs[specProgram]
     const reporter = new TestReporter()
     const options = {
@@ -29,6 +33,10 @@ window._elm_spec.runProgram = (specProgram) => {
 }
 
 window._elm_spec.runSpec = (specProgram, specName, options) => {
+  if (!window.Elm) {
+    throw Error('Elm not compiled?!')
+  }
+
   context.clock.reset()
   var app = Elm.Specs[specProgram].init({
     flags: { specName }
