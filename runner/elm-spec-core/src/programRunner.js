@@ -100,9 +100,9 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.emit('observation', observation)
         if (this.options.endOnFailure && observation.summary === "REJECT") {
           out({
-            home: "_observer",
-            name: "finish",
-            body: null
+            home: "_spec",
+            name: "state",
+            body: "FINISH"
           })
         } else {
           out(this.continue())

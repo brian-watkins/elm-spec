@@ -2,6 +2,7 @@ module Spec.Scenario.Program exposing
   ( Config, Model, init, update, view, subscriptions
   , start
   , receivedMessage
+  , finishScenario
   )
 
 import Spec.Subject as Subject exposing (Subject)
@@ -142,7 +143,9 @@ update config msg state =
           exerciseUpdate config msg model
         Observe model ->
           observeUpdate config msg model
-        _ ->
+        Finished model ->
+          ( state, config.complete )
+        Ready ->
           ( Ready, config.complete )
 
     Abort report ->
@@ -150,7 +153,9 @@ update config msg state =
         Exercise model ->
           case Exercise.update config.outlet msg model of
             ( updated, SendMany messages ) ->
-              ( Ready, Cmd.batch <| List.map config.send messages )
+              ( Finished <| Finished.init updated.subject updated.programModel
+              , Cmd.batch <| List.map config.send messages
+              )
             ( updated, _ ) ->
               badState config state
         _ ->
@@ -206,11 +211,8 @@ observeUpdate config msg model =
     ( updated, Send message ) ->
       ( Observe updated, config.send message )
     ( updated, Transition ) ->
-      ( Finished <| Finished.init model, 
-        if updated.isFinished then
-          config.stop
-        else
-          config.complete 
+      ( Finished <| Finished.init model.subject model.programModel
+      , config.complete
       )
     ( updated, _ ) ->
       badState config <| Observe updated
@@ -232,6 +234,15 @@ finishedUpdate config msg model =
       ( Finished updated, config.send message )
     ( updated, _ ) ->
       badState config <| Finished updated
+
+
+finishScenario : Model model programMsg -> Model model programMsg
+finishScenario state =
+  case state of
+    Observe model ->
+      Finished <| Finished.init model.subject model.programModel
+    _ ->
+      state
 
 
 badState : Config msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )

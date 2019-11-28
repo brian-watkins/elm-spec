@@ -20,6 +20,7 @@ import Html exposing (Html)
 import Browser exposing (UrlRequest, Document)
 import Browser.Navigation exposing (Key)
 import Json.Encode as Encode
+import Json.Decode as Json
 import Url exposing (Url)
 
 
@@ -81,10 +82,25 @@ update config msg model =
     SendMessage message ->
       ( model, config.send message )
     ReceivedMessage message ->
-      if message.home == "_spec" then
-        update config RunNextScenario model
+      if Message.belongsTo "_spec" message then
+        handleSpecMessage config model message
       else
         update config (ScenarioMsg <| ScenarioProgram.receivedMessage message) model
+
+
+handleSpecMessage : Config msg -> Model model msg -> Message -> ( Model model msg, Cmd (Msg msg) )
+handleSpecMessage config model message =
+  Message.decode Json.string message
+    |> Maybe.map (\state ->
+      case state of
+        "FINISH" ->
+          ( { model | scenarioModel = ScenarioProgram.finishScenario model.scenarioModel }
+          , stopSpecSuiteRun
+          )
+        _ ->
+          update config RunNextScenario model
+    )
+    |> Maybe.withDefault ( model, Cmd.none )
 
 
 specComplete : Message
@@ -108,9 +124,20 @@ scenarioConfig config =
   { send = config.send
   , outlet = config.outlet
   , sendToSelf = ScenarioMsg
-  , complete = Task.succeed never |> Task.perform (always RunNextScenario)
-  , stop = Task.succeed never |> Task.perform (always <| SendMessage specFinished)
+  , complete = sendUpdateMsg RunNextScenario
+  , stop = stopSpecSuiteRun
   }
+
+
+stopSpecSuiteRun : Cmd (Msg msg)
+stopSpecSuiteRun =
+  sendUpdateMsg <| SendMessage specFinished
+
+
+sendUpdateMsg : Msg msg -> Cmd (Msg msg)
+sendUpdateMsg msg =
+  Task.succeed never
+    |> Task.perform (always msg)
 
 
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)

@@ -24,10 +24,10 @@ type alias Model model msg =
   }
 
 
-init : Observe.Model model msg -> Model model msg
-init observeModel =
-  { subject = observeModel.subject
-  , programModel = observeModel.programModel
+init : Subject model msg -> model -> Model model msg
+init subject programModel =
+  { subject = subject
+  , programModel = programModel
   }
 
 

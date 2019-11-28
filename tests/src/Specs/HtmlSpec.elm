@@ -233,6 +233,58 @@ observePresenceSpec =
   ]
 
 
+timeoutSpec : Spec Model Msg
+timeoutSpec =
+  Spec.describe "timeout"
+  [ scenario "spec times out" (
+      given (
+        Subject.initWithModel { name = "Cool Dude", count = 7 }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+      )
+      |> when "something is clicked with no event handler"
+        [ Markup.target << by [ id "my-label" ]
+        , Event.click
+        ]
+      |> it "fails due to timeout" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-label" ]
+          |> expect (Markup.hasText "it does not matter")
+      )
+    )
+  ]
+
+
+failingSpec : Spec Model Msg
+failingSpec =
+  Spec.describe "failing"
+  [ scenario "a failing scenario" (
+      given (
+        Subject.initWithModel { name = "Cool Dude", count = 7 }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+      )
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-label" ]
+          |> expect (Markup.hasText "something else")
+      )
+    )
+  , scenario "some other scenario that passes" (
+      given (
+        Subject.initWithModel { name = "Cool Dude", count = 7 }
+          |> Subject.withUpdate testUpdate
+          |> Subject.withView testView
+      )
+      |> it "passes" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-label" ]
+          |> expect (Markup.hasText "Here is a label")
+      )
+    )
+  ]
+
+
 testView : Model -> Html Msg
 testView model =
   Html.div []
@@ -303,6 +355,8 @@ selectSpec name =
     "targetUnknown" -> Just targetUnknownSpec
     "manyElements" -> Just manyElementsSpec
     "observePresence" -> Just observePresenceSpec
+    "timeout" -> Just timeoutSpec
+    "failing" -> Just failingSpec
     _ -> Nothing
 
 

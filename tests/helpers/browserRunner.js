@@ -56,6 +56,9 @@ const runProgram = (app, context, options, resolve, reject) => {
       .on('complete', () => {
         resolve(observations)
       })
+      .on('finished', () => {
+        resolve(observations)
+      })
       .on('error', (err) => {
         reject(err)
       })

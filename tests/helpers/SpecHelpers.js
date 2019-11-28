@@ -9,6 +9,16 @@ const TestReporter = require('./testReporter')
 
 const elmSpecContext = process.env.ELM_SPEC_CONTEXT
 
+exports.runInContext = (runner) => {
+  if (elmSpecContext === "jsdom") {
+    return runner(jsdomContext.window)
+  } else if (elmSpecContext === "browser") {
+    return page.evaluate((fun) => {
+      return eval(fun)(window)
+    }, runner.toString())
+  }
+}
+
 exports.expectPassingSpec = (specProgram, specName, done, matcher) => {
   this.expectSpec(specProgram, specName, done, (observations) => {
     for (let i = 0; i < observations.length; i++) {
@@ -150,6 +160,10 @@ const runSpec = (app, context, done, matcher, options) => {
       observations.push(observation)
     })
     .on('complete', () => {
+      matcher(observations, context)
+      done()
+    })
+    .on('finished', () => {
       matcher(observations)
       done()
     })

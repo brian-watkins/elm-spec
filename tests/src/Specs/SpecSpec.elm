@@ -96,6 +96,15 @@ timeoutSpec =
           |> expect (equals [])
       )
     )
+  , scenario "the scenario step works as expected" (
+      given (
+        testSubject
+      )
+      |> it "passes" (
+        Observer.observeModel .counts
+          |> expect (equals [])
+      )
+    )
   ]
 
 
