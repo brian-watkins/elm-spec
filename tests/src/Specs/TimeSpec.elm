@@ -9,7 +9,7 @@ import Spec.Observer as Observer
 import Runner
 import Task
 import Json.Encode as Encode
-import Time exposing (Posix)
+import Time exposing (Posix, Zone)
 import Specs.Helpers exposing (..)
 
 
@@ -41,6 +41,23 @@ stubTimeSpec =
       |> it "increments the time beginning with the stubbed time" (
         Observer.observeModel .current
           |> expect (equals <| Time.millisToPosix 1111111113120)
+      )
+    )
+  ]
+
+
+stubZoneSpec : Spec Model Msg
+stubZoneSpec =
+  Spec.describe "stubbing the timezone"
+  [ scenario "zone is requested in init" (
+      given (
+        Subject.init ( testModel, Time.here |> Task.perform ReceivedZone )
+          |> Subject.withUpdate testUpdate
+          |> Spec.Time.withTimezoneOffset (9 * 60)
+      )
+      |> it "gets the stubbed time" (
+        Observer.observeModel .currentZone
+          |> expect (equals <| Time.customZone (9 * 60) [])
       )
     )
   ]
@@ -89,21 +106,26 @@ testUpdate msg model =
   case msg of
     ReceivedTime time ->
       ( { model | count = model.count + 1, current = time }, Cmd.none )
+    ReceivedZone zone ->
+      ( { model | currentZone = zone }, Cmd.none )
 
 
 type Msg
   = ReceivedTime Posix
+  | ReceivedZone Zone
 
 
 type alias Model =
   { count: Int
   , current: Posix
+  , currentZone: Zone
   }
 
 
 testModel =
   { count = 0
   , current = Time.millisToPosix 0
+  , currentZone = Time.utc
   }
 
 
@@ -116,6 +138,7 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "stubTime" -> Just stubTimeSpec
+    "stubZone" -> Just stubZoneSpec
     "interval" -> Just countTimePassingSpec
     _ -> Nothing
 

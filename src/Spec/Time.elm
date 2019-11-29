@@ -1,5 +1,6 @@
 module Spec.Time exposing
   ( withTime
+  , withTimezoneOffset
   , tick
   , nextAnimationFrame
   )
@@ -15,6 +16,15 @@ withTime posix =
   { home = "_time"
   , name = "set-time"
   , body = Encode.int posix
+  }
+  |> Subject.configure
+
+
+withTimezoneOffset : Int -> SubjectGenerator model msg -> SubjectGenerator model msg
+withTimezoneOffset zoneOffset =
+  { home = "_time"
+  , name = "set-timezone"
+  , body = Encode.int zoneOffset
   }
   |> Subject.configure
 

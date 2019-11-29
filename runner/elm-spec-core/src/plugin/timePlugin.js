@@ -23,12 +23,22 @@ module.exports = class TimePlugin {
       this.intervals.push(id)
       return id
     }
+
+    this.timezoneOffset = new Date().getTimezoneOffset()
+
+    clock.Date.prototype.getTimezoneOffset = () => {
+        return -1 * this.timezoneOffset
+    }
   }
 
   handle(specMessage, next) {
     switch (specMessage.name) {
       case "set-time": {
         this.clock.setSystemTime(specMessage.body)
+        break
+      }
+      case "set-timezone": {
+        this.timezoneOffset = specMessage.body
         break
       }
       case "tick": {
@@ -49,6 +59,8 @@ module.exports = class TimePlugin {
     for (let i = 0; i < this.intervals.length; i++) {
       this.clock.clearInterval(this.intervals[i])
     }
+
+    this.timezoneOffset = new Date().getTimezoneOffset()
   }
 
   resetFakes() {

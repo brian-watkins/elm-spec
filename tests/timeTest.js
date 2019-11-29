@@ -7,6 +7,10 @@ describe("time plugin", () => {
       expectPassingSpec("TimeSpec", "stubTime", done)
     })
 
+    it("can stub the timezone", (done) => {
+      expectPassingSpec("TimeSpec", "stubZone", done)
+    })
+
     it("allows the spec to control Time.every as necessary", (done) => {
       expectPassingSpec("TimeSpec", "interval", done)
     })
