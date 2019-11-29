@@ -22,7 +22,6 @@ intervalSpec =
           |> Subject.withUpdate testUpdate
           |> Subject.withView testView
           |> Subject.withSubscriptions testSubscriptions
-          |> Spec.Time.fake
       )
       |> when "time passes"
         [ Spec.Time.tick 1000

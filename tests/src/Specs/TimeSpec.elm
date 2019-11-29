@@ -32,7 +32,6 @@ stubTimeSpec =
         Subject.init ( testModel, Time.now |> Task.perform ReceivedTime )
           |> Subject.withUpdate testUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Spec.Time.fake
           |> Spec.Time.withTime 1111111111111
       )
       |> when "time passes"
@@ -55,7 +54,6 @@ countTimePassingSpec =
         Subject.init ( testModel, Cmd.none )
           |> Subject.withUpdate testUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Spec.Time.fake
       )
       |> when "time passes"
         [ Spec.Time.tick 1000
@@ -73,7 +71,6 @@ countTimePassingSpec =
         Subject.init ( testModel, Cmd.none )
           |> Subject.withUpdate testUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Spec.Time.fake
       )
       |> when "time passes"
         [ Spec.Time.tick 1000

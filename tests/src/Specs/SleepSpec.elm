@@ -22,7 +22,6 @@ processSpec =
         Subject.init ( { items = [] }, Cmd.none )
           |> Subject.withUpdate testUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Time.fake
       )
       |> when "subscription messages are received"
         [ Port.send "processSub" (Encode.string "a")
@@ -47,7 +46,6 @@ processOnlyUpToDelaySpec =
         Subject.init ( { items = [] }, Cmd.none )
           |> Subject.withUpdate testDelayUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Time.fake
       )
       |> when "subscription messages are received"
         [ Port.send "processSub" (Encode.string "a")
@@ -65,7 +63,6 @@ processOnlyUpToDelaySpec =
         Subject.init ( { items = [] }, Cmd.none )
           |> Subject.withUpdate testDelayUpdate
           |> Subject.withSubscriptions testSubscriptions
-          |> Time.fake
       )
       |> when "subscription messages are received"
         [ Port.send "processSub" (Encode.string "a")
