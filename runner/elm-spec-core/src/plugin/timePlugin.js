@@ -11,7 +11,7 @@ module.exports = class TimePlugin {
 
   handle(specMessage, next) {
     switch (specMessage.name) {
-      case "setup":
+      case "setup": {
         this.window.setTimeout = (fun, delay) => {
           if (delay === 0) {
             return this.nativeSetTimeout(fun, 0)
@@ -29,6 +29,11 @@ module.exports = class TimePlugin {
         }
 
         break
+      }
+      case "set-time": {
+        this.clock.setSystemTime(specMessage.body)
+        break
+      }
       case "tick": {
         this.clock.tick(specMessage.body)
         next()

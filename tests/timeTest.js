@@ -3,8 +3,12 @@ const { expectPassingSpec } = require("./helpers/SpecHelpers")
 
 describe("time plugin", () => {
   describe("when the program is a worker program in node", () => {
+    it("can stub the time", (done) => {
+      expectPassingSpec("TimeSpec", "stubTime", done)
+    })
+
     it("allows the spec to control Time.every as necessary", (done) => {
-      expectPassingSpec("TimeSpec", "", done)
+      expectPassingSpec("TimeSpec", "interval", done)
     })
   
     describe("when the program uses Process.sleep", () => {

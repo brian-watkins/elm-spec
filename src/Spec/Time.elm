@@ -1,5 +1,6 @@
 module Spec.Time exposing
   ( fake
+  , withTime
   , tick
   , nextAnimationFrame
   )
@@ -15,6 +16,15 @@ fake =
   { home = "_time"
   , name = "setup"
   , body = Encode.null
+  }
+  |> Subject.configure
+
+
+withTime : Int -> SubjectGenerator model msg -> SubjectGenerator model msg
+withTime posix =
+  { home = "_time"
+  , name = "set-time"
+  , body = Encode.int posix
   }
   |> Subject.configure
 
