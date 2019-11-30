@@ -1,9 +1,44 @@
 module Spec.Scenario.Internal exposing
-  ( Step
+  ( Scenario, ScenarioAction, ScenarioPlan, Observation, Step
   , buildStep
+  , buildObservation
+  , describing
+  , formatScenarioDescription
+  , formatCondition
   )
 
 import Spec.Step exposing (Context, Command)
+import Spec.Subject as Subject exposing (SubjectGenerator)
+import Spec.Observer exposing (Expectation)
+
+
+type alias Scenario model msg =
+  { specification: String
+  , description: String
+  , subjectGenerator: SubjectGenerator model msg
+  , steps: List (Step model msg)
+  , observations: List (Observation model)
+  , tags: List String
+  }
+
+
+type alias ScenarioAction model msg =
+  { subjectGenerator: SubjectGenerator model msg
+  , steps: List (Step model msg)
+  }
+
+
+type alias ScenarioPlan model msg =
+  { subjectGenerator: SubjectGenerator model msg
+  , steps: List (Step model msg)
+  , observations: List (Observation model)
+  }
+
+
+type alias Observation model =
+  { description: String
+  , expectation: Expectation model
+  }
 
 
 type alias Step model msg =
@@ -17,3 +52,35 @@ buildStep description stepper =
   { run = stepper
   , condition = description
   }
+
+
+buildObservation : String -> Expectation model -> Observation model
+buildObservation description expectation =
+  { description = formatObservationDescription description
+  , expectation = expectation
+  }
+
+
+describing : String -> Scenario model msg -> Scenario model msg
+describing description scenarioData =
+  { scenarioData | specification = formatSpecDescription description }
+
+
+formatSpecDescription : String -> String
+formatSpecDescription description =
+  description
+
+
+formatScenarioDescription : String -> String
+formatScenarioDescription description =
+  "Scenario: " ++ description
+
+
+formatCondition : String -> String
+formatCondition condition =
+  "When " ++ condition
+
+
+formatObservationDescription : String -> String
+formatObservationDescription description =
+  "It " ++ description

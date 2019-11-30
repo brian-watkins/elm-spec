@@ -3,7 +3,7 @@ module Spec.Markup.Navigation exposing
   , expectReload
   )
 
-import Spec.Scenario as Scenario
+import Spec
 import Spec.Observer as Observer exposing (Observer, Expectation)
 import Spec.Claim as Claim
 import Spec.Report as Report
@@ -30,7 +30,7 @@ observeLocationMessage =
 expectReload : Expectation model
 expectReload =
   Observer.observeEffects (List.filter (Message.is "_navigation" "reload"))
-    |> Scenario.expect (\messages ->
+    |> Spec.expect (\messages ->
       if List.length messages > 0 then
         Claim.Accept
       else

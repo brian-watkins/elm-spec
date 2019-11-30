@@ -5,7 +5,7 @@ module Spec.Scenario.State.Observe exposing
   , update
   )
 
-import Spec.Scenario exposing (Scenario, Observation)
+import Spec.Scenario.Internal exposing (Scenario, Observation)
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)

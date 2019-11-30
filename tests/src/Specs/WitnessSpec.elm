@@ -1,8 +1,7 @@
 port module Specs.WitnessSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Message exposing (Message)
 import Spec.Claim as Claim
 import Spec.Port as Port

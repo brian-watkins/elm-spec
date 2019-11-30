@@ -26,7 +26,7 @@ describe("spec", () => {
     it("sends all the conditions", (done) => {
       expectPassingSpec("SpecSpec", "multipleWhen", done, (observations) => {
         expect(observations[0].conditions).to.deep.equal([
-          "Describing: A Spec",
+          "A Spec",
           "Scenario: multiple when blocks",
           "When the first two subs are sent",
           "When a third sub is sent"
@@ -41,21 +41,21 @@ describe("spec", () => {
         expect(observations).to.have.length(3)
         
         expectObservation(observations[0], "ACCEPT", "It records the number",
-          [ "Describing: Multiple scenarios",
+          [ "Multiple scenarios",
             "Scenario: the happy path",
             "When a single message is sent"
           ]
         )
 
         expectObservation(observations[1], "ACCEPT", "It records the numbers",
-          [ "Describing: Multiple scenarios",
+          [ "Multiple scenarios",
             "Scenario: multiple sub messages are sent",
             "When multiple messages are sent"
           ]
         )
 
         expectObservation(observations[2], "ACCEPT", "It records the number",
-          [ "Describing: Multiple scenarios",
+          [ "Multiple scenarios",
             "Scenario: a different message is sent",
             "When a single message is sent"
           ]

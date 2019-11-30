@@ -1,8 +1,7 @@
 module Specs.EventSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Step as Step
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)

@@ -1,8 +1,7 @@
 port module Specs.PortCommandSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Port as Port
 import Spec.Claim as Claim
 import Specs.Helpers exposing (..)

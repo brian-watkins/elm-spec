@@ -1,9 +1,8 @@
 module Specs.TimeSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
 import Spec.Port as Port
-import Spec.Scenario exposing (..)
 import Spec.Time
 import Spec.Observer as Observer
 import Runner

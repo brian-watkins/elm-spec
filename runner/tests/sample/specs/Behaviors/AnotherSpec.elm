@@ -1,8 +1,7 @@
 module Behaviors.AnotherSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event

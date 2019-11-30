@@ -1,6 +1,12 @@
 module Spec exposing
   ( Spec
+  , Scenario
+  , ScenarioPlan
+  , ScenarioAction
   , describe
+  , scenario
+  , tagged
+  , given, when, it, observeThat, expect
   , Model, Msg, Config
   , Flags, update, view, init, subscriptions
   , program
@@ -9,10 +15,14 @@ module Spec exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Spec.Scenario as Scenario exposing (Scenario)
+import Spec.Subject as Subject exposing (SubjectGenerator)
+import Spec.Scenario.Internal as Internal
 import Spec.Scenario.Message as Message
 import Spec.Scenario.Program as ScenarioProgram
 import Spec.Scenario.State as ScenarioProgram
+import Spec.Step as Step
+import Spec.Observer exposing (Observer, Expectation)
+import Spec.Claim exposing (Claim)
 import Spec.Observation.Message as Message
 import Spec.Helpers exposing (mapDocument)
 import Task
@@ -26,14 +36,96 @@ import Url exposing (Url)
 
 type Spec model msg =
   Spec
-    (List (Scenario model msg))
+    (List (Internal.Scenario model msg))
+
+
+type Scenario model msg =
+  Scenario (Internal.Scenario model msg)
+
+
+type ScenarioAction model msg =
+  ScenarioAction (Internal.ScenarioAction model msg)
+
+
+type ScenarioPlan model msg =
+  ScenarioPlan (Internal.ScenarioPlan model msg)
 
 
 describe : String -> List (Scenario model msg) -> Spec model msg
 describe description scenarios =
   scenarios
-    |> List.map (Scenario.describing description)
+    |> List.map (\(Scenario scenarioData) -> scenarioData)
+    |> List.map (Internal.describing description)
     |> Spec
+
+
+scenario : String -> ScenarioPlan model msg -> Scenario model msg
+scenario description (ScenarioPlan plan) =
+  Scenario
+    { specification = ""
+    , description = Internal.formatScenarioDescription description
+    , subjectGenerator = plan.subjectGenerator
+    , steps = plan.steps
+    , observations = plan.observations
+    , tags = []
+    }
+
+
+tagged : List String -> Scenario model msg -> Scenario model msg
+tagged tags (Scenario scenarioData) =
+  Scenario
+    { scenarioData | tags = tags }
+
+
+given : SubjectGenerator model msg -> ScenarioAction model msg
+given generator =
+  ScenarioAction
+    { subjectGenerator = generator
+    , steps = []
+    }
+
+
+when : String -> List (Step.Context model -> Step.Command msg) -> ScenarioAction model msg -> ScenarioAction model msg
+when condition messageSteps (ScenarioAction action) =
+  ScenarioAction
+    { action
+    | steps =
+        messageSteps
+          |> List.map (Internal.buildStep <| Internal.formatCondition condition)
+          |> List.append action.steps
+    }
+
+
+observeThat : List (ScenarioAction model msg -> ScenarioPlan model msg) -> ScenarioAction model msg -> ScenarioPlan model msg
+observeThat planGenerators (ScenarioAction action) =
+  ScenarioPlan
+    { subjectGenerator = action.subjectGenerator
+    , steps = action.steps
+    , observations =
+        List.foldl (\planGenerator observations ->
+          let
+            (ScenarioPlan plan) = planGenerator (ScenarioAction action)
+          in
+            plan.observations
+              |> List.append observations
+        ) [] planGenerators
+    }
+
+
+it : String -> Expectation model -> ScenarioAction model msg -> ScenarioPlan model msg
+it description expectation (ScenarioAction action) =
+  ScenarioPlan
+    { subjectGenerator = action.subjectGenerator
+    , steps = action.steps
+    , observations =
+        [ Internal.buildObservation description expectation
+        ]
+    }
+
+
+expect : Claim a -> Observer model a -> Expectation model
+expect claim observer =
+  observer claim
 
 
 ---- Program
@@ -59,7 +151,7 @@ type Msg msg
 
 
 type alias Model model msg =
-  { scenarios: List (Scenario model msg)
+  { scenarios: List (Internal.Scenario model msg)
   , scenarioModel: ScenarioProgram.Model model msg
   , key: Maybe Key
   }
@@ -78,8 +170,8 @@ update config msg model =
       case model.scenarios of
         [] ->
           ( model, config.send specComplete )
-        scenario :: remaining ->
-          ScenarioProgram.start (scenarioConfig config) model.key scenario
+        next :: remaining ->
+          ScenarioProgram.start (scenarioConfig config) model.key next
             |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
     ScenarioMsg scenarioMsg ->
       ScenarioProgram.update (scenarioConfig config) scenarioMsg model.scenarioModel
@@ -185,7 +277,7 @@ browserProgram config specs =
     }
 
 
-gatherScenarios : List String -> List (Spec model msg) -> List (Scenario model msg)
+gatherScenarios : List String -> List (Spec model msg) -> List (Internal.Scenario model msg)
 gatherScenarios tags specs =
   List.map (\(Spec scenarios) -> 
     if List.isEmpty tags then
@@ -196,16 +288,16 @@ gatherScenarios tags specs =
     |> List.concat
 
 
-withTags : List String -> Scenario model msg -> Bool
-withTags tags scenario =
+withTags : List String -> Internal.Scenario model msg -> Bool
+withTags tags scenarioData =
   case tags of
     [] ->
       False
     tag :: remaining ->
-      if List.member tag scenario.tags then
+      if List.member tag scenarioData.tags then
         True
       else
-        withTags remaining scenario
+        withTags remaining scenarioData
 
 
 onUrlRequest : UrlRequest -> (Msg msg)

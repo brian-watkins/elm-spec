@@ -1,8 +1,7 @@
 module Specs.HtmlTimeSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Markup as Markup exposing (hasText)
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer

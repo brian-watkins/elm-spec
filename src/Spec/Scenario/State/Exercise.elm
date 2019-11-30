@@ -6,8 +6,7 @@ module Spec.Scenario.State.Exercise exposing
   , subscriptions
   )
 
-import Spec.Scenario exposing (Scenario)
-import Spec.Scenario.Internal as Scenario exposing (Step)
+import Spec.Scenario.Internal as Scenario exposing (Scenario, Step)
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
@@ -35,7 +34,7 @@ init : Scenario model msg -> Subject model msg -> Model model msg
 init scenario subject =
   { scenario = scenario
   , subject = subject
-  , conditionsApplied = [ scenario.describing ]
+  , conditionsApplied = [ scenario.specification ]
   , programModel = subject.model
   , effects = []
   , steps = initialCommandStep scenario subject :: scenario.steps

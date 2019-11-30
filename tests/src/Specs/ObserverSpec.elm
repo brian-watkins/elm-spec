@@ -1,9 +1,8 @@
 module Specs.ObserverSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Observer as Observer
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
 import Specs.Helpers exposing (..)
 import Runner

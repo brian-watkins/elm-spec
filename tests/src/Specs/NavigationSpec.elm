@@ -1,8 +1,7 @@
 module Specs.NavigationSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer

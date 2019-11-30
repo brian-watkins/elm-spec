@@ -1,8 +1,7 @@
 port module Specs.HtmlSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)

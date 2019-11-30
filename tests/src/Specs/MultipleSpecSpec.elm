@@ -1,9 +1,8 @@
 module Specs.MultipleSpecSpec exposing (..)
 
-import Spec exposing (Spec)
+import Spec exposing (..)
 import Spec.Message exposing (Message)
 import Spec.Subject as Subject
-import Spec.Scenario exposing (..)
 import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner as TestRunner
