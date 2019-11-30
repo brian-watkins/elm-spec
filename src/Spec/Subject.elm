@@ -9,7 +9,7 @@ module Spec.Subject exposing
   , onUrlChange, onUrlRequest
   )
 
-import Spec.Scenario.Internal as Internal
+import Spec.Subject.Internal as Internal
 import Spec.Message as Message exposing (Message)
 import Html exposing (Html)
 import Browser exposing (Document, UrlRequest)

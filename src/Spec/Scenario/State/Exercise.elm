@@ -6,7 +6,8 @@ module Spec.Scenario.State.Exercise exposing
   , subscriptions
   )
 
-import Spec.Scenario.Internal as Internal exposing (Scenario, Subject, Step)
+import Spec.Scenario.Internal as Internal exposing (Scenario, Step)
+import Spec.Subject.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message

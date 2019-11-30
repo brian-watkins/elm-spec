@@ -3,7 +3,8 @@ module Spec.Scenario.State.Configure exposing
   , init
   )
 
-import Spec.Scenario.Internal exposing (Scenario, Subject)
+import Spec.Scenario.Internal exposing (Scenario)
+import Spec.Subject.Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Scenario.Message as Message
 

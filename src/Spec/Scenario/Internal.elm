@@ -1,6 +1,5 @@
 module Spec.Scenario.Internal exposing
-  ( Scenario, Subject, SubjectProvider(..), ProgramView(..), ScenarioAction, ScenarioPlan, Observation, Step
-  , mapSubject, initializeSubject
+  ( Scenario, ScenarioAction, ScenarioPlan, Observation, Step
   , buildStep
   , buildObservation
   , describing
@@ -8,13 +7,10 @@ module Spec.Scenario.Internal exposing
   , formatCondition
   )
 
+import Spec.Subject.Internal exposing (SubjectProvider)
 import Spec.Step exposing (Context, Command)
 import Spec.Message exposing (Message)
 import Spec.Observer exposing (Expectation)
-import Browser exposing (Document, UrlRequest)
-import Browser.Navigation exposing (Key)
-import Url exposing (Url)
-import Html exposing (Html)
 
 
 type alias Scenario model msg =
@@ -25,30 +21,6 @@ type alias Scenario model msg =
   , observations: List (Observation model)
   , tags: List String
   }
-
-
-type SubjectProvider model msg =
-  SubjectProvider
-    { location: Url
-    , init: Url -> Maybe Key -> Result String (Subject model msg)
-    }
-
-
-type alias Subject model msg =
-  { model: model
-  , initialCommand: Cmd msg
-  , update: (Message -> Cmd msg) -> msg -> model -> ( model, Cmd msg )
-  , view: ProgramView model msg
-  , subscriptions: model -> Sub msg
-  , configureEnvironment: List Message
-  , onUrlChange: Maybe (Url -> msg)
-  , onUrlRequest: Maybe (UrlRequest -> msg)
-  }
-
-
-type ProgramView model msg
-  = Element (model -> Html msg)
-  | Document (model -> Document msg)
 
 
 type alias ScenarioAction model msg =
@@ -74,21 +46,6 @@ type alias Step model msg =
   { run: Context model -> Command msg
   , condition: String
   }
-
-
-mapSubject : (Subject model msg -> Subject model msg) -> SubjectProvider model msg -> SubjectProvider model msg
-mapSubject mapper (SubjectProvider provider) =
-  SubjectProvider
-    { location = provider.location
-    , init = \url maybeKey ->
-        provider.init url maybeKey
-          |> Result.map mapper
-    }
-
-
-initializeSubject : SubjectProvider model msg -> Maybe Key -> Result String (Subject model msg)
-initializeSubject (SubjectProvider provider) maybeKey =
-  provider.init provider.location maybeKey
 
 
 buildStep : String -> (Context model -> Command msg) -> Step model msg

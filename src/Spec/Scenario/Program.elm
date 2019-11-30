@@ -5,7 +5,8 @@ module Spec.Scenario.Program exposing
   , finishScenario
   )
 
-import Spec.Scenario.Internal as Internal exposing (Scenario, Subject)
+import Spec.Scenario.Internal as Internal exposing (Scenario)
+import Spec.Subject.Internal as Internal exposing (Subject)
 import Spec.Scenario.Message as Message
 import Spec.Scenario.State exposing (Msg(..), Command(..))
 import Spec.Message as Message exposing (Message)

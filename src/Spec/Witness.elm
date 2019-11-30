@@ -6,7 +6,7 @@ module Spec.Witness exposing
   )
 
 import Spec.Observer as Observer exposing (Observer)
-import Spec.Scenario.Internal as Internal
+import Spec.Subject.Internal as Internal
 import Spec.Subject as Subject exposing (SubjectProvider)
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
