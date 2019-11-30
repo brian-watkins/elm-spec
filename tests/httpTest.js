@@ -17,7 +17,8 @@ describe('HTTP', () => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
-        expectRejected(observations[3], [
+        expectAccepted(observations[3])
+        expectRejected(observations[4], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected list to have length", "17"),
           reportLine("but it has length", "3")

@@ -2,6 +2,7 @@ module Spec.Http.Route exposing
   ( HttpRoute
   , get
   , post
+  , route
   )
 
 
