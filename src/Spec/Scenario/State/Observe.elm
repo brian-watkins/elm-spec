@@ -5,8 +5,7 @@ module Spec.Scenario.State.Observe exposing
   , update
   )
 
-import Spec.Scenario.Internal exposing (Scenario, Observation)
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Scenario.Internal as Internal exposing (Scenario, Subject, Observation)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Observation.Expectation as Expectation exposing (Judgment(..))
@@ -44,11 +43,11 @@ init exerciseModel =
 view : Model model msg -> Document msg
 view model =
   case model.subject.view of
-    Subject.Element elementView ->
+    Internal.Element elementView ->
       { title = ""
       , body = [ elementView model.programModel ]
       }
-    Subject.Document documentView ->
+    Internal.Document documentView ->
       documentView model.programModel
 
 

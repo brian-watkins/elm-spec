@@ -8,7 +8,7 @@ module Spec.Http exposing
   , hasJsonBody
   )
 
-import Spec.Subject as Subject exposing (SubjectGenerator)
+import Spec.Subject as Subject exposing (SubjectProvider)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report
@@ -20,8 +20,8 @@ import Json.Decode as Json
 import Dict exposing (Dict)
 
 
-withStubs : List HttpResponseStub -> SubjectGenerator model msg -> SubjectGenerator model msg
-withStubs stubs subjectGenerator =
+withStubs : List HttpResponseStub -> SubjectProvider model msg -> SubjectProvider model msg
+withStubs stubs subjectProvider =
   List.foldl (\stub updatedSubject ->
     Subject.configure
       { home = "_http"
@@ -29,7 +29,7 @@ withStubs stubs subjectGenerator =
       , body = encodeStub stub
       }
       updatedSubject
-  ) (Subject.configure httpSetupMessage subjectGenerator) stubs
+  ) (Subject.configure httpSetupMessage subjectProvider) stubs
 
 
 httpSetupMessage : Message

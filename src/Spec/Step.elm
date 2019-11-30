@@ -6,7 +6,6 @@ module Spec.Step exposing
   )
 
 import Spec.Message exposing (Message)
-import Spec.Subject as Subject exposing (Subject)
 import Spec.Step.Command as Command
 
 

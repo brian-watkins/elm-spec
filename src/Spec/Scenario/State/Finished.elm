@@ -6,7 +6,7 @@ module Spec.Scenario.State.Finished exposing
   , subscriptions
   )
 
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Scenario.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Markup.Message as Message
@@ -29,11 +29,11 @@ init subject programModel =
 view : Model model msg -> Document msg
 view model =
   case model.subject.view of
-    Subject.Element elementView ->
+    Internal.Element elementView ->
       { title = ""
       , body = [ elementView model.programModel ]
       }
-    Subject.Document documentView ->
+    Internal.Document documentView ->
       documentView model.programModel
 
 

@@ -6,8 +6,7 @@ module Spec.Scenario.State.Exercise exposing
   , subscriptions
   )
 
-import Spec.Scenario.Internal as Scenario exposing (Scenario, Step)
-import Spec.Subject as Subject exposing (Subject)
+import Spec.Scenario.Internal as Internal exposing (Scenario, Subject, Step)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message
@@ -43,7 +42,7 @@ init scenario subject =
 
 initialCommandStep : Scenario model msg -> Subject model msg -> Step model msg
 initialCommandStep scenario subject =
-  Scenario.buildStep scenario.description <|
+  Internal.buildStep scenario.description <|
     \_ ->
       Step.sendCommand subject.initialCommand
 
@@ -51,11 +50,11 @@ initialCommandStep scenario subject =
 view : Model model msg -> Document msg
 view model =
   case model.subject.view of
-    Subject.Element elementView ->
+    Internal.Element elementView ->
       { title = ""
       , body = [ elementView model.programModel ]
       }
-    Subject.Document documentView ->
+    Internal.Document documentView ->
       documentView model.programModel
 
 

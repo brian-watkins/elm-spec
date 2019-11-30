@@ -15,7 +15,7 @@ module Spec exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Spec.Subject as Subject exposing (SubjectGenerator)
+import Spec.Subject as Subject exposing (SubjectProvider)
 import Spec.Scenario.Internal as Internal
 import Spec.Scenario.Message as Message
 import Spec.Scenario.Program as ScenarioProgram
@@ -64,7 +64,7 @@ scenario description (ScenarioPlan plan) =
   Scenario
     { specification = ""
     , description = Internal.formatScenarioDescription description
-    , subjectGenerator = plan.subjectGenerator
+    , subjectProvider = plan.subjectProvider
     , steps = plan.steps
     , observations = plan.observations
     , tags = []
@@ -77,10 +77,10 @@ tagged tags (Scenario scenarioData) =
     { scenarioData | tags = tags }
 
 
-given : SubjectGenerator model msg -> ScenarioAction model msg
-given generator =
+given : SubjectProvider model msg -> ScenarioAction model msg
+given provider =
   ScenarioAction
-    { subjectGenerator = generator
+    { subjectProvider = provider
     , steps = []
     }
 
@@ -99,7 +99,7 @@ when condition messageSteps (ScenarioAction action) =
 observeThat : List (ScenarioAction model msg -> ScenarioPlan model msg) -> ScenarioAction model msg -> ScenarioPlan model msg
 observeThat planGenerators (ScenarioAction action) =
   ScenarioPlan
-    { subjectGenerator = action.subjectGenerator
+    { subjectProvider = action.subjectProvider
     , steps = action.steps
     , observations =
         List.foldl (\planGenerator observations ->
@@ -115,7 +115,7 @@ observeThat planGenerators (ScenarioAction action) =
 it : String -> Expectation model -> ScenarioAction model msg -> ScenarioPlan model msg
 it description expectation (ScenarioAction action) =
   ScenarioPlan
-    { subjectGenerator = action.subjectGenerator
+    { subjectProvider = action.subjectProvider
     , steps = action.steps
     , observations =
         [ Internal.buildObservation description expectation

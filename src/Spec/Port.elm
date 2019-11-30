@@ -4,7 +4,7 @@ module Spec.Port exposing
   , observe
   )
 
-import Spec.Subject as Subject exposing (SubjectGenerator)
+import Spec.Subject as Subject exposing (SubjectProvider)
 import Spec.Step as Step
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
@@ -30,7 +30,7 @@ observePortCommand name =
   }
 
 
-record : String -> SubjectGenerator model msg -> SubjectGenerator model msg
+record : String -> SubjectProvider model msg -> SubjectProvider model msg
 record portName =
   observePortCommand portName
     |> Subject.configure

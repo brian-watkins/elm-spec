@@ -1,21 +1,15 @@
 module Spec.Subject exposing
-  ( Subject
-  , SubjectGenerator
-  , ProgramView(..)
-  , init
-  , initWithModel
-  , initForApplication
+  ( SubjectProvider
+  , init, initWithModel, initForApplication
   , configure
   , withSubscriptions
   , withUpdate
-  , withView
-  , withDocument
+  , withView, withDocument
   , withLocation
   , onUrlChange, onUrlRequest
-  , mapSubject
-  , generate
   )
 
+import Spec.Scenario.Internal as Internal
 import Spec.Message as Message exposing (Message)
 import Html exposing (Html)
 import Browser exposing (Document, UrlRequest)
@@ -24,61 +18,44 @@ import Url exposing (Url)
 import Json.Encode as Encode
 
 
-type alias Subject model msg =
-  { model: model
-  , initialCommand: Cmd msg
-  , update: (Message -> Cmd msg) -> msg -> model -> ( model, Cmd msg )
-  , view: ProgramView model msg
-  , subscriptions: model -> Sub msg
-  , configureEnvironment: List Message
-  , onUrlChange: Maybe (Url -> msg)
-  , onUrlRequest: Maybe (UrlRequest -> msg)
-  }
+type alias SubjectProvider model msg
+  = Internal.SubjectProvider model msg
 
 
-type ProgramView model msg
-  = Element (model -> Html msg)
-  | Document (model -> Document msg)
-
-
-type alias SubjectGenerator model msg =
-  { location: Url
-  , generator: Url -> Maybe Key -> Result String (Subject model msg)
-  }
-
-
-init : (model, Cmd msg) -> SubjectGenerator model msg
+init : (model, Cmd msg) -> SubjectProvider model msg
 init ( model, initialCommand ) =
-  { location = defaultUrl
-  , generator = \_ _ ->
-      Ok <| initializeSubject ( model, initialCommand )
-  }
+  Internal.SubjectProvider
+    { location = defaultUrl
+    , init = \_ _ ->
+        Ok <| initializeSubject ( model, initialCommand )
+    }
 
 
-initWithModel : model -> SubjectGenerator model msg
+initWithModel : model -> SubjectProvider model msg
 initWithModel model =
   init ( model, Cmd.none )
 
 
-initForApplication : (Url -> Key -> (model, Cmd msg)) -> SubjectGenerator model msg
+initForApplication : (Url -> Key -> (model, Cmd msg)) -> SubjectProvider model msg
 initForApplication generator =
-  { location = defaultUrl
-  , generator = \url maybeKey ->
-      case maybeKey of
-        Just key ->
-          generator url key
-            |> Ok << initializeSubject
-        Nothing ->
-          Err "Subject.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!"
-  }
+  Internal.SubjectProvider
+    { location = defaultUrl
+    , init = \url maybeKey ->
+        case maybeKey of
+          Just key ->
+            generator url key
+              |> Ok << initializeSubject
+          Nothing ->
+            Err "Subject.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!"
+    }
 
 
-initializeSubject : ( model, Cmd msg ) -> Subject model msg
+initializeSubject : ( model, Cmd msg ) -> Internal.Subject model msg
 initializeSubject ( model, initialCommand ) =
   { model = model
   , initialCommand = initialCommand
   , update = \_ _ m -> (m, Cmd.none)
-  , view = Document <| \_ -> { title = "", body = [ Html.text "" ] }
+  , view = Internal.Document <| \_ -> { title = "", body = [ Html.text "" ] }
   , subscriptions = \_ -> Sub.none
   , configureEnvironment = []
   , onUrlChange = Nothing
@@ -96,51 +73,51 @@ defaultUrl =
   }
 
 
-configure : Message -> SubjectGenerator model msg -> SubjectGenerator model msg
+configure : Message -> SubjectProvider model msg -> SubjectProvider model msg
 configure message =
-  mapSubject <| \subject ->
+  Internal.mapSubject <| \subject ->
     { subject | configureEnvironment = message :: subject.configureEnvironment }
 
 
-withUpdate : (msg -> model -> (model, Cmd msg)) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withUpdate : (msg -> model -> (model, Cmd msg)) -> SubjectProvider model msg -> SubjectProvider model msg
 withUpdate programUpdate =
-  mapSubject <| \subject ->
+  Internal.mapSubject <| \subject ->
     { subject | update = \_ -> programUpdate }
 
 
-withView : (model -> Html msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withView : (model -> Html msg) -> SubjectProvider model msg -> SubjectProvider model msg
 withView view =
-  mapSubject <| \subject ->
-    { subject | view = Element view }
+  Internal.mapSubject <| \subject ->
+    { subject | view = Internal.Element view }
 
 
-withDocument : (model -> Document msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withDocument : (model -> Document msg) -> SubjectProvider model msg -> SubjectProvider model msg
 withDocument view =
-  mapSubject <| \subject ->
-    { subject | view = Document view }
+  Internal.mapSubject <| \subject ->
+    { subject | view = Internal.Document view }
 
 
-withSubscriptions : (model -> Sub msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+withSubscriptions : (model -> Sub msg) -> SubjectProvider model msg -> SubjectProvider model msg
 withSubscriptions programSubscriptions =
-  mapSubject <| \subject ->
+  Internal.mapSubject <| \subject ->
     { subject | subscriptions = programSubscriptions }
 
 
-onUrlChange : (Url -> msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+onUrlChange : (Url -> msg) -> SubjectProvider model msg -> SubjectProvider model msg
 onUrlChange handler =
-  mapSubject <| \subject ->
+  Internal.mapSubject <| \subject ->
     { subject | onUrlChange = Just handler }
 
 
-onUrlRequest : (UrlRequest -> msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
+onUrlRequest : (UrlRequest -> msg) -> SubjectProvider model msg -> SubjectProvider model msg
 onUrlRequest handler =
-  mapSubject <| \subject ->
+  Internal.mapSubject <| \subject ->
     { subject | onUrlRequest = Just handler }
 
 
-withLocation : Url -> SubjectGenerator model msg -> SubjectGenerator model msg
-withLocation url generator =
-  { generator | location = url }
+withLocation : Url -> SubjectProvider model msg -> SubjectProvider model msg
+withLocation url (Internal.SubjectProvider generator) =
+  Internal.SubjectProvider { generator | location = url }
     |> configure (setLocationMessage url)
 
 
@@ -150,17 +127,3 @@ setLocationMessage location =
   , name = "set-location"
   , body = Encode.string <| Url.toString location
   }
-
-
-mapSubject : (Subject model msg -> Subject model msg) -> SubjectGenerator model msg -> SubjectGenerator model msg
-mapSubject mapper generator =
-  { location = generator.location
-  , generator = \url maybeKey ->
-      generator.generator url maybeKey
-        |> Result.map mapper
-  }
-
-
-generate : SubjectGenerator model msg -> Maybe Key -> Result String (Subject model msg)
-generate generator maybeKey =
-  generator.generator generator.location maybeKey
