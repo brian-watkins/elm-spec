@@ -62,8 +62,8 @@ module.exports = class ConsoleReporter {
       if (report.detail) {
         this.writeLine(error(`      ${report.detail}`))
       }
+      this.writeLine()
     })
-    this.writeLine()
   }
 }
 

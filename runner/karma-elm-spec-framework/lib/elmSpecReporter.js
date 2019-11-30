@@ -45,8 +45,8 @@ var ElmSpecReporter = function (baseReporterDecorator) {
       if (report.detail) {
         self.write(error(`      ${report.detail}\n`))
       }
+      self.write('\n')
     })
-    self.write('\n')
   }  
 
   self.onRunComplete = function(browsers, results) {
