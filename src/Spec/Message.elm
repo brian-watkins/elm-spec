@@ -1,5 +1,7 @@
 module Spec.Message exposing
   ( Message
+  , for
+  , withBody
   , decode
   , belongsTo
   , is
@@ -16,6 +18,19 @@ type alias Message =
   , name: String
   , body: Value
   }
+
+
+for : String -> String -> Message
+for home name =
+  { home = home
+  , name = name
+  , body = Encode.null
+  }
+
+
+withBody : Json.Value -> Message -> Message
+withBody value message =
+  { message | body = value }
 
 
 belongsTo : String -> Message -> Bool

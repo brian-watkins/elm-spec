@@ -43,7 +43,5 @@ abortScenario =
 
 scenarioStateMessage : String -> Message
 scenarioStateMessage specState =
-  { home = "_scenario"
-  , name = "state"
-  , body = Encode.string specState
-  }
+  Message.for "_scenario" "state"
+    |> Message.withBody (Encode.string specState)

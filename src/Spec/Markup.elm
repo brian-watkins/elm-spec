@@ -30,10 +30,8 @@ observeTitle =
 
 selectTitleMessage : Message
 selectTitleMessage =
-  { home = "_html"
-  , name = "application"
-  , body = Encode.string "select-title"
-  }
+  Message.for "_html" "application"
+    |> Message.withBody (Encode.string "select-title")
 
 
 type MarkupObservation a =
@@ -86,27 +84,25 @@ query (selection, MarkupObservation (messageGenerator, handler)) =
 
 target : (Selection a, Step.Context model) -> Step.Command msg
 target (selection, context) =
-  Step.sendMessage
-    { home = "_html"
-    , name = "target"
-    , body = Encode.string <| Selector.toString selection
-    }
+  Message.for "_html" "target"
+    |> Message.withBody (Encode.string <| Selector.toString selection)
+    |> Step.sendMessage
 
 
 queryHtml : Selection Element -> Message
 queryHtml selection =
-  { home = "_html"
-  , name = "query"
-  , body = Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
-  }
+  Message.for "_html" "query"
+    |> Message.withBody (
+      Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
+    )
 
 
 queryAllHtml : Selection Element -> Message
 queryAllHtml selection =
-  { home = "_html"
-  , name = "queryAll"
-  , body = Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
-  }
+  Message.for "_html" "queryAll"
+    |> Message.withBody (
+      Encode.object [ ("selector", Encode.string <| Selector.toString selection) ]
+    )
 
 
 type HtmlNode

@@ -33,15 +33,14 @@ forUpdate updateWithWitness =
 
 log : String -> Encode.Value -> Witness msg -> Cmd msg
 log name statement (Witness witness) =
-  witness
-    { home = "_witness"
-    , name = "log"
-    , body =
-        Encode.object
-          [ ("name", Encode.string name)
-          , ("fact", statement)
-          ]
-    }
+  Message.for "_witness" "log"
+    |> Message.withBody (
+      Encode.object
+        [ ("name", Encode.string name)
+        , ("fact", statement)
+        ]
+    )
+    |> witness
 
 
 observe : String -> Json.Decoder a -> Observer model (List a)

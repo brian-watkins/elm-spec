@@ -63,49 +63,49 @@ mouseMoveOut =
 
 basicEventMessage : String -> Step.Context model -> Step.Command msg
 basicEventMessage name context =
-  Step.sendMessage
-    { home = "_html"
-    , name = name
-    , body = Encode.object
-      [ ( "selector", Encode.string <| targetSelector context )
-      ]
-    }
+  Message.for "_html" name
+    |> Message.withBody (
+      Encode.object
+        [ ( "selector", Encode.string <| targetSelector context )
+        ]
+    )
+    |> Step.sendMessage
 
 
 input : String -> Step.Context model -> Step.Command msg
 input text context =
-  Step.sendMessage
-    { home = "_html"
-    , name = "input"
-    , body = Encode.object
-      [ ( "selector", Encode.string <| targetSelector context )
-      , ( "text", Encode.string text )
-      ]
-    }
+  Message.for "_html" "input"
+    |> Message.withBody (
+      Encode.object
+        [ ( "selector", Encode.string <| targetSelector context )
+        , ( "text", Encode.string text )
+        ]
+    )
+    |> Step.sendMessage
 
 
 selectOption : String -> Step.Context model -> Step.Command msg
 selectOption text context =
-  Step.sendMessage
-    { home = "_html"
-    , name = "select"
-    , body = Encode.object
-      [ ( "selector", Encode.string <| targetSelector context )
-      , ( "text", Encode.string text )
-      ]
-    }
+  Message.for "_html" "select"
+    |> Message.withBody (
+      Encode.object
+        [ ( "selector", Encode.string <| targetSelector context )
+        , ( "text", Encode.string text )
+        ]
+    )
+    |> Step.sendMessage
 
 
 resizeWindow : (Int, Int) -> Step.Context model -> Step.Command msg
 resizeWindow (width, height) _ =
-  Step.sendMessage
-    { home = "_html"
-    , name = "resize"
-    , body = Encode.object
-      [ ( "width", Encode.int width )
-      , ( "height", Encode.int height )
-      ]
-    }
+  Message.for "_html" "resize"
+    |> Message.withBody (
+      Encode.object
+        [ ( "width", Encode.int width )
+        , ( "height", Encode.int height )
+        ]
+    )
+    |> Step.sendMessage
 
 
 hideWindow : Step.Context model -> Step.Command msg
@@ -120,26 +120,26 @@ showWindow =
 
 setWindowVisible : Bool -> Step.Context model -> Step.Command msg
 setWindowVisible isVisible _ =
-  Step.sendMessage
-    { home = "_html"
-    , name = "visibilityChange"
-    , body = Encode.object
-      [ ( "isVisible", Encode.bool isVisible )
-      ]
-    }
+  Message.for "_html" "visibilityChange"
+    |> Message.withBody (
+      Encode.object
+        [ ( "isVisible", Encode.bool isVisible )
+        ]
+    )
+    |> Step.sendMessage
 
 
 trigger : String -> Encode.Value -> Step.Context model -> Step.Command msg
 trigger name json context =
-  Step.sendMessage
-    { home = "_html"
-    , name = "customEvent"
-    , body = Encode.object
-      [ ( "selector", Encode.string <| targetSelector context )
-      , ( "name", Encode.string name )
-      , ( "event", json )
-      ]
-    }
+  Message.for "_html" "customEvent"
+    |> Message.withBody (
+      Encode.object
+        [ ( "selector", Encode.string <| targetSelector context )
+        , ( "name", Encode.string name )
+        , ( "event", json )
+        ]
+    )
+    |> Step.sendMessage
 
 
 targetSelector : Step.Context model -> String

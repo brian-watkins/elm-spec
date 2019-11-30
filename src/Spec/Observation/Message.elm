@@ -25,12 +25,12 @@ isObservationMessage message =
 
 inquiry : Message -> Message
 inquiry message =
-  { home = "_observer"
-  , name = "inquiry"
-  , body = Encode.object
-      [ ( "message", Message.encode message )
-      ]
-  }
+  Message.for "_observer" "inquiry"
+    |> Message.withBody (
+      Encode.object
+        [ ( "message", Message.encode message )
+        ]
+    )
 
 
 inquiryDecoder : Json.Decoder Inquiry
@@ -41,10 +41,10 @@ inquiryDecoder =
 
 observation : List String -> String -> Verdict -> Message
 observation conditions description verdict =
-  { home = "_observer"
-  , name = "observation"
-  , body = encodeObservation conditions description verdict
-  }
+  Message.for "_observer" "observation"
+    |> Message.withBody (
+      encodeObservation conditions description verdict
+    )
 
 
 encodeObservation : List String -> String -> Verdict -> Encode.Value

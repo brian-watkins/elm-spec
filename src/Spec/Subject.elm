@@ -123,7 +123,7 @@ withLocation url (Internal.SubjectProvider generator) =
 
 setLocationMessage : Url -> Message
 setLocationMessage location =
-  { home = "_html"
-  , name = "set-location"
-  , body = Encode.string <| Url.toString location
-  }
+  Message.for "_html" "set-location"
+    |> Message.withBody (
+      Encode.string <| Url.toString location
+    )

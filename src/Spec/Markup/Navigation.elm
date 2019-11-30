@@ -21,10 +21,10 @@ observeLocation =
 
 observeLocationMessage : Message
 observeLocationMessage =
-  { home = "_html"
-  , name = "navigation"
-  , body = Encode.string "select-location"
-  }
+  Message.for "_html" "navigation"
+    |> Message.withBody (
+      Encode.string "select-location"
+    )
 
 
 expectReload : Expectation model

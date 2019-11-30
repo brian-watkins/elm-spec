@@ -202,18 +202,14 @@ handleSpecMessage config model message =
 
 specComplete : Message
 specComplete =
-  { home = "_spec"
-  , name = "state"
-  , body = Encode.string "COMPLETE"
-  }
+  Message.for "_spec" "state"
+    |> Message.withBody (Encode.string "COMPLETE")
 
 
 specFinished : Message
 specFinished =
-  { home = "_spec"
-  , name = "state"
-  , body = Encode.string "FINISHED"
-  }
+  Message.for "_spec" "state"
+    |> Message.withBody (Encode.string "FINISHED")
 
 
 scenarioConfig : Config msg -> ScenarioProgram.Config (Msg msg) msg

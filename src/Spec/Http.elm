@@ -24,20 +24,20 @@ withStubs : List HttpResponseStub -> SubjectProvider model msg -> SubjectProvide
 withStubs stubs subjectProvider =
   List.foldl (\stub updatedSubject ->
     Subject.configure
-      { home = "_http"
-      , name = "stub"
-      , body = encodeStub stub
-      }
+      (httpStubMessage stub)
       updatedSubject
   ) (Subject.configure httpSetupMessage subjectProvider) stubs
 
 
+httpStubMessage : HttpResponseStub -> Message
+httpStubMessage stub =
+  Message.for "_http" "stub"
+    |> Message.withBody (encodeStub stub)
+
+
 httpSetupMessage : Message
 httpSetupMessage =
-  { home = "_http"
-  , name = "setup"
-  , body = Encode.null
-  }
+  Message.for "_http" "setup"
 
 
 encodeStub : HttpResponseStub -> Encode.Value
@@ -131,14 +131,13 @@ observeRequests route =
 
 fetchRequestsFor : HttpRoute -> Message
 fetchRequestsFor route =
-  { home = "_http"
-  , name = "fetch-requests"
-  , body =
+  Message.for "_http" "fetch-requests"
+    |> Message.withBody (
       Encode.object
         [ ( "method", Encode.string route.method )
         , ( "url", Encode.string route.url )
         ]
-  }
+    )
 
 
 requestDecoder : Json.Decoder HttpRequest
