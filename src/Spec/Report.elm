@@ -1,4 +1,4 @@
-module Spec.Observation.Report exposing
+module Spec.Report exposing
   ( Report
   , batch
   , note

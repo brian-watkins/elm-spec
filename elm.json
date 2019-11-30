@@ -18,6 +18,7 @@
         "Spec.Message",
         "Spec.Observer",
         "Spec.Port",
+        "Spec.Report",
         "Spec.Scenario",
         "Spec.Step",
         "Spec.Subject",

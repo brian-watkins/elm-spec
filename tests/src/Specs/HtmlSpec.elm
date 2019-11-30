@@ -9,7 +9,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Port as Port
 import Spec.Claim as Claim
-import Spec.Observation.Report as Report
+import Spec.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

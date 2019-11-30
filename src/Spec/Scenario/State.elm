@@ -5,7 +5,7 @@ module Spec.Scenario.State exposing
   )
 
 import Spec.Message exposing (Message)
-import Spec.Observation.Report exposing (Report)
+import Spec.Report exposing (Report)
 import Browser exposing (UrlRequest)
 import Url exposing (Url)
 import Task

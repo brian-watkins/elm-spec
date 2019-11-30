@@ -12,7 +12,7 @@ module Spec.Markup exposing
 
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observation.Report as Report exposing (Report)
+import Spec.Report as Report exposing (Report)
 import Spec.Subject exposing (Subject)
 import Spec.Markup.Selector as Selector exposing (Selection, Element)
 import Spec.Step as Step

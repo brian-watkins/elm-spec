@@ -8,7 +8,7 @@ module Spec.Observation.Expectation exposing
 
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Verdict)
-import Spec.Observation.Report as Report
+import Spec.Report as Report
 import Spec.Observation.Message as Message
 
 

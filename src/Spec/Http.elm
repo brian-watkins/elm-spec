@@ -11,7 +11,7 @@ module Spec.Http exposing
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observation.Report as Report
+import Spec.Report as Report
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Stub exposing (HttpResponseStub)
 import Spec.Http.Route exposing (HttpRoute)

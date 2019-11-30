@@ -5,15 +5,13 @@ import Spec.Subject as Subject
 import Spec.Scenario exposing (..)
 import Spec.Markup as Markup
 import Spec.Observer as Observer
-import Spec.Observation.Report as Report
-import Spec.Claim exposing (..)
+import Spec.Report as Report
+import Spec.Claim as Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
-import Spec.Claim as Claim
-import Spec.Observation.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

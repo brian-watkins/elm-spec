@@ -6,7 +6,7 @@ module Spec.Markup.Navigation exposing
 import Spec.Scenario as Scenario
 import Spec.Observer as Observer exposing (Observer, Expectation)
 import Spec.Claim as Claim
-import Spec.Observation.Report as Report
+import Spec.Report as Report
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json

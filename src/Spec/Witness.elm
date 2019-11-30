@@ -9,7 +9,7 @@ import Spec.Observer as Observer exposing (Observer)
 import Spec.Subject as Subject exposing (SubjectGenerator)
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observation.Report as Report exposing (Report)
+import Spec.Report as Report exposing (Report)
 import Json.Encode as Encode
 import Json.Decode as Json
 

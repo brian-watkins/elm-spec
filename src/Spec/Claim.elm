@@ -12,7 +12,7 @@ module Spec.Claim exposing
   , isNothing
   )
 
-import Spec.Observation.Report as Report exposing (Report)
+import Spec.Report as Report exposing (Report)
 
 
 type alias Claim a =

@@ -11,7 +11,7 @@ module Spec.Observer exposing
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observation.Expectation as Expectation
-import Spec.Observation.Report exposing (Report)
+import Spec.Report exposing (Report)
 
 
 type alias Expectation model =

@@ -13,7 +13,7 @@ import Spec.Message as Message exposing (Message)
 import Spec.Observation.Message as Message
 import Spec.Markup.Message as Message
 import Spec.Observation.Expectation as Expectation
-import Spec.Observation.Report as Report exposing (Report)
+import Spec.Report as Report exposing (Report)
 import Spec.Scenario.State.Exercise as Exercise
 import Spec.Scenario.State.Configure as Configure
 import Spec.Scenario.State.Observe as Observe

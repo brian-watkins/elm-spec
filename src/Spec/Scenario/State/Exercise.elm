@@ -14,7 +14,7 @@ import Spec.Scenario.Message as Message
 import Spec.Step as Step exposing (Step)
 import Spec.Step.Command as StepCommand
 import Spec.Observation.Message as Message
-import Spec.Observation.Report as Report
+import Spec.Report as Report
 import Spec.Claim as Claim
 import Html exposing (Html)
 import Browser exposing (Document)
