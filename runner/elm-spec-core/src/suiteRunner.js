@@ -45,8 +45,7 @@ module.exports = class SuiteRunner extends EventEmitter {
         this.runNextSpecProgram(programs)
       })
       .on("finished", () => {
-        this.reporter.finish()
-        this.emit('complete')
+        this.finish()
       })
       .on("error", (error) => {
         this.reporter.error(error)
