@@ -18,3 +18,7 @@ config =
 
 program specs =
   Spec.browserProgram config specs
+
+
+workerProgram specs =
+  Spec.program config specs

@@ -2,7 +2,7 @@ module Spec exposing
   ( Spec
   , describe
   , Model, Msg, Config
-  , update, view, init, initBrowserProgram, subscriptions
+  , Flags, update, view, init, subscriptions
   , program
   , browserProgram
   , onUrlRequest, onUrlChange
@@ -43,6 +43,11 @@ type alias Config msg =
   { send: Message -> Cmd (Msg msg)
   , outlet: Message -> Cmd msg
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
+  }
+
+
+type alias Flags =
+  { tags: List String
   }
 
 
@@ -149,42 +154,46 @@ subscriptions config model =
   ]
   
 
-init : Config msg -> List (Spec model msg) -> () -> ( Model model msg, Cmd (Msg msg) )
-init config specs _ =
-  ( { scenarios =
-        List.map (\(Spec scenarios) -> scenarios) specs
-          |> List.concat
+init : Config msg -> List (Spec model msg) -> Flags -> Maybe Key -> ( Model model msg, Cmd (Msg msg) )
+init config specs flags maybeKey =
+  ( { scenarios = gatherScenarios flags.tags specs
     , scenarioModel = ScenarioProgram.init
-    , key = Nothing
+    , key = maybeKey
     }
   , Cmd.none
   )
 
 
-program : Config msg -> List (Spec model msg) -> Program () (Model model msg) (Msg msg)
+program : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
 program config specs =
   Platform.worker
-    { init = init config specs
+    { init = \flags -> init config specs flags Nothing
     , update = update config
     , subscriptions = subscriptions config
     }
 
 
-initBrowserProgram : Config msg -> List (Spec model msg) -> Flags -> Url -> Key -> ( Model model msg, Cmd (Msg msg) )
-initBrowserProgram config specs flags url key =
-  ( { scenarios =
-        List.map (\(Spec scenarios) -> 
-          if List.isEmpty flags.tags then
-            scenarios
-          else
-            List.filter (withTags flags.tags) scenarios
-        ) specs
-          |> List.concat
-    , scenarioModel = ScenarioProgram.init
-    , key = Just key
+browserProgram : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
+browserProgram config specs =
+  Browser.application
+    { init = \flags _ key -> init config specs flags (Just key)
+    , view = view
+    , update = update config
+    , subscriptions = subscriptions config
+    , onUrlRequest = onUrlRequest
+    , onUrlChange = onUrlChange
     }
-  , Cmd.none
-  )
+
+
+gatherScenarios : List String -> List (Spec model msg) -> List (Scenario model msg)
+gatherScenarios tags specs =
+  List.map (\(Spec scenarios) -> 
+    if List.isEmpty tags then
+      scenarios
+    else
+      List.filter (withTags tags) scenarios
+  ) specs
+    |> List.concat
 
 
 withTags : List String -> Scenario model msg -> Bool
@@ -207,20 +216,3 @@ onUrlRequest =
 onUrlChange : Url -> (Msg msg)
 onUrlChange =
   ScenarioMsg << ScenarioProgram.OnUrlChange
-
-
-type alias Flags =
-  { tags: List String
-  }
-
-
-browserProgram : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
-browserProgram config specs =
-  Browser.application
-    { init = initBrowserProgram config specs
-    , view = view
-    , update = update config
-    , subscriptions = subscriptions config
-    , onUrlRequest = onUrlRequest
-    , onUrlChange = onUrlChange
-    }

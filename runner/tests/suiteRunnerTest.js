@@ -6,11 +6,11 @@ const SuiteRunner = require('elm-spec-core/src/suiteRunner')
 
 describe("Suite Runner", () => {
   it("runs a suite of tests", (done) => {
-    expectPassingScenarios('specs', 6, [], done)
+    expectPassingScenarios('specs', 8, [], done)
   })
 
   it("runs only the tagged scenarios", (done) => {
-    expectPassingScenarios('specs', 2, [ "tagged" ], done)
+    expectPassingScenarios('specs', 3, [ "tagged" ], done)
   })
 
   context("when the suite should end on the first failure", () => {
