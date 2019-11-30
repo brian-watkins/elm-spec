@@ -10,12 +10,7 @@ import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Markup.Message as Message
-import Spec.Step as Step exposing (Step)
-import Spec.Step.Command as StepCommand
-import Spec.Scenario.State.Observe as Observe
-import Html exposing (Html)
 import Browser exposing (Document)
-import Json.Encode as Encode
 
 
 type alias Model model msg =

@@ -7,11 +7,12 @@ module Spec.Scenario.State.Exercise exposing
   )
 
 import Spec.Scenario exposing (Scenario)
+import Spec.Scenario.Internal as Scenario exposing (Step)
 import Spec.Subject as Subject exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message
-import Spec.Step as Step exposing (Step)
+import Spec.Step as Step
 import Spec.Step.Command as StepCommand
 import Spec.Observation.Message as Message
 import Spec.Report as Report
@@ -43,7 +44,7 @@ init scenario subject =
 
 initialCommandStep : Scenario model msg -> Subject model msg -> Step model msg
 initialCommandStep scenario subject =
-  Step.build scenario.description <|
+  Scenario.buildStep scenario.description <|
     \_ ->
       Step.sendCommand subject.initialCommand
 
@@ -88,11 +89,10 @@ update outlet msg model =
               { model
               | steps = remaining
               , conditionsApplied =
-                  Step.condition step
-                    |> addIfUnique model.conditionsApplied
+                  addIfUnique model.conditionsApplied step.condition
               }
           in
-            case Step.run step { model = model.programModel, effects = model.effects } of
+            case step.run { model = model.programModel, effects = model.effects } of
               StepCommand.SendMessage message ->
                 ( updated, State.Send message )
               StepCommand.SendCommand cmd ->

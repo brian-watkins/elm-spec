@@ -13,8 +13,9 @@ module Spec.Scenario exposing
   , tagged
   )
 
+import Spec.Scenario.Internal as Internal exposing (Step)
 import Spec.Subject as Subject exposing (SubjectGenerator)
-import Spec.Step as Step exposing (Step)
+import Spec.Step as Step
 import Spec.Observer exposing (Observer, Expectation)
 import Spec.Claim exposing (Claim)
 import Spec.Observation.Expectation as Expectation
@@ -77,7 +78,7 @@ when condition messageSteps action =
   { action
   | steps =
       messageSteps
-        |> List.map (Step.build <| formatCondition condition)
+        |> List.map (Internal.buildStep <| formatCondition condition)
         |> List.append action.steps
   }
 
