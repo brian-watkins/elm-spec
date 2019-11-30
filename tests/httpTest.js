@@ -20,7 +20,7 @@ describe('HTTP', () => {
         expectRejected(observations[3], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected list to have length", "17"),
-          reportLine("but it has length", "1")
+          reportLine("but it has length", "3")
         ])
       })
     })
@@ -77,8 +77,15 @@ describe('HTTP', () => {
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Expected request to have body", "{\"blah\":3}"),
+          reportLine("Expected request to have body with string", "{\"blah\":3}"),
           reportLine("but it has", "{\"name\":\"fun person\",\"age\":88}")
+        ])
+        expectAccepted(observations[2])
+        expectRejected(observations[3], [
+          reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Expected to decode request body as JSON", "{\"name\":\"fun person\",\"age\":88}"),
+          reportLine("but the decoder failed", "Problem with the value at json.name:\n\n    \"fun person\"\n\nExpecting an INT")
         ])
       })
     })

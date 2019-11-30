@@ -126,14 +126,16 @@ expectRequestSpec =
       given (
         testSubject getRequest [ successStub ]
       )
-      |> when "an http request is triggered"
+      |> when "http requests are triggered"
         [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Event.click
         , Event.click
         ]
       |> observeThat
         [ it "expects the request" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
-              |> expect (isListWithLength 1)
+              |> expect (isListWithLength 3)
           )
         , it "does not find requests with a different method" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
@@ -338,9 +340,9 @@ hasBodySpec =
       ]
   in
   Spec.describe "hasBody"
-  [ scenario "check body" (
+  [ scenario "string body with json" (
       given (
-        testSubject (postRequest postBody) [ successPostStub ]
+        testSubject (postRequestWithJson postBody) [ successPostStub ]
       )
       |> when "a request is made"
         [ Markup.target << by [ id "trigger" ]
@@ -348,18 +350,34 @@ hasBodySpec =
         ]
       |> observeThat
         [ it "observes the body of the sent request" (
-          Spec.Http.observeRequests (post "http://fake-api.com/stuff")
-            |> expect (
-              isList
-                [ Spec.Http.hasBody "{\"name\":\"fun person\",\"age\":88}"
-                ]
-            )
+            Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+              |> expect (
+                isList
+                  [ Spec.Http.hasStringBody "{\"name\":\"fun person\",\"age\":88}"
+                  ]
+              )
           )
         , it "fails to find the wrong body" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isList
-                  [ Spec.Http.hasBody "{\"blah\":3}"]
+                  [ Spec.Http.hasStringBody "{\"blah\":3}"]
+              )
+          )
+        , it "observes the body as json" (
+            Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+              |> expect (
+                isList
+                  [ Spec.Http.hasJsonBody (Json.field "age" Json.int) <| equals 88
+                  ]
+              )
+          )
+        , it "fails when the decoder fails" (
+            Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+              |> expect (
+                isList
+                  [ Spec.Http.hasJsonBody (Json.field "name" Json.int) <| equals 31
+                  ]
               )
           )
         ]
@@ -367,8 +385,8 @@ hasBodySpec =
   ]
 
 
-postRequest : Json.Value -> Cmd Msg
-postRequest body =
+postRequestWithJson : Json.Value -> Cmd Msg
+postRequestWithJson body =
   Http.request
     { method = "POST"
     , headers =
@@ -381,7 +399,6 @@ postRequest body =
     , timeout = Nothing
     , tracker = Nothing
     }
-
 
 
 testSubject doRequest stubs =

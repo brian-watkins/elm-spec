@@ -1,9 +1,11 @@
 module Spec.Http exposing
   ( HttpRequest
+  , RequestBody
   , withStubs
   , observeRequests
   , hasHeader
-  , hasBody
+  , hasStringBody
+  , hasJsonBody
   )
 
 import Spec.Subject as Subject exposing (SubjectGenerator)
@@ -60,8 +62,12 @@ maybeEncodeString maybeString =
 type alias HttpRequest =
   { url: String
   , headers: Dict String String
-  , body: String
+  , body: RequestBody
   }
+
+
+type RequestBody
+  = StringBody String
 
 
 hasHeader : (String, String) -> Claim HttpRequest
@@ -84,15 +90,31 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
     ]
 
 
-hasBody : String -> Claim HttpRequest
-hasBody expectedBody request =
-  if request.body == expectedBody then
-    Claim.Accept
-  else
-    Claim.Reject <| Report.batch
-      [ Report.fact "Expected request to have body" expectedBody
-      , Report.fact "but it has" request.body
-      ]
+hasStringBody : String -> Claim HttpRequest
+hasStringBody expected request =
+  case request.body of
+    StringBody actual ->
+      if actual == expected then
+        Claim.Accept
+      else
+        Claim.Reject <| Report.batch
+          [ Report.fact "Expected request to have body with string" expected
+          , Report.fact "but it has" actual
+          ]
+
+
+hasJsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
+hasJsonBody decoder claim request =
+  case request.body of
+    StringBody actual ->
+      case Json.decodeString decoder actual of
+        Ok value ->
+          claim value
+        Err error ->
+          Claim.Reject <| Report.batch
+            [ Report.fact "Expected to decode request body as JSON" actual
+            , Report.fact "but the decoder failed" <| Json.errorToString error
+            ]
 
 
 observeRequests : HttpRoute -> Observer model (List HttpRequest)
@@ -124,4 +146,9 @@ requestDecoder =
   Json.map3 HttpRequest
     ( Json.field "url" Json.string )
     ( Json.field "headers" <| Json.dict Json.string )
-    ( Json.field "body" Json.string )
+    ( Json.field "body" requestBodyDecoder )
+
+
+requestBodyDecoder : Json.Decoder RequestBody
+requestBodyDecoder =
+  Json.map StringBody Json.string
