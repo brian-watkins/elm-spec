@@ -5,6 +5,7 @@ port module Runner exposing
   )
 
 import Spec exposing (Spec)
+import Spec.Program
 import Spec.Message exposing (Message)
 import Task
 import Browser exposing (UrlRequest)
@@ -30,40 +31,33 @@ type alias Flags =
   }
 
 
-init : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
-init specConfig specLocator flags =
-  case specLocator flags.specName of
-    Just spec ->
-      Spec.init specConfig [ spec ] { tags = [] } Nothing
-    Nothing ->
-      Debug.todo <| "Unknown spec: " ++ flags.specName
+initForTests : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Maybe Key -> (Spec.Model model msg, Cmd (Spec.Msg msg))
+initForTests specConfig specLocator flags maybeKey =
+  Spec.Program.init (\_ ->
+    case specLocator flags.specName of
+      Just spec ->
+        [ spec ]
+      Nothing ->
+        Debug.todo <| "Unknown spec: " ++ flags.specName
+  ) specConfig { tags = [] } maybeKey
 
 
 program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 program specLocator =
   Platform.worker
-    { init = init config specLocator
-    , update = Spec.update config
-    , subscriptions = Spec.subscriptions config
+    { init = \flags -> initForTests config specLocator flags Nothing
+    , update = Spec.Program.update config
+    , subscriptions = Spec.Program.subscriptions config
     }
-  
-
-initBrowserProgram : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Url -> Key -> (Spec.Model model msg, Cmd (Spec.Msg msg) )
-initBrowserProgram specConfig specLocator flags url key =
-  case specLocator flags.specName of
-    Just spec ->
-      Spec.init specConfig [ spec ] { tags = [] } (Just key)
-    Nothing ->
-      Debug.todo <| "Unknown spec: " ++ flags.specName
 
 
 browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 browserProgram specLocator =
   Browser.application
-    { init = initBrowserProgram config specLocator
-    , view = Spec.view
-    , update = Spec.update config
-    , subscriptions = Spec.subscriptions config
-    , onUrlRequest = Spec.onUrlRequest
-    , onUrlChange = Spec.onUrlChange
+    { init = \flags _ key -> initForTests config specLocator flags (Just key)
+    , view = Spec.Program.view
+    , update = Spec.Program.update config
+    , subscriptions = Spec.Program.subscriptions config
+    , onUrlRequest = Spec.Program.onUrlRequest
+    , onUrlChange = Spec.Program.onUrlChange
     }

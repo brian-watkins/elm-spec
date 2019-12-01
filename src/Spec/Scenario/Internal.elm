@@ -1,5 +1,5 @@
 module Spec.Scenario.Internal exposing
-  ( Scenario, ScenarioAction, ScenarioPlan, Observation, Step
+  ( Spec(..), Scenario, ScenarioAction, ScenarioPlan, Observation, Step
   , buildStep
   , buildObservation
   , describing
@@ -11,6 +11,10 @@ import Spec.Subject.Internal exposing (SubjectProvider)
 import Spec.Step exposing (Context, Command)
 import Spec.Message exposing (Message)
 import Spec.Observer exposing (Expectation)
+
+
+type Spec model msg
+  = Spec (List (Scenario model msg))
 
 
 type alias Scenario model msg =
