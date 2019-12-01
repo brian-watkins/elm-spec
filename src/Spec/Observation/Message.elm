@@ -7,6 +7,7 @@ module Spec.Observation.Message exposing
   )
 
 import Spec.Message as Message exposing (Message)
+import Spec.Message.Internal as Message
 import Spec.Claim exposing (Verdict(..))
 import Spec.Report as Report
 import Json.Decode as Json
@@ -19,8 +20,8 @@ type alias Inquiry =
 
 
 isObservationMessage : Message -> Bool
-isObservationMessage message =
-  message.home == "_observer"
+isObservationMessage =
+  Message.belongsTo "_observer"
 
 
 inquiry : Message -> Message

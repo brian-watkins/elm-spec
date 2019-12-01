@@ -5,8 +5,6 @@ module Spec.Message exposing
   , decode
   , belongsTo
   , is
-  , decoder
-  , encode
   )
 
 import Json.Encode as Encode exposing (Value)
@@ -28,7 +26,7 @@ for home name =
   }
 
 
-withBody : Json.Value -> Message -> Message
+withBody : Value -> Message -> Message
 withBody value message =
   { message | body = value }
 
@@ -47,20 +45,3 @@ decode : Json.Decoder a -> Message -> Maybe a
 decode messageDecoder message =
   Json.decodeValue messageDecoder message.body
     |> Result.toMaybe
-
-
-decoder : Json.Decoder Message
-decoder =
-  Json.map3 Message
-    ( Json.field "home" Json.string )
-    ( Json.field "name" Json.string )
-    ( Json.field "body" Json.value )
-
-
-encode : Message -> Encode.Value
-encode message =
-  Encode.object
-  [ ( "home", Encode.string message.home )
-  , ( "name", Encode.string message.name )
-  , ( "body", message.body )
-  ]
