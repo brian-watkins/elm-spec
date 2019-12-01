@@ -1,8 +1,8 @@
 const chai = require('chai')
 const expect = chai.expect
-const Compiler = require('elm-spec-core/src/compiler')
-const JsdomContext = require('../elm-spec-runner/src/jsdomContext')
-const SuiteRunner = require('elm-spec-core/src/suiteRunner')
+const Compiler = require('../src/compiler')
+const JsdomContext = require('../../elm-spec-runner/src/jsdomContext')
+const SuiteRunner = require('../src/suiteRunner')
 
 describe("Suite Runner", () => {
   it("runs a suite of tests", (done) => {
@@ -57,7 +57,7 @@ const expectPassingScenarios = (specDir, number, tags, done) => {
 
 const expectScenarios = (specDir, options, done, matcher) => {
   const compiler = new Compiler({
-    cwd: './runner/tests/sample',
+    cwd: './tests/sample',
     specPath: `./${specDir}/**/*Spec.elm`
   })
   

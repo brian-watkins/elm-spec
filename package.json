@@ -4,11 +4,11 @@
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
     "start": "cd runner/tests/sample && ../../elm-spec-runner/bin/run",
-    "test": "run-s test:elm test:elm:browser test:runner test:spec-runner build:karma test:karma:runner test:karma",
+    "test": "run-s test:elm test:elm:browser test:runner-core test:jsdom:runner build:karma test:karma:runner test:karma",
     "test:elm": "cd tests && ELM_SPEC_CONTEXT=jsdom mocha '*Test.js'",
     "test:elm:browser": "cd tests && ELM_SPEC_CONTEXT=browser mocha --file ./helpers/browserRunnerSetup.js --timeout 5000 '*Test.js'",
-    "test:runner": "mocha './runner/tests/*Test.js'",
-    "test:spec-runner": "npm test --prefix runner/elm-spec-runner",
+    "test:runner-core": "npm test --prefix runner/elm-spec-core",
+    "test:jsdom:runner": "npm test --prefix runner/elm-spec-runner",
     "build:karma": "npm run build --prefix runner/karma-elm-spec-framework",
     "test:karma": "npm test --prefix runner/karma-elm-spec-framework",
     "test:karma:runner": "npm run test:unit --prefix runner/karma-elm-spec-framework"

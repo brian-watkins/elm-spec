@@ -1,6 +1,7 @@
 module.exports = class TestReporter {
   constructor() {
     this.observations = []
+    this.specError = null
   }
 
   startSuite() {
@@ -14,6 +15,6 @@ module.exports = class TestReporter {
   finish() {}
 
   error(err) {
-    throw err
+    this.specError = err
   }
 }

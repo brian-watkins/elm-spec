@@ -2,12 +2,15 @@ const EventEmitter = require('events')
 const ProgramRunner = require('./programRunner')
 const Program = require('./program')
 
+const ELM_SPEC_CORE_VERSION = 1
+
 module.exports = class SuiteRunner extends EventEmitter {
-  constructor(context, reporter, options) {
+  constructor(context, reporter, options, version) {
     super()
     this.context = context
     this.reporter = reporter
     this.options = options
+    this.version = version || ELM_SPEC_CORE_VERSION
   }
 
   runAll() {
@@ -60,7 +63,8 @@ module.exports = class SuiteRunner extends EventEmitter {
   initializeApp(program) {
     return program.init({
       flags: {
-        tags: this.options.tags
+        tags: this.options.tags,
+        version: this.version
       }
     })
   }

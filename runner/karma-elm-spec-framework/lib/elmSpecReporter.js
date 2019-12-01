@@ -22,6 +22,12 @@ var ElmSpecReporter = function (baseReporterDecorator) {
     self.write("\nRunning specs: ")
   }
 
+  self.onBrowserError = function(browser, error) {
+    self.write("\n\n")
+    self.write("Error running spec suite!\n\n")
+    error.message.forEach((report) => self.printReport(report))
+  }
+
   self.specFailure = function(browser, result) {
     self.failures.push(result)
     self.write(error("x"))
@@ -40,14 +46,16 @@ var ElmSpecReporter = function (baseReporterDecorator) {
     self.write(error("\nFailed to satisfy spec:\n\n"))
     self.printSuite(result.suite)
     self.write(`    ${result.description}\n\n`)
-    result.log.forEach(report => {
-      self.write(error(`    ${report.statement}\n`))
-      if (report.detail) {
-        self.write(error(`      ${report.detail}\n`))
-      }
-      self.write('\n')
-    })
+    result.log.forEach(report => self.printReport(report))
   }  
+
+  self.printReport = function(report) {
+    self.write(error(`    ${report.statement}\n`))
+    if (report.detail) {
+      self.write(error(`      ${report.detail}\n`))
+    }
+    self.write('\n')
+  }
 
   self.onRunComplete = function(browsers, results) {
     self.write("\n\n")

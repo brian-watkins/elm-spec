@@ -71,6 +71,31 @@ describe("elm-spec reporter", () => {
       expect(output).to.contain("2")
     })
   })
+
+  describe("when there is an error", () => {
+    beforeEach(() => {
+      subject.onRunStart()
+      subject.onBrowserError(null, {
+        message: [
+          { statement: "Some error occurred with",
+            detail: "something"
+          },
+          { statement: "some final statement",
+            detail: null
+          }
+        ]
+      })
+    })
+
+    it("prints the error", () => {
+      const output = words.join("")
+
+      expect(output).to.contain("Error running spec suite!")
+      expect(output).to.contain("Some error occurred with")
+      expect(output).to.contain("something")
+      expect(output).to.contain("some final statement")
+    })
+  })
 })
 
 const failureResult = () => {

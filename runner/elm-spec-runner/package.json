@@ -45,6 +45,6 @@
   },
   "repository": "brian-watkins/elm-spec",
   "scripts": {
-    "test": "mocha --forbid-only \"test/**/*.test.js\""
+    "test": "mocha --forbid-only \"test/**/*Test.js\""
   }
 }

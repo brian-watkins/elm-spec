@@ -28,13 +28,9 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   run() {
     this.app.ports.sendOut.subscribe((specMessage) => {
-      try {
-        this.handleMessage(specMessage, (outMessage) => {
-          this.app.ports.sendIn.send(outMessage)
-        })
-      } catch (err) {
-        this.emit('error', err)
-      }
+      this.handleMessage(specMessage, (outMessage) => {
+        this.app.ports.sendIn.send(outMessage)
+      })
     })
 
     this.timePlugin.nativeSetTimeout(() => {
@@ -114,15 +110,27 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   handleSpecEvent(specMessage) {
-    switch (specMessage.body) {
-      case "COMPLETE":
+    switch (specMessage.name) {
+      case "state": {
+        switch (specMessage.body) {
+          case "COMPLETE": {
+            this.timePlugin.resetFakes()
+            this.emit('complete')
+            break
+          }
+          case "FINISHED": {
+            this.timePlugin.resetFakes()
+            this.emit('finished')
+            break
+          }
+        }
+        break    
+      }
+      case "error": {
         this.timePlugin.resetFakes()
-        this.emit('complete')
+        this.emit('error', specMessage.body)
         break
-      case "FINISHED":
-        this.timePlugin.resetFakes()
-        this.emit('finished')
-        break
+      }
     }
   }
 

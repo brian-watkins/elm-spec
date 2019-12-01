@@ -50,7 +50,7 @@ describe('elm-spec-runner', () => {
       test
       .do(() => cmd.run([
         "--elm", "../../node_modules/.bin/elm",
-        "--specs", "../tests/sample/specs/**/*Spec.elm",
+        "--specs", "../elm-spec-core/tests/sample/specs/**/*Spec.elm",
         "--tag", "fun"
       ]))
       .it('passes the tag to the suite runner', () => {
@@ -63,7 +63,7 @@ describe('elm-spec-runner', () => {
       test
       .do(() => cmd.run([
         "--elm", "../../node_modules/.bin/elm",
-        "--specs", "../tests/sample/specs/**/*Spec.elm",
+        "--specs", "../elm-spec-core/tests/sample/specs/**/*Spec.elm",
         "--tag", "fun",
         "--tag", "awesome",
         "--tag", "super"
@@ -78,7 +78,7 @@ describe('elm-spec-runner', () => {
       test
       .do(() => cmd.run([
         "--elm", "../../node_modules/.bin/elm",
-        "--specs", "../tests/sample/specs/**/*Spec.elm",
+        "--specs", "../elm-spec-core/tests/sample/specs/**/*Spec.elm",
       ]))
       .it('passes an empty array to the suite runner', () => {
         const actualTags = suiteRunnerSpy.args[0][2].tags

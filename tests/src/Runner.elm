@@ -1,6 +1,7 @@
 port module Runner exposing
   ( program
   , browserProgram
+  , runSuiteWithVersion
   , config
   )
 
@@ -39,7 +40,7 @@ initForTests specConfig specLocator flags maybeKey =
         [ spec ]
       Nothing ->
         Debug.todo <| "Unknown spec: " ++ flags.specName
-  ) specConfig { tags = [] } maybeKey
+  ) 1 specConfig { version = 1, tags = [] } maybeKey
 
 
 program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
@@ -55,6 +56,24 @@ browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model
 browserProgram specLocator =
   Browser.application
     { init = \flags _ key -> initForTests config specLocator flags (Just key)
+    , view = Spec.Program.view
+    , update = Spec.Program.update config
+    , subscriptions = Spec.Program.subscriptions config
+    , onUrlRequest = Spec.Program.onUrlRequest
+    , onUrlChange = Spec.Program.onUrlChange
+    }
+
+
+runSuiteWithVersion : Int -> List (Spec model msg) -> Program Spec.Flags (Spec.Model model msg) (Spec.Msg msg)
+runSuiteWithVersion elmSpecVersion specs =
+  Browser.application
+    { init = \flags _ key ->
+        Spec.Program.init
+          (\_ -> specs)
+          elmSpecVersion
+          config
+          flags
+          (Just key)
     , view = Spec.Program.view
     , update = Spec.Program.update config
     , subscriptions = Spec.Program.subscriptions config

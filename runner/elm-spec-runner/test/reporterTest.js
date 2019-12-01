@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Reporter = require('../elm-spec-runner/src/consoleReporter')
+const Reporter = require('../src/consoleReporter')
 
 describe("reporter", () => {
   it("counts the number of accepted observations", () => {
@@ -75,6 +75,31 @@ describe("reporter", () => {
         "to be",
         "something else",
         "and a final statement",
+      ])
+    })
+  })
+
+  describe("when there is an error", () => {
+    let lines
+
+    beforeEach(() => {
+      lines = []
+      const subject = new Reporter((character) => {}, (line) => lines.push(line))
+
+      subject.error([
+        { statement: "You received an error", detail: "something" },
+        { statement: "and a final statement", detail: null }
+      ])
+      subject.finish()
+    })
+
+    it("writes the error", () => {
+      expectToContain(lines, [
+        "Error running spec suite!",
+        "You received an error",
+        "something",
+        "and a final statement",
+        "Accepted: 0",
       ])
     })
   })

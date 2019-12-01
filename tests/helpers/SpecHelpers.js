@@ -37,10 +37,14 @@ exports.expectSpec = (specProgram, specName, done, matcher, options) => {
 }
 
 exports.expectProgram = (specProgram, done, matcher) => {
+  this.expectProgramAtVersion(specProgram, null, done, matcher)
+}
+
+exports.expectProgramAtVersion = (specProgram, version, done, matcher) => {
   if (elmSpecContext === "jsdom") {
-    runProgramInJsdom(specProgram, done, matcher)
+    runProgramInJsdom(specProgram, version, done, matcher)
   } else if (elmSpecContext === "browser") {
-    runProgramInBrowser(specProgram, done, matcher)
+    runProgramInBrowser(specProgram, version, done, matcher)
   }
 }
 
@@ -82,7 +86,7 @@ const prepareJsdom = () => {
   }
 }
 
-const runProgramInJsdom = (specProgram, done, matcher) => {
+const runProgramInJsdom = (specProgram, version, done, matcher) => {
   prepareJsdom()
 
   jsdomContext.evaluate((Elm) => {
@@ -95,11 +99,11 @@ const runProgramInJsdom = (specProgram, done, matcher) => {
       endOnFailure: false,
       timeout: 500
     }
-  
-    new SuiteRunner(jsdomContext, reporter, options)
+
+    new SuiteRunner(jsdomContext, reporter, options, version)
       .on('complete', () => {
         setTimeout(() => {
-          matcher(reporter.observations)
+          matcher(reporter.observations, reporter.specError)
           done()
         }, 0)
       })
@@ -107,11 +111,11 @@ const runProgramInJsdom = (specProgram, done, matcher) => {
   })
 }
 
-const runProgramInBrowser = (specProgram, done, matcher) => {
-  page.evaluate((program) => {
-    return _elm_spec.runProgram(program)
-  }, specProgram).then((observations) => {
-    matcher(observations)
+const runProgramInBrowser = (specProgram, version, done, matcher) => {
+  page.evaluate((program, version) => {
+    return _elm_spec.runProgram(program, version)
+  }, specProgram, version).then(({ observations, error }) => {
+    matcher(observations, error)
     done()
   }).catch((err) => {
     if (err.name === "AssertionError") {
@@ -125,8 +129,8 @@ const runProgramInBrowser = (specProgram, done, matcher) => {
 const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {  
   page.evaluate((program, name, options) => { 
     return _elm_spec.runSpec(program, name, options)
-  }, specProgram, specName, options).then((observations) => {
-    matcher(observations)
+  }, specProgram, specName, options).then(({ observations, error }) => {
+    matcher(observations, error)
     done()
   }).catch((err) => {
     if (err.name === "AssertionError") {
@@ -154,21 +158,23 @@ const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
 
 const runSpec = (app, context, done, matcher, options) => {
   const observations = []
+  let error = null
+  const programOptions = Object.assign({ timeout: 500 }, options)
 
-  new ProgramRunner(app, context, options || { timeout: 500 })
+  new ProgramRunner(app, context, programOptions)
     .on('observation', (observation) => {
       observations.push(observation)
     })
     .on('complete', () => {
-      matcher(observations, context)
+      matcher(observations, error)
       done()
     })
     .on('finished', () => {
-      matcher(observations)
+      matcher(observations, error)
       done()
     })
     .on('error', (err) => {
-      done(err)
+      error = err
     })
     .run()
 }

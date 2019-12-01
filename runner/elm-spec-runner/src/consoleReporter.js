@@ -27,8 +27,9 @@ module.exports = class ConsoleReporter {
   }
 
   error(err) {
-    this.writeLine("Error running Spec!")
-    this.writeLine(err)
+    this.writeLine("Error running spec suite!")
+    this.writeLine()
+    err.forEach(r => this.printReport(r))
   }
 
   finish() {
@@ -57,13 +58,15 @@ module.exports = class ConsoleReporter {
     this.printConditions(observation.conditions)
     this.writeLine(`    ${observation.description}`)
     this.writeLine()
-    observation.report.forEach(report => {
-      this.writeLine(error(`    ${report.statement}`))
-      if (report.detail) {
-        this.writeLine(error(`      ${report.detail}`))
-      }
-      this.writeLine()
-    })
+    observation.report.forEach(r => this.printReport(r))
+  }
+
+  printReport(report) {
+    this.writeLine(error(`    ${report.statement}`))
+    if (report.detail) {
+      this.writeLine(error(`      ${report.detail}`))
+    }
+    this.writeLine()
   }
 }
 

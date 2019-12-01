@@ -10,7 +10,7 @@ base.setAttribute("href", "http://localhost")
 window.document.head.appendChild(base)
 
 
-window._elm_spec.runProgram = (specProgram) => {
+window._elm_spec.runProgram = (specProgram, version) => {
   return new Promise((resolve, reject) => {
     if (!window.Elm) {
       reject("Elm not compiled?!")
@@ -24,9 +24,12 @@ window._elm_spec.runProgram = (specProgram) => {
       timeout: 500
     }
     
-    new SuiteRunner(context, reporter, options)
+    new SuiteRunner(context, reporter, options, version)
       .on('complete', () => {
-        resolve(reporter.observations)
+        resolve({
+          observations: reporter.observations,
+          error: reporter.specError
+        })
       })
       .run([program])
   })
@@ -49,18 +52,20 @@ window._elm_spec.runSpec = (specProgram, specName, options) => {
 
 const runProgram = (app, context, options, resolve, reject) => {
   const observations = []
+  let error = null
+
   new ProgramRunner(app, context, options || { tags: [], endOnFailure: false, timeout: 2000 })
       .on('observation', (observation) => {
         observations.push(observation)
       })
       .on('complete', () => {
-        resolve(observations)
+        resolve({ observations, error })
       })
       .on('finished', () => {
-        resolve(observations)
+        resolve({ observations, error })
       })
       .on('error', (err) => {
-        reject(err)
+        error = err
       })
       .run()
 }
