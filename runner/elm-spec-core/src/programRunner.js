@@ -4,6 +4,7 @@ const TimePlugin = require('./plugin/timePlugin')
 const HtmlPlugin = require('./plugin/htmlPlugin')
 const HttpPlugin = require('./plugin/httpPlugin')
 const { registerApp, setBaseLocation } = require('./fakes')
+const { report, line } = require('./report')
 
 module.exports = class ProgramRunner extends EventEmitter {
   constructor(app, context, options) {
@@ -185,11 +186,9 @@ module.exports = class ProgramRunner extends EventEmitter {
       out({
         home: "_scenario",
         name: "abort",
-        body: [
-          { statement: `Scenario timeout of ${this.options.timeout}ms exceeded!`,
-            detail: null
-          }
-        ]
+        body: report(
+          line(`Scenario timeout of ${this.options.timeout}ms exceeded!`)
+        )
       })
     }, this.options.timeout)
   }

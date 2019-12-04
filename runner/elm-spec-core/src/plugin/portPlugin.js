@@ -1,3 +1,5 @@
+const { report, line } = require('../report')
+
 module.exports = class PortPlugin {
   constructor(app) {
     this.app = app
@@ -11,10 +13,9 @@ module.exports = class PortPlugin {
         if (this.app.ports.hasOwnProperty(subscription.sub)) {
           this.app.ports[subscription.sub].send(subscription.value)
         } else {
-          abort([{
-            statement: "Attempt to send message to unknown subscription",
-            detail: subscription.sub
-          }])
+          abort(report(
+            line("Attempt to send message to unknown subscription", subscription.sub)
+          ))
         }
         break
       case "receive":

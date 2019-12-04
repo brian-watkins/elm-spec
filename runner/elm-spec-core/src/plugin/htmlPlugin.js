@@ -1,3 +1,4 @@
+const { report, line } = require('../report')
 const {
   getLocation,
   setBaseLocation,
@@ -40,10 +41,9 @@ module.exports = class HtmlPlugin {
         this.renderAndThen(() => {
           const element = this.getElement(specMessage.body)
           if (element == null) {
-            abort([{
-              statement: "No match for selector",
-              detail: specMessage.body
-            }])
+            abort(report(
+              line("No match for selector", specMessage.body)
+            ))
           } else {
             out(specMessage)
           }
@@ -214,10 +214,9 @@ module.exports = class HtmlPlugin {
   }
 
   elementNotTargetedForEvent(event, abort) {
-    abort([{
-      statement: "No element targeted for event",
-      detail: event
-    }])
+    abort(report(
+      line("No element targeted for event", event)
+    ))
   }
 
   getElement(selector) {
@@ -250,10 +249,9 @@ module.exports = class HtmlPlugin {
     }
 
     if (forElementsOnly && props.selector === "_document_") {
-      abort([{
-        statement: "Event not supported when document is targeted",
-        detail: name
-      }])
+      abort(report(
+        line("Event not supported when document is targeted", name)
+      ))
       return
     }
 
