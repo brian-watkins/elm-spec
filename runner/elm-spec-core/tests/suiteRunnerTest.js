@@ -17,9 +17,9 @@ describe("Suite Runner", () => {
     it("stops at the first failure", (done) => {
       expectScenarios('specsWithFailure', { tags: [], timeout: 50, endOnFailure: true }, done, (observations) => {
         expect(observations).to.have.length(3)
-        expect(observations[0].summary).to.equal("ACCEPT")
-        expect(observations[1].summary).to.equal("ACCEPT")
-        expect(observations[2].summary).to.equal("REJECT")
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectRejected(observations[2])
       })
     })
   })
@@ -28,10 +28,10 @@ describe("Suite Runner", () => {
     it("reports all results", (done) => {
       expectScenarios('specsWithFailure', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
         expect(observations).to.have.length(4)
-        expect(observations[0].summary).to.equal("ACCEPT")
-        expect(observations[1].summary).to.equal("ACCEPT")
-        expect(observations[2].summary).to.equal("REJECT")
-        expect(observations[3].summary).to.equal("ACCEPT")
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectRejected(observations[2])
+        expectAccepted(observations[3])
       })
     })
   })
@@ -40,6 +40,20 @@ describe("Suite Runner", () => {
     it("reports zero tests", (done) => {
       expectScenarios('specsWithCompilationError', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
         expect(observations).to.have.length(0)
+      })
+    })
+  })
+
+  context("when the expected ports are not found", () => {
+    context("when the sendOut port is not found", () => {
+      it("reports an error", (done) => {
+        expectScenariosAt({ cwd: './tests/badRunnerSample', specPath: './specs/*Spec.elm' }, { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
+          expect(observations).to.have.length(0)
+          expect(error).to.deep.equal([
+            reportLine("No sendOut port found!"),
+            reportLine("Make sure your elm-spec program uses a port defined like so", "port sendOut : Message -> Cmd msg")
+          ])
+        })
       })
     })
   })
@@ -55,11 +69,8 @@ const expectPassingScenarios = (specDir, number, tags, done) => {
   })
 }
 
-const expectScenarios = (specDir, options, done, matcher) => {
-  const compiler = new Compiler({
-    cwd: './tests/sample',
-    specPath: `./${specDir}/**/*Spec.elm`
-  })
+const expectScenariosAt = (compilerOptions, options, done, matcher) => {
+  const compiler = new Compiler(compilerOptions)
   
   const context = new JsdomContext(compiler)
   const reporter = new TestReporter()
@@ -68,16 +79,24 @@ const expectScenarios = (specDir, options, done, matcher) => {
   runner
     .on('complete', () => {
       setTimeout(() => {
-        matcher(reporter.observations)
+        matcher(reporter.observations, reporter.specError)
         done()
       }, 0)
     })
     .runAll()
 }
 
+const expectScenarios = (specDir, options, done, matcher) => {
+  expectScenariosAt({
+    cwd: './tests/sample',
+    specPath: `./${specDir}/**/*Spec.elm`
+  }, options, done, matcher)
+}
+
 const TestReporter = class {
   constructor() {
     this.observations = []
+    this.specError = null
   }
 
   startSuite() {
@@ -91,6 +110,19 @@ const TestReporter = class {
   finish() {}
 
   error(err) {
-    throw err
+    this.specError = err
   }
 }
+
+const expectAccepted = (observation) => {
+  expect(observation.summary).to.equal("ACCEPT")
+}
+
+const expectRejected = (observation) => {
+  expect(observation.summary).to.equal("REJECT")
+}
+
+const reportLine = (statement, detail = null) => ({
+  statement,
+  detail
+})
