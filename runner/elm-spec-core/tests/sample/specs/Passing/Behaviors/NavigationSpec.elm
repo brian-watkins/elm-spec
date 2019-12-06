@@ -1,4 +1,4 @@
-module Behaviors.NavigationSpec exposing (main)
+module Passing.Behaviors.NavigationSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Subject as Subject

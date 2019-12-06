@@ -1,4 +1,4 @@
-module ClickSpec exposing (..)
+module WithFailure.ClickSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Subject as Subject
@@ -12,8 +12,7 @@ import Main as App
 clickSpec : Spec App.Model App.Msg
 clickSpec =
   Spec.describe "an html program"
-  [ tagged [ "tagged" ] <|
-    scenario "a click event" (
+  [ scenario "a click event" (
       given (
         Subject.initWithModel App.defaultModel
           |> Subject.withUpdate App.update

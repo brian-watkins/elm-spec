@@ -1,4 +1,4 @@
-port module RunnerWithBadSendOut exposing (..)
+port module WithNoSendOutPort.Runner exposing (..)
 
 import Spec exposing (Spec)
 import Spec.Message exposing (Message)

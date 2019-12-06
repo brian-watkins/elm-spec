@@ -69,6 +69,14 @@ module.exports = class SuiteRunner extends EventEmitter {
       return null
     }
 
+    if (!app.ports.hasOwnProperty("sendIn")) {
+      this.reporter.error(report(
+        line("No sendIn port found!"),
+        line("Make sure your elm-spec program uses a port defined like so", "port sendIn : (Message -> msg) -> Sub msg")
+      ))
+      return null
+    }
+
     return app
   }
 

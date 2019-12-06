@@ -6,16 +6,16 @@ const SuiteRunner = require('../src/suiteRunner')
 
 describe("Suite Runner", () => {
   it("runs a suite of tests", (done) => {
-    expectPassingScenarios('specs', 8, [], done)
+    expectPassingScenarios('Passing', 8, [], done)
   })
 
   it("runs only the tagged scenarios", (done) => {
-    expectPassingScenarios('specs', 3, [ "tagged" ], done)
+    expectPassingScenarios('Passing', 3, [ "tagged" ], done)
   })
 
   context("when the suite should end on the first failure", () => {
     it("stops at the first failure", (done) => {
-      expectScenarios('specsWithFailure', { tags: [], timeout: 50, endOnFailure: true }, done, (observations) => {
+      expectScenarios('WithFailure', { tags: [], timeout: 50, endOnFailure: true }, done, (observations) => {
         expect(observations).to.have.length(3)
         expectAccepted(observations[0])
         expectAccepted(observations[1])
@@ -26,7 +26,7 @@ describe("Suite Runner", () => {
 
   context("when the suite should report all results", () => {
     it("reports all results", (done) => {
-      expectScenarios('specsWithFailure', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
+      expectScenarios('WithFailure', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
         expect(observations).to.have.length(4)
         expectAccepted(observations[0])
         expectAccepted(observations[1])
@@ -38,7 +38,7 @@ describe("Suite Runner", () => {
   
   context("when the code does not compile", () => {
     it("reports zero tests", (done) => {
-      expectScenarios('specsWithCompilationError', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
+      expectScenarios('WithCompilationError', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
         expect(observations).to.have.length(0)
       })
     })
@@ -46,12 +46,23 @@ describe("Suite Runner", () => {
 
   context("when the expected ports are not found", () => {
     context("when the sendOut port is not found", () => {
-      it("reports an error", (done) => {
-        expectScenariosAt({ cwd: './tests/badRunnerSample', specPath: './specs/*Spec.elm' }, { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
+      it("fails and reports an error", (done) => {
+        expectScenarios("WithNoSendOutPort", { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
           expect(observations).to.have.length(0)
           expect(error).to.deep.equal([
             reportLine("No sendOut port found!"),
             reportLine("Make sure your elm-spec program uses a port defined like so", "port sendOut : Message -> Cmd msg")
+          ])
+        })
+      })
+    })
+    context("when the sendIn port is not found", () => {
+      it("fails and reports an error", (done) => {
+        expectScenarios("WithNoSendInPort", { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
+          expect(observations).to.have.length(0)
+          expect(error).to.deep.equal([
+            reportLine("No sendIn port found!"),
+            reportLine("Make sure your elm-spec program uses a port defined like so", "port sendIn : (Message -> msg) -> Sub msg")
           ])
         })
       })
@@ -69,6 +80,13 @@ const expectPassingScenarios = (specDir, number, tags, done) => {
   })
 }
 
+const expectScenarios = (specDir, options, done, matcher) => {
+  expectScenariosAt({
+    cwd: './tests/sample',
+    specPath: `./specs/${specDir}/**/*Spec.elm`
+  }, options, done, matcher)
+}
+
 const expectScenariosAt = (compilerOptions, options, done, matcher) => {
   const compiler = new Compiler(compilerOptions)
   
@@ -84,13 +102,6 @@ const expectScenariosAt = (compilerOptions, options, done, matcher) => {
       }, 0)
     })
     .runAll()
-}
-
-const expectScenarios = (specDir, options, done, matcher) => {
-  expectScenariosAt({
-    cwd: './tests/sample',
-    specPath: `./${specDir}/**/*Spec.elm`
-  }, options, done, matcher)
 }
 
 const TestReporter = class {

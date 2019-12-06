@@ -1,4 +1,4 @@
-module InputSpec exposing (..)
+module WithFailure.InputSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Subject as Subject
@@ -44,10 +44,10 @@ differentInputSpec =
         , Event.input "Here is some awesome text!"
         ]
       |> observeThat
-        [ it "renders the text on the view" (
+        [ it "renders other the text on the view" (
             Markup.observeElement
               |> Markup.query << by [ id "input-results" ]
-              |> expect (Markup.hasText "You typed: Here is some awesome text!")
+              |> expect (Markup.hasText "You typed: Here is some awesome text?")
           )
         , it "does not record any clicks" (
             Markup.observeElement

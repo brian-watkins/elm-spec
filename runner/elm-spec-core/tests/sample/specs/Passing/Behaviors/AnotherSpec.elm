@@ -1,4 +1,4 @@
-module ClickSpec exposing (..)
+module Passing.Behaviors.AnotherSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Subject as Subject
@@ -9,25 +9,24 @@ import Runner
 import Main as App
 
 
-clickSpec : Spec App.Model App.Msg
-clickSpec =
+eightClicksSpec : Spec App.Model App.Msg
+eightClicksSpec =
   Spec.describe "an html program"
-  [ scenario "a click event" (
+  [ tagged [ "fun" ] <| 
+    scenario "a click event" (
       given (
         Subject.initWithModel App.defaultModel
           |> Subject.withUpdate App.update
           |> Subject.withView App.view
       )
-      |> when "the button is clicked three times"
-        [ Markup.target << by [ id "my-button" ]
-        , Event.clicksssss
-        , Event.click
-        , Event.click
-        ]
+      |> when "the button is clicked eight times" (
+        (Markup.target << by [ id "my-button" ])
+        :: (List.repeat 8 Event.click)
+      )
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "count-results" ]
-          |> expect (Markup.hasText "You clicked the button 3 time(s)")
+          |> expect (Markup.hasText "You clicked the button 8 time(s)")
       )
     )
   ]
@@ -35,5 +34,5 @@ clickSpec =
 
 main =
   Runner.program
-    [ clickSpec
+    [ eightClicksSpec
     ]

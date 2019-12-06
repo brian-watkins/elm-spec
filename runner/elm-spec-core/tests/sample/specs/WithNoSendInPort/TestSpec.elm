@@ -1,10 +1,10 @@
-module TestSpec exposing (main)
+module WithNoSendInPort.TestSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Subject as Subject
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observer as Observer
-import RunnerWithBadSendOut
+import WithNoSendInPort.Runner as Runner
 
 
 testSpec : Spec () Msg
@@ -32,6 +32,6 @@ equals =
 
 
 main =
-  RunnerWithBadSendOut.program
+  Runner.program
     [ testSpec
     ]

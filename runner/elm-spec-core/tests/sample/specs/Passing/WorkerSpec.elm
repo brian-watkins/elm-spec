@@ -1,4 +1,4 @@
-module WorkerSpec exposing (main)
+module Passing.WorkerSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Subject as Subject
