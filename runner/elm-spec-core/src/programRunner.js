@@ -35,7 +35,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     })
 
     this.timePlugin.nativeSetTimeout(() => {
-      this.app.ports.sendIn.send({ home: "_spec", name: "state", body: "START" })
+      this.app.ports.sendIn.send(this.specStateMessage("START"))
     }, 0)
   }
 
@@ -52,7 +52,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "_time":
         this.timePlugin.handle(specMessage, () => {
-          this.handleMessage({home: "_scenario", name: "state", body: "STEP_COMPLETE"}, out)
+          this.handleMessage(this.scenarioStateMessage("STEP_COMPLETE"), out)
         })
         break
       case "_witness":
@@ -74,7 +74,7 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   sendAbortMessage(out) {
     return (reason) => {
-      out({ home: "_scenario", name: "abort", body: reason})
+      out(this.abort(reason))
     }
   }
 
@@ -96,11 +96,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         const observation = specMessage.body
         this.emit('observation', observation)
         if (this.options.endOnFailure && observation.summary === "REJECT") {
-          out({
-            home: "_spec",
-            name: "state",
-            body: "FINISH"
-          })
+          out(this.specStateMessage("FINISH"))
         } else {
           out(this.continue())
         }
@@ -169,6 +165,14 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
+  abort(reason) {
+    return {
+      home: "_scenario",
+      name: "abort",
+      body: reason
+    }
+  }
+
   scenarioExerciseComplete() {
     this.stopTimeoutTimer()
     this.portPlugin.unsubscribe()
@@ -183,13 +187,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   startTimeoutTimer(out) {
     this.stopTimeoutTimer()
     this.scenarioTimeout = this.timePlugin.nativeSetTimeout(() => {
-      out({
-        home: "_scenario",
-        name: "abort",
-        body: report(
-          line(`Scenario timeout of ${this.options.timeout}ms exceeded!`)
-        )
-      })
+      out(this.abort(report(line(`Scenario timeout of ${this.options.timeout}ms exceeded!`))))
     }, this.options.timeout)
   }
 
@@ -198,10 +196,22 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   continue () {
+    return this.scenarioStateMessage("CONTINUE")
+  }
+
+  specStateMessage (state) {
+    return {
+      home: "_spec",
+      name: "state",
+      body: state
+    }
+  }
+
+  scenarioStateMessage (state) {
     return {
       home: "_scenario",
       name: "state",
-      body: "CONTINUE"
+      body: state
     }
   }
 }
