@@ -19,6 +19,7 @@
         "Spec.Observer",
         "Spec.Port",
         "Spec.Report",
+        "Spec.Runner",
         "Spec.Step",
         "Spec.Subject",
         "Spec.Time",
