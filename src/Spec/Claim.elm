@@ -12,18 +12,46 @@ module Spec.Claim exposing
   , isNothing
   )
 
+{-| A claim is a function that maps a subject to a verdict.
+
+@docs Claim, Verdict
+
+# Basic Claims
+@docs isEqual, isTrue, isFalse
+
+# Claims about Lists
+@docs isListWhere, isListWhereItemAt, isListWithLength
+
+# Claims about Maybe types
+@docs isSomething, isNothing
+
+# Combining Claims
+@docs satisfying
+
+-}
+
 import Spec.Report as Report exposing (Report)
 
 
+{-| Represents a function from a subject to a verdict.
+-}
 type alias Claim a =
   a -> Verdict
 
 
+{-| The result of applying a claim to a subject.
+
+A claim about a subject will either be accepted or rejected.
+-}
 type Verdict
   = Accept
   | Reject Report
 
 
+{-| Combine multiple claims into one.
+
+If any of the claims is rejected, then the combined claim is rejected.
+-}
 satisfying : List (Claim a) -> Claim a
 satisfying claims actual =
   List.foldl (\claim verdict ->
@@ -46,11 +74,15 @@ satisfying claims actual =
   ) Accept claims
 
 
+{-| Claim that the subject is `True`
+-}
 isTrue : Claim Bool
 isTrue =
   isEqual boolWriter True
 
 
+{-| Claim that the subject is `False`
+-}
 isFalse : Claim Bool
 isFalse =
   isEqual boolWriter False
@@ -64,6 +96,19 @@ boolWriter b =
     "False"
 
 
+{-| Claim that the subject is equal to the provided value.
+
+The first argument to this function converts a value of some type to a string, which
+is used to produce readable messages if the claim is rejected. Instead of providing
+this string-generating function each time, I suggest adding a helper function that just uses the
+`Debug.toString` function like so:
+
+    equals : a -> Claim a
+    equals =
+      Spec.Claim.isEqual Debug.toString
+
+Then just use your `equals` function whenever you need to claim that a subject is equal to some value.
+-}
 isEqual : (a -> String) -> a -> Claim a
 isEqual toString expected actual =
   if expected == actual then
@@ -75,6 +120,8 @@ isEqual toString expected actual =
       ]
 
 
+{-| Claim that the subject is a list with the given length.
+-}
 isListWithLength : Int -> Claim (List a)
 isListWithLength expected actual =
   let
@@ -86,6 +133,22 @@ isListWithLength expected actual =
       Reject <| wrongLength expected actualLength
 
 
+{-| Claim that the subject is a list where the following claims are satisfied:
+
+- the subject has the same length as the provided list
+- for each item in the subject, that item satisfies the corresponding claim in the provided list.
+
+For example:
+
+    [ 1, 2, 3 ]
+      |> Spec.Claim.isListWhere
+          [ Spec.Claim.isEqualTo Debug.toString 1
+          , Spec.Claim.isEqualTo Debug.toString 27
+          , Spec.Claim.isEqualTo Debug.toString 3
+          ]
+
+would result in a rejected claim, since 2 is not equal to 27.
+-}
 isListWhere : List (Claim a) -> Claim (List a)
 isListWhere claims actual =
   if List.length claims == List.length actual then
@@ -123,6 +186,11 @@ matchList position claims actual =
       Reject <| Report.note "Something crazy happened"
 
 
+{-| Claim that the subject is a list such that:
+
+- there is an item at the given index
+- that item satisfies the given claim
+-}
 isListWhereItemAt : Int -> Claim a -> Claim (List a)
 isListWhereItemAt index claim actualList =
   case List.head <| List.drop index actualList of
@@ -149,6 +217,8 @@ mapRejection mapper verdict =
       Reject <| mapper report
 
 
+{-| Claim that the subject is the `Just` case of the `Maybe` type.
+-}
 isSomething : Claim (Maybe a)
 isSomething actual =
   case actual of
@@ -161,6 +231,8 @@ isSomething actual =
         ]
 
 
+{-| Claim that the subject is the `Nothing` case of the `Maybe` type.
+-}
 isNothing : Claim (Maybe a)
 isNothing actual =
   case actual of
