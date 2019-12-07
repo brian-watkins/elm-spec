@@ -33,7 +33,7 @@ class ElmSpecRunnerCommand extends Command {
       runnerOptions: {
         tags,
         endOnFailure: flags.endOnFailure,
-        timeout: 500
+        timeout: flags.timeout
       }
     })
   }
@@ -62,7 +62,8 @@ ElmSpecRunnerCommand.flags = {
   elm: flags.string({char: 'e', description: 'path to elm'}),
   specs: flags.string({char: 's', description: 'glob for spec modules', default: './specs/**/*Spec.elm'}),
   tag: flags.string({char: 't', description: 'execute scenarios with this tag only', multiple: true}),
-  endOnFailure: flags.boolean({char: 'f', description: 'end on first failure', default: false})
+  endOnFailure: flags.boolean({char: 'f', description: 'end on first failure', default: false}),
+  timeout: flags.integer({char: 'm', description: 'spec timeout', default: 500})
 }
 
 module.exports = ElmSpecRunnerCommand
