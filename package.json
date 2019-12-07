@@ -11,7 +11,8 @@
     "test:jsdom:runner": "npm test --prefix runner/elm-spec-runner",
     "build:karma": "npm run build --prefix runner/karma-elm-spec-framework",
     "test:karma": "npm test --prefix runner/karma-elm-spec-framework",
-    "test:karma:runner": "npm run test:unit --prefix runner/karma-elm-spec-framework"
+    "test:karma:runner": "npm run test:unit --prefix runner/karma-elm-spec-framework",
+    "build:docs": "elm make --docs=docs.json"
   },
   "author": "Brian Watkins",
   "license": "MIT",
