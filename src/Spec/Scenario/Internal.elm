@@ -1,5 +1,5 @@
 module Spec.Scenario.Internal exposing
-  ( Spec(..), Scenario, ScenarioAction, ScenarioPlan, Observation, Step
+  ( Spec(..), Scenario, Script, Plan, Observation, Step
   , buildStep
   , buildObservation
   , describing
@@ -27,13 +27,13 @@ type alias Scenario model msg =
   }
 
 
-type alias ScenarioAction model msg =
+type alias Script model msg =
   { subjectProvider: SubjectProvider model msg
   , steps: List (Step model msg)
   }
 
 
-type alias ScenarioPlan model msg =
+type alias Plan model msg =
   { subjectProvider: SubjectProvider model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)

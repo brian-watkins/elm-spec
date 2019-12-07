@@ -1,6 +1,6 @@
 module Spec exposing
   ( Spec
-  , Scenario, ScenarioPlan, ScenarioAction
+  , Scenario, Script, Plan
   , describe
   , scenario
   , tagged
@@ -8,6 +8,14 @@ module Spec exposing
   )
 
 {-| Functions for writing specs.
+
+A spec is a collection of scenarios, each of which provides an example that
+illustrates a behavior belonging to your program. Each scenario follows
+the same basic plan:
+
+1. Describe the state of the world (and your program) at the beginning of the scenario.
+2. Provide a list of steps to perform.
+3. List your expectations about the new state of the world after the actions have been completed.
 
 Here's a sample spec for a browser program called `App`:
 
@@ -31,10 +39,13 @@ Here's a sample spec for a browser program called `App`:
     ]
 
 # Creating a Spec
-@docs Spec, describe
+@docs Spec, Scenario, describe, scenario
 
-# Creating a Scenario
-@docs Scenario, ScenarioPlan, ScenarioAction, scenario, given, when, it, observeThat, expect
+# Creating the Scenario Script
+@docs Script, given, when
+
+# Turn a Script into a Plan
+@docs Plan, it, observeThat, expect
 
 # Tag a Scenario
 @docs tagged
@@ -60,16 +71,16 @@ type Scenario model msg =
   Scenario (Internal.Scenario model msg)
 
 
-{-| Represents the setup and actions involved in a scenario.
+{-| Represents the setup and steps involved in a scenario.
 -}
-type ScenarioAction model msg =
-  ScenarioAction (Internal.ScenarioAction model msg)
+type Script model msg =
+  Script (Internal.Script model msg)
 
 
-{-| Represents the full plan (setup, actions, expectations) involved in a scenario.
+{-| Represents the full plan (setup, steps, expectations) involved in a scenario.
 -}
-type ScenarioPlan model msg =
-  ScenarioPlan (Internal.ScenarioPlan model msg)
+type Plan model msg =
+  Plan (Internal.Plan model msg)
 
 
 {-| Specify a description and a list of scenarios that compose the spec.
@@ -84,8 +95,8 @@ describe description scenarios =
 
 {-| Create a scenario with a description and a plan.
 -}
-scenario : String -> ScenarioPlan model msg -> Scenario model msg
-scenario description (ScenarioPlan plan) =
+scenario : String -> Plan model msg -> Scenario model msg
+scenario description (Plan plan) =
   Scenario
     { specification = ""
     , description = Internal.formatScenarioDescription description
@@ -107,42 +118,47 @@ tagged tags (Scenario scenarioData) =
     { scenarioData | tags = tags }
 
 
-{-| Provide the subject whose behavior you will describe.
+{-| Provide a representation of the state of the world at the start of the scenario.
+
+See `Spec.Subject` for functions to construct this representation.
 -}
-given : SubjectProvider model msg -> ScenarioAction model msg
+given : SubjectProvider model msg -> Script model msg
 given provider =
-  ScenarioAction
+  Script
     { subjectProvider = provider
     , steps = []
     }
 
 
-{-| Specify a description and a list of steps for some action involved in a scenario.
+{-| Specify a description and the steps involved in a scenario.
 
-You may specify multiple `when` blocks as part of a scenario.
+Each step is a function from `Step.Context` to `Step.Command`, but usually
+you will use steps that are provided by other modules, like `Spec.Markup.Event`.
+
+You may provide multiple `when` blocks as part of a scenario.
 -}
-when : String -> List (Step.Context model -> Step.Command msg) -> ScenarioAction model msg -> ScenarioAction model msg
-when condition messageSteps (ScenarioAction action) =
-  ScenarioAction
-    { action
+when : String -> List (Step.Context model -> Step.Command msg) -> Script model msg -> Script model msg
+when condition messageSteps (Script script) =
+  Script
+    { script
     | steps =
         messageSteps
           |> List.map (Internal.buildStep <| Internal.formatCondition condition)
-          |> List.append action.steps
+          |> List.append script.steps
     }
 
 
-{-| Specify multiple expectations that should hold once the scenario's actions have been executed.
+{-| Specify multiple expectations that should hold once the scenario's steps have been performed.
 -}
-observeThat : List (ScenarioAction model msg -> ScenarioPlan model msg) -> ScenarioAction model msg -> ScenarioPlan model msg
-observeThat planGenerators (ScenarioAction action) =
-  ScenarioPlan
-    { subjectProvider = action.subjectProvider
-    , steps = action.steps
+observeThat : List (Script model msg -> Plan model msg) -> Script model msg -> Plan model msg
+observeThat planGenerators (Script script) =
+  Plan
+    { subjectProvider = script.subjectProvider
+    , steps = script.steps
     , observations =
         List.foldl (\planGenerator observations ->
           let
-            (ScenarioPlan plan) = planGenerator (ScenarioAction action)
+            (Plan plan) = planGenerator (Script script)
           in
             plan.observations
               |> List.append observations
@@ -150,13 +166,13 @@ observeThat planGenerators (ScenarioAction action) =
     }
 
 
-{-| Specify an expectation that should hold once the scenario's actions have been executed.
+{-| Specify an expectation that should hold once the scenario's steps have been performed.
 -}
-it : String -> Expectation model -> ScenarioAction model msg -> ScenarioPlan model msg
-it description expectation (ScenarioAction action) =
-  ScenarioPlan
-    { subjectProvider = action.subjectProvider
-    , steps = action.steps
+it : String -> Expectation model -> Script model msg -> Plan model msg
+it description expectation (Script script) =
+  Plan
+    { subjectProvider = script.subjectProvider
+    , steps = script.steps
     , observations =
         [ Internal.buildObservation description expectation
         ]
