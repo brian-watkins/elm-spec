@@ -4,14 +4,6 @@ const rewire = require('rewire')
 const cmd = rewire('..')
 
 describe('elm-spec-runner', () => {
-  context("when the gloabl elm executable does not exist", () => {
-    test
-    .env({PATH: "./nowhere"})
-    .do(() => cmd.run([]))
-    .catch(err => expect(err.message).to.contain("No elm executable found in the current path"))
-    .it('gives an error message')
-  })
-  
   context("when the specified elm executable does not exist", () => {
     test
     .do(() => cmd.run(["--elm", "blah"]))

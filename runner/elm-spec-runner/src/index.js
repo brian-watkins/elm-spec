@@ -10,14 +10,9 @@ const process = require('process')
 class ElmSpecRunnerCommand extends Command {
   async run() {
     const {flags} = this.parse(ElmSpecRunnerCommand)
-    
-    const elmPath = flags.elm || 'elm'
-    if (!commandExists(elmPath)) {
-      if (flags.elm) {
-        this.error(`No elm executable found at: ${flags.elm}`)
-      } else {
-        this.error('No elm executable found in the current path')
-      }
+
+    if (!commandExists(flags.elm)) {
+      this.error(`No elm executable found at: ${flags.elm}`)
     }
 
     const specPath = flags.specs
@@ -29,7 +24,7 @@ class ElmSpecRunnerCommand extends Command {
 
     this.runSpecs({
       specPath,
-      elmPath,
+      elmPath: flags.elm,
       runnerOptions: {
         tags,
         endOnFailure: flags.endOnFailure,
@@ -49,21 +44,18 @@ class ElmSpecRunnerCommand extends Command {
   }
 }
 
-ElmSpecRunnerCommand.description = `Run Elm-Spec specs from the command line
-...
-Extra documentation goes here
-`
+ElmSpecRunnerCommand.description = `Run Elm-Spec specs from the command line`
 
 ElmSpecRunnerCommand.flags = {
   // add --version flag to show CLI version
   version: flags.version({char: 'v'}),
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
-  elm: flags.string({char: 'e', description: 'path to elm'}),
+  elm: flags.string({char: 'e', description: 'path to elm', default: 'elm'}),
   specs: flags.string({char: 's', description: 'glob for spec modules', default: './specs/**/*Spec.elm'}),
-  tag: flags.string({char: 't', description: 'execute scenarios with this tag only', multiple: true}),
-  endOnFailure: flags.boolean({char: 'f', description: 'end on first failure', default: false}),
-  timeout: flags.integer({char: 'm', description: 'spec timeout', default: 500})
+  tag: flags.string({char: 't', description: 'execute scenarios with this tag only (may specify multiple)', multiple: true}),
+  endOnFailure: flags.boolean({char: 'f', description: 'end spec suite run on first failure', default: false}),
+  timeout: flags.integer({char: 'm', description: 'spec timeout in milliseconds', default: 500})
 }
 
 module.exports = ElmSpecRunnerCommand
