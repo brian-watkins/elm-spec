@@ -23,7 +23,7 @@ recordSpec =
       |> it "records statements about the injected function" (
         Witness.observe "injected" Json.int
           |> expect (
-            Claim.isList
+            Claim.isListWhere
               [ equals 88
               , equals 91
               , equals 14

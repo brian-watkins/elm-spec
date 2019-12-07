@@ -6,8 +6,8 @@ module Spec.Claim exposing
   , isFalse
   , isEqual
   , isListWithLength
-  , isList
-  , isListWhereIndex
+  , isListWhere
+  , isListWhereItemAt
   , isSomething
   , isNothing
   )
@@ -86,8 +86,8 @@ isListWithLength expected actual =
       Reject <| wrongLength expected actualLength
 
 
-isList : List (Claim a) -> Claim (List a)
-isList claims actual =
+isListWhere : List (Claim a) -> Claim (List a)
+isListWhere claims actual =
   if List.length claims == List.length actual then
     matchList 1 claims actual
   else
@@ -123,19 +123,19 @@ matchList position claims actual =
       Reject <| Report.note "Something crazy happened"
 
 
-isListWhereIndex : Int -> Claim a -> Claim (List a)
-isListWhereIndex index claim actualList =
+isListWhereItemAt : Int -> Claim a -> Claim (List a)
+isListWhereItemAt index claim actualList =
   case List.head <| List.drop index actualList of
     Just actual ->
       claim actual
         |> mapRejection (\report -> Report.batch
-            [ Report.note <| "Element at index " ++ String.fromInt index ++ " did not satisfy claim:"
+            [ Report.note <| "Item at index " ++ String.fromInt index ++ " did not satisfy claim:"
             , report
             ]
         )
     Nothing ->
       Reject <| Report.batch
-        [ Report.fact "Expected element at index" <| String.fromInt index
+        [ Report.fact "Expected item at index" <| String.fromInt index
         , Report.fact "but the list has length" <| String.fromInt <| List.length actualList
         ]
 

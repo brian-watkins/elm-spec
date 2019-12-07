@@ -35,7 +35,7 @@ getSpec =
         ]
       |> it "receives a stubbed response" (
         Observer.observeModel .responses
-          |> expect ( isList
+          |> expect ( isListWhere
             [ equals 
               { name = "Cool Dude"
               , score = 1034
@@ -54,7 +54,7 @@ getSpec =
         ]
       |> it "receives the stubbed responses" (
         Observer.observeModel .responses
-          |> expect ( isList
+          |> expect ( isListWhere
             [ equals { name = "Cool Dude", score = 1034 }
             , equals { name = "Fun Person", score = 971 }
             ]
@@ -302,7 +302,7 @@ hasHeaderSpec =
         [ it "has the expected headers" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
-                isListWhereIndex 0 <| satisfying
+                isListWhereItemAt 0 <| satisfying
                   [ Spec.Http.hasHeader ("X-Fun-Header", "some-fun-value")
                   , Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
                   ]
@@ -353,7 +353,7 @@ hasBodySpec =
         [ it "observes the body of the sent request" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
-                isList
+                isListWhere
                   [ Spec.Http.hasStringBody "{\"name\":\"fun person\",\"age\":88}"
                   ]
               )
@@ -361,14 +361,15 @@ hasBodySpec =
         , it "fails to find the wrong body" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
-                isList
-                  [ Spec.Http.hasStringBody "{\"blah\":3}"]
+                isListWhere
+                  [ Spec.Http.hasStringBody "{\"blah\":3}"
+                  ]
               )
           )
         , it "observes the body as json" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
-                isList
+                isListWhere
                   [ Spec.Http.hasJsonBody (Json.field "age" Json.int) <| equals 88
                   ]
               )
@@ -376,7 +377,7 @@ hasBodySpec =
         , it "fails when the decoder fails" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
-                isList
+                isListWhere
                   [ Spec.Http.hasJsonBody (Json.field "name" Json.int) <| equals 31
                   ]
               )

@@ -42,7 +42,7 @@ isListSpec =
       |> it "matches" (
         Observer.observeModel identity
           |> expect (
-            Claim.isList
+            Claim.isListWhere
               [ equals "1"
               , equals "2"
               , equals "3"
@@ -58,7 +58,7 @@ isListSpec =
       |> it "matches" (
         Observer.observeModel identity
           |> expect (
-              Claim.isList
+              Claim.isListWhere
                 [ equals "1"
                 , equals "something"
                 , equals "not correct"
@@ -74,7 +74,7 @@ isListSpec =
       |> it "matches" (
         Observer.observeModel identity
           |> expect (
-            Claim.isList
+            Claim.isListWhere
               [ equals "1"
               , equals "3"
               ]
@@ -94,7 +94,7 @@ atIndexSpec =
       |> it "matches" (
         Observer.observeModel identity
           |> expect (
-            Claim.isListWhereIndex 2 (equals "3")
+            Claim.isListWhereItemAt 2 (equals "3")
           )
       )
     )
@@ -105,7 +105,7 @@ atIndexSpec =
       |> it "fails to match" (
         Observer.observeModel identity
           |> expect (
-            Claim.isListWhereIndex 2 (equals "17")
+            Claim.isListWhereItemAt 2 (equals "17")
           )
       )
     )
@@ -116,7 +116,7 @@ atIndexSpec =
       |> it "fails to match" (
         Observer.observeModel identity
           |> expect (
-            Claim.isListWhereIndex 22 (equals "17")
+            Claim.isListWhereItemAt 22 (equals "17")
           )
       )
     )
