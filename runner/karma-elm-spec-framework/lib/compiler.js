@@ -2,16 +2,20 @@ const Compiler = require('elm-spec-core/src/compiler')
 const path = require('path')
 const fs = require('fs')
 
+const defaultConfig = {
+  cwd: process.cwd(),
+  specPath: "./specs/**/*Spec.elm",
+  elmPath: "elm"
+}
+
 exports.compile = function(config) {
-  const compiler = new Compiler({
-    cwd: config.specRoot,
-    specPath: config.specs,
-    elmPath: config.pathToElm,
-  })
+  const compilerOptions = Object.assign(defaultConfig, config)
+
+  const compiler = new Compiler(compilerOptions)
 
   const compiledCode = compiler.compile()
 
-  const outputPath = path.resolve(config.specRoot, 'elm-stuff', 'elm-spec.js')
+  const outputPath = path.resolve(compilerOptions.cwd, 'elm-stuff', 'elm-spec.js')
   fs.writeFileSync(outputPath, compiledCode)
   return outputPath
 }
