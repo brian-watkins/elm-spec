@@ -4,15 +4,15 @@ import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 
 
-port sendOut : Message -> Cmd msg
-port sendIn : (Message -> msg) -> Sub msg
+port elmSpecOut : Message -> Cmd msg
+port elmSpecIn : (Message -> msg) -> Sub msg
 
 
 config : Spec.Config msg
 config =
-  { send = sendOut
-  , outlet = sendOut
-  , listen = sendIn
+  { send = elmSpecOut
+  , outlet = elmSpecOut
+  , listen = elmSpecIn
   }
 
 

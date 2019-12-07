@@ -5,14 +5,14 @@ import Spec.Message exposing (Message)
 
 
 port somerthingOtherThanSendOut : Message -> Cmd msg
-port sendIn : (Message -> msg) -> Sub msg
+port elmSpecIn : (Message -> msg) -> Sub msg
 
 
 config : Spec.Config msg
 config =
   { send = somerthingOtherThanSendOut
   , outlet = somerthingOtherThanSendOut
-  , listen = sendIn
+  , listen = elmSpecIn
   }
 
 

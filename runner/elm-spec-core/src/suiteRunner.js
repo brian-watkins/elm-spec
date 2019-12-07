@@ -1,7 +1,6 @@
 const EventEmitter = require('events')
 const ProgramRunner = require('./programRunner')
 const Program = require('./program')
-const { report, line } = require('./report')
 
 const ELM_SPEC_CORE_VERSION = 1
 
@@ -61,19 +60,9 @@ module.exports = class SuiteRunner extends EventEmitter {
       }
     })
 
-    if (!app.ports.hasOwnProperty("sendOut")) {
-      this.reporter.error(report(
-        line("No sendOut port found!"),
-        line("Make sure your elm-spec program uses a port defined like so", "port sendOut : Message -> Cmd msg")
-      ))
-      return null
-    }
-
-    if (!app.ports.hasOwnProperty("sendIn")) {
-      this.reporter.error(report(
-        line("No sendIn port found!"),
-        line("Make sure your elm-spec program uses a port defined like so", "port sendIn : (Message -> msg) -> Sub msg")
-      ))
+    const error = ProgramRunner.hasElmSpecPorts(app)
+    if (error) {
+      this.reporter.error(error)
       return null
     }
 

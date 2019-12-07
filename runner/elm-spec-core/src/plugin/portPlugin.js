@@ -37,7 +37,7 @@ module.exports = class PortPlugin {
           value: commandValue
         }
       }
-      app.ports.sendIn.send(record)
+      app.ports.elmSpecIn.send(record)
     }
   }
 

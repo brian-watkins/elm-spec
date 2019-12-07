@@ -45,25 +45,25 @@ describe("Suite Runner", () => {
   })
 
   context("when the expected ports are not found", () => {
-    context("when the sendOut port is not found", () => {
+    context("when the elmSpecOut port is not found", () => {
       it("fails and reports an error", (done) => {
         expectScenarios("WithNoSendOutPort", { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
           expect(observations).to.have.length(0)
           expect(error).to.deep.equal([
-            reportLine("No sendOut port found!"),
-            reportLine("Make sure your elm-spec program uses a port defined like so", "port sendOut : Message -> Cmd msg")
+            reportLine("No elmSpecOut port found!"),
+            reportLine("Make sure your elm-spec program uses a port defined like so", "port elmSpecOut : Message -> Cmd msg")
           ])
         })
       })
     })
 
-    context("when the sendIn port is not found", () => {
+    context("when the elmSpecIn port is not found", () => {
       it("fails and reports an error", (done) => {
         expectScenarios("WithNoSendInPort", { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
           expect(observations).to.have.length(0)
           expect(error).to.deep.equal([
-            reportLine("No sendIn port found!"),
-            reportLine("Make sure your elm-spec program uses a port defined like so", "port sendIn : (Message -> msg) -> Sub msg")
+            reportLine("No elmSpecIn port found!"),
+            reportLine("Make sure your elm-spec program uses a port defined like so", "port elmSpecIn : (Message -> msg) -> Sub msg")
           ])
         })
       })

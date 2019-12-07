@@ -4,14 +4,14 @@ import Spec exposing (Spec)
 import Spec.Message exposing (Message)
 
 
-port sendOut : Message -> Cmd msg
+port elmSpecOut : Message -> Cmd msg
 port somethingOtherThanSendIn : (Message -> msg) -> Sub msg
 
 
 config : Spec.Config msg
 config =
-  { send = sendOut
-  , outlet = sendOut
+  { send = elmSpecOut
+  , outlet = elmSpecOut
   , listen = somethingOtherThanSendIn
   }
 

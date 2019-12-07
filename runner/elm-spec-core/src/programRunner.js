@@ -7,6 +7,24 @@ const { registerApp, setBaseLocation } = require('./fakes')
 const { report, line } = require('./report')
 
 module.exports = class ProgramRunner extends EventEmitter {
+  static hasElmSpecPorts(app) {
+    if (!app.ports.hasOwnProperty("elmSpecOut")) {
+      return report(
+        line("No elmSpecOut port found!"),
+        line("Make sure your elm-spec program uses a port defined like so", "port elmSpecOut : Message -> Cmd msg")
+      )
+    }
+
+    if (!app.ports.hasOwnProperty("elmSpecIn")) {
+      return report(
+        line("No elmSpecIn port found!"),
+        line("Make sure your elm-spec program uses a port defined like so", "port elmSpecIn : (Message -> msg) -> Sub msg")
+      )
+    }
+
+    return null
+  }
+
   constructor(app, context, options) {
     super()
     this.app = app
@@ -30,15 +48,15 @@ module.exports = class ProgramRunner extends EventEmitter {
   run() {
     const messageHandler = (specMessage) => {
       this.handleMessage(specMessage, (outMessage) => {
-        this.app.ports.sendIn.send(outMessage)
+        this.app.ports.elmSpecIn.send(outMessage)
       })
     }
 
-    this.app.ports.sendOut.subscribe(messageHandler)
-    this.stopHandlingMessages = () => { this.app.ports.sendOut.unsubscribe(messageHandler) }
+    this.app.ports.elmSpecOut.subscribe(messageHandler)
+    this.stopHandlingMessages = () => { this.app.ports.elmSpecOut.unsubscribe(messageHandler) }
 
     this.timePlugin.nativeSetTimeout(() => {
-      this.app.ports.sendIn.send(this.specStateMessage("START"))
+      this.app.ports.elmSpecIn.send(this.specStateMessage("START"))
     }, 0)
   }
 

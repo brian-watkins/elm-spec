@@ -6,7 +6,7 @@ const { fakeDocument } = require('./fakes/fakeDocument')
 
 exports.registerFakes = (window, clock) => {
     window._elm_spec = {}
-    const fakeLocation = new FakeLocation((msg) => window._elm_spec.app.ports.sendIn.send(msg)) 
+    const fakeLocation = new FakeLocation((msg) => window._elm_spec.app.ports.elmSpecIn.send(msg))
     window._elm_spec.requestAnimationFrame = clock.requestAnimationFrame
     window._elm_spec.date = clock.Date
     window._elm_spec.window = fakeWindow(window, fakeLocation)
