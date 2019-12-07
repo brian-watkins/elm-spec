@@ -7,21 +7,22 @@
 
   const defaultConfig = {
     tags: [],
-    endOnFailure: false
+    endOnFailure: false,
+    timeout: 5000,
+    karmaPort: 9876
   }
 
-  const elmSpecConfig = window.__karma__.config.elmSpec || defaultConfig
+  const options = Object.assign(defaultConfig, window.__karma__.config.elmSpec)
 
   const context = new BrowserContext(window)
 
   const base = document.createElement("base")
-  //NOTE: This has to be the right port!
-  base.setAttribute("href", "http://localhost:9876")
+  base.setAttribute("href", `http://localhost:${options.karmaPort}`)
   window.document.head.appendChild(base)
 
   window.__karma__.start = function() {
     const reporter = new KarmaReporter(window.__karma__)
-    const runner = new SuiteRunner(context, reporter, { tags: elmSpecConfig.tags, endOnFailure: elmSpecConfig.endOnFailure, timeout: 5000 })
+    const runner = new SuiteRunner(context, reporter, options)
     runner.runAll()
   }
 
