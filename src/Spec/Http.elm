@@ -8,6 +8,19 @@ module Spec.Http exposing
   , hasJsonBody
   )
 
+{-| Stub, observe, and make claims about HTTP requests during a spec.
+
+# Set Up Stubs
+@docs withStubs
+
+# Observe HTTP Requests
+@docs HttpRequest, RequestBody, observeRequests
+
+# Make Claims About HTTP Requests
+@docs hasHeader, hasStringBody, hasJsonBody
+
+-}
+
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
@@ -20,6 +33,10 @@ import Json.Decode as Json
 import Dict exposing (Dict)
 
 
+{-| Setup a fake HTTP server to respond with the given stub when the matching request is made.
+
+See `Spec.Http.Stub` for functions that build an `HttpResponseStub`.
+-}
 withStubs : List HttpResponseStub -> Setup model msg -> Setup model msg
 withStubs stubs subjectProvider =
   List.foldl (\stub updatedSubject ->
@@ -59,6 +76,8 @@ maybeEncodeString maybeString =
     |> Encode.string
 
 
+{-| Represents an HTTP request made by the program in the course of the scenario.
+-}
 type alias HttpRequest =
   { url: String
   , headers: Dict String String
@@ -66,10 +85,22 @@ type alias HttpRequest =
   }
 
 
+{-| Represents the body of an HTTP request.
+-}
 type RequestBody
   = StringBody String
 
 
+{-| Claim that an HTTP request has a header with the given (key, value) tuple.
+
+For example, if the observed request has an `Authorization` header with the value
+`Bearer some-fun-token`, then the following claim:
+
+    Spec.Http.hasHeader ("Authorization", "Bearer some-fun-token")
+
+would be accepted.
+
+-}
 hasHeader : (String, String) -> Claim HttpRequest
 hasHeader ( expectedName, expectedValue ) request =
   case Dict.get expectedName request.headers of
@@ -90,6 +121,8 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
     ]
 
 
+{-| Claim that the body of an HTTP request is a string that is equal to the given value.
+-}
 hasStringBody : String -> Claim HttpRequest
 hasStringBody expected request =
   case request.body of
@@ -103,6 +136,17 @@ hasStringBody expected request =
           ]
 
 
+{-| Claim that the body of an HTTP request is a string that can be decoded with the
+given decoder into a value that satisfies the given claim.
+
+For example, if the body of the observed request was `{"sport":"bowling"}`, then the following claim:
+
+    Spec.Http.hasJsonBody (Json.Decode.field "sport" Json.Decode.string)
+      (Spec.Claim.isEqualTo Debug.toString "bowling")
+
+would be accepted.
+
+-}
 hasJsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
 hasJsonBody decoder claim request =
   case request.body of
@@ -117,6 +161,16 @@ hasJsonBody decoder claim request =
             ]
 
 
+{-| Observe HTTP requests that match the given route.
+
+For example:
+
+    Spec.Http.observeRequests (Spec.Http.Route.get "http://fake.com/fake")
+      |> Spec.Claim.isList
+        [ Spec.Http.hasHeader ("Authorization", "Bearer some-fun-token")
+        ]
+
+-}
 observeRequests : HttpRoute -> Observer model (List HttpRequest)
 observeRequests route =
   Observer.inquire (fetchRequestsFor route) (
