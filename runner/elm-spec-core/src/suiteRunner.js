@@ -93,6 +93,7 @@ module.exports = class SuiteRunner extends EventEmitter {
       })
       .on("error", (error) => {
         this.reporter.error(error)
+        this.finish()
       })
       .run()
   }

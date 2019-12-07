@@ -56,6 +56,7 @@ describe("Suite Runner", () => {
         })
       })
     })
+
     context("when the sendIn port is not found", () => {
       it("fails and reports an error", (done) => {
         expectScenarios("WithNoSendInPort", { tags: [], timeout: 50, endOnFailure: false }, done, (observations, error) => {
@@ -65,6 +66,16 @@ describe("Suite Runner", () => {
             reportLine("Make sure your elm-spec program uses a port defined like so", "port sendIn : (Message -> msg) -> Sub msg")
           ])
         })
+      })
+    })
+  })
+
+  context("when the version is not correct", () => {
+    it("fails and reports only one error", (done) => {
+      expectScenariosForVersion(-1, "Passing", { tags: [], timeout: 50, endOnFailure: false }, done, (reporter) => {
+        expect(reporter.observations).to.have.length(0)
+        expect(reporter.errorCount).to.equal(1)
+        expect(reporter.specError).to.not.be.null
       })
     })
   })
@@ -84,20 +95,27 @@ const expectScenarios = (specDir, options, done, matcher) => {
   expectScenariosAt({
     cwd: './tests/sample',
     specPath: `./specs/${specDir}/**/*Spec.elm`
-  }, options, done, matcher)
+  }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError) })
 }
 
-const expectScenariosAt = (compilerOptions, options, done, matcher) => {
+const expectScenariosForVersion = (version, specDir, options, done, matcher) => {
+  expectScenariosAt({
+    cwd: './tests/sample',
+    specPath: `./specs/${specDir}/**/*Spec.elm`
+  }, options, done, matcher, version)
+}
+
+const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
   const compiler = new Compiler(compilerOptions)
   
   const context = new JsdomContext(compiler)
   const reporter = new TestReporter()
   
-  const runner = new SuiteRunner(context, reporter, options)
+  const runner = new SuiteRunner(context, reporter, options, version)
   runner
     .on('complete', () => {
       setTimeout(() => {
-        matcher(reporter.observations, reporter.specError)
+        matcher(reporter)
         done()
       }, 0)
     })
@@ -108,6 +126,7 @@ const TestReporter = class {
   constructor() {
     this.observations = []
     this.specError = null
+    this.errorCount = 0
   }
 
   startSuite() {
@@ -121,6 +140,7 @@ const TestReporter = class {
   finish() {}
 
   error(err) {
+    this.errorCount += 1
     this.specError = err
   }
 }

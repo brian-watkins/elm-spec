@@ -28,11 +28,14 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   run() {
-    this.app.ports.sendOut.subscribe((specMessage) => {
+    const messageHandler = (specMessage) => {
       this.handleMessage(specMessage, (outMessage) => {
         this.app.ports.sendIn.send(outMessage)
       })
-    })
+    }
+
+    this.app.ports.sendOut.subscribe(messageHandler)
+    this.stopHandlingMessages = () => { this.app.ports.sendOut.unsubscribe(messageHandler) }
 
     this.timePlugin.nativeSetTimeout(() => {
       this.app.ports.sendIn.send(this.specStateMessage("START"))
@@ -124,6 +127,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         break    
       }
       case "error": {
+        this.stopHandlingMessages()
         this.timePlugin.resetFakes()
         this.emit('error', specMessage.body)
         break
