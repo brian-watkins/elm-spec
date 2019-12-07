@@ -4,7 +4,7 @@ const fs = require('fs')
 
 const defaultConfig = {
   cwd: process.cwd(),
-  specPath: "./specs/**/*Spec.elm",
+  specPath: path.join(".", "specs", "**", "*Spec.elm"),
   elmPath: "elm"
 }
 

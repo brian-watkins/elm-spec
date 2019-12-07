@@ -6,6 +6,7 @@ const SuiteRunner = require('elm-spec-core')
 const commandExists = require('command-exists').sync
 const glob = require("glob")
 const process = require('process')
+const path = require('path')
 
 class ElmSpecRunnerCommand extends Command {
   async run() {
@@ -52,7 +53,7 @@ ElmSpecRunnerCommand.flags = {
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
   elm: flags.string({char: 'e', description: 'path to elm', default: 'elm'}),
-  specs: flags.string({char: 's', description: 'glob for spec modules', default: './specs/**/*Spec.elm'}),
+  specs: flags.string({char: 's', description: 'glob for spec modules', default: path.join(".", "specs", "**", "*Spec.elm")}),
   tag: flags.string({char: 't', description: 'execute scenarios with this tag only (may specify multiple)', multiple: true}),
   endOnFailure: flags.boolean({char: 'f', description: 'end spec suite run on first failure', default: false}),
   timeout: flags.integer({char: 'm', description: 'spec timeout in milliseconds', default: 500})
