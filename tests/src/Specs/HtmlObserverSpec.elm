@@ -1,7 +1,7 @@
 module Specs.HtmlObserverSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
@@ -15,8 +15,8 @@ hasTextSpec =
   Spec.describe "hasText"
   [ scenario "the hasText matcher is satisfied" (
       given (
-        Subject.initWithModel { activity = "running" }
-          |> Subject.withView testTextView
+        Setup.initWithModel { activity = "running" }
+          |> Setup.withView testTextView
       )
       |> it "matches the text" (
         Markup.observeElement
@@ -26,8 +26,8 @@ hasTextSpec =
     )
   , scenario "the hasText matcher fails" (
       given (
-        Subject.initWithModel { activity = "Running" }
-          |> Subject.withView testTextView
+        Setup.initWithModel { activity = "Running" }
+          |> Setup.withView testTextView
       )
       |> it "renders the name based on the model" (
         Markup.observeElement
@@ -43,8 +43,8 @@ hasTextContainedSpec =
   Spec.describe "hasText"
   [ scenario "the hasText matcher is satisfied" (
       given (
-        Subject.initWithModel { activity = "swimming" }
-          |> Subject.withView testTextView
+        Setup.initWithModel { activity = "swimming" }
+          |> Setup.withView testTextView
       )
       |> it "matches the text" (
         Markup.observeElement
@@ -72,8 +72,8 @@ hasAttributeSpec =
   Spec.describe "hasAttribute"
   [ scenario "when the element has the attribute with the right value" (
       given (
-        Subject.initWithModel { activity = "bowling" }
-          |> Subject.withView testAttributeView
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
@@ -83,8 +83,8 @@ hasAttributeSpec =
     )
   , scenario "when the element does not have the expected attribute" (
       given (
-        Subject.initWithModel { activity = "bowling" }
-          |> Subject.withView testAttributeView
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
@@ -94,8 +94,8 @@ hasAttributeSpec =
     )
   , scenario "when the element has the attribute with the wrong value" (
       given (
-        Subject.initWithModel { activity = "bowling" }
-          |> Subject.withView testAttributeView
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
         Markup.observeElement
@@ -105,8 +105,8 @@ hasAttributeSpec =
     )
   , scenario "when the element has no attributes" (
       given (
-        Subject.initWithModel { activity = "bowling" }
-          |> Subject.withView testAttributeView
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
       )
       |> it "sets the attribute value based on the model" (
         Markup.observeElement

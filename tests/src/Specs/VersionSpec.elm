@@ -1,7 +1,7 @@
 module Specs.VersionSpec exposing (main)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Observer as Observer
 import Specs.Helpers exposing (..)
 import Runner
@@ -12,7 +12,7 @@ versionSpec =
   Spec.describe "version check"
   [ scenario "the version does not match" (
       given (
-        Subject.initWithModel ()
+        Setup.initWithModel ()
       )
       |> it "does not run" (
         Observer.observeModel identity

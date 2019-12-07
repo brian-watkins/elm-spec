@@ -5,25 +5,25 @@ module Spec.Time exposing
   , nextAnimationFrame
   )
 
-import Spec.Subject as Subject exposing (SubjectProvider)
+import Spec.Setup as Setup exposing (Setup)
 import Spec.Step as Step
 import Spec.Message as Message
 import Spec.Markup.Message as Message
 import Json.Encode as Encode
 
 
-withTime : Int -> SubjectProvider model msg -> SubjectProvider model msg
+withTime : Int -> Setup model msg -> Setup model msg
 withTime posix =
   Message.for "_time" "set-time"
     |> Message.withBody (Encode.int posix)
-    |> Subject.configure
+    |> Setup.configure
 
 
-withTimezoneOffset : Int -> SubjectProvider model msg -> SubjectProvider model msg
+withTimezoneOffset : Int -> Setup model msg -> Setup model msg
 withTimezoneOffset zoneOffset =
   Message.for "_time" "set-timezone"
     |> Message.withBody (Encode.int zoneOffset)
-    |> Subject.configure
+    |> Setup.configure
 
 
 tick : Int -> Step.Context model -> Step.Command msg

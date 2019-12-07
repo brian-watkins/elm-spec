@@ -1,7 +1,7 @@
 module WithFailure.ClickSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -14,9 +14,9 @@ clickSpec =
   Spec.describe "an html program"
   [ scenario "a click event" (
       given (
-        Subject.initWithModel App.defaultModel
-          |> Subject.withUpdate App.update
-          |> Subject.withView App.view
+        Setup.initWithModel App.defaultModel
+          |> Setup.withUpdate App.update
+          |> Setup.withView App.view
       )
       |> when "the button is clicked three times"
         [ Markup.target << by [ id "my-button" ]

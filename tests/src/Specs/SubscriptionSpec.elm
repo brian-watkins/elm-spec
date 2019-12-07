@@ -1,7 +1,7 @@
 port module Specs.SubscriptionSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Runner
@@ -15,9 +15,9 @@ sendsSubscriptionSpec =
   Spec.describe "a worker with subscriptions"
   [ scenario "subscriptions are registered always" (
       given (
-        Subject.init ( { count = 0, subscribe = True }, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { count = 0, subscribe = True }, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "some subscription messages are sent"
         [ Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 41) ])
@@ -30,9 +30,9 @@ sendsSubscriptionSpec =
     )
   , scenario "subscriptions are registered later depending on the model" (
       given (
-        Subject.init ( { count = 0, subscribe = False }, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testVariableSubscriptions
+        Setup.init ( { count = 0, subscribe = False }, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testVariableSubscriptions
       )
       |> when "the subscription is enabled"
         [ Port.send "enableSubscription" (Encode.bool True)
@@ -48,9 +48,9 @@ sendsSubscriptionSpec =
     )
   , scenario "attempt to send unknown subscription" (
       given (
-        Subject.init ( { count = 0, subscribe = True }, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { count = 0, subscribe = True }, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "some subscription messages are sent"
         [ Port.send "unknown-subscription" (Encode.object [ ("number", Encode.int 41) ])

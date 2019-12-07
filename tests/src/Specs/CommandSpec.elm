@@ -1,7 +1,7 @@
 module Specs.CommandSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Spec.Command as Command
@@ -15,8 +15,8 @@ sendMessageToUpdateSpec =
   Spec.describe "a worker"
   [ scenario "messages are sent to the update function" (
       given (
-        Subject.init ( { numbers = [] }, Cmd.none )
-          |> Subject.withUpdate testUpdate
+        Setup.init ( { numbers = [] }, Cmd.none )
+          |> Setup.withUpdate testUpdate
       )
       |> when "messages are sent to the update function"
         [ Command.send <| Command.fake <| ReceivedNumber 8
@@ -30,8 +30,8 @@ sendMessageToUpdateSpec =
     )
   , scenario "sending Cmd.none" (
       given (
-        Subject.init ( { numbers = [] }, Cmd.none )
-          |> Subject.withUpdate testUpdate
+        Setup.init ( { numbers = [] }, Cmd.none )
+          |> Setup.withUpdate testUpdate
       )
       |> when "a message is sent along with Cmd.none"
         [ Command.send <| Command.fake <| ReceivedNumber 8

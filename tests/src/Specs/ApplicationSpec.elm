@@ -1,7 +1,7 @@
 module Specs.ApplicationSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
@@ -25,12 +25,12 @@ applyGivenUrlSpec =
   Spec.describe "given a url"
   [ scenario "a url is provided" (
       given (
-        Subject.initForApplication (testInit ())
-          |> Subject.withDocument testDocument
-          |> Subject.withUpdate testUpdate
-          |> Subject.onUrlChange UrlDidChange
-          |> Subject.onUrlRequest UrlChangeRequested
-          |> Subject.withLocation (testUrl "/fun/reading")
+        Setup.initForApplication (testInit ())
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
+          |> Setup.onUrlChange UrlDidChange
+          |> Setup.onUrlRequest UrlChangeRequested
+          |> Setup.withLocation (testUrl "/fun/reading")
       )
       |> observeThat
         [ it "sets the location to the given url" (
@@ -52,9 +52,9 @@ noChangeHandlerSpec =
   Spec.describe "on url change"
   [ scenario "no url change handler is set" (
       given (
-        Subject.initForApplication (testInit ())
-          |> Subject.withDocument testDocument
-          |> Subject.withUpdate testUpdate
+        Setup.initForApplication (testInit ())
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
       )
       |> when "the url is changed"
         [ Markup.target << by [ id "push-url-button" ]
@@ -194,9 +194,9 @@ noRequestHandlerSpec =
   Spec.describe "handling a url request"
   [ scenario "no url request handler is set" (
       given (
-        Subject.initForApplication (testInit ())
-          |> Subject.withDocument testDocument
-          |> Subject.withUpdate testUpdate
+        Setup.initForApplication (testInit ())
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
       )
       |> when "the url is changed"
         [ Markup.target << by [ id "internal-link" ]
@@ -214,12 +214,12 @@ noRequestHandlerSpec =
 
 
 testSubject =
-  Subject.initForApplication (testInit ())
-    |> Subject.withDocument testDocument
-    |> Subject.withUpdate testUpdate
-    |> Subject.onUrlChange UrlDidChange
-    |> Subject.onUrlRequest UrlChangeRequested
-    |> Subject.withLocation (testUrl "/")
+  Setup.initForApplication (testInit ())
+    |> Setup.withDocument testDocument
+    |> Setup.withUpdate testUpdate
+    |> Setup.onUrlChange UrlDidChange
+    |> Setup.onUrlRequest UrlChangeRequested
+    |> Setup.withLocation (testUrl "/")
 
 
 testUrl path =

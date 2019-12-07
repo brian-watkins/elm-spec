@@ -1,7 +1,7 @@
 module Specs.TimeSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Time
 import Spec.Observer as Observer
@@ -17,8 +17,8 @@ stubTimeSpec =
   Spec.describe "stubbing the time"
   [ scenario "the curent time is requested in init" (
       given (
-        Subject.init ( testModel, Time.now |> Task.perform ReceivedTime )
-          |> Subject.withUpdate testUpdate
+        Setup.init ( testModel, Time.now |> Task.perform ReceivedTime )
+          |> Setup.withUpdate testUpdate
           |> Spec.Time.withTime 1111111111111
       )
       |> it "gets the stubbed time" (
@@ -28,9 +28,9 @@ stubTimeSpec =
     )
   , scenario "passing time" (
       given (
-        Subject.init ( testModel, Time.now |> Task.perform ReceivedTime )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( testModel, Time.now |> Task.perform ReceivedTime )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
           |> Spec.Time.withTime 1111111111111
       )
       |> when "time passes"
@@ -50,8 +50,8 @@ stubZoneSpec =
   Spec.describe "stubbing the timezone"
   [ scenario "zone is requested in init" (
       given (
-        Subject.init ( testModel, Time.here |> Task.perform ReceivedZone )
-          |> Subject.withUpdate testUpdate
+        Setup.init ( testModel, Time.here |> Task.perform ReceivedZone )
+          |> Setup.withUpdate testUpdate
           |> Spec.Time.withTimezoneOffset (9 * 60)
       )
       |> it "gets the stubbed time" (
@@ -67,9 +67,9 @@ countTimePassingSpec =
   Spec.describe "a worker that subscribes to the time"
   [ scenario "the time passes as expected" (
       given (
-        Subject.init ( testModel, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( testModel, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "time passes"
         [ Spec.Time.tick 1000
@@ -84,9 +84,9 @@ countTimePassingSpec =
     )
   , scenario "another scenario runs" (
       given (
-        Subject.init ( testModel, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( testModel, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "time passes"
         [ Spec.Time.tick 1000

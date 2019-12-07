@@ -1,7 +1,7 @@
 module WithNoSendInPort.TestSpec exposing (main)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Observer as Observer
 import WithNoSendInPort.Runner as Runner
@@ -12,7 +12,7 @@ testSpec =
   Spec.describe "test"
   [ scenario "passing" (
       given (
-        Subject.initWithModel ()
+        Setup.initWithModel ()
       )
       |> it "passes" (
         Observer.observeModel identity

@@ -1,7 +1,7 @@
 port module Specs.SpecSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Claim as Claim
 import Spec.Observer as Observer
@@ -38,9 +38,9 @@ multipleWhenSpec =
 
 
 testSubject =
-  Subject.init ( { counts = [] }, Cmd.none )
-      |> Subject.withUpdate testUpdate
-      |> Subject.withSubscriptions testSubscriptions
+  Setup.init ( { counts = [] }, Cmd.none )
+      |> Setup.withUpdate testUpdate
+      |> Setup.withSubscriptions testSubscriptions
 
 
 multipleScenariosSpec : Spec Model Msg

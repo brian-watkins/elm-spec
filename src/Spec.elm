@@ -13,18 +13,18 @@ A spec is a collection of scenarios, each of which provides an example that
 illustrates a behavior belonging to your program. Each scenario follows
 the same basic plan:
 
-1. Describe the state of the world (and your program) at the beginning of the scenario.
-2. Provide a list of steps to perform.
-3. List your expectations about the new state of the world after the actions have been completed.
+1. Configure the initial state of the world (and your program).
+2. Perform a sequence of steps.
+3. Check your xpectations about the new state of the world after the steps have been performed.
 
 Here's a sample spec for a browser program called `App`:
 
     Spec.describe "some part of my system"
     [ Spec.scenario "the awesome path" (
         Spec.given (
-          Spec.Subject.init (App.init testFlags)
-            |> Spec.Subject.withView App.view
-            |> Spec.Subject.withUpdate App.update
+          Spec.Setup.init (App.init testFlags)
+            |> Spec.Setup.withView App.view
+            |> Spec.Setup.withUpdate App.update
         )
         |> Spec.when "something happens"
           [ Spec.Markup.target << by [ id "some-button" ]
@@ -52,7 +52,7 @@ Here's a sample spec for a browser program called `App`:
 
 -}
 
-import Spec.Subject as Subject exposing (SubjectProvider)
+import Spec.Setup as Setup exposing (Setup)
 import Spec.Scenario.Internal as Internal
 import Spec.Step as Step
 import Spec.Observer exposing (Observer, Expectation)
@@ -100,7 +100,7 @@ scenario description (Plan plan) =
   Scenario
     { specification = ""
     , description = Internal.formatScenarioDescription description
-    , subjectProvider = plan.subjectProvider
+    , setup = plan.setup
     , steps = plan.steps
     , observations = plan.observations
     , tags = []
@@ -118,14 +118,14 @@ tagged tags (Scenario scenarioData) =
     { scenarioData | tags = tags }
 
 
-{-| Provide a representation of the state of the world at the start of the scenario.
+{-| Provide the `Setup` that represents the state of the world at the start of the scenario.
 
-See `Spec.Subject` for functions to construct this representation.
+See `Spec.Setup` for functions to construct this representation.
 -}
-given : SubjectProvider model msg -> Script model msg
+given : Setup model msg -> Script model msg
 given provider =
   Script
-    { subjectProvider = provider
+    { setup = provider
     , steps = []
     }
 
@@ -153,7 +153,7 @@ when condition messageSteps (Script script) =
 observeThat : List (Script model msg -> Plan model msg) -> Script model msg -> Plan model msg
 observeThat planGenerators (Script script) =
   Plan
-    { subjectProvider = script.subjectProvider
+    { setup = script.setup
     , steps = script.steps
     , observations =
         List.foldl (\planGenerator observations ->
@@ -171,7 +171,7 @@ observeThat planGenerators (Script script) =
 it : String -> Expectation model -> Script model msg -> Plan model msg
 it description expectation (Script script) =
   Plan
-    { subjectProvider = script.subjectProvider
+    { setup = script.setup
     , steps = script.steps
     , observations =
         [ Internal.buildObservation description expectation

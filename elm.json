@@ -20,8 +20,8 @@
         "Spec.Port",
         "Spec.Report",
         "Spec.Runner",
+        "Spec.Setup",
         "Spec.Step",
-        "Spec.Subject",
         "Spec.Time",
         "Spec.Witness"
     ],

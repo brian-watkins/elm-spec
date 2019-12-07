@@ -1,7 +1,7 @@
 module Specs.InitWorkerSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner
@@ -14,8 +14,8 @@ usesModelFromInitSpec =
   Spec.describe "a worker"
   [ scenario "Uses Model from Init" (
       given (
-        Subject.init testInit
-          |> Subject.withUpdate testUpdate
+        Setup.init testInit
+          |> Setup.withUpdate testUpdate
       )
       |> it "uses the given model" (
         Observer.observeModel .count
@@ -30,8 +30,8 @@ usesCommandFromInitSpec =
   Spec.describe "a worker"
   [ scenario "Uses command from Init" (
       given (
-        Subject.init (testInitWithCommand 33)
-          |> Subject.withUpdate testUpdate
+        Setup.init (testInitWithCommand 33)
+          |> Setup.withUpdate testUpdate
       )
       |> it "updates the model" (
         Observer.observeModel .count

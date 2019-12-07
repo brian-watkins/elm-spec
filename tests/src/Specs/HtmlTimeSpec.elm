@@ -1,7 +1,7 @@
 module Specs.HtmlTimeSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup exposing (hasText)
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
@@ -17,10 +17,10 @@ intervalSpec =
   Spec.describe "an Html program that updates the time"
   [ scenario "the expected amount of time passes" (
       given (
-        Subject.initWithModel { count = 0 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.initWithModel { count = 0 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "time passes"
         [ Spec.Time.tick 1000

@@ -3,7 +3,7 @@ module Specs.MultipleSpecSpec exposing (..)
 import Spec exposing (..)
 import Spec.Runner
 import Spec.Message exposing (Message)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner as TestRunner
@@ -17,8 +17,8 @@ passingSpec =
   Spec.describe "a fragment"
   [ scenario "the observation is valid" (
       given (
-        Subject.initWithModel { count = 99 }
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel { count = 99 }
+          |> Setup.withUpdate testUpdate
       )
       |> it "contains the expected value" (
           Observer.observeModel .count
@@ -33,8 +33,8 @@ failingSpec =
   Spec.describe "another fragment"
   [ scenario "the observation is invalid" (
       given (
-        Subject.initWithModel { count = 99 }
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel { count = 99 }
+          |> Setup.withUpdate testUpdate
       )
       |> it "contains the expected value" (
           Observer.observeModel .count
@@ -49,8 +49,8 @@ specWithAScenario =
   Spec.describe "a third fragment"
   [ scenario "passing" (
       given (
-        Subject.initWithModel { count = 108 }
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel { count = 108 }
+          |> Setup.withUpdate testUpdate
       )
       |> it "contains the expected value" (
           Observer.observeModel .count
@@ -59,8 +59,8 @@ specWithAScenario =
     )
   , scenario "failing" (
       given (
-        Subject.initWithModel { count = 108 }
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel { count = 108 }
+          |> Setup.withUpdate testUpdate
       )
       |> it "contains a different value" (
           Observer.observeModel .count

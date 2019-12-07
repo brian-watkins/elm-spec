@@ -6,7 +6,7 @@ module Spec.Scenario.State.Observe exposing
   )
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Observation)
-import Spec.Subject.Internal as Internal exposing (Subject)
+import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Observation.Expectation as Expectation exposing (Judgment(..))

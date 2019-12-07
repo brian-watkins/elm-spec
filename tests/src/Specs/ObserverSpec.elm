@@ -2,7 +2,7 @@ module Specs.ObserverSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Observer as Observer
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim
 import Specs.Helpers exposing (..)
 import Runner
@@ -13,7 +13,7 @@ satisfyingSpec =
   Spec.describe "satisfying"
   [ scenario "all observers are satisfied" (
       given (
-        Subject.initWithModel { name = "Cool Dude", sport = "bowling", age = 19, isFun = True }
+        Setup.initWithModel { name = "Cool Dude", sport = "bowling", age = 19, isFun = True }
       )
       |> it "checks all the attributes of the model" (
         Observer.observeModel identity
@@ -28,7 +28,7 @@ satisfyingSpec =
     )
   , scenario "one observer fails" (
       given (
-        Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
       )
       |> it "checks all the attributes of the model" (
         Observer.observeModel identity
@@ -43,7 +43,7 @@ satisfyingSpec =
     )
   , scenario "multiple observers fail" (
       given (
-        Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
       )
       |> it "checks all the attributes of the model" (
         Observer.observeModel identity
@@ -64,7 +64,7 @@ booleanSpec =
   Spec.describe "boolean claims"
   [ scenario "true claim" (
       given (
-        Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
       )
       |> it "checks the value" (
         Observer.observeModel .isFun
@@ -73,7 +73,7 @@ booleanSpec =
     )
   , scenario "false claim" (
       given (
-        Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = False }
+        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = False }
       )
       |> it "checks the value" (
         Observer.observeModel .isFun
@@ -82,7 +82,7 @@ booleanSpec =
     )
   , scenario "failing" (
       given (
-        Subject.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
       )
       |> it "checks the value" (
         Observer.observeModel .isFun

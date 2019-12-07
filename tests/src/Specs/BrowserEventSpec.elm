@@ -1,7 +1,7 @@
 module Specs.BrowserEventSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -249,10 +249,10 @@ nonBrowserEventsSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [], animationFrames = 0 }
-    |> Subject.withView testView
-    |> Subject.withUpdate testUpdate
-    |> Subject.withSubscriptions testSubscriptions
+  Setup.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [], animationFrames = 0 }
+    |> Setup.withView testView
+    |> Setup.withUpdate testUpdate
+    |> Setup.withSubscriptions testSubscriptions
 
 
 type Msg

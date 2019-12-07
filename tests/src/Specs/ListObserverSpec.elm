@@ -2,7 +2,7 @@ module Specs.ListObserverSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Observer as Observer
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Claim as Claim
 import Runner
 import Specs.Helpers exposing (..)
@@ -13,7 +13,7 @@ hasLengthSpec =
   Spec.describe "isListWithLength"
   [ scenario "the list has the expected length" (
       given (
-        Subject.initWithModel [ "a", "b", "c" ]
+        Setup.initWithModel [ "a", "b", "c" ]
       )
       |> it "has three items" (
         Observer.observeModel identity
@@ -22,7 +22,7 @@ hasLengthSpec =
     )
   , scenario "the list does not have the expected length" (
       given (
-        Subject.initWithModel [ "a" ]
+        Setup.initWithModel [ "a" ]
       )
       |> it "has three items" (
         Observer.observeModel identity
@@ -37,7 +37,7 @@ isListSpec =
   Spec.describe "isList"
   [ scenario "the list matches" (
       given (
-        Subject.initWithModel [ "1", "2", "3", "4" ]
+        Setup.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
         Observer.observeModel identity
@@ -53,7 +53,7 @@ isListSpec =
     )
   , scenario "it has the correct size but some elements fail to match" (
       given (
-        Subject.initWithModel [ "1", "2", "3", "4" ]
+        Setup.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
         Observer.observeModel identity
@@ -69,7 +69,7 @@ isListSpec =
     )
   , scenario "the list does not have the expected size" (
       given (
-        Subject.initWithModel [ "1", "2", "3", "4" ]
+        Setup.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
         Observer.observeModel identity
@@ -89,7 +89,7 @@ atIndexSpec =
   Spec.describe "atIndex"
   [ scenario "the list has an element that matches" (
       given (
-        Subject.initWithModel [ "1", "2", "3", "4" ]
+        Setup.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "matches" (
         Observer.observeModel identity
@@ -100,7 +100,7 @@ atIndexSpec =
     )
   , scenario "the list has an element that does not match" (
       given (
-        Subject.initWithModel [ "1", "2", "3", "4" ]
+        Setup.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "fails to match" (
         Observer.observeModel identity
@@ -111,7 +111,7 @@ atIndexSpec =
     )
   , scenario "the list does not have an element at the index" (
       given (
-        Subject.initWithModel [ "1", "2", "3", "4" ]
+        Setup.initWithModel [ "1", "2", "3", "4" ]
       )
       |> it "fails to match" (
         Observer.observeModel identity

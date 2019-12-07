@@ -1,7 +1,7 @@
 module Specs.SelectorSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
@@ -17,8 +17,8 @@ descendantsOfSpec =
   Spec.describe "an html program"
   [ scenario "Select descendants" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView descendantsView
+        Setup.initWithModel ()
+          |> Setup.withView descendantsView
       )
       |> it "finds all the elements" (
         Markup.observeElements
@@ -30,8 +30,8 @@ descendantsOfSpec =
     )
   , scenario "Multiple descendants" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView descendantsView
+        Setup.initWithModel ()
+          |> Setup.withView descendantsView
       )
       |> it "finds all the elements" (
         Markup.observeElements
@@ -68,8 +68,8 @@ attributeNameSelectorSpec =
   Spec.describe "an html program"
   [ scenario "Select by attribute name" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
+        Setup.initWithModel ()
+          |> Setup.withView testView
       )
       |> it "finds the element" (
         Markup.observeElement
@@ -85,8 +85,8 @@ attributeSelectorSpec =
   Spec.describe "attribute selector"
   [ scenario "select by attribute" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
+        Setup.initWithModel ()
+          |> Setup.withView testView
       )
       |> it "finds the element" (
         Markup.observeElement
@@ -102,8 +102,8 @@ onlyOneTagAllowedSpec =
   Spec.describe "an html program"
   [ scenario "Select by multiple tags" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
+        Setup.initWithModel ()
+          |> Setup.withView testView
       )
       |> it "uses the first tag only" (
         Markup.observeElement
@@ -119,8 +119,8 @@ tagSelectorSpec =
   Spec.describe "an html program"
   [ scenario "Selects elements by tag" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
+        Setup.initWithModel ()
+          |> Setup.withView testView
       )
       |> it "renders the text on the view" (
         Markup.observeElement
@@ -136,8 +136,8 @@ combinedTagSelectorSpec =
   Spec.describe "an html program"
   [ scenario "Selects by tag and then id" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
+        Setup.initWithModel ()
+          |> Setup.withView testView
       )
       |> it "selects the text on the view" (
         Markup.observeElement
@@ -147,8 +147,8 @@ combinedTagSelectorSpec =
     )
   , scenario "Selects by id and then tag" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
+        Setup.initWithModel ()
+          |> Setup.withView testView
       )
       |> it "selects the text on the view" (
         Markup.observeElement

@@ -1,7 +1,7 @@
 module Specs.FormSpec exposing (main)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
@@ -219,9 +219,9 @@ selectOptionByTextSpec =
 
 
 testSubject =
-  Subject.initWithModel defaultModel
-    |> Subject.withView testView
-    |> Subject.withUpdate testUpdate
+  Setup.initWithModel defaultModel
+    |> Setup.withView testView
+    |> Setup.withUpdate testUpdate
 
 
 type alias Model =

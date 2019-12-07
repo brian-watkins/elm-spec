@@ -4,7 +4,7 @@ module Spec.Port exposing
   , observe
   )
 
-import Spec.Subject as Subject exposing (SubjectProvider)
+import Spec.Setup as Setup exposing (Setup)
 import Spec.Step as Step
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
@@ -30,10 +30,10 @@ observePortCommand name =
     )
 
 
-record : String -> SubjectProvider model msg -> SubjectProvider model msg
+record : String -> Setup model msg -> Setup model msg
 record portName =
   observePortCommand portName
-    |> Subject.configure
+    |> Setup.configure
 
 
 send : String -> Encode.Value -> Step.Context model -> Step.Command msg

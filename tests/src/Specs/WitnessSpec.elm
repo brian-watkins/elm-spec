@@ -1,7 +1,7 @@
 port module Specs.WitnessSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Message exposing (Message)
 import Spec.Claim as Claim
 import Spec.Port as Port
@@ -51,12 +51,12 @@ recordSpec =
 
 
 testSubject =
-  Subject.initWithModel { count = 0 }
+  Setup.initWithModel { count = 0 }
     |> Witness.forUpdate (\witness ->
         testUpdate <| \num -> 
           Witness.log "injected" (Encode.int num) witness
       )
-    |> Subject.withSubscriptions testSubscriptions
+    |> Setup.withSubscriptions testSubscriptions
 
 
 triggerInjectedFunctionWith number =

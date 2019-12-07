@@ -1,7 +1,7 @@
 module Specs.EventSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Step as Step
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
@@ -298,9 +298,9 @@ customEventSpec =
 
 
 testSubject =
-  Subject.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0, mouseOut = 0, mouseLeave = 0 }
-    |> Subject.withUpdate testUpdate
-    |> Subject.withView testView
+  Setup.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0, mouseOut = 0, mouseLeave = 0 }
+    |> Setup.withUpdate testUpdate
+    |> Setup.withView testView
 
 
 keyUpEvent : Int -> Step.Context model -> Step.Command msg

@@ -1,7 +1,7 @@
 port module Specs.PortCommandSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Claim as Claim
 import Specs.Helpers exposing (..)
@@ -15,8 +15,8 @@ witnessPortCommandFromInitSpec =
   Spec.describe "a worker with a port"
   [ scenario "commands sent via a port are observed" (
       given (
-        Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
-          |> Subject.withUpdate testUpdate
+        Setup.init ( { count = 0 }, sendTestMessageOut "From init!")
+          |> Setup.withUpdate testUpdate
           |> Port.record "sendTestMessageOut"
       )
       |> it "sends the expected message" (
@@ -26,8 +26,8 @@ witnessPortCommandFromInitSpec =
     )
   , scenario "observing the same port in another scenario" (
       given (
-        Subject.init ( { count = 0 }, sendTestMessageOut "From init in another scenario!")
-          |> Subject.withUpdate testUpdate
+        Setup.init ( { count = 0 }, sendTestMessageOut "From init in another scenario!")
+          |> Setup.withUpdate testUpdate
           |> Port.record "sendTestMessageOut"
       )
       |> it "resets the subscription between scenarios so only one request is observed" (
@@ -37,8 +37,8 @@ witnessPortCommandFromInitSpec =
     )
   , scenario "observing a port that is not being recorded" (
       given (
-        Subject.init ( { count = 0 }, sendTestMessageOut "Some message!")
-          |> Subject.withUpdate testUpdate
+        Setup.init ( { count = 0 }, sendTestMessageOut "Some message!")
+          |> Setup.withUpdate testUpdate
           |> Port.record "sendTestMessageOut"
       )
       |> it "fails" (
@@ -48,8 +48,8 @@ witnessPortCommandFromInitSpec =
     )
   , scenario "decoding a port value with the wrong decoder" (
       given (
-        Subject.init ( { count = 0 }, sendTestMessageOut "From init!")
-          |> Subject.withUpdate testUpdate
+        Setup.init ( { count = 0 }, sendTestMessageOut "From init!")
+          |> Setup.withUpdate testUpdate
           |> Port.record "sendTestMessageOut"
       )
       |> it "fails" (
@@ -65,11 +65,11 @@ witnessMultiplePortCommandsFromInitSpec =
   Spec.describe "a worker with a port"
   [ scenario "multiple port commands are witnessed" (
       given (
-        Subject.init
+        Setup.init
           ( {count = 0}
           , Cmd.batch [ sendTestMessageOut "One", sendTestMessageOut "Two", sendTestMessageOut "Three" ]
           )
-        |> Subject.withUpdate testUpdate
+        |> Setup.withUpdate testUpdate
         |> Port.record "sendTestMessageOut"
       )
       |> it "records all the messages sent" (

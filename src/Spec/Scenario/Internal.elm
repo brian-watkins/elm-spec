@@ -7,7 +7,7 @@ module Spec.Scenario.Internal exposing
   , formatCondition
   )
 
-import Spec.Subject.Internal exposing (SubjectProvider)
+import Spec.Setup.Internal exposing (Setup)
 import Spec.Step exposing (Context, Command)
 import Spec.Message exposing (Message)
 import Spec.Observer exposing (Expectation)
@@ -20,7 +20,7 @@ type Spec model msg
 type alias Scenario model msg =
   { specification: String
   , description: String
-  , subjectProvider: SubjectProvider model msg
+  , setup: Setup model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)
   , tags: List String
@@ -28,13 +28,13 @@ type alias Scenario model msg =
 
 
 type alias Script model msg =
-  { subjectProvider: SubjectProvider model msg
+  { setup: Setup model msg
   , steps: List (Step model msg)
   }
 
 
 type alias Plan model msg =
-  { subjectProvider: SubjectProvider model msg
+  { setup: Setup model msg
   , steps: List (Step model msg)
   , observations: List (Observation model)
   }

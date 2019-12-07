@@ -1,7 +1,7 @@
 module Specs.NavigationSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
@@ -22,10 +22,10 @@ loadUrlSpec =
   Spec.describe "a program that uses Browser.Navigation.loadUrl"
   [ scenario "a new URL is loaded" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Subject.withLocation testUrl
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Setup.withLocation testUrl
       )
       |> when "a new page load is triggered"
         [ Markup.target << by [ id "load-button" ]
@@ -38,10 +38,10 @@ loadUrlSpec =
     )
   , scenario "checking the default location" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Subject.withLocation testUrl
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Setup.withLocation testUrl
       )
       |> it "shows the default location" (
         Navigation.observeLocation
@@ -66,9 +66,9 @@ reloadSpec =
   Spec.describe "a program that reloads the page"
   [ scenario "Browser.Navigation.reload is used" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
       )
       |> when "a reload is triggered"
         [ Markup.target << by [ id "reload-button" ]
@@ -80,9 +80,9 @@ reloadSpec =
     )
   , scenario "Browser.Navigation.reloadAndSkipCache is used" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
       )
       |> when "a reload is triggered"
         [ Markup.target << by [ id "reload-skip-cache-button" ]
@@ -94,9 +94,9 @@ reloadSpec =
     )
   , scenario "the page has not been reloaded" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
       )
       |> it "records the reload" (
         Navigation.expectReload
@@ -110,10 +110,10 @@ batchLoadSpec =
   Spec.describe "batching load with another command"
   [ scenario "load and something else" (
       given (
-        Subject.initWithModel ()
-          |> Subject.withView testView
-          |> Subject.withUpdate testUpdate
-          |> Subject.withLocation testUrl
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Setup.withLocation testUrl
       )
       |> when "the batch command is triggered"
         [ Markup.target << by [ id "load-and-send" ]

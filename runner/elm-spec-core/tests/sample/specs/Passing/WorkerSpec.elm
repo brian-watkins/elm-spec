@@ -1,7 +1,7 @@
 module Passing.WorkerSpec exposing (main)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Observer as Observer
 import Spec.Claim as Claim exposing (Claim)
 import Runner
@@ -12,7 +12,7 @@ funSpec =
   Spec.describe "something fun"
   [ tagged [ "tagged" ] <| scenario "something passes" (
       given (
-        Subject.initWithModel { value = 87 }
+        Setup.initWithModel { value = 87 }
       )
       |> it "passes" (
         Observer.observeModel .value
@@ -27,7 +27,7 @@ awesomeSpec =
   Spec.describe "something awesome"
   [ scenario "something passes" (
       given (
-        Subject.initWithModel { value = 91 }
+        Setup.initWithModel { value = 91 }
       )
       |> it "passes" (
         Observer.observeModel .value

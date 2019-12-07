@@ -3,7 +3,7 @@ module Specs.NoKeySpec exposing (..)
 import Spec exposing (..)
 import Spec.Runner
 import Spec.Message exposing (Message)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -26,12 +26,12 @@ applicationSpec =
   Spec.describe "application"
   [ scenario "a url is provided" (
       given (
-        Subject.initForApplication (testInit ())
-          |> Subject.withDocument testDocument
-          |> Subject.withUpdate testUpdate
-          |> Subject.onUrlChange UrlDidChange
-          |> Subject.onUrlRequest UrlChangeRequested
-          |> Subject.withLocation (testUrl "/fun/reading")
+        Setup.initForApplication (testInit ())
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
+          |> Setup.onUrlChange UrlDidChange
+          |> Setup.onUrlRequest UrlChangeRequested
+          |> Setup.withLocation (testUrl "/fun/reading")
       )
       |> observeThat
         [ it "renders the view based on the url" (

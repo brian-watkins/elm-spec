@@ -1,7 +1,7 @@
 port module Specs.SleepSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Claim as Claim
 import Spec.Observer as Observer
@@ -18,9 +18,9 @@ processSpec =
   Spec.describe "a program that uses Process.sleep"
   [ scenario "the program stores up sleeps and processes them when time passes" (
       given (
-        Subject.init ( { items = [] }, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { items = [] }, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "subscription messages are received"
         [ Port.send "processSub" (Encode.string "a")
@@ -42,9 +42,9 @@ processOnlyUpToDelaySpec =
   Spec.describe "a program that uses Process.sleep"
   [ scenario "not enough time passes for everything" (
       given (
-        Subject.init ( { items = [] }, Cmd.none )
-          |> Subject.withUpdate testDelayUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { items = [] }, Cmd.none )
+          |> Setup.withUpdate testDelayUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "subscription messages are received"
         [ Port.send "processSub" (Encode.string "a")
@@ -59,9 +59,9 @@ processOnlyUpToDelaySpec =
     )
   , scenario "another scenario runs" (
       given (
-        Subject.init ( { items = [] }, Cmd.none )
-          |> Subject.withUpdate testDelayUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { items = [] }, Cmd.none )
+          |> Setup.withUpdate testDelayUpdate
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "subscription messages are received"
         [ Port.send "processSub" (Encode.string "a")

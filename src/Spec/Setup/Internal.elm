@@ -1,6 +1,6 @@
-module Spec.Subject.Internal exposing
+module Spec.Setup.Internal exposing
   ( Subject
-  , SubjectProvider(..)
+  , Setup(..)
   , ProgramView(..)
   , mapSubject
   , initializeSubject
@@ -13,8 +13,8 @@ import Url exposing (Url)
 import Html exposing (Html)
 
 
-type SubjectProvider model msg =
-  SubjectProvider
+type Setup model msg =
+  Setup
     { location: Url
     , init: Url -> Maybe Key -> Result String (Subject model msg)
     }
@@ -37,9 +37,9 @@ type ProgramView model msg
   | Document (model -> Document msg)
 
 
-mapSubject : (Subject model msg -> Subject model msg) -> SubjectProvider model msg -> SubjectProvider model msg
-mapSubject mapper (SubjectProvider provider) =
-  SubjectProvider
+mapSubject : (Subject model msg -> Subject model msg) -> Setup model msg -> Setup model msg
+mapSubject mapper (Setup provider) =
+  Setup
     { location = provider.location
     , init = \url maybeKey ->
         provider.init url maybeKey
@@ -47,6 +47,6 @@ mapSubject mapper (SubjectProvider provider) =
     }
 
 
-initializeSubject : SubjectProvider model msg -> Maybe Key -> Result String (Subject model msg)
-initializeSubject (SubjectProvider provider) maybeKey =
+initializeSubject : Setup model msg -> Maybe Key -> Result String (Subject model msg)
+initializeSubject (Setup provider) maybeKey =
   provider.init provider.location maybeKey

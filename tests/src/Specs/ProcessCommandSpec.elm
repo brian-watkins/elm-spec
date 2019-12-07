@@ -1,7 +1,7 @@
 port module Specs.ProcessCommandSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Observer as Observer
 import Runner
@@ -16,9 +16,9 @@ processCommandSpec =
   Spec.describe "a worker"
   [ scenario "a command is sent by the update function and processed" (
       given (
-        Subject.init ( { count = 0, num = 0 }, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { count = 0, num = 0 }, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
           |> Port.record "sendSomethingOut"
       )
       |> when "a subscription message is sent"
@@ -40,9 +40,9 @@ processBatchedTerminatingAndNoCallbackCommands =
   Spec.describe "a worker"
   [ scenario "commands with no callback are sent from the update function" (
       given (
-        Subject.init ( { count = 0, num = 0 }, Cmd.none )
-          |> Subject.withUpdate testUpdate
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.init ( { count = 0, num = 0 }, Cmd.none )
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
           |> Port.record "sendSomethingOut"
       )
       |> when "many subscription messages are sent" (

@@ -1,7 +1,7 @@
 module WithFailure.InputSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -13,9 +13,9 @@ inputSpec =
   Spec.describe "an html program"
   [ scenario "an input event" (
       given (
-        Subject.initWithModel App.defaultModel
-          |> Subject.withUpdate App.update
-          |> Subject.withView App.view
+        Setup.initWithModel App.defaultModel
+          |> Setup.withUpdate App.update
+          |> Setup.withView App.view
       )
       |> when "some text is input"
         [ Markup.target << by [ id "my-input" ]
@@ -35,9 +35,9 @@ differentInputSpec =
   Spec.describe "an html program"
   [ scenario "another input event" (
       given (
-        Subject.initWithModel App.defaultModel
-          |> Subject.withUpdate App.update
-          |> Subject.withView App.view
+        Setup.initWithModel App.defaultModel
+          |> Setup.withUpdate App.update
+          |> Setup.withView App.view
       )
       |> when "some text is input"
         [ Markup.target << by [ id "my-input" ]

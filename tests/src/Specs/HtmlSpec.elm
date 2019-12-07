@@ -1,7 +1,7 @@
 port module Specs.HtmlSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)
@@ -22,8 +22,8 @@ htmlSpecSingle =
   Spec.describe "an html program"
   [ scenario "observes the rendered view" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 78 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 78 }
+          |> Setup.withView testView
       )
       |> observeThat
         [ it "renders the name based on the model" (
@@ -46,8 +46,8 @@ htmlSpecMultiple =
   Spec.describe "an html program"
   [ scenario "multiple observations one" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 78 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 78 }
+          |> Setup.withView testView
       )
       |> observeThat
         [ it "renders the name based on the model" (
@@ -64,8 +64,8 @@ htmlSpecMultiple =
     )
   , scenario "multiple observations two" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 78 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 78 }
+          |> Setup.withView testView
       )
       |> observeThat
         [ it "finds a third thing" (
@@ -88,9 +88,9 @@ targetUnknownSpec =
   Spec.describe "an html program"
   [ scenario "targeting an unknown element" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 0 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 0 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
       )
       |> when "the button is clicked three times"
         [ Markup.target << by [ id "some-element-that-does-not-exist" ]
@@ -110,9 +110,9 @@ targetUnknownSpec =
     )
   , scenario "Should run even though previous spec was rejected" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 0 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 0 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
       )
       |> it "should pass" (
           Markup.observeElement
@@ -128,10 +128,10 @@ subSpec =
   Spec.describe "an html program"
   [ scenario "Program with a subscription" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 0 }
-          |> Subject.withUpdate testSubUpdate
-          |> Subject.withView testSubView
-          |> Subject.withSubscriptions testSubscriptions
+        Setup.initWithModel { name = "Cool Dude", count = 0 }
+          |> Setup.withUpdate testSubUpdate
+          |> Setup.withView testSubView
+          |> Setup.withSubscriptions testSubscriptions
       )
       |> when "a subscription message is received"
         [ Port.send "htmlSpecSub" <| Encode.int 27
@@ -157,9 +157,9 @@ manyElementsSpec =
   Spec.describe "an html program"
   [ scenario "the view has many elements" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
       )
       |> observeThat
         [ it "selects many elements" (
@@ -187,8 +187,8 @@ observePresenceSpec =
   Spec.describe "observe presence"
   [ scenario "nothing is expected to be found" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withView testView
       )
       |> it "selects nothing" (
         Markup.observe
@@ -198,8 +198,8 @@ observePresenceSpec =
     )
   , scenario "nothing is expected but something is found" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withView testView
       )
       |> it "selects nothing" (
         Markup.observe
@@ -209,8 +209,8 @@ observePresenceSpec =
     )
   , scenario "something is expected and something is found" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withView testView
       )
       |> it "selects nothing" (
         Markup.observe
@@ -220,8 +220,8 @@ observePresenceSpec =
     )
   , scenario "something is expected but nothing is found" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withView testView
       )
       |> it "selects nothing" (
         Markup.observe
@@ -237,9 +237,9 @@ timeoutSpec =
   Spec.describe "timeout"
   [ scenario "spec times out" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
       )
       |> when "something is clicked with no event handler"
         [ Markup.target << by [ id "my-label" ]
@@ -259,9 +259,9 @@ failingSpec =
   Spec.describe "failing"
   [ scenario "a failing scenario" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
       )
       |> it "fails" (
         Markup.observeElement
@@ -271,9 +271,9 @@ failingSpec =
     )
   , scenario "some other scenario that passes" (
       given (
-        Subject.initWithModel { name = "Cool Dude", count = 7 }
-          |> Subject.withUpdate testUpdate
-          |> Subject.withView testView
+        Setup.initWithModel { name = "Cool Dude", count = 7 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
       )
       |> it "passes" (
         Markup.observeElement

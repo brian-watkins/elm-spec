@@ -7,7 +7,7 @@ module Spec.Scenario.State.Exercise exposing
   )
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Step)
-import Spec.Subject.Internal as Internal exposing (Subject)
+import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message
@@ -119,7 +119,7 @@ update outlet msg model =
           ( model
           , State.updateWith <| Abort <| Report.batch
               [ Report.note "A URL change occurred, but no handler has been provided."
-              , Report.note "Use Spec.Subject.onUrlChange to set a handler."
+              , Report.note "Use Spec.Setup.onUrlChange to set a handler."
               ]
           )
 
@@ -131,7 +131,7 @@ update outlet msg model =
           ( model
           , State.updateWith <| Abort <| Report.batch
               [ Report.note "A URL request occurred, but no handler has been provided."
-              , Report.note "Use Spec.Subject.onUrlRequest to set a handler."
+              , Report.note "Use Spec.Setup.onUrlRequest to set a handler."
               ]
           )
 

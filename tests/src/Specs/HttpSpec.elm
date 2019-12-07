@@ -1,7 +1,7 @@
 module Specs.HttpSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Observer as Observer
 import Spec.Report as Report
@@ -404,9 +404,9 @@ postRequestWithJson body =
 
 
 testSubject doRequest stubs =
-  Subject.initWithModel defaultModel
-    |> Subject.withView testView
-    |> Subject.withUpdate (testUpdate doRequest)
+  Setup.initWithModel defaultModel
+    |> Setup.withView testView
+    |> Setup.withUpdate (testUpdate doRequest)
     |> Spec.Http.withStubs stubs
 
 

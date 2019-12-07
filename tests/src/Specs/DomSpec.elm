@@ -1,7 +1,7 @@
 module Specs.DomSpec exposing (main)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
@@ -79,9 +79,9 @@ type Msg
 
 
 testSubject =
-  Subject.initWithModel { viewport = { x = 0, y = 0 }, scrollTo = { x = 0, y = 0 } }
-    |> Subject.withView testView
-    |> Subject.withUpdate testUpdate
+  Setup.initWithModel { viewport = { x = 0, y = 0 }, scrollTo = { x = 0, y = 0 } }
+    |> Setup.withView testView
+    |> Setup.withUpdate testUpdate
 
 
 testView : Model -> Html Msg

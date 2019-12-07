@@ -1,7 +1,7 @@
 module Behaviors.NavigationSpec exposing (main)
 
 import Spec exposing (..)
-import Spec.Subject as Subject
+import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -16,11 +16,11 @@ navigationSpec =
   [ tagged [ "tagged" ] <|
     scenario "use pushUrl to navigate" (
       given (
-        Subject.initForApplication (Application.init ())
-          |> Subject.withDocument Application.document
-          |> Subject.withUpdate Application.update
-          |> Subject.onUrlChange Application.UrlDidChange
-          |> Subject.withLocation testUrl
+        Setup.initForApplication (Application.init ())
+          |> Setup.withDocument Application.document
+          |> Setup.withUpdate Application.update
+          |> Setup.onUrlChange Application.UrlDidChange
+          |> Setup.withLocation testUrl
       )
       |> when "the url is changed"
         [ Markup.target << by [ id "push-url-button" ]

@@ -21,7 +21,7 @@ describe("application", () => {
         expectSpec("ApplicationSpec", "noChangeUrlHandler", done, (observations) => {
           expectRejected(observations[0], [
             reportLine("A URL change occurred, but no handler has been provided."),
-            reportLine("Use Spec.Subject.onUrlChange to set a handler.")
+            reportLine("Use Spec.Setup.onUrlChange to set a handler.")
           ])  
         })
       })
@@ -53,7 +53,7 @@ describe("application", () => {
       expectSpec("ApplicationSpec", "noRequestHandler", done, (observations) => {
         expectRejected(observations[0], [
           reportLine("A URL request occurred, but no handler has been provided."),
-          reportLine("Use Spec.Subject.onUrlRequest to set a handler.")
+          reportLine("Use Spec.Setup.onUrlRequest to set a handler.")
         ])
       })
     })
@@ -73,7 +73,7 @@ describe("application", () => {
     it("fails with a message", (done) => {
       expectProgram("NoKeySpec", done, (observations) => {
         expectRejected(observations[0], [
-          reportLine("Subject.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!")
+          reportLine("Spec.Setup.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.Runner.browserProgram to run specs for Browser applications!")
         ])
       })
     })
