@@ -13,7 +13,7 @@ import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Step as Step
 import Spec.Step.Command as StepCommand
-import Spec.Observation.Message as Message
+import Spec.Observer.Message as Message
 import Spec.Report as Report
 import Spec.Claim as Claim
 import Html exposing (Html)

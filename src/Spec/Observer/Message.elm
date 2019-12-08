@@ -1,4 +1,4 @@
-module Spec.Observation.Message exposing
+module Spec.Observer.Message exposing
   ( Inquiry
   , inquiry
   , inquiryDecoder

@@ -10,9 +10,9 @@ import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.Message as Message
 import Spec.Scenario.State exposing (Msg(..), Command(..))
 import Spec.Message as Message exposing (Message)
-import Spec.Observation.Message as Message
+import Spec.Observer.Message as Message
 import Spec.Markup.Message as Message
-import Spec.Observation.Expectation as Expectation
+import Spec.Observer.Expectation as Expectation
 import Spec.Report as Report exposing (Report)
 import Spec.Scenario.State.Exercise as Exercise
 import Spec.Scenario.State.Configure as Configure

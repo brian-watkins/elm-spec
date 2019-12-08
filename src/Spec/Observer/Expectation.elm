@@ -1,4 +1,4 @@
-module Spec.Observation.Expectation exposing
+module Spec.Observer.Expectation exposing
   ( Model, Msg(..), init, update
   , Judgment(..)
   , Expectation(..)
@@ -9,7 +9,7 @@ module Spec.Observation.Expectation exposing
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Verdict)
 import Spec.Report as Report
-import Spec.Observation.Message as Message
+import Spec.Observer.Message as Message
 
 
 type Expectation model =

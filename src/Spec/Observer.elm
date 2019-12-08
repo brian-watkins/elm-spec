@@ -24,7 +24,7 @@ more observers.
 import Spec.Observer.Internal as Internal
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observation.Expectation as Expectation
+import Spec.Observer.Expectation as Expectation
 import Spec.Report exposing (Report)
 
 

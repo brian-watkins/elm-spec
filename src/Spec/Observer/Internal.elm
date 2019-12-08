@@ -9,7 +9,7 @@ module Spec.Observer.Internal exposing
 
 import Spec.Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observation.Expectation as Expectation exposing (Expectation)
+import Spec.Observer.Expectation as Expectation exposing (Expectation)
 
 
 type Observer model a =

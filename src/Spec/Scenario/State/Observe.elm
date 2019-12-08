@@ -9,8 +9,8 @@ import Spec.Scenario.Internal as Internal exposing (Scenario, Observation)
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
-import Spec.Observation.Expectation as Expectation exposing (Judgment(..))
-import Spec.Observation.Message as Message
+import Spec.Observer.Expectation as Expectation exposing (Judgment(..))
+import Spec.Observer.Message as Message
 import Spec.Scenario.State.Exercise as Exercise
 import Html exposing (Html)
 import Browser exposing (Document)
