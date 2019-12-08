@@ -236,9 +236,7 @@ module.exports = class HtmlPlugin {
     return {
       tag: element.tagName,
       attributes: this.getAttributes(element),
-      children: [
-        { text: element.textContent }
-      ]
+      textContext: element.textContent
     }
   }
 
