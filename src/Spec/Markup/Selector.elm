@@ -121,7 +121,8 @@ For example,
 
     descendantsOf [ tag "div" ] << by [ tag "span" ]
 
-will match all `<span>` that are inside a `<div>`.
+will match all `<span>` that are inside a `<div>`. You may chain `descendantsOf` selectors
+using `<<` but the chain must terminate with a `by` selector.
 
 -}
 descendantsOf : List Characteristic -> (Selector Element, a) -> (Selector Element, a)
@@ -133,6 +134,16 @@ descendantsOf selectors ( selection, targetable )=
 
 This is used primarily in conjunction with `Spec.Markup.target` to trigger
 document-level events.
+
+For example,
+
+    Spec.when "a document level mouse click is triggered"
+      [ Spec.Markup.target << document
+      , Spec.Markup.Event.click
+      ]
+
+The `document` selector only works with `Spec.Markup.target`, which is to say
+that you cannot observe the document to make claims about it.
 
 -}
 document : Step.Context model -> (Selector Object, Step.Context model)
