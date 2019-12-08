@@ -9,6 +9,7 @@ module Spec.Command exposing
 -}
 
 import Spec.Step as Step
+import Spec.Step.Command as Command
 import Task
 import Json.Encode as Encode
 
@@ -17,7 +18,7 @@ import Json.Encode as Encode
 -}
 send : Cmd msg -> Step.Context model -> Step.Command msg
 send cmd _ =
-  Step.sendCommand cmd
+  Command.sendCommand cmd
 
 
 {-| Generate a `Cmd` value that will send a `Msg` to the `update`

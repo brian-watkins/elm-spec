@@ -30,6 +30,7 @@ import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report exposing (Report)
 import Spec.Markup.Selector as Selector exposing (Selector, Element)
 import Spec.Step as Step
+import Spec.Step.Command as Command
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -147,7 +148,7 @@ target : (Selector a, Step.Context model) -> Step.Command msg
 target (selection, context) =
   Message.for "_html" "target"
     |> Message.withBody (Encode.string <| Selector.toString selection)
-    |> Step.sendMessage
+    |> Command.sendMessage
 
 
 queryHtml : Selector Element -> Message

@@ -7,6 +7,7 @@ module Spec.Time exposing
 
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step as Step
+import Spec.Step.Command as Command
 import Spec.Message as Message
 import Spec.Markup.Message as Message
 import Json.Encode as Encode
@@ -30,10 +31,10 @@ tick : Int -> Step.Context model -> Step.Command msg
 tick duration _ =
   Message.for "_time" "tick"
     |> Message.withBody (Encode.int duration)
-    |> Step.sendMessage
+    |> Command.sendMessage
 
 
 nextAnimationFrame : Step.Context model -> Step.Command msg
 nextAnimationFrame _ =
-  Step.sendMessage
+  Command.sendMessage
     Message.runToNextAnimationFrame

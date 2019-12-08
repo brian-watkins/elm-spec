@@ -11,8 +11,8 @@ import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message
-import Spec.Step as Step
-import Spec.Step.Command as StepCommand
+import Spec.Step.Context as Context
+import Spec.Step.Command as Step
 import Spec.Observer.Message as Message
 import Spec.Report as Report
 import Spec.Claim as Claim
@@ -90,16 +90,19 @@ update outlet msg model =
               , conditionsApplied =
                   addIfUnique model.conditionsApplied step.condition
               }
+            context =
+              Context.for model.programModel
+                |> Context.withEffects model.effects
           in
-            case step.run { model = model.programModel, effects = model.effects } of
-              StepCommand.SendMessage message ->
+            case step.run context of
+              Step.SendMessage message ->
                 ( updated, State.Send message )
-              StepCommand.SendCommand cmd ->
+              Step.SendCommand cmd ->
                 ( updated
                 , Cmd.map ProgramMsg cmd
                     |> State.DoAndRender
                 )
-              StepCommand.DoNothing ->
+              Step.DoNothing ->
                 update outlet Continue updated
 
     Abort report ->

@@ -6,6 +6,7 @@ module Spec.Port exposing
 
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step as Step
+import Spec.Step.Command as Command
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim exposing (Claim)
@@ -39,7 +40,7 @@ record portName =
 
 send : String -> Encode.Value -> Step.Context model -> Step.Command msg
 send name value _ =
-  Step.sendMessage <| sendSubscription name value
+  Command.sendMessage <| sendSubscription name value
 
 
 type alias PortRecord =
