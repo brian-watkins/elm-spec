@@ -3,6 +3,12 @@ module Spec.Markup.Navigation exposing
   , expectReload
   )
 
+{-| Functions for observing navigation changes.
+
+@docs observeLocation, expectReload
+
+-}
+
 import Spec
 import Spec.Observer as Observer exposing (Observer, Expectation)
 import Spec.Claim as Claim
@@ -12,6 +18,24 @@ import Json.Encode as Encode
 import Json.Decode as Json
 
 
+{-| Observe the current location of the document.
+
+    Spec.it "has the correct location" (
+      observeLocation
+        |> Spec.expect (
+           Spec.Claim.isEqual Debug.toString
+             "http://fake-server.com/something-fun"
+        )
+    )
+
+This is useful to observe that `Browswer.Navigation.load`,
+`Browser.Navigation.pushUrl`, or `Browser.Navigation.replaceUrl` was
+executed with the value you expect.
+
+Note that you can use `Spec.Setup.withLocation` to set the base location
+of the document at the start of the scenario.
+
+-}
 observeLocation : Observer model String
 observeLocation =
   Observer.inquire observeLocationMessage <| \message ->
@@ -27,6 +51,9 @@ observeLocationMessage =
     )
 
 
+{-| Expect that a `Browser.Navigation.reload` or `Browser.Navigation.reloadAndSkipCache`
+command was executed.
+-}
 expectReload : Expectation model
 expectReload =
   Observer.observeEffects (List.filter (Message.is "_navigation" "reload"))
