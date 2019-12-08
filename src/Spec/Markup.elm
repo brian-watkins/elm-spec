@@ -27,7 +27,7 @@ module Spec.Markup exposing
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report exposing (Report)
-import Spec.Markup.Selector as Selector exposing (Selection, Element)
+import Spec.Markup.Selector as Selector exposing (Selector, Element)
 import Spec.Step as Step
 import Spec.Message as Message exposing (Message)
 import Json.Encode as Encode
@@ -57,7 +57,7 @@ selectTitleMessage =
 -}
 type MarkupObservation a =
   MarkupObservation
-    (Selection Element -> Message, Selection Element -> Message -> Result Report a)
+    (Selector Element -> Message, Selector Element -> Message -> Result Report a)
 
 
 {-| Observe an HTML element that may not be present in the document.
@@ -118,12 +118,12 @@ observeElements =
     )
 
 
-{-| Select an HTML element or elements to observe.
+{-| Search for HTML elements.
 
 Use this function in conjunction with `observe`, `observeElement`, or `observeElements` to
 observe the HTML document.
 -}
-query : (Selection Element, MarkupObservation a) -> Observer model a
+query : (Selector Element, MarkupObservation a) -> Observer model a
 query (selection, MarkupObservation (messageGenerator, handler)) =
   Observer.inquire (messageGenerator selection) (handler selection)
     |> Observer.observeResult
@@ -142,14 +142,14 @@ query (selection, MarkupObservation (messageGenerator, handler)) =
       ]
 
 -}
-target : (Selection a, Step.Context model) -> Step.Command msg
+target : (Selector a, Step.Context model) -> Step.Command msg
 target (selection, context) =
   Message.for "_html" "target"
     |> Message.withBody (Encode.string <| Selector.toString selection)
     |> Step.sendMessage
 
 
-queryHtml : Selection Element -> Message
+queryHtml : Selector Element -> Message
 queryHtml selection =
   Message.for "_html" "query"
     |> Message.withBody (
@@ -157,7 +157,7 @@ queryHtml selection =
     )
 
 
-queryAllHtml : Selection Element -> Message
+queryAllHtml : Selector Element -> Message
 queryAllHtml selection =
   Message.for "_html" "queryAll"
     |> Message.withBody (
