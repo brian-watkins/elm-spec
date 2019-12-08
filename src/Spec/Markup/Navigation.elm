@@ -11,6 +11,7 @@ module Spec.Markup.Navigation exposing
 
 import Spec
 import Spec.Observer as Observer exposing (Observer, Expectation)
+import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim
 import Spec.Report as Report
 import Spec.Message as Message exposing (Message)

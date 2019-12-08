@@ -56,6 +56,7 @@ import Spec.Setup as Setup exposing (Setup)
 import Spec.Scenario.Internal as Internal
 import Spec.Step as Step
 import Spec.Observer exposing (Observer, Expectation)
+import Spec.Observer.Internal as Observer
 import Spec.Claim exposing (Claim)
 
 
@@ -148,7 +149,7 @@ when condition messageSteps (Script script) =
     }
 
 
-{-| Specify multiple expectations that should hold once the scenario's steps have been performed.
+{-| Specify multiple expectations to be checked once the scenario's steps have been performed.
 -}
 observeThat : List (Script model msg -> Plan model msg) -> Script model msg -> Plan model msg
 observeThat planGenerators (Script script) =
@@ -166,7 +167,7 @@ observeThat planGenerators (Script script) =
     }
 
 
-{-| Specify an expectation that should hold once the scenario's steps have been performed.
+{-| Specify an expectation to be checked once the scenario's steps have been performed.
 -}
 it : String -> Expectation model -> Script model msg -> Plan model msg
 it description expectation (Script script) =
@@ -179,8 +180,8 @@ it description expectation (Script script) =
     }
 
 
-{-| Specify an expectation by providing a claim and an observer.
+{-| Provide an observer with a claim to evaluate.
 -}
 expect : Claim a -> Observer model a -> Expectation model
-expect claim observer =
-  observer claim
+expect =
+  Observer.expect

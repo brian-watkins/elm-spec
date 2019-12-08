@@ -18,6 +18,7 @@ module Spec.Http exposing
 -}
 
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report
 import Spec.Message as Message exposing (Message)

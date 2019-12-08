@@ -25,6 +25,7 @@ module Spec.Markup exposing
 -}
 
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report exposing (Report)
 import Spec.Markup.Selector as Selector exposing (Selector, Element)

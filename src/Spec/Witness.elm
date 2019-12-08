@@ -6,6 +6,7 @@ module Spec.Witness exposing
   )
 
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Observer.Internal as Observer
 import Spec.Setup.Internal as Internal
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Message as Message exposing (Message)

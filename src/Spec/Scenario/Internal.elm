@@ -10,7 +10,7 @@ module Spec.Scenario.Internal exposing
 import Spec.Setup.Internal exposing (Setup)
 import Spec.Step exposing (Context, Command)
 import Spec.Message exposing (Message)
-import Spec.Observer exposing (Expectation)
+import Spec.Observation.Expectation exposing (Expectation)
 
 
 type Spec model msg

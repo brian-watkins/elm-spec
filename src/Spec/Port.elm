@@ -7,6 +7,7 @@ module Spec.Port exposing
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step as Step
 import Spec.Observer as Observer exposing (Observer)
+import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Message as Message exposing (Message)
 import Spec.Report as Report exposing (Report)
