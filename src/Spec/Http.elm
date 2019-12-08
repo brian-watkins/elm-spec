@@ -1,17 +1,13 @@
 module Spec.Http exposing
   ( HttpRequest
   , RequestBody
-  , withStubs
   , observeRequests
   , hasHeader
   , hasStringBody
   , hasJsonBody
   )
 
-{-| Stub, observe, and make claims about HTTP requests during a spec.
-
-# Set Up Stubs
-@docs withStubs
+{-| Observe, and make claims about HTTP requests during a spec.
 
 # Observe HTTP Requests
 @docs HttpRequest, RequestBody, observeRequests
@@ -21,59 +17,16 @@ module Spec.Http exposing
 
 -}
 
-import Spec.Setup as Setup exposing (Setup)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report
 import Spec.Message as Message exposing (Message)
-import Spec.Http.Stub exposing (HttpResponseStub)
 import Spec.Http.Route exposing (HttpRoute)
 import Json.Encode as Encode
 import Json.Decode as Json
 import Dict exposing (Dict)
 
 
-{-| Setup a fake HTTP server to respond with the given stub when the matching request is made.
-
-See `Spec.Http.Stub` for functions that build an `HttpResponseStub`.
--}
-withStubs : List HttpResponseStub -> Setup model msg -> Setup model msg
-withStubs stubs subjectProvider =
-  List.foldl (\stub updatedSubject ->
-    Setup.configure
-      (httpStubMessage stub)
-      updatedSubject
-  ) (Setup.configure httpSetupMessage subjectProvider) stubs
-
-
-httpStubMessage : HttpResponseStub -> Message
-httpStubMessage stub =
-  Message.for "_http" "stub"
-    |> Message.withBody (encodeStub stub)
-
-
-httpSetupMessage : Message
-httpSetupMessage =
-  Message.for "_http" "setup"
-
-
-encodeStub : HttpResponseStub -> Encode.Value
-encodeStub stub =
-  Encode.object
-    [ ( "method", Encode.string stub.route.method )
-    , ( "url", Encode.string stub.route.url )
-    , ( "status", Encode.int stub.response.status )
-    , ( "headers", Encode.dict identity Encode.string stub.response.headers )
-    , ( "body", maybeEncodeString stub.response.body )
-    , ( "error", maybeEncodeString stub.error )
-    , ( "shouldRespond", Encode.bool stub.shouldRespond )
-    ]
-
-
-maybeEncodeString : Maybe String -> Encode.Value
-maybeEncodeString maybeString =
-  Maybe.withDefault "" maybeString
-    |> Encode.string
 
 
 {-| Represents an HTTP request made by the program in the course of the scenario.

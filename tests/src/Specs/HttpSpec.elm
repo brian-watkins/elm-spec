@@ -407,7 +407,7 @@ testSubject doRequest stubs =
   Setup.initWithModel defaultModel
     |> Setup.withView testView
     |> Setup.withUpdate (testUpdate doRequest)
-    |> Spec.Http.withStubs stubs
+    |> Stub.serve stubs
 
 
 successStub =
