@@ -167,7 +167,11 @@ queryAllHtml selection =
 
 {-| Represents an HTML element.
 -}
-type alias HtmlElement =
+type HtmlElement =
+  HtmlElement HtmlElementData
+
+
+type alias HtmlElementData =
   { tag: String
   , attributes: Dict String String
   , text: String
@@ -176,10 +180,11 @@ type alias HtmlElement =
 
 htmlDecoder : Json.Decoder HtmlElement
 htmlDecoder =
-  Json.map3 HtmlElement
-    ( Json.field "tag" Json.string )
-    ( Json.field "attributes" <| Json.dict Json.string )
-    ( Json.field "textContext" Json.string )
+  Json.map HtmlElement <|
+    Json.map3 HtmlElementData
+      ( Json.field "tag" Json.string )
+      ( Json.field "attributes" <| Json.dict Json.string )
+      ( Json.field "textContext" Json.string )
 
 
 {-| Claim that the text belonging to the HTML element contains the given text. 
@@ -188,7 +193,7 @@ Note that the text belonging to an observed HTML element includes the text
 belonging to all its descendants.
 -}
 hasText : String -> Claim HtmlElement
-hasText expectedText element =
+hasText expectedText (HtmlElement element) =
   if String.contains expectedText element.text then
     Claim.Accept
   else
@@ -208,7 +213,7 @@ hasText expectedText element =
 
 -}
 hasAttribute : ( String, String ) -> Claim HtmlElement
-hasAttribute ( expectedName, expectedValue ) element =
+hasAttribute ( expectedName, expectedValue ) (HtmlElement element) =
   case Dict.get expectedName element.attributes of
     Just actualValue ->
       if expectedValue == actualValue then
