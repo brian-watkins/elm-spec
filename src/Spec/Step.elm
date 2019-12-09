@@ -4,10 +4,12 @@ module Spec.Step exposing
   , model
   )
 
-{-| The scenario script is a sequence of steps. A step is a function from a `Context` to a `Command`.
+{-| The scenario script is a sequence of steps. A step is a function from a `Context`,
+which represents the current scenario state, to a `Command`, which describes an action to be
+executed before moving to the next step.
 
 See `Spec.Command`, `Spec.Markup`, `Spec.Markup.Event`, `Spec.Port`, and `Spec.Time` for
-steps you can use to build your scenario script.
+steps you can use to build a scenario script.
 
 @docs Context, Command
 
