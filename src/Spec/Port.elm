@@ -4,6 +4,53 @@ module Spec.Port exposing
   , observe
   )
 
+{-| Functions for working with ports during a spec.
+
+Suppose your app sends a port command when a button is clicked,
+and then displays a message received over a port subscription. You
+could write a scenario like so:
+
+    Spec.describe "command ports and subscription ports"
+    [ Spec.scenario "send and receive" (
+        Spec.given (
+          Spec.Setup.withInit (App.init testFlags)
+            |> Spec.Setup.withUpdate App.update
+            |> Spec.Setup.withView App.view
+            |> Spec.Setup.withSubscriptions App.subscriptions
+            |> Spec.Port.record "my-command-port"
+        )
+        |> Spec.when "a message is sent out"
+          [ Spec.Markup.target << by [ tag "button" ]
+          , Spec.Markup.Event.click
+          ]
+        |> Spec.when "a response is received"
+          [ Spec.Port.send "my-subscription-port" <|
+              Json.Encode.object
+                [ ("message", Encode.string "Have fun!")
+                ]
+          ]
+        |> Spec.observeThat
+          [ Spec.it "sent one message over the port" (
+              Spec.Port.observe "my-command-port" someDecoder
+                |> Spec.expect (Spec.isListWithLength 1)
+            )
+          , Spec.it "shows the message received" (
+              Spec.Markup.observeElement
+                |> Spec.Markup.query << by [ id "message" ]
+                |> Spec.expect (Spec.Markup.hasText "Have fun!")
+            )
+          ]
+      )
+    ]
+
+# Observe Command Ports
+@docs record, observe
+
+# Simulate Subscription Ports
+@docs send
+
+-}
+
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step as Step
 import Spec.Step.Command as Command
@@ -32,12 +79,34 @@ observePortCommand name =
     )
 
 
+{-| Setup the scenario to record messages sent via a command port.
+
+Note: If a port command is sent at any time during the scenario script, you must
+use `record` to setup the scenario to record messages on that port.
+Otherwise, the scenario may time out.
+
+-}
 record : String -> Setup model msg -> Setup model msg
 record portName =
   observePortCommand portName
     |> Setup.configure
 
 
+{-| A step that sends a message to a port subscription.
+
+Provide the name of the port and an encoded JSON value that should be sent from the JavaScript side.
+
+For example, if you have a port like so:
+
+    port listenForStuff : (String -> msg) -> Sub msg
+
+Then you could send a message on this port like so:
+
+    Spec.when "a message is sent to the subscription"
+    [ Spec.Port.send "listenForStuff" <| Encode.string "Some words"
+    ]
+
+-}
 send : String -> Encode.Value -> Step.Context model -> Step.Command msg
 send name value _ =
   Command.sendMessage <| sendSubscription name value
@@ -49,6 +118,12 @@ type alias PortRecord =
   }
 
 
+{-| Observe messages sent out via a command port.
+
+Provide the name of the port (the function name) and a decoder that can decode
+messages sent out over the port.
+
+-}
 observe : String -> Json.Decoder a -> Observer model (List a)
 observe name decoder =
   Observer.observeEffects (\effects ->
@@ -82,6 +157,7 @@ recordedValues decoder =
 jsonErrorToReport : Json.Error -> Report
 jsonErrorToReport =
   Report.fact "Unable to decode value sent through port" << Json.errorToString
+
 
 recordDecoder : Json.Decoder PortRecord
 recordDecoder =
