@@ -1,5 +1,5 @@
 module Spec.Program exposing
-  ( Msg, Model
+  ( Msg, Model, Flags
   , init, view, update, subscriptions
   , onUrlChange, onUrlRequest
   )
