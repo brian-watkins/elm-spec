@@ -52,6 +52,7 @@ could write a scenario like so:
 -}
 
 import Spec.Setup as Setup exposing (Setup)
+import Spec.Setup.Internal as Setup
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Observer as Observer exposing (Observer)

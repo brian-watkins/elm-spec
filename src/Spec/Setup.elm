@@ -1,13 +1,24 @@
 module Spec.Setup exposing
   ( Setup
   , init, initWithModel, initForApplication
-  , configure
   , withSubscriptions
   , withUpdate
   , withView, withDocument
   , withLocation
   , onUrlChange, onUrlRequest
   )
+
+{-| Functions for the initial setup of a scenario.
+
+@docs Setup
+
+# Setup the Initial State
+@docs initForApplication, init, initWithModel, withLocation
+
+# Provide Core Functions
+@docs withUpdate, withView, withDocument, withSubscriptions, onUrlChange, onUrlRequest
+
+-}
 
 import Spec.Setup.Internal as Internal
 import Spec.Message as Message exposing (Message)
@@ -18,10 +29,26 @@ import Url exposing (Url)
 import Json.Encode as Encode
 
 
+{-| Represents the initial state of the world for a scenario.
+-}
 type alias Setup model msg
   = Internal.Setup model msg
 
 
+{-| Provide an initial program model and command. The command will be executed as
+the first step in the scenario script.
+
+You might use `init` in conjunction with the `init` function of the program whose
+behavior the scenario describes. In that case you could do something like:
+
+    Spec.given (
+      Spec.Setup.init (App.init testFlags)
+    )
+
+If you are describing the behavior of a program created with `Browser.application` then
+consider using `initForApplication` instead.
+
+-}
 init : (model, Cmd msg) -> Setup model msg
 init ( model, initialCommand ) =
   Internal.Setup
@@ -31,11 +58,21 @@ init ( model, initialCommand ) =
     }
 
 
+{-| Provide an initial model for the program whose behavior this scenario describes.
+-}
 initWithModel : model -> Setup model msg
 initWithModel model =
   init ( model, Cmd.none )
 
 
+{-| Use the init function for a program created with `Browser.application` to set the
+initial state for the scenario. You could do something like:
+
+    Spec.given (
+      Spec.Setup.initForApplication (App.init testFlags)
+    )
+
+-}
 initForApplication : (Url -> Key -> (model, Cmd msg)) -> Setup model msg
 initForApplication generator =
   Internal.Setup
@@ -73,52 +110,74 @@ defaultUrl =
   }
 
 
-configure : Message -> Setup model msg -> Setup model msg
-configure message =
-  Internal.mapSubject <| \subject ->
-    { subject | configureEnvironment = message :: subject.configureEnvironment }
-
-
+{-| Provide the `update` function for the program whose behavior the scenario describes.
+-}
 withUpdate : (msg -> model -> (model, Cmd msg)) -> Setup model msg -> Setup model msg
 withUpdate programUpdate =
   Internal.mapSubject <| \subject ->
     { subject | update = \_ -> programUpdate }
 
 
+{-| Provide the `view` function for the program whose behavior the scenario describes, where
+this program is created with `Browser.sandbox` or `Browser.element`.
+-}
 withView : (model -> Html msg) -> Setup model msg -> Setup model msg
 withView view =
   Internal.mapSubject <| \subject ->
     { subject | view = Internal.Element view }
 
 
+{-| Provide the `view` function for the program whose behavior the scenario describes, where
+this program is created with `Browser.document` or `Browser.application`. 
+-}
 withDocument : (model -> Document msg) -> Setup model msg -> Setup model msg
 withDocument view =
   Internal.mapSubject <| \subject ->
     { subject | view = Internal.Document view }
 
 
+{-| Provide the `subscriptions` function for the program whose behavior the scenario describes.
+-}
 withSubscriptions : (model -> Sub msg) -> Setup model msg -> Setup model msg
 withSubscriptions programSubscriptions =
   Internal.mapSubject <| \subject ->
     { subject | subscriptions = programSubscriptions }
 
 
+{-| If the scenario is describing a program created with `Browser.application`, you can use
+this function to supply the program's `onUrlChange` function.
+
+This is most useful if the scenario involves reponding to location changes.
+-}
 onUrlChange : (Url -> msg) -> Setup model msg -> Setup model msg
 onUrlChange handler =
   Internal.mapSubject <| \subject ->
     { subject | onUrlChange = Just handler }
 
 
+{-| If the scenario is describing a program created with `Browser.application`, you can use
+this function to supply the program's `onUrlRequest` function.
+
+This is most useful if the scenario involves initiating location changes.
+-}
 onUrlRequest : (UrlRequest -> msg) -> Setup model msg -> Setup model msg
 onUrlRequest handler =
   Internal.mapSubject <| \subject ->
     { subject | onUrlRequest = Just handler }
 
 
+{-| Set up the scenario to begin with a particular location.
+
+If the program whose behavior is being described was created with `Browser.application` then
+this `Url` will be provided to the `init` function. In any case, this location will serve as
+the base href, and any location changes will be relative to this location.
+
+By default, the scenario begins with the location `http://elm-spec/`
+-}
 withLocation : Url -> Setup model msg -> Setup model msg
 withLocation url (Internal.Setup generator) =
   Internal.Setup { generator | location = url }
-    |> configure (setLocationMessage url)
+    |> Internal.configure (setLocationMessage url)
 
 
 setLocationMessage : Url -> Message

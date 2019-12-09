@@ -4,6 +4,7 @@ module Spec.Setup.Internal exposing
   , ProgramView(..)
   , mapSubject
   , initializeSubject
+  , configure
   )
 
 import Spec.Message exposing (Message)
@@ -35,6 +36,12 @@ type alias Subject model msg =
 type ProgramView model msg
   = Element (model -> Html msg)
   | Document (model -> Document msg)
+
+
+configure : Message -> Setup model msg -> Setup model msg
+configure message =
+  mapSubject <| \subject ->
+    { subject | configureEnvironment = message :: subject.configureEnvironment }
 
 
 mapSubject : (Subject model msg -> Subject model msg) -> Setup model msg -> Setup model msg

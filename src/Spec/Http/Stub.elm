@@ -21,6 +21,7 @@ module Spec.Http.Stub exposing
 -}
 
 import Spec.Setup as Setup exposing (Setup)
+import Spec.Setup.Internal as Setup
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Route exposing (HttpRoute)
 import Dict exposing (Dict)
