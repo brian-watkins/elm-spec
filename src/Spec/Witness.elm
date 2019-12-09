@@ -50,9 +50,11 @@ observe name decoder =
     statementsForWitness name effects
         |> factsFromStatements decoder
   )
-  |> Observer.mapRejection (
-    Report.append <|
-      Report.fact "Claim rejected for witness" name
+  |> Observer.mapRejection (\report ->
+    Report.batch
+    [ Report.fact "Claim rejected for witness" name
+    , report
+    ]
   )
   |> Observer.observeResult
 

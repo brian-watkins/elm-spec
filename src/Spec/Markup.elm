@@ -129,9 +129,11 @@ query : (Selector Element, MarkupObservation a) -> Observer model a
 query (selection, MarkupObservation (messageGenerator, handler)) =
   Observer.inquire (messageGenerator selection) (handler selection)
     |> Observer.observeResult
-    |> Observer.mapRejection (
-      Report.append <|
-        Report.fact "Claim rejected for selector" <| Selector.toString selection
+    |> Observer.mapRejection (\report ->
+      Report.batch
+      [ Report.fact "Claim rejected for selector" <| Selector.toString selection
+      , report
+      ]
     )
 
 

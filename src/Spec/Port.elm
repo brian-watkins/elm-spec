@@ -130,8 +130,11 @@ observe name decoder =
     recordsForPort name effects
       |> recordedValues decoder
   )
-  |> Observer.mapRejection (
-    Report.append <| Report.fact "Claim rejected for port" name
+  |> Observer.mapRejection (\report ->
+    Report.batch
+    [ Report.fact "Claim rejected for port" name
+    , report
+    ]
   )
   |> Observer.observeResult
 

@@ -131,9 +131,11 @@ observeRequests route =
     Message.decode (Json.list requestDecoder)
       >> Maybe.withDefault []
   )
-  |> Observer.mapRejection (
-    Report.append <|
-      Report.fact  "Claim rejected for route" <| route.method ++ " " ++ route.url
+  |> Observer.mapRejection (\report ->
+    Report.batch
+    [ Report.fact  "Claim rejected for route" <| route.method ++ " " ++ route.url
+    , report
+    ]
   )
 
 
