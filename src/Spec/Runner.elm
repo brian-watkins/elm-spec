@@ -1,5 +1,6 @@
 module Spec.Runner exposing
-  ( Msg
+  ( Message
+  , Msg
   , Model
   , Config
   , Flags
@@ -13,13 +14,13 @@ module Spec.Runner exposing
 @docs Config, browserProgram, program
 
 # Spec Suite Program Types
-@docs Flags, Msg, Model
+@docs Message, Flags, Msg, Model
 
 -}
 
 import Spec exposing (Spec)
 import Spec.Program as Program
-import Spec.Message as Message exposing (Message)
+import Spec.Message as Message
 import Browser
 
 
@@ -50,6 +51,12 @@ type alias Config msg =
   , outlet: Message -> Cmd msg
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
   }
+
+
+{-| Represents a message to pass between elm-spec and the JavaScript elm-spec runner.
+-}
+type alias Message =
+  Message.Message
 
 
 {-| Flags that the JavaScript runner will pass to the spec suite program.
