@@ -16,7 +16,6 @@
     "elm-spec-core": "file:../elm-spec-core",
     "glob": "^7.1.4",
     "jsdom": "^15.1.1",
-    "lolex": "^4.2.0",
     "node-elm-compiler": "^5.0.4"
   },
   "devDependencies": {

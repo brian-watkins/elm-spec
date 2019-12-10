@@ -1,12 +1,7 @@
 const { JSDOM } = require("jsdom");
-const lolex = require('lolex')
-const { registerFakes } = require('elm-spec-core/src/fakes')
-
 
 module.exports = class JsdomContext {
-  constructor(compiler) {
-    this.compiler = compiler
-
+  constructor() {
     this.dom = new JSDOM(
       "<html><head><base href='http://elm-spec'></head><body></body></html>",
       { pretendToBeVisual: true,
@@ -14,16 +9,11 @@ module.exports = class JsdomContext {
         url: "http://elm-spec"
       }
     )
-
-    this.clock = lolex.createClock()
-
-    registerFakes(this.dom.window, this.clock)
-    this.generateElm()
   }
 
-  generateElm() {
+  loadElm(compiler) {
     try {
-      const compiledCode = this.compiler.compile()
+      const compiledCode = compiler.compile()
       this.dom.window.eval(compiledCode)
     } catch (error) {
       console.log(error)
@@ -33,9 +23,5 @@ module.exports = class JsdomContext {
 
   get window () {
     return this.dom.window
-  }
-
-  evaluate(evaluator) {
-    evaluator(this.dom.window.Elm)
   }
 }

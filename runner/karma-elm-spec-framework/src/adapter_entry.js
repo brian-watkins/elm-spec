@@ -1,9 +1,8 @@
 
 (function(window) {
 
-  const BrowserContext = require('./browserContext')
   const KarmaReporter = require('./karmaReporter')
-  const SuiteRunner = require('elm-spec-core')
+  const { SuiteRunner, ElmContext } = require('elm-spec-core')
 
   const defaultConfig = {
     tags: [],
@@ -14,7 +13,7 @@
 
   const options = Object.assign(defaultConfig, window.__karma__.config.elmSpec)
 
-  const context = new BrowserContext(window)
+  const context = new ElmContext(window)
 
   const base = document.createElement("base")
   base.setAttribute("href", `http://localhost:${options.karmaPort}`)

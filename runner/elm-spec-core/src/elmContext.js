@@ -1,7 +1,7 @@
 const lolex = require('lolex')
-const { registerFakes } = require('elm-spec-core/src/fakes')
+const { registerFakes } = require('./fakes')
 
-module.exports = class BrowserContext {
+module.exports = class ElmContext {
   constructor(window) {
     this.window = window
     this.clock = lolex.createClock()

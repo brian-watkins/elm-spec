@@ -1,9 +1,7 @@
-const BrowserContext = require('../../runner/karma-elm-spec-framework/src/browserContext')
-const SuiteRunner = require('elm-spec-core/src/suiteRunner')
-const ProgramRunner = require('elm-spec-core/src/programRunner')
+const { SuiteRunner, ProgramRunner, ElmContext } = require('elm-spec-core')
 const TestReporter = require('./testReporter')
 
-const context = new BrowserContext(window, [])
+const elmContext = new ElmContext(window)
 
 const base = document.createElement("base")
 base.setAttribute("href", "http://localhost")
@@ -24,7 +22,7 @@ window._elm_spec.runProgram = (specProgram, version) => {
       timeout: 500
     }
     
-    new SuiteRunner(context, reporter, options, version)
+    new SuiteRunner(elmContext, reporter, options, version)
       .on('complete', () => {
         resolve({
           observations: reporter.observations,
@@ -40,13 +38,13 @@ window._elm_spec.runSpec = (specProgram, specName, options) => {
     throw Error('Elm not compiled?!')
   }
 
-  context.clock.reset()
+  elmContext.clock.reset()
   var app = Elm.Specs[specProgram].init({
     flags: { specName }
   })
 
   return new Promise((resolve, reject) => {
-    runProgram(app, context, options, resolve, reject)
+    runProgram(app, elmContext, options, resolve, reject)
   })
 }
 

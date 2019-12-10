@@ -13,8 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^3.0.0",
-    "elm-spec-core": "file:../elm-spec-core",
-    "lolex": "^5.1.1"
+    "elm-spec-core": "file:../elm-spec-core"
   },
   "devDependencies": {
     "browserify": "^16.5.0",

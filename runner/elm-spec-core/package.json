@@ -1,11 +1,19 @@
 {
   "name": "elm-spec-core",
   "version": "1.0.0",
-  "description": "Run Elm-Spec Specs",
+  "description": "Core Library for Elm-Spec Runners",
+  "keywords": [
+    "elm"
+  ],
+  "homepage": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-core"
+  },
   "files": [
     "src/"
   ],
-  "main": "src/suiteRunner.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "mocha './tests/*Test.js'"
   },

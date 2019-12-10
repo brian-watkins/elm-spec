@@ -1,4 +1,4 @@
-const Compiler = require('elm-spec-core/src/compiler')
+const { Compiler } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 

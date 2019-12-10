@@ -34,8 +34,9 @@ describe('elm-spec-runner', () => {
       })
 
       cmd.__set__("Compiler", function() {})
-      cmd.__set__("JsdomContext", function() {})
+      cmd.__set__("JsdomContext", function() { return { loadElm: () => {} }})
       cmd.__set__("SuiteRunner", suiteRunnerSpy)
+      cmd.__set__("ElmContext", function() {})
     })
 
     context("when one tag is specified", () => {
