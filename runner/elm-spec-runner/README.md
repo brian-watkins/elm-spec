@@ -3,15 +3,15 @@ elm-spec-runner
 
 Node CLI for Elm-Spec
 
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/elm-spec-runner.svg)](https://npmjs.org/package/elm-spec-runner)
-[![Downloads/week](https://img.shields.io/npm/dw/elm-spec-runner.svg)](https://npmjs.org/package/elm-spec-runner)
-[![License](https://img.shields.io/npm/l/elm-spec-runner.svg)](https://github.com/brian-watkins/elm-spec/blob/master/package.json)
+## Install
 
-<!-- toc -->
-# Usage
+```
+$ npm install --save-dev elm-spec-runner
+```
 
-Use elm-spec-runner to run elm-spec suites from the command line in the [jsdom](https://github.com/jsdom/jsdom) environment.
+## Usage
+
+Use elm-spec-runner to run elm-spec suites from the command line in the [JSDOM](https://github.com/jsdom/jsdom) environment.
 
 ```
 $ elm-spec [options]
