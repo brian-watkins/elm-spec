@@ -1,30 +1,22 @@
 # elm-spec
 
-Use elm-spec to write specs that describe the behavior of your Elm program. Why?
+Use elm-spec to write specs that describe the behavior of your Elm program.
 
-Once you have a suite of specs that describe the behavior of your Elm program, you're in a position
-to change your code with confidence. Just run the spec suite to determine whether your program
-still has all the behavior you've described in those specs.
-
-When you can change your code with confidence, you're in a better position to refactor your code.
-
-When you can refactor your code, you can manage and reduce complexity.
-
-When you can manage and reduce complexity, you can continue to add new features with ease, even as the scope
-of your program grows. 
-
-Sure, but why use elm-spec?
+You think TDD/BDD is great, and maybe you're already writing tests in Elm or using tools like Cypress
+to test your program end-to-end. Why use elm-spec?
 
 - elm-spec allows you to describe behaviors that involve HTML, HTTP, Time, ports, commands, and subscriptions --
 and there's no need to structure your code in any special way to do so (although you can if you wish).
-- elm-spec does not simulate calls to your program's view and update or commands and subscriptions; the Elm runtime
-handles all this just as it will when your program is executed on its own.
-- elm-spec exercises your program in a DOM environment (JSOM or a web browser)
+- elm-spec does not simulate calls to your program's `view` or `update` functions, and it lets the
+Elm runtime handle commands and subscriptions; your program interacts with the Elm runtime just as it
+would in production.
+- elm-spec exercises your program in a DOM environment (JSDOM or a web browser).
 - elm-spec allows you to write specs that describe the behavior of parts of your program in isolation from others. This makes those specs easier to write and easier to understand.
 
-In short, with elm-spec you can get the same level of confidence as you would from a browser-based
+In short, with elm-spec you get the confidence you would from a browser-based
 end-to-end testing tool like Cypress, without losing the convenience of tools like elm-test. You can
-still write your tests in Elm, and you can still test parts of your code in isolation.
+still write your specs in Elm and you can still test parts of your code in isolation, but your specs
+run in a browser (via Karma) and they exercise your code just like it will be exercised in production.
 
 
 ## Getting Started
@@ -38,7 +30,6 @@ still write your tests in Elm, and you can still test parts of your code in isol
 ```
 port module Runner exposing (program, browserProgram)
 
-import Spec exposing (Spec)
 import Spec.Runner exposing (Message)
 
 port elmSpecOut : Message -> Cmd msg
@@ -51,11 +42,9 @@ config =
   , listen = elmSpecIn
   }
 
-program : List (Spec model msg) -> Program Spec.Runner.Flags (Spec.Runner.Model model msg) (Spec.Runner.Msg msg)
 program specs =
   Spec.Runner.program config specs
 
-browserProgram : List (Spec model msg) -> Program Spec.Runner.Flags (Spec.Runner.Model model msg) (Spec.Runner.Msg msg)
 browserProgram specs =
   Spec.Runner.browserProgram config specs
 ```
@@ -64,8 +53,8 @@ You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec
 very same port, `elmSpecOut`. 
 
 Now you can write spec modules. Each spec module is an elm program and so must have a `main` function. To construct
-the `main` function, just reference `program` or `browserProgram` from your `Runner.elm` and provide a `List` of
-`Spec`s to run. 
+the `main` function, just reference `program` or `browserProgram` from your `Runner.elm` and
+provide a `List Spec` to run. 
 
 Here's an example spec module:
 
@@ -122,7 +111,7 @@ You can run your specs from the command line in a [JSDOM](https://github.com/jsd
 $ npm install --save-dev elm-spec-runner
 ```
 
-Then you can just run your specs like so:
+Then just run your specs like so:
 
 ```
 $ npx elm-spec
@@ -148,12 +137,10 @@ For a real-world test suite, see the [specs for a simple code-guessing game](htt
 
 ## Extra
 
-I suggest adding one more file to your spec suite -- `Spec/Extra.elm`
+I suggest adding one more file to your spec suite: `Spec/Extra.elm`
 
 ```
-module Spec.Extra exposing
-  ( equals
-  )
+module Spec.Extra exposing (equals)
 
 import Spec.Claim as Claim exposing (Claim)
 
