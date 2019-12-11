@@ -17,10 +17,9 @@ describe("Suite Runner", () => {
   context("when the suite should end on the first failure", () => {
     it("stops at the first failure", (done) => {
       expectScenarios('WithFailure', { tags: [], timeout: 50, endOnFailure: true }, done, (observations) => {
-        expect(observations).to.have.length(3)
+        expect(observations).to.have.length(2)
         expectAccepted(observations[0])
-        expectAccepted(observations[1])
-        expectRejected(observations[2])
+        expectRejected(observations[1])
       })
     })
   })
@@ -28,11 +27,12 @@ describe("Suite Runner", () => {
   context("when the suite should report all results", () => {
     it("reports all results", (done) => {
       expectScenarios('WithFailure', { tags: [], timeout: 50, endOnFailure: false }, done, (observations) => {
-        expect(observations).to.have.length(4)
+        expect(observations).to.have.length(5)
         expectAccepted(observations[0])
-        expectAccepted(observations[1])
-        expectRejected(observations[2])
+        expectRejected(observations[1])
+        expectAccepted(observations[2])
         expectAccepted(observations[3])
+        expectAccepted(observations[4])
       })
     })
   })

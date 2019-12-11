@@ -74,11 +74,12 @@ module.exports = class SuiteRunner extends EventEmitter {
       .on("observation", (observation) => {
         this.reporter.record(observation)
       })
-      .on("complete", () => {
-        this.runNextSpecProgram(programs)
-      })
-      .on("finished", () => {
-        this.finish()
+      .on("complete", (shouldContinue) => {
+        if (shouldContinue) {
+          this.runNextSpecProgram(programs)
+        } else {
+          this.finish()
+        }
       })
       .on("error", (error) => {
         this.reporter.error(error)

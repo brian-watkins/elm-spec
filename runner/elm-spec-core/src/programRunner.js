@@ -133,12 +133,12 @@ module.exports = class ProgramRunner extends EventEmitter {
         switch (specMessage.body) {
           case "COMPLETE": {
             this.timePlugin.resetFakes()
-            this.emit('complete')
+            this.emit('complete', true)
             break
           }
           case "FINISHED": {
             this.timePlugin.resetFakes()
-            this.emit('finished')
+            this.emit('complete', false)
             break
           }
         }

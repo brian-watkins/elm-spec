@@ -160,10 +160,6 @@ const runSpec = (app, context, done, matcher, options) => {
       matcher(observations, error)
       done()
     })
-    .on('finished', () => {
-      matcher(observations, error)
-      done()
-    })
     .on('error', (err) => {
       error = err
     })
