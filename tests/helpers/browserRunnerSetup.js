@@ -1,10 +1,11 @@
 const puppeteer = require('puppeteer');
 const browserify = require('browserify');
-const SpecCompiler = require('elm-spec-core/src/compiler')
+const { Compiler } = require('elm-spec-core')
+const path = require('path')
 
-const compiler = new SpecCompiler({
-  specPath: "./src/Specs/*Spec.elm",
-  elmPath: "../node_modules/.bin/elm"
+const compiler = new Compiler({
+  cwd: path.join(__dirname, "..", "src"),
+  specPath: "./Specs/*Spec.elm"
 })
 
 
@@ -30,7 +31,7 @@ after(async () => {
 
 const bundleRunnerCode = () => {
   const b = browserify();
-  b.add('./helpers/browserRunner.js');
+  b.add(path.join(__dirname, "browserRunner.js"));
   
   return new Promise((resolve, reject) => {  
     let bundle = ''

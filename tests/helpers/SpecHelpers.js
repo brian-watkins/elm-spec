@@ -3,6 +3,7 @@ const expect = chai.expect
 const { SuiteRunner, ProgramRunner, ElmContext, Compiler } = require('elm-spec-core')
 const JsdomContext = require('../../runner/elm-spec-runner/src/jsdomContext')
 const TestReporter = require('./testReporter')
+const path = require('path')
 
 
 const elmSpecContext = process.env.ELM_SPEC_CONTEXT
@@ -69,8 +70,8 @@ const prepareJsdom = () => {
     elmContext = new ElmContext(jsdom.window)
 
     const compiler = new Compiler({
-      specPath: "./src/Specs/*Spec.elm",
-      elmPath: "../node_modules/.bin/elm"
+      cwd: path.join(__dirname, "..", "src"),
+      specPath: "./Specs/*Spec.elm"
     })
         
     jsdom.loadElm(compiler)
