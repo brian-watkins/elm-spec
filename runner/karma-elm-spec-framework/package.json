@@ -4,6 +4,7 @@
   "description": "Run elm-spec specs",
   "main": "lib/index.js",
   "scripts": {
+    "prepublish": "npm run build",
     "test": "karma start --single-run",
     "test:unit": "mocha 'tests/**/*Test.js'",
     "test:watch": "karma start",
