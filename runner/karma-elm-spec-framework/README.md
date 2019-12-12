@@ -66,8 +66,3 @@ Here's an example of the config properties relevant to elm-spec:
     // For best results, use the included elm-spec reporter.
     reporters: ['elm-spec'],
 ```
-
-You should be able to get by without specifying a special working directory, assuming your project's `elm.json` is
-in the root directory of your project. Use the 
-root `elm.json` by adding the directory with your specs to the `source-directories` portion of your
-root `elm.json` and installing `brian-watkins/elm-spec` as a test dependency.

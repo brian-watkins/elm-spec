@@ -21,12 +21,14 @@ run in a browser (via Karma) and they exercise your code just like it will be ex
 
 ## Getting Started
 
-1. Install `brian-watkins/elm-spec` as a test dependency. Consider using
-[elm-json](https://www.npmjs.com/package/elm-json) to manage test dependencies.
+1. Create a directory for your specs and initialize a new elm app with `elm init`. Add your program's source
+directory to the `source-directories` field of `elm.json`.
 
-2. Create a directory for your specs and add it to the `source-directories` in your `elm.json`.
+2. Install elm-spec: `elm install brian-watkins/elm-spec`.
 
-3. Add a file called `Runner.elm` to your specs directory. It should look something like this:
+3. Install any other dependencies your app needs.
+
+3. Add a file called `Runner.elm` to your specs src directory. It should look something like this:
 
 ```
 port module Runner exposing (program, browserProgram)
@@ -115,7 +117,8 @@ $ npm install --save-dev elm-spec-runner
 Then just run your specs like so:
 
 ```
-$ npx elm-spec
+$ cd specs
+$ npx elm-spec --specs './**/*Spec.elm'
 ```
 
 See [elm-spec-runner](https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner) for more
