@@ -55,10 +55,12 @@ module.exports = class TimePlugin {
     for (let i = 0; i < this.timeouts.length; i++) {
       this.clock.clearTimeout(this.timeouts[i])
     }
+    this.timeouts = []
 
     for (let i = 0; i < this.intervals.length; i++) {
       this.clock.clearInterval(this.intervals[i])
     }
+    this.intervals = []
 
     this.timezoneOffset = new Date().getTimezoneOffset()
   }
