@@ -2,7 +2,7 @@
   "name": "elm-spec-runner",
   "description": "Node CLI for Elm-Spec",
   "version": "1.0.0",
-  "author": "Brian Watkins @brian-watkins",
+  "author": "Brian Watkins",
   "bin": {
     "elm-spec": "./bin/run"
   },
@@ -13,7 +13,7 @@
     "@oclif/plugin-help": "^2.2.1",
     "chalk": "^2.4.2",
     "command-exists": "^1.2.8",
-    "elm-spec-core": "^1.0.0",
+    "elm-spec-core": "~1.0.0",
     "glob": "^7.1.4",
     "jsdom": "^15.1.1",
     "node-elm-compiler": "^5.0.4"
@@ -33,16 +33,17 @@
     "/bin",
     "/src"
   ],
-  "homepage": "https://github.com/brian-watkins/elm-spec",
+  "homepage": "https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner",
   "keywords": [
-    "oclif"
+    "elm",
+    "testing"
   ],
   "license": "MIT",
   "main": "src/index.js",
   "oclif": {
     "bin": "elm-spec"
   },
-  "repository": "brian-watkins/elm-spec",
+  "repository": "https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner",
   "scripts": {
     "test": "mocha --forbid-only \"test/**/*Test.js\""
   }

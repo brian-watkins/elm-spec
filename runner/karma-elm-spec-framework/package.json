@@ -1,7 +1,7 @@
 {
   "name": "karma-elm-spec-framework",
   "version": "1.0.0",
-  "description": "Run elm-spec specs",
+  "description": "Run elm-spec specs with Karma",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "npm run build",
@@ -12,9 +12,18 @@
   },
   "author": "Brian Watkins",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brian-watkins/elm-spec/tree/master/runner/karma-elm-spec-framework"
+  },
+  "keywords": [
+    "karma",
+    "elm",
+    "testing"
+  ],
   "dependencies": {
     "chalk": "^3.0.0",
-    "elm-spec-core": "^1.0.0"
+    "elm-spec-core": "~1.0.0"
   },
   "devDependencies": {
     "browserify": "^16.5.0",
