@@ -14,14 +14,15 @@ would in production.
 - elm-spec allows you to write specs that describe the behavior of parts of your program in isolation from others. This makes those specs easier to write and easier to understand.
 
 In short, with elm-spec you get the confidence you would from a browser-based
-end-to-end testing tool like Cypress, without losing the convenience of tools like elm-test. You can
+end-to-end testing tool like Cypress, without losing the convenience of elm-based testing tools. You can
 still write your specs in Elm and you can still test parts of your code in isolation, but your specs
 run in a browser (via Karma) and they exercise your code just like it will be exercised in production.
 
 
 ## Getting Started
 
-1. Install `brian-watkins/elm-spec` as a test dependency.
+1. Install `brian-watkins/elm-spec` as a test dependency. Consider using
+[elm-json](https://www.npmjs.com/package/elm-json) to manage test dependencies.
 
 2. Create a directory for your specs and add it to the `source-directories` in your `elm.json`.
 
