@@ -1,11 +1,11 @@
 # Karma Elm Spec Framework
 
 This is a plugin for [Karma](http://karma-runner.github.io/latest/) that allows you to 
-run specs create with elm-spec.
+run specs created with elm-spec.
 
 ### Getting Started
 
-First, follow the instructions in elm-spec to set up your specs.
+First, follow the [instructions](https://github.com/brian-watkins/elm-spec) to set up your elm-spec specs.
 
 Then install Karma and the Elm Spec framework:
 
@@ -21,54 +21,53 @@ Here's an example of the config properties relevant to elm-spec:
     frameworks: ['elm-spec'],
 
     elmSpec: {
+      // Root directory for your specs; must contain elm.json.
+      // By default this is '.'
       cwd: './specs',
+
+      // A glob to locate your spec modules, relative to the current
+      // working directory.
+      // By default, this is './specs/**/*Spec.elm'
       specs: './**/*Spec.elm',
+
+      // Path to the elm executable
+      // By default, this looks for elm on your path
       pathToElm: './node_modules/.bin/elm'
     },
 
     client: {
       elmSpec: {
+        // Only scenarios tagged with one of these tags will be executed
         tags: [ 'fun' ],
+
+        // End the spec suite run on the first failure.
+        // This is helpful to turn on when debugging failures, as you'll be able
+        // to see and interact with the program under test (on the Karma debug
+        // page) when a spec fails in the browser Karma is controling.
+        // By default, this is false.
         endOnFailure: true
       }
     },
 
+    // These files will be watched for changes by Karma.
+    // When they change, the elm files will be recompiled.
+    // Tell Karma not to serve these files; the elm-spec framework takes care of
+    // compiling and loading the correct files into the browser.
     files: [
       { pattern: 'src/elm/*.elm', included: false, served: false },
       { pattern: 'specs/**/*Spec.elm', included: false, served: false }
     ],
 
+    // This ensures any changed elm files will trigger the spec files to be recompiled.
     preprocessors: {
       "**/*.elm": [ "elm-spec" ],
     },
 
+    // For best results, use the included elm-spec reporter.
     reporters: ['elm-spec'],
 ```
-
-In the `files` and `preprocessors` section, specify the files you want Karma to watch for changes.
-
-Note that we tell Karma not to serve these files. The elm-spec framework will take care
-of loading the appropriate compiled elm code into the browser.
-
-For best results, add elm-spec as your reporter.
-
-Here are some elm-spec specific configuration properties:
-
-`elmSpec.cwd` specifies a root directory for your specs, that is, a directory that contains an `elm.json` file for
-your specs. By default this value is `.`. 
 
 You should be able to get by without specifying a special working directory, assuming your project's `elm.json` is
 in the root directory of your project. Use the 
 root `elm.json` by adding the directory with your specs to the `source-directories` portion of your
 root `elm.json` and installing `brian-watkins/elm-spec` as a test dependency.
-
-`elmSpec.specs` is a glob specifying the pattern to find all your spec programs. Note that this path is relative
-to `elmSpec.cwd`. By default, this will look for specs at `./specs/**/*Spec.elm`.
-
-`elmSpec.pathToElm` specifies the path to the elm binary. By default this will look for `elm` in your path.
-
-`client.elmSpec.tags` is a list of tags. If these are specified, only those specs tagged with these tags will be executed.
-
-`client.elmSpec.endOnFailure` is a boolean that tells elm-spec whether it should stop executing specs on the first failure.
-This option is especially helpful to turn on when debugging failures, as you'll be able to see and interact with the
-program under test (on the Karma debug page) when a spec fails in the browser Karma is controling.
