@@ -52,7 +52,7 @@ Here's a sample spec for a browser program called `App`:
 
 -}
 
-import Spec.Setup as Setup exposing (Setup)
+import Spec.Setup exposing (Setup)
 import Spec.Scenario.Internal as Internal
 import Spec.Step as Step
 import Spec.Observer exposing (Observer, Expectation)

@@ -23,6 +23,7 @@
     "browserify": "^16.5.0",
     "chai": "^4.2.0",
     "elm-doc-preview": "^3.0.4",
+    "elm-json": "^0.2.6",
     "elm-spec-core": "file:runner/elm-spec-core",
     "lerna": "^3.19.0",
     "mocha": "^6.2.0",
