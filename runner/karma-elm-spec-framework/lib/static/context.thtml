@@ -9,6 +9,7 @@ Reloaded before every execution run.
   <title></title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <base href="%KARMA_URL_ROOT%" />
   <script src="context.js"></script>
   <script type="text/javascript">
     // Configure our Karma and set up bindings

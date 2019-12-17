@@ -11,6 +11,7 @@ just for immediate execution, without reporting to Karma server.
   <link href="favicon.ico" rel="icon" type="image/x-icon" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <base href="%KARMA_URL_ROOT%" />
   <script src="context.js"></script>
   <script src="debug.js"></script>
   <script type="text/javascript">
