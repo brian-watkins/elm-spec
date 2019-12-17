@@ -60,12 +60,12 @@ describe('HTTP', () => {
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"),
-          reportLine("but it has", "Content-Type = text/plain;charset=utf-8\nX-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
         ])
         expectRejected(observations[2], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"),
-          reportLine("but it has", "Content-Type = text/plain;charset=utf-8\nX-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
         ])
       })
     })
@@ -74,15 +74,27 @@ describe('HTTP', () => {
   context("hasBody", () => {
     it("observes the request body as expected", (done) => {
       expectSpec("HttpSpec", "hasBody", done, (observations) => {
-        expectAccepted(observations[0])
+        expectRejected(observations[0], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Expected request to have body with string", "some string body that it does not have"),
+          reportLine("but it has no body at all")
+        ])
         expectRejected(observations[1], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Expected to decode request body as JSON"),
+          reportLine("but it has no body at all")
+        ])
+        expectAccepted(observations[2])
+        expectRejected(observations[3], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
           reportLine("Expected request to have body with string", "{\"blah\":3}"),
           reportLine("but it has", "{\"name\":\"fun person\",\"age\":88}")
         ])
-        expectAccepted(observations[2])
-        expectRejected(observations[3], [
+        expectAccepted(observations[4])
+        expectRejected(observations[5], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
           reportLine("Expected to decode request body as JSON", "{\"name\":\"fun person\",\"age\":88}"),

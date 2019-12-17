@@ -42,7 +42,8 @@ type alias HttpRequest =
 {-| Represents the body of an HTTP request.
 -}
 type RequestBody
-  = StringBody String
+  = EmptyBody
+  | StringBody String
 
 
 {-| Claim that an HTTP request has a header with the given (key, value) tuple.
@@ -80,6 +81,11 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
 hasStringBody : String -> Claim HttpRequest
 hasStringBody expected request =
   case request.body of
+    EmptyBody ->
+      Claim.Reject <| Report.batch
+        [ Report.fact "Expected request to have body with string" expected
+        , Report.note "but it has no body at all"
+        ]
     StringBody actual ->
       if actual == expected then
         Claim.Accept
@@ -104,6 +110,11 @@ would be accepted.
 hasJsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
 hasJsonBody decoder claim request =
   case request.body of
+    EmptyBody ->
+      Claim.Reject <| Report.batch
+        [ Report.note "Expected to decode request body as JSON"
+        , Report.note "but it has no body at all"
+        ]
     StringBody actual ->
       case Json.decodeString decoder actual of
         Ok value ->
@@ -160,4 +171,8 @@ requestDecoder =
 
 requestBodyDecoder : Json.Decoder RequestBody
 requestBodyDecoder =
-  Json.map StringBody Json.string
+  Json.nullable Json.string
+    |> Json.map (
+      Maybe.map StringBody
+        >> Maybe.withDefault EmptyBody
+    )

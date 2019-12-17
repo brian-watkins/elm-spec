@@ -69,6 +69,6 @@ const buildRequest = (request) => {
   return {
     url: request.url,
     headers: request.requestHeaders,
-    body: request.requestBody
+    body: request.requestBody || null
   }
 }

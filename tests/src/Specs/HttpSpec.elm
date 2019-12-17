@@ -1,4 +1,4 @@
-module Specs.HttpSpec exposing (..)
+module Specs.HttpSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
@@ -93,7 +93,7 @@ getRequestWithTimeout timeout =
       , Http.header "X-Awesome-Header" "some-awesome-value"
       ]
     , url = "http://fake-api.com/stuff"
-    , body = Http.stringBody "text/plain;charset=utf-8" ""
+    , body = Http.emptyBody
     , expect = Http.expectJson ReceivedResponse responseDecoder
     , timeout = timeout
     , tracker = Nothing
@@ -109,7 +109,7 @@ getOtherRequest =
       , Http.header "X-Awesome-Header" "some-awesome-value"
       ]
     , url = "http://fake-api.com/fun"
-    , body = Http.stringBody "text/plain;charset=utf-8" ""
+    , body = Http.emptyBody
     , expect = Http.expectJson ReceivedResponse responseDecoder
     , timeout = Nothing
     , tracker = Nothing
@@ -341,7 +341,34 @@ hasBodySpec =
       ]
   in
   Spec.describe "hasBody"
-  [ scenario "string body with json" (
+  [ scenario "empty body" (
+      given (
+        testSubject getRequest [ successStub ]
+      )
+      |> when "a request is made"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "fails to find a string body" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+              |> expect (
+                isListWhere
+                  [ Spec.Http.hasStringBody "some string body that it does not have"
+                  ]
+              )
+          )
+        , it "fails to find a json body" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+              |> expect (
+                isListWhere
+                  [ Spec.Http.hasJsonBody Json.string <| equals "some json that it does not have"
+                  ]
+              )
+          )
+        ]
+    )
+  , scenario "string body with json" (
       given (
         testSubject (postRequestWithJson postBody) [ successPostStub ]
       )
