@@ -158,8 +158,16 @@ const runSpec = (app, context, done, matcher, options) => {
       observations.push(observation)
     })
     .on('complete', () => {
-      matcher(observations, error)
-      done()
+      try {
+        matcher(observations, error)
+        done()
+      } catch (err) {
+        if (err.name === "AssertionError") {
+          done(err)
+        } else {
+          process.exit(1)
+        }
+      }
     })
     .on('error', (err) => {
       error = err
