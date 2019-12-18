@@ -1,3 +1,5 @@
+const chai = require('chai')
+const expect = chai.expect
 const { expectSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
 
 describe('HTTP', () => {
@@ -57,16 +59,16 @@ describe('HTTP', () => {
     it("observes request headers as expected", (done) => {
       expectSpec("HttpSpec", "hasHeader", done, (observations) => {
         expectAccepted(observations[0])
-        expectRejected(observations[1], [
-          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
-          reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"),
-          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
-        ])
-        expectRejected(observations[2], [
-          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
-          reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"),
-          reportLine("but it has", "X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
-        ])
+
+        expect(observations[1].report[0]).to.deep.equal(reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"))
+        expect(observations[1].report[1]).to.deep.equal(reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"))
+        expect(observations[1].report[2].statement).to.equal("but it has")
+        expect(observations[1].report[2].detail).to.contain("X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+
+        expect(observations[2].report[0]).to.deep.equal(reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"))
+        expect(observations[2].report[1]).to.deep.equal(reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"))
+        expect(observations[2].report[2].statement).to.equal("but it has")
+        expect(observations[2].report[2].detail).to.contain("X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
       })
     })
   })
