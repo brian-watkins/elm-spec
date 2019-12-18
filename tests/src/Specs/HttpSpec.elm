@@ -370,7 +370,7 @@ hasBodySpec =
     )
   , scenario "string body with json" (
       given (
-        testSubject (postRequestWithJson postBody) [ successPostStub ]
+        testSubject (postRequestWithJson postBody) []
       )
       |> when "a request is made"
         [ Markup.target << by [ id "trigger" ]
@@ -444,10 +444,6 @@ successStub =
 otherSuccessStub =
   Stub.for (get "http://fake-api.com/fun")
     |> Stub.withBody "{\"name\":\"Fun Person\",\"score\":971}"
-
-successPostStub =
-  Stub.for (post "http://fake-api.com/stuff")
-    |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
 
 unauthorizedStub =
   Stub.for (get "http://fake-api.com/stuff")
