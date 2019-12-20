@@ -46,8 +46,8 @@ type alias Model model msg =
 
 
 init : (() -> List (Internal.Spec model msg)) -> Int -> Config msg -> Flags -> Maybe Key -> ( Model model msg, Cmd (Msg msg) )
-init specProvider version config flags maybeKey =
-  if version == flags.version then
+init specProvider requiredElmSpecCoreVersion config flags maybeKey =
+  if requiredElmSpecCoreVersion == flags.version then
     ( { scenarios =
           specProvider ()
             |> gatherScenarios flags.tags
@@ -61,7 +61,7 @@ init specProvider version config flags maybeKey =
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
       }
-    , versionMismatchErrorMessage version flags.version
+    , versionMismatchErrorMessage requiredElmSpecCoreVersion flags.version
         |> config.send
     )
 
@@ -185,12 +185,12 @@ withTags tags scenarioData =
 
 
 versionMismatchErrorMessage : Int -> Int -> Message
-versionMismatchErrorMessage elmSpecVersion elmSpecRunnerVersion =
+versionMismatchErrorMessage elmSpecCoreRequiredVersion elmSpecCoreActualVersion =
   Message.for "_spec" "error"
     |> Message.withBody (
       Report.encoder <| Report.batch
-        [ Report.fact "The elm-spec javascript API version is" <| String.fromInt elmSpecVersion
-        , Report.fact "but your elm-spec runner expects a version of" <| String.fromInt elmSpecRunnerVersion
-        , Report.note "Upgrade to make the versions match."
+        [ Report.fact "elm-spec requires elm-spec-core at version" <| String.fromInt elmSpecCoreRequiredVersion ++ ".x"
+        , Report.fact "but your elm-spec-core version is" <| String.fromInt elmSpecCoreActualVersion ++ ".x"
+        , Report.note "Check your JavaScript runner and upgrade to make the versions match."
         ]
     )

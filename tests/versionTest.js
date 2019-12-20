@@ -15,9 +15,9 @@ describe("version check", () => {
     it("sends an error to the reporter", (done) => {
       expectProgramAtVersion("VersionSpec", 8, done, (observations, error) => {
         expect(error).to.deep.equal([
-          reportLine("The elm-spec javascript API version is", "10"),
-          reportLine("but your elm-spec runner expects a version of", "8"),
-          reportLine("Upgrade to make the versions match.")
+          reportLine("elm-spec requires elm-spec-core at version", "10.x"),
+          reportLine("but your elm-spec-core version is", "8.x"),
+          reportLine("Check your JavaScript runner and upgrade to make the versions match.")
         ])
       })
     })
