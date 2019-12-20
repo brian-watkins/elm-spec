@@ -177,6 +177,11 @@ manyElementsSpec =
                   |> Maybe.withDefault (Claim.Reject <| Report.note "Element not found!")
               )
           )
+        , it "finds no elements" (
+            Markup.observeElements
+              |> Markup.query << by [ id "blah-nothing" ]
+              |> expect (Claim.isListWithLength 0)
+          )
         ]
     )
   ]

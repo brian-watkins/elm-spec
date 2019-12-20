@@ -19,8 +19,9 @@ module.exports = class HtmlPlugin {
         this.renderAndThen(() => {
           const selector = specMessage.body.selector
           const element = this.document.querySelector(selector)
+
           if (element) {
-            out(this.selected(this.describeElement(element)))
+            out(this.selected(element))
           } else {
             out(this.elementNotFound())
           }
@@ -31,7 +32,7 @@ module.exports = class HtmlPlugin {
       case "queryAll": {
         this.renderAndThen(() => {
           const selector = specMessage.body.selector
-          const elements = Array.from(this.document.querySelectorAll(selector)).map(element => this.describeElement(element))
+          const elements = Array.from(this.document.querySelectorAll(selector))
           out(this.selected(elements))
         })
 
@@ -230,14 +231,6 @@ module.exports = class HtmlPlugin {
   getEvent(name, options = {}) {
     const details = Object.assign({ bubbles: true, cancelable: true }, options)
     return this.window.eval(`new Event('${name}', ${JSON.stringify(details)})`)
-  }
-
-  describeElement(element) {
-    return {
-      tag: element.tagName,
-      attributes: this.getAttributes(element),
-      textContext: element.textContent
-    }
   }
 
   verifySelector(name, { props, forElementsOnly }, abort, handler) {

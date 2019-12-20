@@ -50,4 +50,18 @@ describe("html observers", () => {
       })
     })
   })
+
+  describe("hasProperty", () => {
+    it("observes properties of elements as expected", (done) => {
+      expectSpec("HtmlObserverSpec", "hasProperty", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("Claim rejected for selector", "button"),
+          reportLine("Unable to decode JSON for property", "Problem with the given value:\n\n{}\n\nExpecting an OBJECT with a field named `something_it_does_not_have`")
+        ])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+      })
+    })
+  })
 })

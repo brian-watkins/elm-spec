@@ -5,8 +5,11 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
+import Spec.Claim exposing (isTrue, isListWhere)
+import Specs.Helpers exposing (equals)
 import Html exposing (Html)
 import Html.Attributes as Attr
+import Json.Decode as Json
 import Runner
 
 
@@ -117,6 +120,66 @@ hasAttributeSpec =
   ]
 
 
+hasPropertySpec : Spec Model Msg
+hasPropertySpec =
+  Spec.describe "hasProperty"
+  [ scenario "element has the property with the right value" (
+      given (
+        propertySpecSetup
+      )
+      |> it "gets the value of the property" (
+        Markup.observeElement
+          |> Markup.query << by [ tag "button" ]
+          |> expect (Markup.property (Json.field "disabled" Json.bool) isTrue)
+      )
+    )
+  , scenario "the element does not have the property" (
+      given (
+        propertySpecSetup
+      )
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ tag "button" ]
+          |> expect (Markup.property (Json.field "something_it_does_not_have" Json.bool) isTrue)
+      )
+    )
+  , scenario "getting a property on all elements" (
+      given (
+        propertySpecSetup
+      )
+      |> it "gets the property for each element" (
+        Markup.observeElements
+          |> Markup.query << by [ tag "div" ]
+          |> expect (isListWhere
+            [ Markup.property (Json.field "id" Json.string) <| equals "root"
+            , \_ -> Spec.Claim.Accept
+            , Markup.property (Json.field "id" Json.string) <| equals "fun-div"
+            ]
+          )
+      )
+    )
+  , scenario "crazy case" (
+      given (
+        propertySpecSetup
+      )
+      |> it "gets the value" (
+        Markup.observeElement
+          |> Markup.query << by [ id "root" ]
+          |> expect (Markup.property nodeDecoder <| equals "fun-div")
+      )
+    )
+  ]
+
+
+nodeDecoder =
+  Json.at [ "childNodes", "1", "childNodes", "0", "id" ] Json.string
+
+
+propertySpecSetup =
+  Setup.initWithModel { activity = "bowling" }
+    |> Setup.withView testPropertyView
+
+
 type alias Model =
   { activity: String
   }
@@ -135,12 +198,23 @@ testAttributeView model =
   ]
 
 
+testPropertyView : Model -> Html Msg
+testPropertyView model =
+  Html.div [ Attr.id "root" ]
+  [ Html.button [ Attr.disabled True ] [ Html.text "Click me!" ]
+  , Html.div []
+    [ Html.div [ Attr.id "fun-div" ] [ Html.text "FUN!" ]
+    ]
+  ]
+
+
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "hasText" -> Just hasTextSpec
     "hasTextContained" -> Just hasTextContainedSpec
     "hasAttribute" -> Just hasAttributeSpec
+    "hasProperty" -> Just hasPropertySpec
     _ -> Nothing
 
 
