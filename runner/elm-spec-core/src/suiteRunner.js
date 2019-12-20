@@ -2,7 +2,7 @@ const EventEmitter = require('events')
 const ProgramRunner = require('./programRunner')
 const Program = require('./program')
 
-const ELM_SPEC_CORE_VERSION = 1
+const ELM_SPEC_CORE_VERSION = 2
 
 module.exports = class SuiteRunner extends EventEmitter {
   constructor(context, reporter, options, version) {
