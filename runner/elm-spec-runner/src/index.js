@@ -16,13 +16,14 @@ class ElmSpecRunnerCommand extends Command {
     }
 
     const specPath = flags.specs
-    if (glob.sync(specPath).length == 0) {
+    if (glob.sync(specPath, { cwd: flags.cwd }).length == 0) {
       this.error(`No spec modules found matching: ${specPath}`)
     }    
 
     const tags = flags.tag || []
 
     this.runSpecs({
+      cwd: flags.cwd,
       specPath,
       elmPath: flags.elm,
       runnerOptions: {
@@ -53,8 +54,9 @@ ElmSpecRunnerCommand.flags = {
   version: flags.version({char: 'v'}),
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
-  elm: flags.string({char: 'e', description: 'path to elm', default: 'elm'}),
+  cwd: flags.string({char: 'c', description: 'current working directory', default: process.cwd()}),
   specs: flags.string({char: 's', description: 'glob for spec modules', default: path.join(".", "specs", "**", "*Spec.elm")}),
+  elm: flags.string({char: 'e', description: 'path to elm', default: 'elm'}),
   tag: flags.string({char: 't', description: 'execute scenarios with this tag only (may specify multiple)', multiple: true}),
   endOnFailure: flags.boolean({char: 'f', description: 'end spec suite run on first failure', default: false}),
   timeout: flags.integer({char: 'm', description: 'spec timeout in milliseconds', default: 500})

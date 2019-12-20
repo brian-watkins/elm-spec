@@ -21,6 +21,8 @@ $ elm-spec [options]
 
 `--help` -- Print options
 
+`--cwd` -- Specify a different working directory; should contain the elm.json file for the specs.
+
 `--elm` -- Specify path to elm executable. Defaults to `elm`
 
 `--specs` -- Specify a glob for spec modules. Defaults to `./specs/**/*Spec.elm`
