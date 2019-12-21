@@ -7,6 +7,26 @@ module Spec.Time exposing
 
 {-| Functions for working with time during a spec.
 
+Suppose you use `Time.every` to increment a count in your model after each second.
+Here's a spec you could use to describe that behavior:
+
+    Spec.describe "seconds counter"
+    [ Spec.scenario "some seconds pass" (
+        Spec.given (
+          Spec.Setup.init (App.init testFlags)
+            |> Spec.Setup.withView App.view
+            |> Spec.Setup.withUpdate App.update
+        )
+        |> when "some time passes"
+          [ Spec.Time.tick 3000
+          ]
+        |> it "increments the counter" (
+          Spec.Observer.observeModel .seconds
+            |> Spec.expect (Spec.Claim.isEqual Debug.toString 3)
+        )
+      )
+    ]
+
 # Set Up at a Time
 @docs withTime, withTimezoneOffset
 

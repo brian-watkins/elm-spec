@@ -9,6 +9,42 @@ module Spec.Http exposing
 
 {-| Observe, and make claims about HTTP requests during a spec.
 
+Here's an example:
+
+First, create an `HttpResponseStub` that defines the response to return when a request is sent by the program.
+
+    successStub : HttpResponseStub
+    successStub =
+      Spec.Http.Stub.for (Spec.Http.Route.post "http://fake-api.com/api/sports")
+        |> Spec.Http.Stub.withStatus 201
+
+Now, you could write a spec that checks to see if the request body contains a value:
+
+    Spec.describe "some request"
+    [ Spec.scenario "the post is successful" (
+        Spec.given (
+          Spec.Setup.init (App.init testFlags)
+            |> Spec.Setup.withView App.view
+            |> Spec.Setup.withUpdate App.update
+            |> Spec.Http.Stub.serve [ successStub ]
+        )
+        |> Spec.when "the request is sent"
+          [ Spec.Markup.target << by [ id "request-button" ]
+          , Spec.Markup.Event.click
+          ]
+        |> Spec.it "sends the correct request" (
+          Spec.Http.observeRequests
+              (Spec.Http.Route.post "http://fake-api.com/api/sports")
+            |> Spec.expect (Spec.Claim.isListWhere
+              [ Spec.Http.hasJsonBody
+                  (Json.field "name" Json.string)
+                  (Spec.Claim.isEqual Debug.toString "bowling")
+              ]
+            )
+        )
+      )
+    ]
+
 # Observe HTTP Requests
 @docs HttpRequest, RequestBody, observeRequests
 
@@ -101,7 +137,8 @@ given decoder into a value that satisfies the given claim.
 
 For example, if the body of the observed request was `{"sport":"bowling"}`, then the following claim:
 
-    Spec.Http.hasJsonBody (Json.Decode.field "sport" Json.Decode.string)
+    Spec.Http.hasJsonBody
+      (Json.Decode.field "sport" Json.Decode.string)
       (Spec.Claim.isEqualTo Debug.toString "bowling")
 
 would be accepted.
@@ -131,9 +168,10 @@ hasJsonBody decoder claim request =
 For example:
 
     Spec.Http.observeRequests (Spec.Http.Route.get "http://fake.com/fake")
-      |> Spec.Claim.isList
+      |> Spec.expect (Spec.Claim.isList
         [ Spec.Http.hasHeader ("Authorization", "Bearer some-fun-token")
         ]
+      )
 
 -}
 observeRequests : HttpRoute -> Observer model (List HttpRequest)

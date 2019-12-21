@@ -43,6 +43,8 @@ behavior the scenario describes. In that case you could do something like:
 
     Spec.given (
       Spec.Setup.init (App.init testFlags)
+        |> Spec.Setup.withUpdate App.update
+        |> Spec.Setup.withView App.view
     )
 
 If you are describing the behavior of a program created with `Browser.application` then
@@ -70,6 +72,26 @@ initial state for the scenario. You could do something like:
 
     Spec.given (
       Spec.Setup.initForApplication (App.init testFlags)
+        |> Spec.Setup.withDocument App.view
+        |> Spec.Setup.withUpdate App.update
+    )
+
+If your scenario involves location changes, you'll want to use this function in
+conjunction with `Spec.Setup.onUrlChange` and `Spec.Setup.onUrlRequest` to provide
+those extra functions that an application requires. But doing so is not necessary.
+
+In addition, you might consider using `Spec.Setup.withLocation` to set the URL that
+will be passed to the application's init function at the start of the scenario.
+
+So, a full setup for an application might look something like this:
+
+    Spec.given (
+      Spec.Setup.initForApplication (App.init testFlags)
+        |> Spec.Setup.withDocument App.view
+        |> Spec.Setup.withUpdate App.update
+        |> Spec.Setup.onUrlChange App.urlDidChange
+        |> Spec.Setup.onUrlRequest App.urlChangeRequested
+        |> Spec.Setup.withLocation (someUrlWithPath "/sports")
     )
 
 -}

@@ -33,7 +33,7 @@ Now, I can write a spec that uses a witness to record the score passed to the in
     Spec.describe "saving the score"
     [ Spec.scenario "successful save" (
         Spec.given (
-          Spec.Setup.withInit (App.init testFlags)
+          Spec.Setup.init (App.init testFlags)
             |> Spec.Setup.withView App.view
             |> Witness.forUpdate (\witness ->
               App.update <| \score ->
