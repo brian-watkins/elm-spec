@@ -3,7 +3,7 @@
     "name": "brian-watkins/elm-spec",
     "summary": "Describe the behavior of Elm programs",
     "license": "MIT",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "exposed-modules": [
         "Spec",
         "Spec.Claim",
