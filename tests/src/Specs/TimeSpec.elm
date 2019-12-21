@@ -74,8 +74,7 @@ countTimePassingSpec =
       |> when "time passes"
         [ Spec.Time.tick 1000
         , Spec.Time.tick 1000
-        , Spec.Time.tick 1000
-        , Spec.Time.tick 1000
+        , Spec.Time.tick 2000
         ]
       |> it "updates the model" (
         Observer.observeModel .count
