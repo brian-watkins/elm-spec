@@ -5,8 +5,9 @@ Use elm-spec to write specs that describe the behavior of your Elm program.
 You think TDD/BDD is great, and maybe you're already writing tests in Elm or using tools like Cypress
 to test your program end-to-end. Why use elm-spec?
 
-- elm-spec allows you to describe behaviors that involve HTML, HTTP, Time, ports, commands, and subscriptions --
-and there's no need to structure your code in any special way to do so (although you can if you wish).
+- elm-spec allows you to describe behaviors that involve HTML, browser navigation, HTTP, Time, ports,
+commands, and subscriptions -- and there's no need to structure your code in any special way
+to do so (although you can if you wish).
 - elm-spec does not simulate calls to your program's `view` or `update` functions, and it lets the
 Elm runtime handle commands and subscriptions; your program interacts with the Elm runtime just as it
 would in production.
