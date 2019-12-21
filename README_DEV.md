@@ -17,3 +17,21 @@ $ npx lerna bootstrap
 ```
 $ npm test
 ```
+
+## Publishing
+
+1. fast-forward merge develop into master and push
+2. `npx lerna version`
+  - Choose versions for each package
+  - Lerna will update the package.json appropriately for each package and push changes and push new release tags
+3. `npx lerna publish from-git`
+  - Publishes the latest tagged releases of the packages to npm
+4. `npx elm bump`
+  - Figures out the right semantic versioning for elm-spec and updates the elm.json; does not push to git
+5. Commit and push
+6. `git tag 1.1.0`
+  - Where 1.1.0 is your new version
+7. `git push --tags`
+8. `npx elm publish`
+
+
