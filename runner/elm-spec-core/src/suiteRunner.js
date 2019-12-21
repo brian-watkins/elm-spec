@@ -1,6 +1,7 @@
 const EventEmitter = require('events')
 const ProgramRunner = require('./programRunner')
 const Program = require('./program')
+const { report, line } = require('./report')
 
 const ELM_SPEC_CORE_VERSION = 2
 
@@ -53,12 +54,19 @@ module.exports = class SuiteRunner extends EventEmitter {
   }
 
   initializeApp(program) {
-    const app = program.init({
-      flags: {
-        tags: this.options.tags,
-        version: this.version
-      }
-    })
+    let app
+    
+    try {
+      app = program.init({
+        flags: {
+          tags: this.options.tags,
+          version: this.version
+        }
+      })
+    } catch (err) {
+      this.reporter.error(this.initializationError())
+      return null
+    }
 
     const error = ProgramRunner.hasElmSpecPorts(app)
     if (error) {
@@ -91,5 +99,13 @@ module.exports = class SuiteRunner extends EventEmitter {
   finish() {
     this.reporter.finish()
     this.emit('complete')
+  }
+
+  initializationError() {
+    return report(
+      line("Unable to initialize the spec program!"),
+      line("This suggests that your elm-spec Elm package expects a different version of elm-spec-core."),
+      line("Try upgrading your JavaScript runner.")
+    )
   }
 }

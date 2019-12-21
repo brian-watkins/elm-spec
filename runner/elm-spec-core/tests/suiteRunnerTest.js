@@ -71,6 +71,16 @@ describe("Suite Runner", () => {
     })
   })
 
+  context("when the flags passed on init are messed up", () => {
+    it("fails and reports an error", (done) => {
+      expectScenariosForVersion("BAD VERSION", "Passing", { tags: [], timeout: 50, endOnFailure: false }, done, (reporter) => {
+        expect(reporter.observations).to.have.length(0)
+        expect(reporter.errorCount).to.equal(1)
+        expect(reporter.specError).to.not.be.null
+      })
+    })
+  })
+
   context("when the version is not correct", () => {
     it("fails and reports only one error", (done) => {
       expectScenariosForVersion(-1, "Passing", { tags: [], timeout: 50, endOnFailure: false }, done, (reporter) => {
