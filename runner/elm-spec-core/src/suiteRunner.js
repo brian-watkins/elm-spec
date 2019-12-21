@@ -105,7 +105,7 @@ module.exports = class SuiteRunner extends EventEmitter {
     return report(
       line("Unable to initialize the spec program!"),
       line("This suggests that your elm-spec Elm package expects a different version of elm-spec-core."),
-      line("Try upgrading your JavaScript runner.")
+      line("Try upgrading your JavaScript runner and/or your elm-spec Elm package to the latest version.")
     )
   }
 }
