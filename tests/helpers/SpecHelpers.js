@@ -49,7 +49,11 @@ exports.expectProgramAtVersion = (specProgram, version, done, matcher) => {
 }
 
 exports.expectAccepted = (observation) => {
-  expect(observation.summary).to.equal("ACCEPT", `Rejected: ${JSON.stringify(observation.report)}`)
+  if (observation) {
+    expect(observation.summary).to.equal("ACCEPT", `Rejected: ${JSON.stringify(observation.report)}`)
+  } else {
+    expect.fail("observation is null!")
+  }
 }
 
 exports.expectRejected = (observation, report) => {
@@ -162,11 +166,7 @@ const runSpec = (app, context, done, matcher, options) => {
         matcher(observations, error)
         done()
       } catch (err) {
-        if (err.name === "AssertionError") {
-          done(err)
-        } else {
-          process.exit(1)
-        }
+        done(err)
       }
     })
     .on('error', (err) => {
