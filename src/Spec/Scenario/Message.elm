@@ -2,12 +2,13 @@ module Spec.Scenario.Message exposing
   ( isScenarioMessage
   , startScenario
   , configureComplete
-  , stepComplete
+  , stepMessage
   , startObservation
   , abortScenario
   )
 
 import Spec.Message as Message exposing (Message)
+import Spec.Message.Internal as Message
 import Json.Encode as Encode exposing (Value)
 
 
@@ -21,9 +22,14 @@ configureComplete =
   scenarioStateMessage "CONFIGURE_COMPLETE"
 
 
-stepComplete : Message
-stepComplete =
-  scenarioStateMessage "STEP_COMPLETE"
+stepMessage : Message -> Message
+stepMessage message =
+  Message.for "_scenario" "step"
+    |> Message.withBody (
+      Encode.object
+        [ ("message", Message.encode message)
+        ]
+    )
 
 
 startObservation : Message

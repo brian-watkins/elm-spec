@@ -6,8 +6,7 @@
 
   const defaultConfig = {
     tags: [],
-    endOnFailure: false,
-    timeout: 5000
+    endOnFailure: false
   }
 
   const options = Object.assign(defaultConfig, window.__karma__.config.elmSpec)

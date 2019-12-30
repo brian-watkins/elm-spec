@@ -30,5 +30,3 @@ $ elm-spec [options]
 `--tag` -- Specify a tag. Only scenarios with this tag will be executable. You may specify several tags.
 
 `--endOnFailure` -- Stop the spec suite run on the first failure. Defaults to `false`
-
-`--timeout` -- Timeout in milliseconds for a scenario. Defaults to 500ms

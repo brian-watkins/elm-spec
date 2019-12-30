@@ -92,8 +92,7 @@ const runProgramInJsdom = (specProgram, version, done, matcher) => {
     const reporter = new TestReporter()
     const options = {
       tags: [],
-      endOnFailure: false,
-      timeout: 500
+      endOnFailure: false
     }
 
     new SuiteRunner(elmContext, reporter, options, version)
@@ -155,7 +154,7 @@ const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
 const runSpec = (app, context, done, matcher, options) => {
   const observations = []
   let error = null
-  const programOptions = Object.assign({ timeout: 500 }, options)
+  const programOptions = options || {}
 
   new ProgramRunner(app, context, programOptions)
     .on('observation', (observation) => {

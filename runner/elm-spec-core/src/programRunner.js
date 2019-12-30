@@ -3,6 +3,7 @@ const PortPlugin = require('./plugin/portPlugin')
 const TimePlugin = require('./plugin/timePlugin')
 const HtmlPlugin = require('./plugin/htmlPlugin')
 const HttpPlugin = require('./plugin/httpPlugin')
+const WitnessPlugin = require('./plugin/witnessPlugin')
 const { registerApp, setBaseLocation } = require('./fakes')
 const { report, line } = require('./report')
 
@@ -41,7 +42,10 @@ module.exports = class ProgramRunner extends EventEmitter {
   generatePlugins(context) {
     return {
       "_html": new HtmlPlugin(context),
-      "_http": new HttpPlugin(context)
+      "_http": new HttpPlugin(context),
+      "_time": this.timePlugin,
+      "_witness": new WitnessPlugin(),
+      "_port": this.portPlugin
     }
   }
 
@@ -67,17 +71,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "_scenario":
         this.handleScenarioEvent(specMessage, out)
-        break
-      case "_port":
-        this.portPlugin.handle(specMessage, this.sendAbortMessage(out))
-        break
-      case "_time":
-        this.timePlugin.handle(specMessage, () => {
-          this.handleMessage(this.scenarioStateMessage("STEP_COMPLETE"), out)
-        })
-        break
-      case "_witness":
-        out(specMessage)
         break
       case "_observer":
         this.handleObserverEvent(specMessage, out)
@@ -158,6 +151,12 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "state":
         this.handleStateChange(specMessage.body, out)
         break
+      case "step":
+        this.handleMessage(specMessage.body.message, out)
+        this.startStepTimer(out)
+        break
+      default:
+        console.log("Message for unknown scenario event", specMessage)
     }
   }
 
@@ -169,13 +168,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "CONFIGURE_COMPLETE":
         out(this.continue())
-        break
-      case "STEP_COMPLETE":
-        if (this.timer) clearTimeout(this.timer)
-        this.timer = this.timePlugin.nativeSetTimeout(() => {
-          out(this.continue())
-        }, 0)
-        this.startTimeoutTimer(out)
         break
       case "OBSERVATION_START":
         this.scenarioExerciseComplete()
@@ -196,25 +188,27 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   scenarioExerciseComplete() {
-    this.stopTimeoutTimer()
+    this.stopStepTimer()
     this.portPlugin.unsubscribe()
   }
 
   prepareForScenario(out) {
     this.timePlugin.clearTimers()
     setBaseLocation("http://elm-spec", this.context.window)
-    this.startTimeoutTimer(out)
   }
 
-  startTimeoutTimer(out) {
-    this.stopTimeoutTimer()
-    this.scenarioTimeout = this.timePlugin.nativeSetTimeout(() => {
-      out(this.abort(report(line(`Scenario timeout of ${this.options.timeout}ms exceeded!`))))
-    }, this.options.timeout)
+  startStepTimer(out) {
+    this.stopStepTimer()
+    this.stepTimeout = this.timePlugin.nativeSetTimeout(() => {
+      out(this.continue())
+    }, 0)
   }
 
-  stopTimeoutTimer() {
-    if (this.scenarioTimeout) clearTimeout(this.scenarioTimeout)
+  stopStepTimer() {
+    if (this.stepTimeout) {
+      clearTimeout(this.stepTimeout)
+      this.stepTimeout = null
+    }
   }
 
   continue () {

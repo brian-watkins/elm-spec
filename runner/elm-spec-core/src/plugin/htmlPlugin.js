@@ -83,8 +83,8 @@ module.exports = class HtmlPlugin {
               selector: props.selector
             }
           }
-          this.handle(clickMessage, out, abort)
-          this.handle(clickMessage, out, abort)
+          this.handle(clickMessage, out, next, abort)
+          this.handle(clickMessage, out, next, abort)
           
           const element = this.document.querySelector(props.selector)
           element.dispatchEvent(this.getEvent("dblclick"))

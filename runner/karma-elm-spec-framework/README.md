@@ -46,10 +46,6 @@ Here's an example of the config properties relevant to elm-spec:
         // page) when a spec fails in the browser Karma is controling.
         // By default, this is false.
         endOnFailure: true,
-
-        // Timeout for a spec suite step in milliseconds.
-        // By default, this is 5000ms.
-        timeout: 1000
       }
     },
 

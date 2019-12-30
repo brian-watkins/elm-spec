@@ -194,11 +194,11 @@ exerciseUpdate config msg model =
       ( Exercise updated
       , Cmd.batch
         [ Cmd.map config.sendToSelf cmd
-        , config.send Message.runToNextAnimationFrame
+        , config.send <| Message.stepMessage <| Message.runToNextAnimationFrame
         ]
       )
     ( updated, Send message ) ->
-      ( Exercise updated, config.send message )
+      ( Exercise updated, config.send <| Message.stepMessage <| message )
     ( updated, SendMany messages ) ->
       ( Exercise updated, Cmd.batch <| List.map config.send messages )
     ( updated, Transition ) ->

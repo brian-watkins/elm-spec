@@ -6,7 +6,7 @@ module.exports = class PortPlugin {
     this.subscriptions = []
   }
 
-  handle(specMessage, abort) {
+  handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
       case "send":
         const subscription = specMessage.body

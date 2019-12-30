@@ -248,6 +248,31 @@ nonBrowserEventsSpec =
   ]
 
 
+noHandlerSpec : Spec Model Msg
+noHandlerSpec =
+  Spec.describe "events triggered with no handler"
+  [ scenario "trigger unhandled event" (
+      given (
+        testSubject
+          |> Setup.withSubscriptions (\_ -> Sub.none)
+      )
+      |> when "a click event is triggered with no handler"
+        [ Markup.target << document
+        , Event.click
+        ]
+      |> when "a mouse up event is triggered with no handler"
+        [ Markup.target << document
+        , Event.mouseUp
+        ]
+      |> it "does nothing" (
+        Markup.observeElement
+          |> Markup.query << by [ id "message" ]
+          |> expect (Markup.hasText "You wrote")
+      )
+    )
+  ]
+
+
 testSubject =
   Setup.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [], animationFrames = 0 }
     |> Setup.withView testView
@@ -342,6 +367,7 @@ selectSpec name =
     "nonBrowserEvents" -> Just nonBrowserEventsSpec
     "windowVisibility" -> Just windowVisibilitySpec
     "animationFrame" -> Just animationFrameSpec
+    "noHandler" -> Just noHandlerSpec
     _ -> Nothing
 
 

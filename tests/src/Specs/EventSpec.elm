@@ -297,6 +297,34 @@ customEventSpec =
   ]
 
 
+noHandlerSpec : Spec Model Msg
+noHandlerSpec =
+  describe "no handlers"
+  [ scenario "no click handler" (
+      given (
+        testSubject
+      )
+      |> when "it clicks an element without a click handler"
+        [ Markup.target << by [ id "my-message" ]
+        , Event.click
+        ]
+      |> when "it inputs but there's no input handler"
+        [ Markup.target << by [ id "my-message" ]
+        , Event.input "Hey!"
+        ]
+      |> when "it does a custom event but there's no handler"
+        [ Markup.target << by [ id "my-message" ]
+        , Event.trigger "unknown-event" <| Encode.object []
+        ]
+      |> it "does nothing" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-message" ]
+          |> expect (Markup.hasText "You wrote:")
+      )
+    )
+  ]
+
+
 testSubject =
   Setup.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0, mouseOut = 0, mouseLeave = 0 }
     |> Setup.withUpdate testUpdate
@@ -397,6 +425,7 @@ selectSpec name =
     "mouseUp" -> Just mouseUpSpec
     "mouseMoveIn" -> Just mouseMoveInSpec
     "mouseMoveOut" -> Just mouseMoveOutSpec
+    "noHandler" -> Just noHandlerSpec
     _ -> Nothing
 
 

@@ -31,7 +31,7 @@ module.exports = class TimePlugin {
     }
   }
 
-  handle(specMessage, next) {
+  handle(specMessage) {
     switch (specMessage.name) {
       case "set-time": {
         this.clock.setSystemTime(specMessage.body)
@@ -43,7 +43,6 @@ module.exports = class TimePlugin {
       }
       case "tick": {
         this.clock.tick(specMessage.body)
-        next()
         break
       }
     }

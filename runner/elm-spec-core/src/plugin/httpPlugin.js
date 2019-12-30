@@ -38,7 +38,6 @@ module.exports = class HttpPlugin {
             }
           } else {
             request.readyState = 4
-            next()
           }
         })
 

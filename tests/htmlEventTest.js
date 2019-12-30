@@ -91,4 +91,12 @@ describe("Events", () => {
       })
     })
   })
+
+  describe("no handler", () => {
+    it("does nothing when there is no handler", (done) => {
+      expectSpec("EventSpec", "noHandler", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
 })

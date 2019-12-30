@@ -85,4 +85,12 @@ describe("browser events", () => {
       })
     })
   })
+
+  context("events without a handler", () => {
+    it("does nothing", (done) => {
+      expectSpec("BrowserEventSpec", "noHandler", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
 })

@@ -64,7 +64,7 @@ update outlet msg model =
   case msg of
     ReceivedMessage message ->
       ( { model | effects = message :: model.effects }
-      , State.Send Message.stepComplete
+      , State.Do Cmd.none
       )
 
     ProgramMsg programMsg ->
@@ -72,7 +72,7 @@ update outlet msg model =
         |> Tuple.mapFirst (\updated -> { model | programModel = updated })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then
-            State.Send Message.stepComplete
+            State.Do Cmd.none
           else
             Cmd.map ProgramMsg nextCommand
               |> State.DoAndRender

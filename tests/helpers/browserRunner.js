@@ -18,8 +18,7 @@ window._elm_spec.runProgram = (specProgram, version) => {
     const reporter = new TestReporter()
     const options = {
       tags: [],
-      endOnFailure: false,
-      timeout: 500
+      endOnFailure: false
     }
     
     new SuiteRunner(elmContext, reporter, options, version)
@@ -52,7 +51,7 @@ const runProgram = (app, context, options, resolve, reject) => {
   const observations = []
   let error = null
 
-  new ProgramRunner(app, context, options || { tags: [], endOnFailure: false, timeout: 2000 })
+  new ProgramRunner(app, context, options || { tags: [], endOnFailure: false })
       .on('observation', (observation) => {
         observations.push(observation)
       })
