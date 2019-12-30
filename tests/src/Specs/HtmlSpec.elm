@@ -237,28 +237,6 @@ observePresenceSpec =
   ]
 
 
-timeoutSpec : Spec Model Msg
-timeoutSpec =
-  Spec.describe "timeout"
-  [ scenario "spec times out" (
-      given (
-        Setup.initWithModel { name = "Cool Dude", count = 7 }
-          |> Setup.withUpdate testUpdate
-          |> Setup.withView testView
-      )
-      |> when "something is clicked with no event handler"
-        [ Markup.target << by [ id "my-label" ]
-        , Event.click
-        ]
-      |> it "fails due to timeout" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-label" ]
-          |> expect (Markup.hasText "it does not matter")
-      )
-    )
-  ]
-
-
 failingSpec : Spec Model Msg
 failingSpec =
   Spec.describe "failing"
@@ -359,7 +337,6 @@ selectSpec name =
     "targetUnknown" -> Just targetUnknownSpec
     "manyElements" -> Just manyElementsSpec
     "observePresence" -> Just observePresenceSpec
-    "timeout" -> Just timeoutSpec
     "failing" -> Just failingSpec
     _ -> Nothing
 
