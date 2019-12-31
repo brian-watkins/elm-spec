@@ -5,6 +5,7 @@ module Spec.Claim exposing
   , isTrue
   , isFalse
   , isEqual
+  , contains
   , isListWithLength
   , isListWhere
   , isListWhereItemAt
@@ -18,6 +19,9 @@ module Spec.Claim exposing
 
 # Basic Claims
 @docs isEqual, isTrue, isFalse
+
+# Claims about Strings
+@docs contains
 
 # Claims about Lists
 @docs isListWhere, isListWhereItemAt, isListWithLength
@@ -118,6 +122,41 @@ isEqual toString expected actual =
       [ Report.fact "Expected" <| toString actual
       , Report.fact "to equal" <| toString expected
       ]
+
+
+{-| Claim that the subject contains the given string the given number of times.
+
+For example,
+
+    "some funny string"
+      |> Claim.contains 2 "fun"
+
+would be rejected, since it contains `fun` only once.
+
+-}
+contains : Int -> String -> Claim String
+contains expectedTimes expectedString actual =
+  let
+    count =
+      String.indices expectedString actual
+        |> List.length
+  in
+    if count == expectedTimes then
+      Accept
+    else
+      Reject <| Report.batch
+        [ Report.fact "Expected" actual
+        , Report.fact ("to contain " ++ pluralize expectedTimes "instance" ++ " of") expectedString
+        , Report.note <| "but the text was found " ++ pluralize count "time"
+        ]
+
+
+pluralize : Int -> String -> String
+pluralize times word =
+  if times == 1 then
+    "1 " ++ word
+  else
+    String.fromInt times ++ " " ++ word ++ "s"
 
 
 {-| Claim that the subject is a list with the given length.
