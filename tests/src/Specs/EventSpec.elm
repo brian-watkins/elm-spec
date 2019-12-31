@@ -8,6 +8,8 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Observer as Observer
 import Specs.Helpers exposing (equals)
+import Spec.Report as Report
+import Spec.Claim as Claim
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -379,7 +381,7 @@ customEventSpec =
 itFails =
   it "should fail before it gets here" (
     Observer.observeModel (always True)
-      |> expect (equals False)
+      |> expect (always << Claim.Reject <| Report.note "Should have already failed!")
   )
 
 
