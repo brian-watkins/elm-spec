@@ -66,11 +66,22 @@ clickSpec =
       |> when "no element is targeted for a click"
         [ Event.click
         ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-count" ]
-          |> expect (Markup.hasText "The count is 1!")
+      |> itFails
+    )
+  , scenario "view re-renders before click event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.div [ Attr.id "conditional", Events.onClick ConditionalTrigger ] [] ]
+          , off = []
+          }
       )
+      |> when "click in the conditional area"
+        [ Markup.target << by [ id "conditional" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> itFails
     )
   ]
 
@@ -113,11 +124,22 @@ doubleClickSpec =
       |> when "a double click event occurs but no element is targeted"
         [ Event.doubleClick
         ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.hasText "You wrote: DOUBLE CLICK")
+      |> itFails
+    )
+  , scenario "view re-renders before double click event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.div [ Attr.id "conditional", Events.onDoubleClick ConditionalTrigger ] [] ]
+          , off = []
+          }
       )
+      |> when "double click in the conditional area"
+        [ Markup.target << by [ id "conditional" ]
+        , Event.doubleClick
+        , Event.doubleClick
+        , Event.doubleClick
+        ]
+      |> itFails
     )
   ]
 
@@ -146,11 +168,22 @@ mouseDownSpec =
       |> when "a mouse down event occurs but no element is targeted"
         [ Event.mouseDown
         ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.hasText "You wrote: MOUSE DOWN")
+      |> itFails
+    )
+  , scenario "view re-renders before mouseDown event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.div [ Attr.id "conditional", Events.onMouseDown ConditionalTrigger ] [] ]
+          , off = []
+          }
       )
+      |> when "mouse down in the conditional area"
+        [ Markup.target << by [ id "conditional" ]
+        , Event.mouseDown
+        , Event.mouseDown
+        , Event.mouseDown
+        ]
+      |> itFails
     )
   ]
 
@@ -179,11 +212,22 @@ mouseUpSpec =
       |> when "a mouse up event occurs but no element is targeted"
         [ Event.mouseUp
         ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.hasText "You wrote: MOUSE UP")
+      |> itFails
+    )
+  , scenario "view re-renders before mouseUp event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.div [ Attr.id "conditional", Events.onMouseUp ConditionalTrigger ] [] ]
+          , off = []
+          }
       )
+      |> when "mouse up in the conditional area"
+        [ Markup.target << by [ id "conditional" ]
+        , Event.mouseUp
+        , Event.mouseUp
+        , Event.mouseUp
+        ]
+      |> itFails
     )
   ]
 
@@ -217,10 +261,22 @@ mouseMoveInSpec =
       |> when "no element is targeted for the mouse moves in event"
         [ Event.mouseMoveIn
         ]
-      |> it "fails" (
-        Observer.observeModel .mouseOver
-          |> expect (equals 2)
+      |> itFails
+    )
+  , scenario "view re-renders before mouseMoveIn event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.div [ Attr.id "conditional", Events.onMouseOver ConditionalTrigger ] [] ]
+          , off = []
+          }
       )
+      |> when "mouse moves into the conditional area"
+        [ Markup.target << by [ id "conditional" ]
+        , Event.mouseMoveIn
+        , Event.mouseMoveIn
+        , Event.mouseMoveIn
+        ]
+      |> itFails
     )
   ]
 
@@ -254,10 +310,22 @@ mouseMoveOutSpec =
       |> when "no element is targeted for the mouse move out event"
         [ Event.mouseMoveOut
         ]
-      |> it "fails" (
-        Observer.observeModel .mouseOut
-          |> expect (equals 2)
+      |> itFails
+    )
+  , scenario "view re-renders before mouseMoveOut event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.div [ Attr.id "conditional", Events.onMouseOut ConditionalTrigger ] [] ]
+          , off = []
+          }
       )
+      |> when "mouse moves out of the conditional area"
+        [ Markup.target << by [ id "conditional" ]
+        , Event.mouseMoveOut
+        , Event.mouseMoveOut
+        , Event.mouseMoveOut
+        ]
+      |> itFails
     )
   ]
 
@@ -288,13 +356,31 @@ customEventSpec =
       |> when "some event is triggered without targeting an element first"
         [ keyUpEvent 65
         ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.hasText "You wrote: A")
+      |> itFails
+    )
+  , scenario "view re-renders before event" (
+      given (
+        testSubjectWithConditionalElement <|
+          { on = [ Html.input [ Attr.id "conditional", onKeyUp (always ConditionalTrigger) ] [] ]
+          , off = []
+          }
       )
+      |> when "type in the conditional input"
+        [ Markup.target << by [ id "conditional" ]
+        , keyUpEvent 65
+        , keyUpEvent 66
+        , keyUpEvent 67
+        ]
+      |> itFails
     )
   ]
+
+
+itFails =
+  it "should fail before it gets here" (
+    Observer.observeModel (always True)
+      |> expect (equals False)
+  )
 
 
 noHandlerSpec : Spec Model Msg
@@ -325,10 +411,17 @@ noHandlerSpec =
   ]
 
 
-testSubject =
-  Setup.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0, mouseOut = 0, mouseLeave = 0 }
+testSubjectWithConditionalElement elementSwitch =
+  Setup.initWithModel { message = "", count = 0, mouseUp = 0, mouseDown = 0, mouseEnter = 0, mouseOver = 0, mouseOut = 0, mouseLeave = 0, conditionalTriggerCount = 0 }
     |> Setup.withUpdate testUpdate
-    |> Setup.withView testView
+    |> Setup.withView (testView elementSwitch)
+
+
+testSubject =
+  testSubjectWithConditionalElement <| 
+    { on = []
+    , off = []
+    }
 
 
 keyUpEvent : Int -> Step.Context model -> Step.Command msg
@@ -337,6 +430,12 @@ keyUpEvent code =
     [ ( "keyCode", Encode.int code )
     ]
     |> Event.trigger "keyup"
+
+
+type alias ElementSwitch =
+  { on: List (Html Msg)
+  , off: List (Html Msg)
+  }
 
 
 type Msg
@@ -350,6 +449,7 @@ type Msg
   | MouseOut
   | MouseLeave
   | DoubleClick
+  | ConditionalTrigger
 
 
 type alias Model =
@@ -361,6 +461,7 @@ type alias Model =
   , mouseOut: Int
   , mouseLeave: Int
   , count: Int
+  , conditionalTriggerCount: Int
   }
 
 
@@ -369,6 +470,8 @@ testUpdate msg model =
   case msg of
     HandleClick ->
       ( { model | count = model.count + 1 }, Cmd.none )
+    ConditionalTrigger ->
+      ( { model | conditionalTriggerCount = model.conditionalTriggerCount + 1 }, Cmd.none )
     HandleMegaClick ->
       ( { model | count = model.count * 10 }, Cmd.none )
     DoubleClick ->
@@ -394,9 +497,9 @@ testUpdate msg model =
         ( { model | message = model.message ++ letter }, Cmd.none )
 
 
-testView : Model -> Html Msg
-testView model =
-  Html.div []
+testView : ElementSwitch -> Model -> Html Msg
+testView elementSwitch model =
+  Html.div [] <|
   [ Html.input [ Attr.id "my-typing-place", onKeyUp GotKey ] []
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick, Events.onMouseUp MouseUp, Events.onMouseDown MouseDown ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "No, Click me!" ]
@@ -405,9 +508,16 @@ testView model =
   , Html.div [ Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter, Events.onMouseOut MouseOut, Events.onMouseLeave MouseLeave ]
     [ Html.div [ Attr.id "move-area", Events.onMouseOver MouseOver, Events.onMouseEnter MouseEnter, Events.onMouseOut MouseOut, Events.onMouseLeave MouseLeave ] [ Html.text "Move Area!" ]
     ]
-  , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ]
+  , Html.div [ Attr.id "my-message" ] [ Html.text <| "You wrote: " ++ model.message ++ "!" ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
-  ]
+  ] ++ (conditionalElement elementSwitch model)
+
+
+conditionalElement elementSwitch model =
+  if model.conditionalTriggerCount == 1 then
+    elementSwitch.off
+  else
+    elementSwitch.on
 
 
 onKeyUp : (Int -> Msg) -> Html.Attribute Msg

@@ -12,9 +12,8 @@ describe("Events", () => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
-        expectRejected(observations[3], [
-          reportLine("No element targeted for event", "click")
-        ])
+        expectRejectedOnNoElementTargeted("click", observations[3])
+        expectRejectedOnViewReRender(observations[4])
       })
     })
   })
@@ -26,9 +25,8 @@ describe("Events", () => {
         expectAccepted(observations[1])
         expectAccepted(observations[2])
         expectAccepted(observations[3])
-        expectRejected(observations[4], [
-          reportLine("No element targeted for event", "doubleClick")
-        ])
+        expectRejectedOnNoElementTargeted("doubleClick", observations[4])
+        expectRejectedOnViewReRender(observations[5])
       })
     })
   })
@@ -37,9 +35,8 @@ describe("Events", () => {
     it("handles the mousedown event as expected", (done) => {
       expectSpec("EventSpec", "mouseDown", done, (observations) => {
         expectAccepted(observations[0])
-        expectRejected(observations[1], [
-          reportLine("No element targeted for event", "mousedown")
-        ])
+        expectRejectedOnNoElementTargeted("mousedown", observations[1])
+        expectRejectedOnViewReRender(observations[2])
       })
     })
   })
@@ -48,9 +45,8 @@ describe("Events", () => {
     it("handles the mouseup event as expected", (done) => {
       expectSpec("EventSpec", "mouseUp", done, (observations) => {
         expectAccepted(observations[0])
-        expectRejected(observations[1], [
-          reportLine("No element targeted for event", "mouseup")
-        ])
+        expectRejectedOnNoElementTargeted("mouseup", observations[1])
+        expectRejectedOnViewReRender(observations[2])
       })
     })
   })
@@ -60,9 +56,8 @@ describe("Events", () => {
       expectSpec("EventSpec", "mouseMoveIn", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
-        expectRejected(observations[2], [
-          reportLine("No element targeted for event", "mouseMoveIn")
-        ])
+        expectRejectedOnNoElementTargeted("mouseMoveIn", observations[2])
+        expectRejectedOnViewReRender(observations[3])
       })
     })
   })
@@ -72,9 +67,8 @@ describe("Events", () => {
       expectSpec("EventSpec", "mouseMoveOut", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
-        expectRejected(observations[2], [
-          reportLine("No element targeted for event", "mouseMoveOut")
-        ])
+        expectRejectedOnNoElementTargeted("mouseMoveOut", observations[2])
+        expectRejectedOnViewReRender(observations[3])
       })
     })
   })
@@ -84,9 +78,8 @@ describe("Events", () => {
       it("updates as expected", (done) => {
         expectSpec("EventSpec", "custom", done, (observations) => {
           expectAccepted(observations[0])
-          expectRejected(observations[1], [
-            reportLine("No element targeted for event", "keyup")
-          ])
+          expectRejectedOnNoElementTargeted("keyup", observations[1])
+          expectRejectedOnViewReRender(observations[2])
         })
       })
     })
@@ -100,3 +93,15 @@ describe("Events", () => {
     })
   })
 })
+
+const expectRejectedOnNoElementTargeted = (eventName, observation) => {
+  expectRejected(observation, [
+    reportLine("No element targeted for event", eventName)
+  ])
+}
+
+const expectRejectedOnViewReRender = (observation) => {
+  expectRejected(observation, [
+    reportLine("No match for selector", "#conditional")
+  ])
+}

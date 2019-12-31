@@ -15,40 +15,49 @@ module.exports = class HtmlPlugin {
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
-      case "query": {
+      case "nextAnimationFrame": {
+        setTimeout(() => {
+          this.renderAndThen(() => {})
+        }, 0)
+        break
+      }
+      default:
         this.renderAndThen(() => {
-          const selector = specMessage.body.selector
-          const element = this.document.querySelector(selector)
+          this.handleMessage(specMessage, out, next, abort)
+        })    
+    }
+  }
 
-          if (element) {
-            out(this.selected(element))
-          } else {
-            out(this.elementNotFound())
-          }
-        })
+  handleMessage(specMessage, out, next, abort) {
+    switch (specMessage.name) {
+      case "query": {
+        const selector = specMessage.body.selector
+        const element = this.document.querySelector(selector)
+
+        if (element) {
+          out(this.selected(element))
+        } else {
+          out(this.elementNotFound())
+        }
 
         break
       }
       case "queryAll": {
-        this.renderAndThen(() => {
-          const selector = specMessage.body.selector
-          const elements = Array.from(this.document.querySelectorAll(selector))
-          out(this.selected(elements))
-        })
+        const selector = specMessage.body.selector
+        const elements = Array.from(this.document.querySelectorAll(selector))
+        out(this.selected(elements))
 
         break
       }
       case "target": {
-        this.renderAndThen(() => {
-          const element = this.getElement(specMessage.body)
-          if (element == null) {
-            abort(report(
-              line("No match for selector", specMessage.body)
-            ))
-          } else {
-            out(specMessage)
-          }
-        })
+        const element = this.getElement(specMessage.body)
+        if (element == null) {
+          abort(report(
+            line("No match for selector", specMessage.body)
+          ))
+        } else {
+          out(specMessage)
+        }
 
         break
       }
@@ -157,12 +166,6 @@ module.exports = class HtmlPlugin {
         this.document.dispatchEvent(this.getEvent("visibilitychange"))
         break
       }
-      case "nextAnimationFrame": {
-        setTimeout(() => {
-          this.renderAndThen(() => {})
-        }, 0)
-        break
-      }
       case "navigation": {
         out({
           home: "navigation",
@@ -177,12 +180,10 @@ module.exports = class HtmlPlugin {
         break
       }
       case "application": {
-        this.renderAndThen(() => {
-          out({
-            home: "application",
-            name: "current-title",
-            body: this.window.document.title
-          })
+        out({
+          home: "application",
+          name: "current-title",
+          body: this.window.document.title
         })
 
         break
@@ -242,6 +243,13 @@ module.exports = class HtmlPlugin {
     if (forElementsOnly && props.selector === "_document_") {
       abort(report(
         line("Event not supported when document is targeted", name)
+      ))
+      return
+    }
+
+    if (props.selector !== "_document_" && this.document.querySelector(props.selector) == null) {
+      abort(report(
+        line("No match for selector", props.selector)
       ))
       return
     }
