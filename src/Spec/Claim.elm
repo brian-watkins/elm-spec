@@ -5,7 +5,7 @@ module Spec.Claim exposing
   , isTrue
   , isFalse
   , isEqual
-  , contains
+  , stringContains
   , isListWithLength
   , isListWhere
   , isListWhereItemAt
@@ -21,7 +21,7 @@ module Spec.Claim exposing
 @docs isEqual, isTrue, isFalse
 
 # Claims about Strings
-@docs contains
+@docs stringContains
 
 # Claims about Lists
 @docs isListWhere, isListWhereItemAt, isListWithLength
@@ -129,13 +129,13 @@ isEqual toString expected actual =
 For example,
 
     "some funny string"
-      |> Claim.contains 2 "fun"
+      |> Claim.stringContains 2 "fun"
 
 would be rejected, since it contains `fun` only once.
 
 -}
-contains : Int -> String -> Claim String
-contains expectedTimes expectedString actual =
+stringContains : Int -> String -> Claim String
+stringContains expectedTimes expectedString actual =
   let
     count =
       String.indices expectedString actual
