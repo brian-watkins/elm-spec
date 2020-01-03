@@ -10,6 +10,7 @@ module Spec.Markup exposing
   , target
   , hasText
   , hasAttribute
+  , attribute
   )
 
 {-| Target, observe and make claims about aspects of an HTML document.
@@ -21,7 +22,7 @@ module Spec.Markup exposing
 @docs MarkupObservation, observeElements, observeElement, observe, query, observeTitle
 
 # Make Claims about an HTML Element
-@docs HtmlElement, hasText, hasAttribute, property
+@docs HtmlElement, hasText, hasAttribute, attribute, property
 
 -}
 
@@ -241,31 +242,50 @@ hasText expectedText (HtmlElement element) =
 
 -}
 hasAttribute : ( String, String ) -> Claim HtmlElement
-hasAttribute ( expectedName, expectedValue ) (HtmlElement element) =
-  case Json.decodeValue attributesDecoder element of
-    Ok attributes ->
-      case Dict.get expectedName attributes of
-        Just actualValue ->
-          if expectedValue == actualValue then
-            Claim.Accept
-          else
-            Claim.Reject <| Report.batch
-              [ Report.fact "Expected element to have attribute" <| expectedName ++ " = " ++ expectedValue
-              , Report.fact "but it has" <| expectedName ++ " = " ++ actualValue
+hasAttribute ( expectedName, expectedValue ) element =
+  attribute expectedName (\maybeValue ->
+    case maybeValue of
+      Just actualValue ->
+        if expectedValue == actualValue then
+          Claim.Accept
+        else
+          Claim.Reject <| Report.batch
+            [ Report.fact "Expected attribute to have value" expectedValue
+            , Report.fact "but it has" actualValue
+            ]
+      Nothing ->
+        Claim.Reject <| Report.batch
+          [ Report.fact "Expected attribute to have value" expectedValue
+          , Report.note "but the element has no such attribute"
+          ]
+  ) element
+
+
+{-| Claim that the specified attribute value satisfies the given claim.
+
+    Spec.Markup.observeElement
+      |> Spec.Markup.query << by [ tag "div" ]
+      |> Spec.expect (
+        Spec.Markup.attribute "class" <|
+          Spec.Claim.isSomethingWhere <|
+          Spec.Claim.stringContains 1 "red"
+      )
+
+-}
+attribute : String -> Claim (Maybe String) -> Claim HtmlElement
+attribute name claim =
+  \(HtmlElement element) ->
+    case Json.decodeValue attributesDecoder element of
+      Ok attributes ->
+        Dict.get name attributes
+          |> claim
+          |> Claim.mapRejection (\report -> Report.batch
+              [ Report.fact "Claim rejected for attribute" name
+              , report
               ]
-        Nothing ->
-          if Dict.isEmpty attributes then
-            Claim.Reject <| Report.batch
-              [ Report.fact "Expected element to have attribute" expectedName
-              , Report.note "but it has no attributes"
-              ]
-          else
-            Claim.Reject <| Report.batch
-              [ Report.fact "Expected element to have attribute" expectedName
-              , Report.fact "but it has only these attributes" <| attributeNames attributes
-              ]
-    Err err ->
-      Claim.Reject <| Report.fact "Unable to decode JSON for attributes" <| Json.errorToString err
+          )
+      Err err ->
+        Claim.Reject <| Report.fact "Unable to decode JSON for attributes" <| Json.errorToString err
 
 
 attributesDecoder : Json.Decoder (Dict String String)
@@ -277,12 +297,6 @@ attributesDecoder =
     Json.map2 Tuple.pair
       (Json.field "name" Json.string)
       (Json.field "value" Json.string)
-
-
-attributeNames : Dict String String -> String
-attributeNames attributes =
-  Dict.keys attributes
-    |> String.join ", "
 
 
 {-| Apply the given decoder to the HTML element and make a claim about the resulting value.

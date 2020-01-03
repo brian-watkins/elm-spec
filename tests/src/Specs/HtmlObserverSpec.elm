@@ -5,7 +5,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
-import Spec.Claim exposing (isTrue, isListWhere)
+import Spec.Claim exposing (..)
 import Specs.Helpers exposing (equals)
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -120,6 +120,45 @@ hasAttributeSpec =
   ]
 
 
+attributeSpec : Spec Model Msg
+attributeSpec =
+  Spec.describe "attribute"
+  [ scenario "the attribute value satisfies the claim" (
+      given (
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
+      )
+      |> it "finds the attribute for a claim" (
+        Markup.observeElement
+          |> Markup.query << by [ id "activity" ]
+          |> expect (Markup.attribute "data-fun-activity" <| isSomethingWhere <| equals "bowling")
+      )
+    )
+  , scenario "the attribute value does not satisfy the claim" (
+      given (
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
+      )
+      |> it "finds the attribute for a claim" (
+        Markup.observeElement
+          |> Markup.query << by [ id "activity" ]
+          |> expect (Markup.attribute "data-fun-activity" <| isSomethingWhere <| stringContains 1 "fishing")
+      )
+    )
+  , scenario "the attribute is not found" (
+      given (
+        Setup.initWithModel { activity = "bowling" }
+          |> Setup.withView testAttributeView
+      )
+      |> it "finds nothing" (
+        Markup.observeElement
+          |> Markup.query << by [tag "h1" ]
+          |> expect (Markup.attribute "data-wrong-attribute" isNothing)
+      )
+    )
+  ]
+
+
 hasPropertySpec : Spec Model Msg
 hasPropertySpec =
   Spec.describe "hasProperty"
@@ -214,6 +253,7 @@ selectSpec name =
     "hasText" -> Just hasTextSpec
     "hasTextContained" -> Just hasTextContainedSpec
     "hasAttribute" -> Just hasAttributeSpec
+    "attribute" -> Just attributeSpec
     "hasProperty" -> Just hasPropertySpec
     _ -> Nothing
 

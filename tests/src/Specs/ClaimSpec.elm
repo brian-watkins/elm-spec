@@ -1,4 +1,4 @@
-module Specs.ObserverSpec exposing (..)
+module Specs.ClaimSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Observer as Observer
@@ -11,9 +11,9 @@ import Runner
 satisfyingSpec : Spec Model Msg
 satisfyingSpec =
   Spec.describe "satisfying"
-  [ scenario "all observers are satisfied" (
+  [ scenario "all claims are satisfied" (
       given (
-        Setup.initWithModel { name = "Cool Dude", sport = "bowling", age = 19, isFun = True }
+        specSetup
       )
       |> it "checks all the attributes of the model" (
         Observer.observeModel identity
@@ -26,31 +26,31 @@ satisfyingSpec =
             )
       )
     )
-  , scenario "one observer fails" (
+  , scenario "one claim fails" (
       given (
-        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        specSetup
       )
       |> it "checks all the attributes of the model" (
         Observer.observeModel identity
           |> expect (
               Claim.satisfying
                 [ \model -> equals "Cool Dude" model.name
-                , \model -> equals "bowling" model.sport
+                , \model -> equals "should fail" model.sport
                 , \model -> equals 19 model.age
                 ]
             )
       )
     )
-  , scenario "multiple observers fail" (
+  , scenario "multiple claims fail" (
       given (
-        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        specSetup
       )
       |> it "checks all the attributes of the model" (
         Observer.observeModel identity
           |> expect (
               Claim.satisfying
                 [ \model -> equals "Cool Dude" model.name
-                , \model -> equals "bowling" model.sport
+                , \model -> equals "should fail" model.sport
                 , \model -> equals 27 model.age
                 ]
             )
@@ -64,7 +64,7 @@ booleanSpec =
   Spec.describe "boolean claims"
   [ scenario "true claim" (
       given (
-        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        specSetup
       )
       |> it "checks the value" (
         Observer.observeModel .isFun
@@ -73,7 +73,7 @@ booleanSpec =
     )
   , scenario "false claim" (
       given (
-        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = False }
+        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = False, possibly = Nothing }
       )
       |> it "checks the value" (
         Observer.observeModel .isFun
@@ -82,7 +82,7 @@ booleanSpec =
     )
   , scenario "failing" (
       given (
-        Setup.initWithModel { name = "Cool Dude", sport = "running", age = 19, isFun = True }
+        specSetup
       )
       |> it "checks the value" (
         Observer.observeModel .isFun
@@ -92,11 +92,59 @@ booleanSpec =
   ]
 
 
+isSomethingWhereSpec : Spec Model Msg
+isSomethingWhereSpec =
+  Spec.describe "isSomethingWhere"
+  [ scenario "is something where claim is accepted" (
+      given (
+        specSetupForMaybe <| Just "hello"
+      )
+      |> it "satisfies the claim" (
+        Observer.observeModel .possibly
+          |> expect (Claim.isSomethingWhere <| equals "hello")
+      )
+    )
+  , scenario "is something where the claim is rejected" (
+      given (
+        specSetupForMaybe <| Just "hello"
+      )
+      |> it "rejects the claim" (
+        Observer.observeModel .possibly
+          |> expect (Claim.isSomethingWhere <| equals "blah")
+      )
+    )
+  , scenario "nothing is found" (
+      given (
+        specSetupForMaybe Nothing
+      )
+      |> it "rejects the claim" (
+        Observer.observeModel .possibly
+          |> expect (Claim.isSomethingWhere <| equals "blah")
+      )
+    )
+  ]
+
+
+specSetup =
+  specSetupForMaybe Nothing
+
+
+specSetupForMaybe maybeValue =
+  Setup.initWithModel
+    { name = "Cool Dude"
+    , sport = "bowling"
+    , age = 19
+    , isFun = True
+    , possibly = maybeValue
+    }
+
+
 type alias Model =
   { name: String
   , sport: String
   , age: Int
   , isFun: Bool
+  , possibly: Maybe String
   }
 
 
@@ -109,6 +157,7 @@ selectSpec specName =
   case specName of
     "satisfying" -> Just satisfyingSpec
     "boolean" -> Just booleanSpec
+    "isSomethingWhere" -> Just isSomethingWhereSpec
     _ -> Nothing
 
 

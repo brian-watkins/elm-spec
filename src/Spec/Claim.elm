@@ -10,7 +10,9 @@ module Spec.Claim exposing
   , isListWhere
   , isListWhereItemAt
   , isSomething
+  , isSomethingWhere
   , isNothing
+  , mapRejection
   )
 
 {-| A claim is a function that maps a subject to a verdict.
@@ -18,7 +20,7 @@ module Spec.Claim exposing
 @docs Claim, Verdict
 
 # Basic Claims
-@docs isEqual, isTrue, isFalse
+@docs isEqual, isTrue, isFalse, satisfying
 
 # Claims about Strings
 @docs stringContains
@@ -27,10 +29,10 @@ module Spec.Claim exposing
 @docs isListWhere, isListWhereItemAt, isListWithLength
 
 # Claims about Maybe types
-@docs isSomething, isNothing
+@docs isSomething, isSomethingWhere, isNothing
 
-# Combining Claims
-@docs satisfying
+# Working with Claims
+@docs mapRejection
 
 -}
 
@@ -247,6 +249,8 @@ isListWhereItemAt index claim actualList =
         ]
 
 
+{-| Modify the report associated with a rejected verdict; otherwise, do nothing.
+-}
 mapRejection : (Report -> Report) -> Verdict -> Verdict
 mapRejection mapper verdict =
   case verdict of
@@ -268,6 +272,30 @@ isSomething actual =
         [ Report.fact "Expected" "something"
         , Report.fact "but found" "nothing"
         ]
+
+
+{-| Claim that the subject is the `Just` case of the `Maybe` type and that
+the associated value satisfies the given claim.
+
+For example,
+
+    Just "apple"
+      |> isSomethingWhere (stringContains 1 "cheese")
+
+would be rejected.
+
+-}
+isSomethingWhere : Claim a -> Claim (Maybe a)
+isSomethingWhere claim =
+  \actual ->
+    case actual of
+      Just value ->
+        claim value
+      Nothing ->
+        Reject <| Report.batch
+          [ Report.fact "Expected" "something"
+          , Report.fact "but found" "nothing"
+          ]
 
 
 {-| Claim that the subject is the `Nothing` case of the `Maybe` type.

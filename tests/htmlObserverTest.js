@@ -32,21 +32,40 @@ describe("html observers", () => {
         
         expectRejected(observations[1], [
           reportLine("Claim rejected for selector", "#activity"),
-          reportLine("Expected element to have attribute", "data-unknown-attribute"),
-          reportLine("but it has only these attributes", "data-fun-activity, id")
+          reportLine("Claim rejected for attribute", "data-unknown-attribute"),
+          reportLine("Expected attribute to have value", "bowling"),
+          reportLine("but the element has no such attribute")
         ])
 
         expectRejected(observations[2], [
           reportLine("Claim rejected for selector", "#activity"),
-          reportLine("Expected element to have attribute", "data-fun-activity = running"),
-          reportLine("but it has", "data-fun-activity = bowling")
+          reportLine("Claim rejected for attribute", "data-fun-activity"),
+          reportLine("Expected attribute to have value", "running"),
+          reportLine("but it has", "bowling")
         ])
 
         expectRejected(observations[3], [
           reportLine("Claim rejected for selector", "h1"),
-          reportLine("Expected element to have attribute", "data-fun-activity"),
-          reportLine("but it has no attributes")
+          reportLine("Claim rejected for attribute", "data-fun-activity"),
+          reportLine("Expected attribute to have value", "running"),
+          reportLine("but the element has no such attribute")
         ])
+      })
+    })
+  })
+
+  describe("attribute", () => {
+    it("observes attributes and applies a claim", (done) => {
+      expectSpec("HtmlObserverSpec", "attribute", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("Claim rejected for selector", "#activity"),
+          reportLine("Claim rejected for attribute", "data-fun-activity"),
+          reportLine("Expected", "bowling"),
+          reportLine("to contain 1 instance of", "fishing"),
+          reportLine("but the text was found 0 times")
+        ])
+        expectAccepted(observations[2])
       })
     })
   })
