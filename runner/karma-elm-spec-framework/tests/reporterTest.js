@@ -72,7 +72,7 @@ describe("elm-spec reporter", () => {
     })
   })
 
-  describe("when there is an error", () => {
+  describe("when there is an elm-spec error", () => {
     beforeEach(() => {
       subject.onRunStart()
       subject.onBrowserError(null, {
@@ -94,6 +94,18 @@ describe("elm-spec reporter", () => {
       expect(output).to.contain("Some error occurred with")
       expect(output).to.contain("something")
       expect(output).to.contain("some final statement")
+    })
+  })
+
+  describe("when there is some uncaught browser error", () => {
+    beforeEach(() => {
+      subject.onRunStart()
+      subject.onBrowserError(null, "There was an error initializing Elm, like two ports with the same name!")
+    })
+
+    it("prints the error", () => {
+      const output = words.join("")
+      expect(output).to.contain("There was an error initializing Elm, like two ports with the same name!")
     })
   })
 })

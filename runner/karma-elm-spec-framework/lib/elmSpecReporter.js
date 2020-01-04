@@ -24,8 +24,12 @@ var ElmSpecReporter = function (baseReporterDecorator) {
 
   self.onBrowserError = function(browser, error) {
     self.write("\n\n")
-    self.write("Error running spec suite!\n\n")
-    error.message.forEach((report) => self.printReport(report))
+    if (typeof(error) === "string") {
+      self.write(error)
+    } else {
+      self.write("Error running spec suite!\n\n")
+      error.message.forEach((report) => self.printReport(report))  
+    }
   }
 
   self.specFailure = function(browser, result) {
