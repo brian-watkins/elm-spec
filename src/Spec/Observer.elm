@@ -75,7 +75,7 @@ fails then the `Claim` will be rejected.
 -}
 observeResult : Observer model (Result Report a) -> Observer model a
 observeResult =
-  Internal.observeClaim <| \claim ->
+  Internal.andThenClaim <| \claim ->
     \actual ->
       case actual of
         Ok value ->
@@ -88,7 +88,7 @@ observeResult =
 -}
 mapRejection : (Report -> Report) -> Observer model a -> Observer model a
 mapRejection mapper =
-  Internal.observeClaim <| \claim ->
+  Internal.andThenClaim <| \claim ->
     \actual ->
       case claim actual of
         Claim.Accept ->

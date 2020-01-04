@@ -4,7 +4,7 @@ module Spec.Observer.Internal exposing
   , observeEffects
   , inquire
   , expect
-  , observeClaim
+  , andThenClaim
   )
 
 import Spec.Message exposing (Message)
@@ -22,8 +22,8 @@ for =
   Observer
 
 
-observeClaim : (Claim a -> Claim b) -> Observer model b -> Observer model a
-observeClaim generator (Observer observer) =
+andThenClaim : (Claim b -> Claim a) -> Observer model a -> Observer model b
+andThenClaim generator (Observer observer) =
   Observer <| \claim ->
     observer <| generator claim
 
