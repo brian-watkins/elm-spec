@@ -2,6 +2,7 @@ module Spec.Setup.Internal exposing
   ( Subject
   , Setup(..)
   , ProgramView(..)
+  , NavigationConfig
   , mapSubject
   , initializeSubject
   , configure
@@ -28,8 +29,14 @@ type alias Subject model msg =
   , view: ProgramView model msg
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message
-  , onUrlChange: Maybe (Url -> msg)
-  , onUrlRequest: Maybe (UrlRequest -> msg)
+  , isApplication: Bool
+  , navigationConfig: Maybe (NavigationConfig msg)
+  }
+
+
+type alias NavigationConfig msg =
+  { onUrlChange: Url -> msg
+  , onUrlRequest: UrlRequest -> msg
   }
 
 

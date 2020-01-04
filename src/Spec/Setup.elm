@@ -5,7 +5,7 @@ module Spec.Setup exposing
   , withUpdate
   , withView, withDocument
   , withLocation
-  , onUrlChange, onUrlRequest
+  , forNavigation
   )
 
 {-| Functions for the initial setup of a scenario.
@@ -16,7 +16,7 @@ module Spec.Setup exposing
 @docs initForApplication, init, initWithModel, withLocation
 
 # Provide Core Functions
-@docs withUpdate, withView, withDocument, withSubscriptions, onUrlChange, onUrlRequest
+@docs withUpdate, withView, withDocument, withSubscriptions, forNavigation
 
 -}
 
@@ -56,7 +56,7 @@ init ( model, initialCommand ) =
   Internal.Setup
     { location = defaultUrl
     , init = \_ _ ->
-        Ok <| initializeSubject ( model, initialCommand )
+        Ok <| initializeSubject False ( model, initialCommand )
     }
 
 
@@ -77,10 +77,12 @@ initial state for the scenario. You could do something like:
     )
 
 If your scenario involves location changes, you'll want to use this function in
-conjunction with `Spec.Setup.onUrlChange` and `Spec.Setup.onUrlRequest` to provide
-those extra functions that an application requires. But doing so is not necessary.
+conjunction with `Spec.Setup.forNavigation` to provide
+those extra functions that an application requires. Providing these functions
+is not necessary, but if you do not provde them, your spec will fail with an error
+if it is setup with `initForApplication` and it tries to make location changes.
 
-In addition, you might consider using `Spec.Setup.withLocation` to set the URL that
+You can also use `Spec.Setup.withLocation` to set the URL that
 will be passed to the application's init function at the start of the scenario.
 
 So, a full setup for an application might look something like this:
@@ -89,8 +91,10 @@ So, a full setup for an application might look something like this:
       Spec.Setup.initForApplication (App.init testFlags)
         |> Spec.Setup.withDocument App.view
         |> Spec.Setup.withUpdate App.update
-        |> Spec.Setup.onUrlChange App.urlDidChange
-        |> Spec.Setup.onUrlRequest App.urlChangeRequested
+        |> Spec.Setup.forNavigation
+          { onUrlChange = App.urlDidChange
+          , onUrlRequest = App.urlChangeRequested
+          }
         |> Spec.Setup.withLocation (someUrlWithPath "/sports")
     )
 
@@ -103,22 +107,22 @@ initForApplication generator =
         case maybeKey of
           Just key ->
             generator url key
-              |> Ok << initializeSubject
+              |> Ok << initializeSubject True
           Nothing ->
             Err "Spec.Setup.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.Runner.browserProgram to run specs for Browser applications!"
     }
 
 
-initializeSubject : ( model, Cmd msg ) -> Internal.Subject model msg
-initializeSubject ( model, initialCommand ) =
+initializeSubject : Bool -> ( model, Cmd msg ) -> Internal.Subject model msg
+initializeSubject isApplication ( model, initialCommand ) =
   { model = model
   , initialCommand = initialCommand
   , update = \_ _ m -> (m, Cmd.none)
   , view = Internal.Document <| \_ -> { title = "", body = [ Html.text "" ] }
   , subscriptions = \_ -> Sub.none
   , configureEnvironment = []
-  , onUrlChange = Nothing
-  , onUrlRequest = Nothing
+  , isApplication = isApplication
+  , navigationConfig = Nothing
   }
 
 
@@ -167,25 +171,14 @@ withSubscriptions programSubscriptions =
 
 
 {-| If the scenario is describing a program created with `Browser.application`, you can use
-this function to supply the program's `onUrlChange` function.
+this function to supply the program's `onUrlRequest` and `onUrlChange` functions.
 
-This is most useful if the scenario involves reponding to location changes.
+Use this in conjunction with `initForApplication` to describe a scenario that involves location changes.
 -}
-onUrlChange : (Url -> msg) -> Setup model msg -> Setup model msg
-onUrlChange handler =
+forNavigation : { onUrlRequest: UrlRequest -> msg, onUrlChange: Url -> msg } -> Setup model msg -> Setup model msg
+forNavigation config =
   Internal.mapSubject <| \subject ->
-    { subject | onUrlChange = Just handler }
-
-
-{-| If the scenario is describing a program created with `Browser.application`, you can use
-this function to supply the program's `onUrlRequest` function.
-
-This is most useful if the scenario involves initiating location changes.
--}
-onUrlRequest : (UrlRequest -> msg) -> Setup model msg -> Setup model msg
-onUrlRequest handler =
-  Internal.mapSubject <| \subject ->
-    { subject | onUrlRequest = Just handler }
+    { subject | navigationConfig = Just config }
 
 
 {-| Set up the scenario to begin with a particular location.

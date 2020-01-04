@@ -29,8 +29,7 @@ applicationSpec =
         Setup.initForApplication (testInit ())
           |> Setup.withDocument testDocument
           |> Setup.withUpdate testUpdate
-          |> Setup.onUrlChange UrlDidChange
-          |> Setup.onUrlRequest UrlChangeRequested
+          |> Setup.forNavigation { onUrlChange = UrlDidChange, onUrlRequest = UrlChangeRequested }
           |> Setup.withLocation (testUrl "/fun/reading")
       )
       |> observeThat

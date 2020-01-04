@@ -19,7 +19,7 @@ navigationSpec =
         Setup.initForApplication (Application.init ())
           |> Setup.withDocument Application.document
           |> Setup.withUpdate Application.update
-          |> Setup.onUrlChange Application.UrlDidChange
+          |> Setup.forNavigation { onUrlChange = Application.UrlDidChange, onUrlRequest = Application.onUrlRequest }
           |> Setup.withLocation testUrl
       )
       |> when "the url is changed"

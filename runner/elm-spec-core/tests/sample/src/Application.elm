@@ -80,12 +80,16 @@ init _ _ key =
   ( defaultModel key, Cmd.none )
 
 
+onUrlRequest _ =
+  Ignore
+
+
 main =
   Browser.application
     { init = init
     , view = document
     , update = update
     , subscriptions = \_ -> Sub.none
-    , onUrlRequest = \_ -> Ignore
+    , onUrlRequest = onUrlRequest
     , onUrlChange = UrlDidChange
     }

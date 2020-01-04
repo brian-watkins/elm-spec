@@ -117,6 +117,8 @@ update config msg state =
             exerciseUpdate config msg model
           Observe model ->
             observeUpdate config msg model
+          Finished model ->
+            finishedUpdate config msg model
           _ ->
             badState config state
         
@@ -167,6 +169,8 @@ update config msg state =
       case state of
         Exercise model ->
           exerciseUpdate config msg model
+        Finished model ->
+          finishedUpdate config msg model
         _ ->
           badState config state
 
@@ -174,6 +178,8 @@ update config msg state =
       case state of
         Exercise model ->
           exerciseUpdate config msg model
+        Finished model ->
+          finishedUpdate config msg model
         _ ->
           badState config state
 

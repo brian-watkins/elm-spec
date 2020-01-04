@@ -5,6 +5,8 @@ describe("Navigation", () => {
     it("performs the spec as expected", (done) => {
       expectSpec("NavigationSpec", "loadUrl", done, (observations) => {
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
       })
     })
 

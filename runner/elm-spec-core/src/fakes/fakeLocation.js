@@ -13,11 +13,15 @@ module.exports = class FakeLocation {
 
   assign(url) {
     const updated = new URL(url, this.href)
+    const current = new URL(this.href)
+
+    if (current.origin == updated.origin && current.pathname == updated.pathname) return
+
     this.href = updated.href
     this.sendToProgram({
       home: '_navigation',
       name: 'assign',
-      body: url
+      body: updated.href
     })
   }
 

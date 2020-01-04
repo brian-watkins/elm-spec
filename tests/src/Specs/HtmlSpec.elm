@@ -267,6 +267,66 @@ failingSpec =
   ]
 
 
+elementLinkSpec : Spec Model Msg
+elementLinkSpec =
+  Spec.describe "an element application with a link"
+  [ scenario "clicking the link" (
+      given (
+        Setup.initWithModel { name = "Awesome Person", count = 0 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testAnchorView
+      )
+      |> when "a link is clicked"
+        [ Markup.target << by [ id "same-page" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> it "handles the clicks" (
+        Markup.observeElement
+          |> Markup.query << by [ id "count" ]
+          |> expect (Markup.hasText "Count: 3")
+      )
+    )
+  ]
+
+
+elementInternalLinkFailureSpec : Spec Model Msg
+elementInternalLinkFailureSpec =
+  Spec.describe "an element application with an internal link"
+  [ scenario "failure" (
+      given (
+        Setup.initWithModel { name = "Awesome Person", count = 0 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testAnchorView
+      )
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "count" ]
+          |> expect (Markup.hasText "Count: 3")
+      )
+    )
+  ]
+
+
+elementExternalLinkFailureSpec : Spec Model Msg
+elementExternalLinkFailureSpec =
+  Spec.describe "an element application with an external link"
+  [ scenario "failure" (
+      given (
+        Setup.initWithModel { name = "Awesome Person", count = 0 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testExternalAnchorView
+      )
+      |> it "fails" (
+        Markup.observeElement
+          |> Markup.query << by [ id "count" ]
+          |> expect (Markup.hasText "Count: 3")
+      )
+    )
+  ]
+
+
 testView : Model -> Html Msg
 testView model =
   Html.div []
@@ -278,6 +338,23 @@ testView model =
     ]
   , Html.button [ Attr.id "my-button", Events.onClick HandleClick ] [ Html.text "Click me!" ]
   , Html.button [ Attr.id "another-button", Events.onClick HandleMegaClick ] [ Html.text "Click me!" ]
+  ]
+
+
+testAnchorView : Model -> Html Msg
+testAnchorView model =
+  Html.div []
+  [ Html.a [ Attr.id "same-page", Attr.href "#", Events.onClick HandleClick ] [ Html.text "Click ms!" ]
+  , Html.a [ Attr.id "another-page", Attr.href "/some-other-page" ] [ Html.text "I go to another page!" ]
+  , Html.div [ Attr.id "count" ] [ Html.text <| "Count: " ++ String.fromInt model.count ]
+  ]
+
+
+testExternalAnchorView : Model -> Html Msg
+testExternalAnchorView model =
+  Html.div []
+  [ Html.a [ Attr.id "another-page", Attr.href "http://my-cool-site.com" ] [ Html.text "I go to another page!" ]
+  , Html.div [ Attr.id "count" ] [ Html.text <| "Count: " ++ String.fromInt model.count ]
   ]
 
 
@@ -338,6 +415,9 @@ selectSpec name =
     "manyElements" -> Just manyElementsSpec
     "observePresence" -> Just observePresenceSpec
     "failing" -> Just failingSpec
+    "elementLink" -> Just elementLinkSpec
+    "elementInternalLinkFailure" -> Just elementInternalLinkFailureSpec
+    "elementExternalLinkFailure" -> Just elementExternalLinkFailureSpec
     _ -> Nothing
 
 

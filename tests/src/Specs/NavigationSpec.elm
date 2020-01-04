@@ -31,10 +31,40 @@ loadUrlSpec =
         [ Markup.target << by [ id "load-button" ]
         , Event.click
         ]
-      |> it "updates the document location" (
-        Navigation.observeLocation
-          |> expect (equals "http://navigation-test-app.com/some-fun-place")
+      |> observeThat
+        [ it "updates the document location" (
+            Navigation.observeLocation
+              |> expect (equals "http://navigation-test-app.com/some-fun-place")
+          )
+        , it "shows a view that says we navigated outside the scope of the Elm program" (
+            Markup.observeElement
+              |> Markup.query << by [ tag "body" ]
+              |> expect (Markup.hasText "[Navigated to a page outside the control of the Elm program: http://navigation-test-app.com/some-fun-place]")
+          )
+        ]
+    )
+  , scenario "a URL is loaded with the same path but a different origin" (
+      given (
+        Setup.initWithModel ()
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Setup.withLocation testUrl
       )
+      |> when "a new page load is triggered"
+        [ Markup.target << by [ id "load-same-path-button" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "updates the document location" (
+            Navigation.observeLocation
+              |> expect (equals "http://some-other-spot.com/")
+          )
+        , it "shows a view that says we navigated outside the scope of the Elm program" (
+            Markup.observeElement
+              |> Markup.query << by [ tag "body" ]
+              |> expect (Markup.hasText "[Navigated to a page outside the control of the Elm program: http://some-other-spot.com/]")
+          )
+        ]
     )
   , scenario "checking the default location" (
       given (
@@ -131,6 +161,7 @@ type alias Model =
 
 type Msg
   = ChangeLocation
+  | ChangeOrigin
   | Reload
   | ReloadSkipCache
   | LoadAndSend
@@ -140,6 +171,8 @@ testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.button [ Attr.id "load-button", Events.onClick ChangeLocation ]
+    [ Html.text "Click to change location!" ]
+  , Html.button [ Attr.id "load-same-path-button", Events.onClick ChangeOrigin ]
     [ Html.text "Click to change location!" ]
   , Html.button [ Attr.id "reload-button", Events.onClick Reload ]
     [ Html.text "Click to reload!" ]
@@ -155,6 +188,10 @@ testUpdate msg model =
     ChangeLocation ->
       ( model
       , Browser.Navigation.load "/some-fun-place"
+      )
+    ChangeOrigin ->
+      ( model
+      , Browser.Navigation.load "http://some-other-spot.com"
       )
     Reload ->
       ( model

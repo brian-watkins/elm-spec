@@ -8,6 +8,8 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
+import Spec.Report as Report
+import Spec.Command as Command
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -28,8 +30,7 @@ applyGivenUrlSpec =
         Setup.initForApplication (testInit ())
           |> Setup.withDocument testDocument
           |> Setup.withUpdate testUpdate
-          |> Setup.onUrlChange UrlDidChange
-          |> Setup.onUrlRequest UrlChangeRequested
+          |> Setup.forNavigation { onUrlChange = UrlDidChange, onUrlRequest = UrlChangeRequested }
           |> Setup.withLocation (testUrl "/fun/reading")
       )
       |> observeThat
@@ -43,28 +44,6 @@ applyGivenUrlSpec =
               |> expect ( Markup.hasText "reading" )
           )
         ]
-    )
-  ]
-
-
-noChangeHandlerSpec : Spec Model Msg
-noChangeHandlerSpec =
-  Spec.describe "on url change"
-  [ scenario "no url change handler is set" (
-      given (
-        Setup.initForApplication (testInit ())
-          |> Setup.withDocument testDocument
-          |> Setup.withUpdate testUpdate
-      )
-      |> when "the url is changed"
-        [ Markup.target << by [ id "push-url-button" ]
-        , Event.click
-        ]
-      |> it "fails" (
-          Markup.observeElement
-            |> Markup.query << by [ id "no-page" ]
-            |> expect ( Markup.hasText "bowling" )
-        )
     )
   ]
 
@@ -117,6 +96,7 @@ changeUrlSpec =
           ]
     )
   ]
+
 
 titleSpec : Spec Model Msg
 titleSpec =
@@ -189,10 +169,10 @@ clickLinkSpec =
   ]
 
 
-noRequestHandlerSpec : Spec Model Msg
-noRequestHandlerSpec =
-  Spec.describe "handling a url request"
-  [ scenario "no url request handler is set" (
+noNavigationConfigSpec : Spec Model Msg
+noNavigationConfigSpec =
+  Spec.describe "no navigation config is set"
+  [ scenario "initForApplication is used and a link is clicked" (
       given (
         Setup.initForApplication (testInit ())
           |> Setup.withDocument testDocument
@@ -202,23 +182,81 @@ noRequestHandlerSpec =
         [ Markup.target << by [ id "internal-link" ]
         , Event.click
         ]
+      |> itFails
+    )
+  , scenario "initForApplication is used and a url is pushed" (
+      given (
+        Setup.initForApplication (testInit ())
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "the url is changed"
+        [ Markup.target << by [ id "push-url-button" ]
+        , Event.click
+        ]
+      |> itFails
+    )
+  , scenario "any other init function is used" (
+      given (
+        Setup.initWithModel elementModel
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
+          |> Setup.withLocation (testUrl "/")
+      )
+      |> when "an internal link is clicked"
+        [ Markup.target << by [ id "internal-link" ]
+        , Event.click
+        ]
       |> observeThat
-        [ it "fails" (
+        [ it "updates the location" (
+            Navigation.observeLocation
+              |> expect (equals "http://my-test-app.com/fun/running")
+          )
+        , it "updates the view to show we are on some other page" (
             Markup.observeElement
-              |> Markup.query << by [ id "no-page" ]
-              |> expect ( Markup.hasText "nothing" )
+              |> Markup.query << by [ tag "body" ]
+              |> expect (Markup.hasText "[Navigated to a page outside the control of the Elm program: http://my-test-app.com/fun/running]")
+          )
+        ]
+    )
+  , scenario "any other init is used and external url request" (
+      given (
+        Setup.initWithModel elementModel
+          |> Setup.withDocument testDocument
+          |> Setup.withUpdate testUpdate
+          |> Setup.withLocation (testUrl "/")
+      )
+      |> when "an external link is clicked"
+        [ Markup.target << by [ id "external-link" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "navigates as expected" (
+            Navigation.observeLocation
+              |> expect (equals "http://fun-town.org/fun")
+          )
+        , it "updates the view to show we are on some other page" (
+            Markup.observeElement
+              |> Markup.query << by [ tag "body" ]
+              |> expect (Markup.hasText "[Navigated to a page outside the control of the Elm program: http://fun-town.org/fun]")
           )
         ]
     )
   ]
 
 
+itFails =
+  it "fails" (
+    Observer.observeModel (always True)
+      |> expect (always << Claim.Reject <| Report.note "Should fail before this!")
+  )
+
+
 testSubject =
   Setup.initForApplication (testInit ())
     |> Setup.withDocument testDocument
     |> Setup.withUpdate testUpdate
-    |> Setup.onUrlChange UrlDidChange
-    |> Setup.onUrlRequest UrlChangeRequested
+    |> Setup.forNavigation { onUrlChange = UrlDidChange, onUrlRequest = UrlChangeRequested }
     |> Setup.withLocation (testUrl "/")
 
 
@@ -238,7 +276,7 @@ testInit _ initialUrl key =
 
 
 type alias Model =
-  { key: Key
+  { key: Maybe Key
   , page: Page
   , title: String
   }
@@ -251,9 +289,17 @@ type Page
 
 defaultModel : Url -> Key -> Model
 defaultModel url key =
-  { key = key
+  { key = Just key
   , page = toPage url
   , title = "Some Boring Title"
+  }
+
+
+elementModel : Model
+elementModel =
+  { key = Nothing
+  , page = Home
+  , title = "Some Element"
   }
 
 
@@ -276,13 +322,25 @@ testUpdate msg model =
     UrlChangeRequested urlRequest ->
       case urlRequest of
         Internal url ->
-          ( model, Browser.Navigation.pushUrl model.key <| Url.toString url )
+          case model.key of
+            Just key ->
+              ( model, Browser.Navigation.pushUrl key <| Url.toString url )
+            Nothing ->
+              ( model, Cmd.none )
         External url ->
           ( model, Browser.Navigation.load url )
     DoPushUrl ->
-      ( model, Browser.Navigation.pushUrl model.key <| Url.Builder.absolute [ "fun", "bowling" ] [] )
+      case model.key of
+        Just key ->
+          ( model, Browser.Navigation.pushUrl key <| Url.Builder.absolute [ "fun", "bowling" ] [] )
+        Nothing ->
+          ( model, Cmd.none )
     DoReplaceUrl ->
-      ( model, Browser.Navigation.replaceUrl model.key <| Url.Builder.absolute [ "fun", "swimming" ] []  )
+      case model.key of
+        Just key ->
+          ( model, Browser.Navigation.replaceUrl key <| Url.Builder.absolute [ "fun", "swimming" ] []  )
+        Nothing ->
+          ( model, Cmd.none )
     UpdateTitle ->
       ( { model | title = "My Fun Title" }, Cmd.none )
 
@@ -326,10 +384,9 @@ selectSpec name =
   case name of
     "applyUrl" -> Just applyGivenUrlSpec
     "changeUrl" -> Just changeUrlSpec
-    "noChangeUrlHandler" -> Just noChangeHandlerSpec
     "changeTitle" -> Just titleSpec
     "clickLink" -> Just clickLinkSpec
-    "noRequestHandler" -> Just noRequestHandlerSpec
+    "noNavigationConfig" -> Just noNavigationConfigSpec
     _ -> Nothing
 
 

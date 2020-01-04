@@ -16,17 +16,6 @@ describe("application", () => {
     })
   })
   context("when the url is changed", () => {
-    context("when no url change handler is set", () => {
-      it("fails the test", (done) => {
-        expectSpec("ApplicationSpec", "noChangeUrlHandler", done, (observations) => {
-          expectRejected(observations[0], [
-            reportLine("A URL change occurred, but no handler has been provided."),
-            reportLine("Use Spec.Setup.onUrlChange to set a handler.")
-          ])  
-        })
-      })
-    })
-
     context("when the change handler is set", () => {
       it("acts as expected", (done) => {
         expectSpec("ApplicationSpec", "changeUrl", done, (observations) => {
@@ -49,12 +38,20 @@ describe("application", () => {
   })
 
   context("when no url request handler is set", () => {
-    it("fails the test", (done) => {
-      expectSpec("ApplicationSpec", "noRequestHandler", done, (observations) => {
+    it("fails the test if initForApplication is used", (done) => {
+      expectSpec("ApplicationSpec", "noNavigationConfig", done, (observations) => {
         expectRejected(observations[0], [
-          reportLine("A URL request occurred, but no handler has been provided."),
-          reportLine("Use Spec.Setup.onUrlRequest to set a handler.")
+          reportLine("A URL request occurred for an application, but no handler has been provided."),
+          reportLine("Use Spec.Setup.forNavigation to set a handler.")
         ])
+        expectRejected(observations[1], [
+          reportLine("A URL change occurred for an application, but no handler has been provided."),
+          reportLine("Use Spec.Setup.forNavigation to set a handler.")
+        ])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+        expectAccepted(observations[4])
+        expectAccepted(observations[5])
       })
     })
   })

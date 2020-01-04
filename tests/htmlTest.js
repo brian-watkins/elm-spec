@@ -88,4 +88,12 @@ describe("html plugin", () => {
       })
     })
   })
+
+  context("element applications with a link", () => {
+    it("handles clicks on a link as expected", (done) => {
+      expectSpec("HtmlSpec", "elementLink", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+  })
 })

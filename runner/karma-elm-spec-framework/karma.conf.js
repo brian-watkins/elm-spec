@@ -18,8 +18,7 @@ module.exports = function(config) {
 
     elmSpec: {
       cwd: './sample',
-      specs: './specs/**/*Spec.elm',
-      pathToElm: '../node_modules/.bin/elm'
+      specs: './specs/**/*Spec.elm'
     },
 
     client: {

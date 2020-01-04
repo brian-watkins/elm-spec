@@ -79,6 +79,8 @@ init : () -> Url -> Key -> ( Model, Cmd Msg )
 init _ _ key =
   ( defaultModel key, Cmd.none )
 
+onUrlRequest _ =
+  Ignore
 
 main =
   Browser.application
@@ -86,6 +88,6 @@ main =
     , view = document
     , update = update
     , subscriptions = \_ -> Sub.none
-    , onUrlRequest = \_ -> Ignore
+    , onUrlRequest = onUrlRequest
     , onUrlChange = UrlDidChange
     }

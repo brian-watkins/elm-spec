@@ -9,15 +9,17 @@ module Spec.Scenario.State.Exercise exposing
 import Spec.Scenario.Internal as Internal exposing (Scenario, Step)
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
-import Spec.Message exposing (Message)
+import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Observer.Message as Message
 import Spec.Report as Report
 import Spec.Claim as Claim
+import Spec.Scenario.State.NavigationHelpers exposing (..)
 import Html exposing (Html)
 import Browser exposing (Document)
+import Json.Decode as Json
 
 
 type alias Model model msg =
@@ -63,9 +65,12 @@ update : (Message -> Cmd msg) -> Msg msg -> Model model msg -> ( Model model msg
 update outlet msg model =
   case msg of
     ReceivedMessage message ->
-      ( { model | effects = message :: model.effects }
-      , State.Do Cmd.none
-      )
+      if Message.is "_navigation" "assign" message then
+        handleLocationAssigned model message
+      else
+        ( { model | effects = message :: model.effects }
+        , State.Do Cmd.none
+        )
 
     ProgramMsg programMsg ->
       model.subject.update outlet programMsg model.programModel
@@ -115,28 +120,36 @@ update outlet msg model =
       )
 
     OnUrlChange url ->
-      case model.subject.onUrlChange of
-        Just handler ->
-          update outlet (ProgramMsg <| handler url) model
+      case model.subject.navigationConfig of
+        Just config ->
+          update outlet (ProgramMsg <| config.onUrlChange url) model
         Nothing ->
-          ( model
-          , State.updateWith <| Abort <| Report.batch
-              [ Report.note "A URL change occurred, but no handler has been provided."
-              , Report.note "Use Spec.Setup.onUrlChange to set a handler."
+          if model.subject.isApplication then
+            ( model
+            , State.updateWith <| Abort <| Report.batch
+              [ Report.note "A URL change occurred for an application, but no handler has been provided."
+              , Report.note "Use Spec.Setup.forNavigation to set a handler."
               ]
-          )
+            )
+          else
+            ( model
+            , State.Do Cmd.none
+            )
 
     OnUrlRequest request ->
-      case model.subject.onUrlRequest of
-        Just handler ->
-          update outlet (ProgramMsg <| handler request) model
+      case model.subject.navigationConfig of
+        Just config ->
+          update outlet (ProgramMsg <| config.onUrlRequest request) model
         Nothing ->
-          ( model
-          , State.updateWith <| Abort <| Report.batch
-              [ Report.note "A URL request occurred, but no handler has been provided."
-              , Report.note "Use Spec.Setup.onUrlRequest to set a handler."
+          if model.subject.isApplication then
+            ( model
+            , State.updateWith <| Abort <| Report.batch
+              [ Report.note "A URL request occurred for an application, but no handler has been provided."
+              , Report.note "Use Spec.Setup.forNavigation to set a handler."
               ]
-          )
+            )
+          else
+            handleUrlRequest model request
 
 
 subscriptions : Model model msg -> Sub msg
@@ -150,3 +163,22 @@ addIfUnique list val =
     list
   else
     list ++ [ val ]
+
+
+handleLocationAssigned : Model model msg -> Message -> ( Model model msg, Command (Msg msg) )
+handleLocationAssigned model message =
+  case Message.decode Json.string message of
+    Just location ->
+      case model.subject.navigationConfig of
+        Just _ ->
+          ( { model | effects = message :: model.effects }
+          , State.Do Cmd.none
+          )
+        Nothing ->
+          ( { model | effects = message :: model.effects, subject = navigatedSubject location model.subject }
+          , State.Do Cmd.none
+          )
+    Nothing ->
+      ( { model | effects = message :: model.effects }
+      , State.Do Cmd.none
+      )

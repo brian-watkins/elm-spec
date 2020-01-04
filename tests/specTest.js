@@ -78,6 +78,16 @@ describe("spec", () => {
           checkThatProgramFunctions(done)
         }, () => {})
       })
+      it("still handles navigation of internal links", (done) => {
+        expectSpec("HtmlSpec", "elementInternalLinkFailure", () => {
+          checkThatNavigationFunctions("http://elm-spec/some-other-page", done)
+        }, () => {})
+      })
+      it("still handles navigation of external links", (done) => {
+        expectSpec("HtmlSpec", "elementExternalLinkFailure", () => {
+          checkThatNavigationFunctions("http://my-cool-site.com/", done)
+        }, () => {})
+      })
     })
   })
 
@@ -87,12 +97,22 @@ describe("spec", () => {
         expectSpec("HtmlSpec", "failing", done, (observations) => {
           expect(observations).to.have.length(1)
           expect(observations[0].summary).to.equal("REJECT")
-        }, { timeout: 20, endOnFailure: true })
+        }, { endOnFailure: true })
       })
       it("leaves the html program in a mostly usable state", (done) => {
         expectSpec("HtmlSpec", "failing", () => {
           checkThatProgramFunctions(done)
-        }, () => {}, { timeout: 20, endOnFailure: true })
+        }, () => {}, { endOnFailure: true })
+      })
+      it("still handles navigation of internal links", (done) => {
+        expectSpec("HtmlSpec", "elementInternalLinkFailure", () => {
+          checkThatNavigationFunctions("http://elm-spec/some-other-page", done)
+        }, () => {}, { endOnFailure: true })
+      })
+      it("still handles navigation of external links", (done) => {
+        expectSpec("HtmlSpec", "elementExternalLinkFailure", () => {
+          checkThatNavigationFunctions("http://my-cool-site.com/", done)
+        }, () => {}, { endOnFailure: true })
       })
     })
   })
@@ -120,6 +140,26 @@ const checkThatProgramFunctions = (done) => {
     return label.textContent
   }).then((text) => {
     expect(text).to.equal("The count is 10!")
+    done()
+  }).catch((err) => {
+    done(err)
+  })
+}
+
+const checkThatNavigationFunctions = (expectedLocation, done) => {
+  runInContext(async (window) => {
+    const wait = () => new Promise((resolve) => setTimeout(resolve, 20))
+
+    const document = window.document
+    const link = document.querySelector("#another-page")
+
+    link.click()
+    await wait()
+
+    const body = document.querySelector("body")
+    return body.textContent
+  }).then((text) => {
+    expect(text).to.equal(`[Navigated to a page outside the control of the Elm program: ${expectedLocation}]`)
     done()
   }).catch((err) => {
     done(err)
