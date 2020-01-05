@@ -39,8 +39,11 @@ describe("Suite Runner", () => {
   
   context("when the code does not compile", () => {
     it("reports zero tests", (done) => {
-      expectScenarios('WithCompilationError', { tags: [], endOnFailure: false }, done, (observations) => {
+      expectScenarios('WithCompilationError', { tags: [], endOnFailure: false }, done, (observations, error) => {
         expect(observations).to.have.length(0)
+        expect(error).to.deep.equal([
+          reportLine("Unable to compile the elm-spec program!")
+        ])
       })
     })
   })

@@ -15,6 +15,7 @@ var ElmSpecReporter = function (baseReporterDecorator) {
   self.onRunStart = function() {
     self.failures = []
     self._browsers = []
+    self.hasError = false
   }
 
   self.onBrowserStart = function(browser) {
@@ -30,6 +31,8 @@ var ElmSpecReporter = function (baseReporterDecorator) {
       self.write("Error running spec suite!\n\n")
       error.message.forEach((report) => self.printReport(report))  
     }
+
+    self.hasError = true
   }
 
   self.specFailure = function(browser, result) {
@@ -68,6 +71,8 @@ var ElmSpecReporter = function (baseReporterDecorator) {
   }
 
   self.onRunComplete = function(browsers, results) {
+    if (self.hasError) return
+
     self.write("\n\n")
     self.write(ok(`Accepted: ${results.success}\n`))
     if (results.failed > 0) {

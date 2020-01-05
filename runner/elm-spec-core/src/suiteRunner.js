@@ -17,6 +17,7 @@ module.exports = class SuiteRunner extends EventEmitter {
   runAll() {
     this.context.evaluate((Elm) => {
       if (!Elm) {
+        this.reporter.error(this.compilationError())
         this.finish()
         return
       }
@@ -99,6 +100,12 @@ module.exports = class SuiteRunner extends EventEmitter {
   finish() {
     this.reporter.finish()
     this.emit('complete')
+  }
+
+  compilationError() {
+    return report(
+      line("Unable to compile the elm-spec program!")
+    )
   }
 
   initializationError() {

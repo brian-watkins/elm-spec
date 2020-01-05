@@ -43,6 +43,10 @@ class ElmSpecRunnerCommand extends Command {
     jsdom.loadElm(compiler)
 
     runner.runAll()
+
+    if (reporter.hasError) {
+      process.exit(1)
+    }
   }
 }
 

@@ -102,6 +102,10 @@ describe("elm-spec reporter", () => {
     beforeEach(() => {
       subject.onRunStart()
       subject.onBrowserError(null, "There was an error initializing Elm, like two ports with the same name!")
+      subject.onRunComplete(null, {
+        success: 0,
+        failed: 0
+      })
     })
 
     it("prints the error", () => {
@@ -118,6 +122,7 @@ const expectToContain = (actualLines, expectedLines) => {
     expect(index, `Expected at least ${index + 1} actual lines, but there are only ${actualWithoutBlanks.length}`).to.be.lessThan(actualWithoutBlanks.length)
     expect(actualWithoutBlanks[index]).to.contain(expectedLine)
   })
+  expect(expectedLines.length, "Number of actual lines does not equal number of expected lines").to.equal(actualWithoutBlanks.length)
 }
 
 const failureResult = () => {

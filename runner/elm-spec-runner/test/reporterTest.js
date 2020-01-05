@@ -45,10 +45,11 @@ describe("reporter", () => {
 
   describe("when there are rejected observations", () => {
     let lines
+    let subject
 
     beforeEach(() => {
       lines = []
-      const subject = new Reporter((character) => {}, (line) => lines.push(line))
+      subject = new Reporter((character) => {}, (line) => lines.push(line))
 
       subject.record(rejectedMessage({
         conditions: [ "Given a subject", "When something happens" ],
@@ -81,18 +82,23 @@ describe("reporter", () => {
         "lines"
       ])
     })
+
+    it("shows there was no error", () => {
+      expect(subject.hasError).to.be.false
+    })
   })
 
   describe("when there is an error", () => {
     let lines
+    let subject
 
     beforeEach(() => {
       lines = []
-      const subject = new Reporter((character) => {}, (line) => lines.push(line))
+      subject = new Reporter((character) => {}, (line) => lines.push(line))
 
       subject.error([
         { statement: "You received an error", detail: "something" },
-        { statement: "and a final statement", detail: null }
+        { statement: "and a final statement\nwith multiple lines", detail: null }
       ])
       subject.finish()
     })
@@ -103,8 +109,12 @@ describe("reporter", () => {
         "You received an error",
         "something",
         "and a final statement",
-        "Accepted: 0",
+        "with multiple lines"
       ])
+    })
+
+    it("records that an error occurred", () => {
+      expect(subject.hasError).to.be.true
     })
   })
 })
@@ -115,6 +125,7 @@ const expectToContain = (actualLines, expectedLines) => {
     expect(index, `Expected at least ${index + 1} actual lines, but there are only ${actualWithoutBlanks.length}`).to.be.lessThan(actualWithoutBlanks.length)
     expect(actualWithoutBlanks[index]).to.contain(expectedLine)
   })
+  expect(expectedLines.length, "Number of actual lines does not equal number of expected lines").to.equal(actualWithoutBlanks.length)
 }
 
 const acceptedMessage = (data = { conditions: [], description: '' }) => {

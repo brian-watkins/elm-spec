@@ -9,6 +9,7 @@ module.exports = class ConsoleReporter {
     this.rejected = []
     this.write = write
     this.writeLine = writeLine
+    this.hasError = false
   }
 
   startSuite() {
@@ -30,9 +31,12 @@ module.exports = class ConsoleReporter {
     this.writeLine("Error running spec suite!")
     this.writeLine()
     err.forEach(r => this.printReport(r))
+    this.hasError = true
   }
 
   finish() {
+    if (this.hasError) return
+
     this.writeLine("\n")
     this.writeLine(ok(`Accepted: ${this.accepted}`))
     if (this.rejected.length > 0) {
