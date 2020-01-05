@@ -55,8 +55,8 @@ describe("reporter", () => {
         description: "It does something else",
         report: [
           { statement: "Expected the following", detail: "something" },
-          { statement: "to be", detail: "something else" },
-          { statement: "and a final statement", detail: null }
+          { statement: "to be", detail: "something else\nwith\nmultiple lines" },
+          { statement: "and a final statement\nthat has multiple\nlines", detail: null }
         ]
       }))
       subject.finish()
@@ -74,7 +74,11 @@ describe("reporter", () => {
         "something",
         "to be",
         "something else",
+        "with",
+        "multiple lines",
         "and a final statement",
+        "that has multiple",
+        "lines"
       ])
     })
   })
@@ -106,10 +110,11 @@ describe("reporter", () => {
 })
 
 const expectToContain = (actualLines, expectedLines) => {
-  const output = actualLines.join("\n")
-  for (let i = 0; i < expectedLines.length; i++) {
-    expect(output).to.contain(expectedLines[i])
-  }
+  const actualWithoutBlanks = actualLines.filter(line => line !== "\n" && line !== undefined)
+  expectedLines.forEach((expectedLine, index) => {
+    expect(index, `Expected at least ${index + 1} actual lines, but there are only ${actualWithoutBlanks.length}`).to.be.lessThan(actualWithoutBlanks.length)
+    expect(actualWithoutBlanks[index]).to.contain(expectedLine)
+  })
 }
 
 const acceptedMessage = (data = { conditions: [], description: '' }) => {

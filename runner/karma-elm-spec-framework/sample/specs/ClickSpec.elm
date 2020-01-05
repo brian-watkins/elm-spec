@@ -5,6 +5,9 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Claim as Claim
+import Spec.Http
+import Spec.Http.Route exposing (..)
 import Runner
 import Main as App
 
@@ -29,6 +32,25 @@ clickSpec =
         Markup.observeElement
           |> Markup.query << by [ id "count-results" ]
           |> expect (Markup.hasText "You clicked the button 3 time(s)")
+      )
+    )
+  , tagged [ "fun" ] <|
+    scenario "click to make a request" (
+      given (
+        Setup.initWithModel App.defaultModel
+          |> Setup.withUpdate App.update
+          |> Setup.withView App.view
+      )
+      |> when "the button is clicked three times"
+        [ Markup.target << by [ id "request-button" ]
+        , Event.click
+        ]
+      |> it "makes the request" (
+        Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+          |> expect (Claim.isListWhere
+            [ Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
+            ]
+          )
       )
     )
   ]

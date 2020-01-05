@@ -4,13 +4,13 @@ const { ElmSpecReporter } = require('../lib/elmSpecReporter')
 
 describe("elm-spec reporter", () => {
   let subject
-  let words
+  let lines
 
   beforeEach(() => {
-    words = []
+    lines = []
 
     subject = new ElmSpecReporter((self) => {
-      self.write = (line) => words.push(line)
+      self.write = (line) => lines.push(line)
     })
   })
 
@@ -24,9 +24,9 @@ describe("elm-spec reporter", () => {
     })
 
     it("prints only the accepted count", () => {
-      const output = words.join("")
-      expect(output).to.contain("Accepted: 3")
-      expect(output).to.not.contain("Rejected")
+      expectToContain(lines, [
+        "Accepted: 3"
+      ])
     })
   })
 
@@ -41,34 +41,35 @@ describe("elm-spec reporter", () => {
       })
     })
 
-    it("prints the accepted and rejected count", () => {
-      const output = words.join("")
-      expect(output).to.contain("Accepted: 3")
-      expect(output).to.contain("Rejected: 2")
-    })
-
-    it("prints rejections", () => {
-      const output = words.join("")
-
-      expect(output).to.contain("Describing: Something")
-      expect(output).to.contain("Scenario: Something happens")
-      expect(output).to.contain("When some event occurs")
-      expect(output).to.contain("it failed to do something")
-
-      expect(output).to.contain("Expected")
-      expect(output).to.contain("7")
-      expect(output).to.contain("to equal")
-      expect(output).to.contain("5")
-
-      expect(output).to.contain("Describing: Another Thing")
-      expect(output).to.contain("Scenario: Something else happens")
-      expect(output).to.contain("When some other event occurs")
-      expect(output).to.contain("it failed to do another thing")
-
-      expect(output).to.contain("Require")
-      expect(output).to.contain("19")
-      expect(output).to.contain("to be")
-      expect(output).to.contain("2")
+    it("prints the count and the rejection reports", () => {
+      expectToContain(lines, [
+        "Accepted: 3",
+        "Rejected: 2",
+        "Failed to satisfy spec:",
+        "Describing: Something",
+        "Scenario: Something happens",
+        "When some event occurs",
+        "it failed to do something",
+        "Expected",
+        "7",
+        "to equal",
+        "5",
+        "Failed to satisfy spec:",
+        "Describing: Another Thing",
+        "Scenario: Something else happens",
+        "When some other event occurs",
+        "it failed to do another thing",
+        "Expected",
+        "something",
+        "with",
+        "multiple lines",
+        "to be",
+        "something else",
+        "and some final",
+        "statement",
+        "with multiple",
+        "lines"
+      ])
     })
   })
 
@@ -88,12 +89,12 @@ describe("elm-spec reporter", () => {
     })
 
     it("prints the error", () => {
-      const output = words.join("")
-
-      expect(output).to.contain("Error running spec suite!")
-      expect(output).to.contain("Some error occurred with")
-      expect(output).to.contain("something")
-      expect(output).to.contain("some final statement")
+      expectToContain(lines, [
+        "Error running spec suite!",
+        "Some error occurred with",
+        "something",
+        "some final statement"
+      ])
     })
   })
 
@@ -104,11 +105,20 @@ describe("elm-spec reporter", () => {
     })
 
     it("prints the error", () => {
-      const output = words.join("")
-      expect(output).to.contain("There was an error initializing Elm, like two ports with the same name!")
+      expectToContain(lines, [
+        "There was an error initializing Elm, like two ports with the same name!"
+      ])
     })
   })
 })
+
+const expectToContain = (actualLines, expectedLines) => {
+  const actualWithoutBlanks = actualLines.filter(line => line !== "\n" && line !== "\n\n" && line !== '\u001b[31mx\u001b[39m')
+  expectedLines.forEach((expectedLine, index) => {
+    expect(index, `Expected at least ${index + 1} actual lines, but there are only ${actualWithoutBlanks.length}`).to.be.lessThan(actualWithoutBlanks.length)
+    expect(actualWithoutBlanks[index]).to.contain(expectedLine)
+  })
+}
 
 const failureResult = () => {
   return {
@@ -142,11 +152,14 @@ const failureResultTwo = () => {
       "When some other event occurs"
     ],
     log: [
-      { statement: "Required",
-        detail: "19"
+      { statement: "Expected",
+        detail: "something\nwith\nmultiple lines"
       },
       { statement: "to be",
-        detail: "2"
+        detail: "something else"
+      },
+      { statement: "and some final\nstatement\nwith multiple\nlines",
+        detail: null
       }
     ],
     success: false,

@@ -62,9 +62,15 @@ module.exports = class ConsoleReporter {
   }
 
   printReport(report) {
-    this.writeLine(error(`    ${report.statement}`))
+    const statementLines = report.statement.split("\n")
+    statementLines.forEach(line => {
+      this.writeLine(error(`    ${line}`))
+    })
     if (report.detail) {
-      this.writeLine(error(`      ${report.detail}`))
+      const detailLines = report.detail.split("\n")
+      detailLines.forEach(line => {
+        this.writeLine(error(`      ${line}`))
+      })
     }
     this.writeLine()
   }

@@ -54,9 +54,15 @@ var ElmSpecReporter = function (baseReporterDecorator) {
   }  
 
   self.printReport = function(report) {
-    self.write(error(`    ${report.statement}\n`))
+    const statementLines = report.statement.split("\n")
+    statementLines.forEach(line => {
+      self.write(error(`    ${line}\n`))
+    })
     if (report.detail) {
-      self.write(error(`      ${report.detail}\n`))
+      const detailLines = report.detail.split("\n")
+      detailLines.forEach(line => {
+        self.write(error(`      ${line}\n`))
+      })
     }
     self.write('\n')
   }
