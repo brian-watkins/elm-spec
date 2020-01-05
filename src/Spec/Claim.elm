@@ -5,7 +5,7 @@ module Spec.Claim exposing
   , isTrue
   , isFalse
   , isEqual
-  , stringContains
+  , isStringContaining
   , isListWithLength
   , isListWhere
   , isListWhereItemAt
@@ -23,7 +23,7 @@ module Spec.Claim exposing
 @docs isEqual, isTrue, isFalse, satisfying
 
 # Claims about Strings
-@docs stringContains
+@docs isStringContaining
 
 # Claims about Lists
 @docs isListWhere, isListWhereItemAt, isListWithLength
@@ -133,13 +133,13 @@ isEqual toString expected =
 For example,
 
     "some funny string"
-      |> Claim.stringContains 2 "fun"
+      |> isStringContaining 2 "fun"
 
 would be rejected, since it contains `fun` only once.
 
 -}
-stringContains : Int -> String -> Claim String
-stringContains expectedTimes expectedString =
+isStringContaining : Int -> String -> Claim String
+isStringContaining expectedTimes expectedString =
   \actual ->
     let
       count =
@@ -288,7 +288,7 @@ the associated value satisfies the given claim.
 For example,
 
     Just "apple"
-      |> isSomethingWhere (stringContains 1 "cheese")
+      |> isSomethingWhere (isStringContaining 1 "cheese")
 
 would be rejected.
 

@@ -170,7 +170,7 @@ attributeSpec =
       |> it "finds the attribute for a claim" (
         Markup.observeElement
           |> Markup.query << by [ id "activity" ]
-          |> expect (Markup.attribute "data-fun-activity" <| isSomethingWhere <| stringContains 1 "fishing")
+          |> expect (Markup.attribute "data-fun-activity" <| isSomethingWhere <| isStringContaining 1 "fishing")
       )
     )
   , scenario "the attribute is not found" (

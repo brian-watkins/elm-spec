@@ -220,7 +220,7 @@ belonging to all its descendants.
 -}
 hasText : String -> Claim HtmlElement
 hasText expectedText =
-  text <| Claim.stringContains 1 expectedText
+  text <| Claim.isStringContaining 1 expectedText
 
 
 {-| Claim that the HTML element's text satisfies the given claim.
@@ -229,7 +229,7 @@ hasText expectedText =
       |> Spec.Markup.query << by [ tag "div" ]
       |> Spec.expect (
         Spec.Markup.text <|
-          Spec.Claim.stringContains 1 "red"
+          Spec.Claim.isStringContaining 1 "red"
       )
 
 Note that an observed HTML element's text includes the text belonging to
@@ -287,7 +287,7 @@ hasAttribute ( expectedName, expectedValue ) =
       |> Spec.expect (
         Spec.Markup.attribute "class" <|
           Spec.Claim.isSomethingWhere <|
-          Spec.Claim.stringContains 1 "red"
+          Spec.Claim.isStringContaining 1 "red"
       )
 
 -}

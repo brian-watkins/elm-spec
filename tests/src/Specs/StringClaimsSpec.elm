@@ -16,7 +16,7 @@ containsSpec =
       )
       |> it "does not contain the string" (
         Observer.observeModel .text
-          |> expect (Claim.stringContains 0 "fun")
+          |> expect (Claim.isStringContaining 0 "fun")
       )
     )
   , scenario "the string contains the string" (
@@ -25,7 +25,7 @@ containsSpec =
       )
       |> it "contains the string" (
         Observer.observeModel .text
-          |> expect (Claim.stringContains 4 "blah")
+          |> expect (Claim.isStringContaining 4 "blah")
       )
     )
   , scenario "the contains claim fails for multiple instances and times" (
@@ -34,7 +34,7 @@ containsSpec =
       )
       |> it "fails" (
         Observer.observeModel .text
-          |> expect (Claim.stringContains 4 "blah")
+          |> expect (Claim.isStringContaining 4 "blah")
       )
     )
   , scenario "the contains claim fails for one instance" (
@@ -43,7 +43,7 @@ containsSpec =
       )
       |> it "fails" (
         Observer.observeModel .text
-          |> expect (Claim.stringContains 1 "blah")
+          |> expect (Claim.isStringContaining 1 "blah")
       )
     )
   , scenario "the contains claim fails for one time" (
@@ -52,7 +52,7 @@ containsSpec =
       )
       |> it "fails" (
         Observer.observeModel .text
-          |> expect (Claim.stringContains 0 "blah")
+          |> expect (Claim.isStringContaining 0 "blah")
       )
     )
   ]
