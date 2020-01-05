@@ -1,5 +1,7 @@
 const FakeLocation = require('./fakes/fakeLocation')
 const FakeHistory = require('./fakes/fakeHistory')
+const FakeTimer = require('./fakes/fakeTimer')
+const { fakeDate } = require('./fakes/fakeDate')
 const { proxiedConsole } = require('./fakes/proxiedConsole')
 const { fakeWindow } = require('./fakes/fakeWindow')
 const { fakeDocument } = require('./fakes/fakeDocument')
@@ -8,11 +10,12 @@ exports.registerFakes = (window, clock) => {
     window._elm_spec = {}
     const fakeLocation = new FakeLocation((msg) => window._elm_spec.app.ports.elmSpecIn.send(msg))
     window._elm_spec.requestAnimationFrame = clock.requestAnimationFrame
-    window._elm_spec.date = clock.Date
+    window._elm_spec.date = fakeDate(clock)
     window._elm_spec.window = fakeWindow(window, fakeLocation)
     window._elm_spec.document = fakeDocument(window, fakeLocation)
     window._elm_spec.history = new FakeHistory(fakeLocation)
     window._elm_spec.console = proxiedConsole()
+    window._elm_spec.timer = new FakeTimer(clock)
 }
 
 exports.injectFakes = (code) => {
@@ -24,6 +27,8 @@ exports.injectFakes = (code) => {
   const window = theWindow._elm_spec.window;
   const history = theWindow._elm_spec.history;
   const document = theWindow._elm_spec.document;
+  const setTimeout = theWindow._elm_spec.timer.fakeSetTimeout(theWindow);
+  const setInterval = theWindow._elm_spec.timer.fakeSetInterval();
   ${code}
 })(window)
 `
@@ -50,3 +55,10 @@ exports.setWindowVisibility = (isVisible, window) => {
     window._elm_spec.isVisible = isVisible
 }
 
+exports.clearTimers = (window) => {
+    window._elm_spec.timer.clear()
+}
+
+exports.setTimezoneOffset = (window, offset) => {
+    window._elm_spec.date.fakeTimezoneOffset = offset
+}

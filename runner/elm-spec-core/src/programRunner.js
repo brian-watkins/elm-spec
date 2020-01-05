@@ -4,7 +4,7 @@ const TimePlugin = require('./plugin/timePlugin')
 const HtmlPlugin = require('./plugin/htmlPlugin')
 const HttpPlugin = require('./plugin/httpPlugin')
 const WitnessPlugin = require('./plugin/witnessPlugin')
-const { registerApp, setBaseLocation } = require('./fakes')
+const { registerApp, setBaseLocation, clearTimers, setTimezoneOffset } = require('./fakes')
 const { report, line } = require('./report')
 
 module.exports = class ProgramRunner extends EventEmitter {
@@ -32,7 +32,6 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.context = context
     this.timer = null
     this.portPlugin = new PortPlugin(app)
-    this.timePlugin = new TimePlugin(this.context.clock, this.context.window)
     this.plugins = this.generatePlugins(this.context)
     this.options = options
 
@@ -43,7 +42,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     return {
       "_html": new HtmlPlugin(context),
       "_http": new HttpPlugin(context),
-      "_time": this.timePlugin,
+      "_time": new TimePlugin(context),
       "_witness": new WitnessPlugin(),
       "_port": this.portPlugin
     }
@@ -59,7 +58,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.app.ports.elmSpecOut.subscribe(messageHandler)
     this.stopHandlingMessages = () => { this.app.ports.elmSpecOut.unsubscribe(messageHandler) }
 
-    this.timePlugin.nativeSetTimeout(() => {
+    setTimeout(() => {
       this.app.ports.elmSpecIn.send(this.specStateMessage("START"))
     }, 0)
   }
@@ -125,12 +124,10 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "state": {
         switch (specMessage.body) {
           case "COMPLETE": {
-            this.timePlugin.resetFakes()
             this.emit('complete', true)
             break
           }
           case "FINISHED": {
-            this.timePlugin.resetFakes()
             this.emit('complete', false)
             break
           }
@@ -139,7 +136,6 @@ module.exports = class ProgramRunner extends EventEmitter {
       }
       case "error": {
         this.stopHandlingMessages()
-        this.timePlugin.resetFakes()
         this.emit('error', specMessage.body)
         break
       }
@@ -163,7 +159,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   handleStateChange(state, out) {
     switch (state) {
       case "START":
-        this.prepareForScenario(out)
+        this.prepareForScenario()
         out(this.continue())
         break
       case "CONFIGURE_COMPLETE":
@@ -192,14 +188,16 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.portPlugin.unsubscribe()
   }
 
-  prepareForScenario(out) {
-    this.timePlugin.clearTimers()
+  prepareForScenario() {
+    this.context.clock.runToFrame()
+    clearTimers(this.context.window)
+    setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
     setBaseLocation("http://elm-spec", this.context.window)
   }
 
   startStepTimer(out) {
     this.stopStepTimer()
-    this.stepTimeout = this.timePlugin.nativeSetTimeout(() => {
+    this.stepTimeout = setTimeout(() => {
       out(this.continue())
     }, 0)
   }

@@ -1,34 +1,11 @@
+const {
+  setTimezoneOffset
+} = require('../fakes')
 
 module.exports = class TimePlugin {
-  constructor(clock, window) {
-    this.window = window
-    this.clock = clock
-    this.timeouts = []
-    this.intervals = []
-
-    this.nativeSetTimeout = setTimeout.bind(window)
-    this.window.setTimeout = (fun, delay) => {
-      if (delay === 0) {
-        return this.nativeSetTimeout(fun, 0)
-      }
-
-      const id = this.clock.setTimeout(fun, delay)
-      this.timeouts.push(id)
-      return id
-    }
-
-    this.nativeSetInterval = setInterval.bind(window)
-    this.window.setInterval = (fun, delay) => {
-      const id = this.clock.setInterval(fun, delay)
-      this.intervals.push(id)
-      return id
-    }
-
-    this.timezoneOffset = new Date().getTimezoneOffset()
-
-    clock.Date.prototype.getTimezoneOffset = () => {
-        return -1 * this.timezoneOffset
-    }
+  constructor(context) {
+    this.window = context.window
+    this.clock = context.clock
   }
 
   handle(specMessage) {
@@ -38,7 +15,7 @@ module.exports = class TimePlugin {
         break
       }
       case "set-timezone": {
-        this.timezoneOffset = specMessage.body
+        setTimezoneOffset(this.window, specMessage.body)
         break
       }
       case "tick": {
@@ -46,26 +23,5 @@ module.exports = class TimePlugin {
         break
       }
     }
-  }
-
-  clearTimers() {
-    this.clock.runToFrame()
-    
-    for (let i = 0; i < this.timeouts.length; i++) {
-      this.clock.clearTimeout(this.timeouts[i])
-    }
-    this.timeouts = []
-
-    for (let i = 0; i < this.intervals.length; i++) {
-      this.clock.clearInterval(this.intervals[i])
-    }
-    this.intervals = []
-
-    this.timezoneOffset = new Date().getTimezoneOffset()
-  }
-
-  resetFakes() {
-    this.window.setTimeout = this.nativeSetTimeout
-    this.window.setInterval = this.nativeSetInterval
   }
 }
