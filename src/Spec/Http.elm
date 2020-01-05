@@ -2,7 +2,7 @@ module Spec.Http exposing
   ( HttpRequest
   , RequestBody
   , observeRequests
-  , hasHeader
+  , header
   , hasStringBody
   , jsonBody
   )
@@ -49,7 +49,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, RequestBody, observeRequests
 
 # Make Claims About HTTP Requests
-@docs hasHeader, hasStringBody, jsonBody
+@docs header, hasStringBody, jsonBody
 
 -}
 
@@ -82,35 +82,35 @@ type RequestBody
   | StringBody String
 
 
-{-| Claim that an HTTP request has a header with the given (key, value) tuple.
+{-| Claim that an HTTP request has a header that satisfies the given claim.
 
 For example, if the observed request has an `Authorization` header with the value
 `Bearer some-fun-token`, then the following claim:
 
-    Spec.Http.hasHeader ("Authorization", "Bearer some-fun-token")
+    Spec.Http.header "Authorization" <|
+      Spec.Claim.isSomethingWhere <|
+      Spec.Claim.isStringContaining 1 "some-fun-token"
 
 would be accepted.
 
 -}
-hasHeader : (String, String) -> Claim HttpRequest
-hasHeader ( expectedName, expectedValue ) =
+header : String -> Claim (Maybe String) -> Claim HttpRequest
+header name claim =
   \request ->
-    case Dict.get expectedName request.headers of
-      Just actualValue ->
-        if actualValue == expectedValue then
-          Claim.Accept
-        else
-          rejectRequestForHeader (expectedName, expectedValue) request
-      Nothing ->
-        rejectRequestForHeader (expectedName, expectedValue) request
+    Dict.get name request.headers
+      |> claim
+      |> Claim.mapRejection (\report -> Report.batch
+        [ Report.fact "Claim rejected for header" name
+        , report
+        , Report.fact "The request actually had these headers" <| headerList request
+        ]
+      )
 
-
-rejectRequestForHeader : (String, String) -> HttpRequest -> Claim.Verdict
-rejectRequestForHeader ( expectedName, expectedValue ) request =
-  Claim.Reject <| Report.batch
-    [ Report.fact "Expected request to have header" <| expectedName ++ " = " ++ expectedValue
-    , Report.fact "but it has" <| String.join "\n" <| List.map (\(k, v) -> k ++ " = " ++ v) <| Dict.toList request.headers
-    ]
+headerList : HttpRequest -> String
+headerList request =
+  Dict.toList request.headers
+    |> List.map (\(k, v) -> k ++ " = " ++ v)
+    |> String.join "\n"
 
 
 {-| Claim that the body of an HTTP request is a string that is equal to the given value.
@@ -172,7 +172,9 @@ For example:
 
     Spec.Http.observeRequests (Spec.Http.Route.get "http://fake.com/fake")
       |> Spec.expect (Spec.Claim.isList
-        [ Spec.Http.hasHeader ("Authorization", "Bearer some-fun-token")
+        [ Spec.Http.header "Authorization" <|
+            Spec.Claim.isSomethingWhere <|
+            Spec.Claim.isStringContaining 1 "some-fun-token"
         ]
       )
 

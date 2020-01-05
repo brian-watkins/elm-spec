@@ -48,7 +48,7 @@ clickSpec =
       |> it "makes the request" (
         Spec.Http.observeRequests (get "http://fake-api.com/stuff")
           |> expect (Claim.isListWhere
-            [ Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
+            [ Spec.Http.header "X-Awesome-Header" <| Claim.isSomethingWhere <| Claim.isEqual Debug.toString "some-awesome-value"
             ]
           )
       )

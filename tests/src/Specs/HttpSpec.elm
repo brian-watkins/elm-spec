@@ -303,27 +303,23 @@ hasHeaderSpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhereItemAt 0 <| satisfying
-                  [ Spec.Http.hasHeader ("X-Fun-Header", "some-fun-value")
-                  , Spec.Http.hasHeader ("X-Awesome-Header", "some-awesome-value")
+                  [ Spec.Http.header "X-Fun-Header" <| isSomethingWhere <| equals "some-fun-value"
+                  , Spec.Http.header "X-Awesome-Header" <| isSomethingWhere <| equals "some-awesome-value"
                   ]
               )
           )
         , it "fails to find the header" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
-              |> expect (
-                \requests ->
-                  List.head requests
-                    |> Maybe.map (Spec.Http.hasHeader ("X-Missing-Header", "some-fun-value"))
-                    |> Maybe.withDefault (Reject <| Report.note "SHOULD NOT GET HERE")
+              |> expect (isListWhere
+                [ Spec.Http.header "X-Missing-Header" isNothing
+                ]
               )
           )
         , it "fails to match the header value" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
-              |> expect (
-                \requests ->
-                  List.head requests
-                    |> Maybe.map (Spec.Http.hasHeader ("X-Awesome-Header", "some-fun-value"))
-                    |> Maybe.withDefault (Reject <| Report.note "SHOULD NOT GET HERE")
+              |> expect (isListWhere
+                [ Spec.Http.header "X-Awesome-Header" <| isSomethingWhere <| equals "some-fun-value"
+                ]
               )
           )
         ]

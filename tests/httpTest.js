@@ -59,16 +59,15 @@ describe('HTTP', () => {
     it("observes request headers as expected", (done) => {
       expectSpec("HttpSpec", "hasHeader", done, (observations) => {
         expectAccepted(observations[0])
-
-        expect(observations[1].report[0]).to.deep.equal(reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"))
-        expect(observations[1].report[1]).to.deep.equal(reportLine("Expected request to have header", "X-Missing-Header = some-fun-value"))
-        expect(observations[1].report[2].statement).to.equal("but it has")
-        expect(observations[1].report[2].detail).to.contain("X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+        expectAccepted(observations[1])
 
         expect(observations[2].report[0]).to.deep.equal(reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"))
-        expect(observations[2].report[1]).to.deep.equal(reportLine("Expected request to have header", "X-Awesome-Header = some-fun-value"))
-        expect(observations[2].report[2].statement).to.equal("but it has")
-        expect(observations[2].report[2].detail).to.contain("X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+        expect(observations[2].report[1]).to.deep.equal(reportLine("List failed to match at position 1"))
+        expect(observations[2].report[2]).to.deep.equal(reportLine("Claim rejected for header", "X-Awesome-Header"))
+        expect(observations[2].report[3]).to.deep.equal(reportLine("Expected", "\"some-awesome-value\""))
+        expect(observations[2].report[4]).to.deep.equal(reportLine("to equal", "\"some-fun-value\""))
+        expect(observations[2].report[5].statement).to.equal("The request actually had these headers")
+        expect(observations[2].report[5].detail).to.contain("X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
       })
     })
   })
