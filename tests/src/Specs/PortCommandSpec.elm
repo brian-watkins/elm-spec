@@ -17,7 +17,6 @@ witnessPortCommandFromInitSpec =
       given (
         Setup.init ( { count = 0 }, sendTestMessageOut "From init!")
           |> Setup.withUpdate testUpdate
-          |> Port.record "sendTestMessageOut"
       )
       |> it "sends the expected message" (
         Port.observe "sendTestMessageOut" Json.string
@@ -28,7 +27,6 @@ witnessPortCommandFromInitSpec =
       given (
         Setup.init ( { count = 0 }, sendTestMessageOut "From init in another scenario!")
           |> Setup.withUpdate testUpdate
-          |> Port.record "sendTestMessageOut"
       )
       |> it "resets the subscription between scenarios so only one request is observed" (
         Port.observe "sendTestMessageOut" Json.string
@@ -39,7 +37,6 @@ witnessPortCommandFromInitSpec =
       given (
         Setup.init ( { count = 0 }, sendTestMessageOut "Some message!")
           |> Setup.withUpdate testUpdate
-          |> Port.record "sendTestMessageOut"
       )
       |> it "fails" (
         Port.observe "some-other-port" Json.string
@@ -50,7 +47,6 @@ witnessPortCommandFromInitSpec =
       given (
         Setup.init ( { count = 0 }, sendTestMessageOut "From init!")
           |> Setup.withUpdate testUpdate
-          |> Port.record "sendTestMessageOut"
       )
       |> it "fails" (
         Port.observe "sendTestMessageOut" Json.int
@@ -70,7 +66,6 @@ witnessMultiplePortCommandsFromInitSpec =
           , Cmd.batch [ sendTestMessageOut "One", sendTestMessageOut "Two", sendTestMessageOut "Three" ]
           )
         |> Setup.withUpdate testUpdate
-        |> Port.record "sendTestMessageOut"
       )
       |> it "records all the messages sent" (
         Port.observe "sendTestMessageOut" Json.string

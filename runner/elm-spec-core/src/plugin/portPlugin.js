@@ -8,7 +8,7 @@ module.exports = class PortPlugin {
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
-      case "send":
+      case "send": {
         const subscription = specMessage.body
         if (this.app.ports.hasOwnProperty(subscription.sub)) {
           this.app.ports[subscription.sub].send(subscription.value)
@@ -18,12 +18,25 @@ module.exports = class PortPlugin {
           ))
         }
         break
-      case "receive":
-        const port = specMessage.body
-        port.listener = this.portListener(port)
-        this.subscriptions.push(port)
-        this.app.ports[port.cmd].subscribe(port.listener)
+      }
     }
+  }
+
+  subscribe({ ignore }) {
+    const portNames = Object.keys(this.app.ports)
+    for (const key of portNames) {
+      if (this.app.ports[key].hasOwnProperty("subscribe")) {
+        if (ignore.includes(key)) continue
+        this.subscribeToPort(key)
+      }
+    }
+  }
+
+  subscribeToPort(name) {
+    const port = { cmd: name }
+    port.listener = this.portListener(port)
+    this.subscriptions.push(port)
+    this.app.ports[port.cmd].subscribe(port.listener)
   }
 
   portListener(port) {

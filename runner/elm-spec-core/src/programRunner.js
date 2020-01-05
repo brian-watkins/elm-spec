@@ -7,19 +7,22 @@ const WitnessPlugin = require('./plugin/witnessPlugin')
 const { registerApp, setBaseLocation, clearTimers, setTimezoneOffset } = require('./fakes')
 const { report, line } = require('./report')
 
+const ELM_SPEC_OUT = "elmSpecOut"
+const ELM_SPEC_IN = "elmSpecIn"
+
 module.exports = class ProgramRunner extends EventEmitter {
   static hasElmSpecPorts(app) {
-    if (!app.ports.hasOwnProperty("elmSpecOut")) {
+    if (!app.ports.hasOwnProperty(ELM_SPEC_OUT)) {
       return report(
-        line("No elmSpecOut port found!"),
-        line("Make sure your elm-spec program uses a port defined like so", "port elmSpecOut : Message -> Cmd msg")
+        line(`No ${ELM_SPEC_OUT} port found!`),
+        line("Make sure your elm-spec program uses a port defined like so", `port ${ELM_SPEC_OUT} : Message -> Cmd msg`)
       )
     }
 
-    if (!app.ports.hasOwnProperty("elmSpecIn")) {
+    if (!app.ports.hasOwnProperty(ELM_SPEC_IN)) {
       return report(
-        line("No elmSpecIn port found!"),
-        line("Make sure your elm-spec program uses a port defined like so", "port elmSpecIn : (Message -> msg) -> Sub msg")
+        line(`No ${ELM_SPEC_IN} port found!`),
+        line("Make sure your elm-spec program uses a port defined like so", `port ${ELM_SPEC_IN} : (Message -> msg) -> Sub msg`)
       )
     }
 
@@ -51,15 +54,15 @@ module.exports = class ProgramRunner extends EventEmitter {
   run() {
     const messageHandler = (specMessage) => {
       this.handleMessage(specMessage, (outMessage) => {
-        this.app.ports.elmSpecIn.send(outMessage)
+        this.app.ports[ELM_SPEC_IN].send(outMessage)
       })
     }
 
-    this.app.ports.elmSpecOut.subscribe(messageHandler)
-    this.stopHandlingMessages = () => { this.app.ports.elmSpecOut.unsubscribe(messageHandler) }
+    this.app.ports[ELM_SPEC_OUT].subscribe(messageHandler)
+    this.stopHandlingMessages = () => { this.app.ports[ELM_SPEC_OUT].unsubscribe(messageHandler) }
 
     setTimeout(() => {
-      this.app.ports.elmSpecIn.send(this.specStateMessage("START"))
+      this.app.ports[ELM_SPEC_IN].send(this.specStateMessage("START"))
     }, 0)
   }
 
@@ -163,6 +166,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         out(this.continue())
         break
       case "CONFIGURE_COMPLETE":
+        this.configureComplete()
         out(this.continue())
         break
       case "OBSERVATION_START":
@@ -183,16 +187,20 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
-  scenarioExerciseComplete() {
-    this.stopStepTimer()
-    this.portPlugin.unsubscribe()
-  }
-
   prepareForScenario() {
     this.context.clock.runToFrame()
     clearTimers(this.context.window)
     setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
     setBaseLocation("http://elm-spec", this.context.window)
+  }
+
+  configureComplete() {
+    this.portPlugin.subscribe({ ignore: [ ELM_SPEC_OUT ]})
+  }
+
+  scenarioExerciseComplete() {
+    this.stopStepTimer()
+    this.portPlugin.unsubscribe()
   }
 
   startStepTimer(out) {

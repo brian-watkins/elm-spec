@@ -1,13 +1,13 @@
 module Spec.Port exposing
-  ( record
-  , send
+  ( send
   , observe
   )
 
 {-| Functions for working with ports during a spec.
 
 Suppose your app sends a port command when a button is clicked,
-and then displays a message received over a port subscription. You
+via a function called `my-command-port` that takes a string ("TRIGGER_REQUEST" in
+this case), and then displays a message received over a port subscription. You
 could write a scenario like so:
 
     Spec.describe "command ports and subscription ports"
@@ -17,7 +17,6 @@ could write a scenario like so:
             |> Spec.Setup.withUpdate App.update
             |> Spec.Setup.withView App.view
             |> Spec.Setup.withSubscriptions App.subscriptions
-            |> Spec.Port.record "my-command-port"
         )
         |> Spec.when "a message is sent out"
           [ Spec.Markup.target << by [ tag "button" ]
@@ -30,9 +29,12 @@ could write a scenario like so:
                 ]
           ]
         |> Spec.observeThat
-          [ Spec.it "sent one message over the port" (
-              Spec.Port.observe "my-command-port" someDecoder
-                |> Spec.expect (Spec.isListWithLength 1)
+          [ Spec.it "sent the right message over the port" (
+              Spec.Port.observe "my-command-port" Json.Decode.string
+                |> Spec.expect (Spec.Claim.isListWhere
+                  [ Spec.Claim.isEqual Debug.toString "TRIGGER_REQUEST"
+                  ]
+                )
             )
           , Spec.it "shows the message received" (
               Spec.Markup.observeElement
@@ -44,7 +46,7 @@ could write a scenario like so:
     ]
 
 # Observe Command Ports
-@docs record, observe
+@docs observe
 
 # Simulate Subscription Ports
 @docs send
@@ -72,39 +74,19 @@ sendSubscription name value =
     )
 
 
-observePortCommand : String -> Message
-observePortCommand name =
-  Message.for "_port" "receive"
-    |> Message.withBody (
-      Encode.object [ ("cmd", Encode.string name) ]
-    )
-
-
-{-| Setup the scenario to record messages sent via a command port.
-
-Note: If a port command is sent at any time during the scenario script, you must
-use `record` to setup the scenario to record messages on that port.
-Otherwise, the scenario may time out.
-
--}
-record : String -> Setup model msg -> Setup model msg
-record portName =
-  observePortCommand portName
-    |> Setup.configure
-
-
 {-| A step that sends a message to a port subscription.
 
 Provide the name of the port and an encoded JSON value that should be sent from the JavaScript side.
 
-For example, if you have a port like so:
+For example, if you have a port defined in Elm like so:
 
     port listenForStuff : (String -> msg) -> Sub msg
 
-Then you could send a message on this port like so:
+Then you could send a message through this port during a scenario like so:
 
     Spec.when "a message is sent to the subscription"
-    [ Spec.Port.send "listenForStuff" <| Encode.string "Some words"
+    [ Encode.string "Some words"
+        |> Spec.Port.send "listenForStuff"
     ]
 
 -}

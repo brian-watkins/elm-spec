@@ -19,7 +19,6 @@ processCommandSpec =
         Setup.init ( { count = 0, num = 0 }, Cmd.none )
           |> Setup.withUpdate testUpdate
           |> Setup.withSubscriptions testSubscriptions
-          |> Port.record "sendSomethingOut"
       )
       |> when "a subscription message is sent"
         [ Port.send "listenForObject" (Encode.object [ ("number", Encode.int 41) ])
@@ -43,7 +42,6 @@ processBatchedTerminatingAndNoCallbackCommands =
         Setup.init ( { count = 0, num = 0 }, Cmd.none )
           |> Setup.withUpdate testUpdate
           |> Setup.withSubscriptions testSubscriptions
-          |> Port.record "sendSomethingOut"
       )
       |> when "many subscription messages are sent" (
         List.range 0 5
