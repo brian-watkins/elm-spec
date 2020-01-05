@@ -93,15 +93,16 @@ would be accepted.
 
 -}
 hasHeader : (String, String) -> Claim HttpRequest
-hasHeader ( expectedName, expectedValue ) request =
-  case Dict.get expectedName request.headers of
-    Just actualValue ->
-      if actualValue == expectedValue then
-        Claim.Accept
-      else
+hasHeader ( expectedName, expectedValue ) =
+  \request ->
+    case Dict.get expectedName request.headers of
+      Just actualValue ->
+        if actualValue == expectedValue then
+          Claim.Accept
+        else
+          rejectRequestForHeader (expectedName, expectedValue) request
+      Nothing ->
         rejectRequestForHeader (expectedName, expectedValue) request
-    Nothing ->
-      rejectRequestForHeader (expectedName, expectedValue) request
 
 
 rejectRequestForHeader : (String, String) -> HttpRequest -> Claim.Verdict
@@ -115,21 +116,22 @@ rejectRequestForHeader ( expectedName, expectedValue ) request =
 {-| Claim that the body of an HTTP request is a string that is equal to the given value.
 -}
 hasStringBody : String -> Claim HttpRequest
-hasStringBody expected request =
-  case request.body of
-    EmptyBody ->
-      Claim.Reject <| Report.batch
-        [ Report.fact "Expected request to have body with string" expected
-        , Report.note "but it has no body at all"
-        ]
-    StringBody actual ->
-      if actual == expected then
-        Claim.Accept
-      else
+hasStringBody expected =
+  \request ->
+    case request.body of
+      EmptyBody ->
         Claim.Reject <| Report.batch
           [ Report.fact "Expected request to have body with string" expected
-          , Report.fact "but it has" actual
+          , Report.note "but it has no body at all"
           ]
+      StringBody actual ->
+        if actual == expected then
+          Claim.Accept
+        else
+          Claim.Reject <| Report.batch
+            [ Report.fact "Expected request to have body with string" expected
+            , Report.fact "but it has" actual
+            ]
 
 
 {-| Claim that the body of an HTTP request is a string that can be decoded with the
@@ -145,22 +147,23 @@ would be accepted.
 
 -}
 hasJsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
-hasJsonBody decoder claim request =
-  case request.body of
-    EmptyBody ->
-      Claim.Reject <| Report.batch
-        [ Report.note "Expected to decode request body as JSON"
-        , Report.note "but it has no body at all"
-        ]
-    StringBody actual ->
-      case Json.decodeString decoder actual of
-        Ok value ->
-          claim value
-        Err error ->
-          Claim.Reject <| Report.batch
-            [ Report.fact "Expected to decode request body as JSON" actual
-            , Report.fact "but the decoder failed" <| Json.errorToString error
-            ]
+hasJsonBody decoder claim =
+  \request ->
+    case request.body of
+      EmptyBody ->
+        Claim.Reject <| Report.batch
+          [ Report.note "Expected to decode request body as JSON"
+          , Report.note "but it has no body at all"
+          ]
+      StringBody actual ->
+        case Json.decodeString decoder actual of
+          Ok value ->
+            claim value
+          Err error ->
+            Claim.Reject <| Report.batch
+              [ Report.fact "Expected to decode request body as JSON" actual
+              , Report.fact "but the decoder failed" <| Json.errorToString error
+              ]
 
 
 {-| Observe HTTP requests that match the given route.

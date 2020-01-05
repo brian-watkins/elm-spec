@@ -59,25 +59,26 @@ type Verdict
 If any of the claims is rejected, then the combined claim is rejected.
 -}
 satisfying : List (Claim a) -> Claim a
-satisfying claims actual =
-  List.foldl (\claim verdict ->
-    case claim actual of
-      Accept ->
-        verdict
-      Reject report ->
-        case verdict of
-          Accept ->
-            Reject <| Report.batch
-              [ Report.note "Expected all claims to be satisfied, but one or more were rejected"
-              , report
-              ]
-          Reject existingReport ->
-            Reject <| Report.batch
-              [ existingReport
-              , Report.note "and"
-              , report
-              ]
-  ) Accept claims
+satisfying claims =
+  \actual ->
+    List.foldl (\claim verdict ->
+      case claim actual of
+        Accept ->
+          verdict
+        Reject report ->
+          case verdict of
+            Accept ->
+              Reject <| Report.batch
+                [ Report.note "Expected all claims to be satisfied, but one or more were rejected"
+                , report
+                ]
+            Reject existingReport ->
+              Reject <| Report.batch
+                [ existingReport
+                , Report.note "and"
+                , report
+                ]
+    ) Accept claims
 
 
 {-| Claim that the subject is `True`
@@ -116,14 +117,15 @@ this string-generating function each time, I suggest adding a helper function th
 Then just use your `equals` function whenever you need to claim that a subject is equal to some value.
 -}
 isEqual : (a -> String) -> a -> Claim a
-isEqual toString expected actual =
-  if expected == actual then
-    Accept
-  else
-    Reject <| Report.batch
-      [ Report.fact "Expected" <| toString actual
-      , Report.fact "to equal" <| toString expected
-      ]
+isEqual toString expected =
+  \actual ->
+    if expected == actual then
+      Accept
+    else
+      Reject <| Report.batch
+        [ Report.fact "Expected" <| toString actual
+        , Report.fact "to equal" <| toString expected
+        ]
 
 
 {-| Claim that the subject contains the given string the given number of times.
@@ -137,20 +139,21 @@ would be rejected, since it contains `fun` only once.
 
 -}
 stringContains : Int -> String -> Claim String
-stringContains expectedTimes expectedString actual =
-  let
-    count =
-      String.indices expectedString actual
-        |> List.length
-  in
-    if count == expectedTimes then
-      Accept
-    else
-      Reject <| Report.batch
-        [ Report.fact "Expected" actual
-        , Report.fact ("to contain " ++ pluralize expectedTimes "instance" ++ " of") expectedString
-        , Report.note <| "but the text was found " ++ pluralize count "time"
-        ]
+stringContains expectedTimes expectedString =
+  \actual ->
+    let
+      count =
+        String.indices expectedString actual
+          |> List.length
+    in
+      if count == expectedTimes then
+        Accept
+      else
+        Reject <| Report.batch
+          [ Report.fact "Expected" actual
+          , Report.fact ("to contain " ++ pluralize expectedTimes "instance" ++ " of") expectedString
+          , Report.note <| "but the text was found " ++ pluralize count "time"
+          ]
 
 
 pluralize : Int -> String -> String
@@ -164,14 +167,15 @@ pluralize times word =
 {-| Claim that the subject is a list with the given length.
 -}
 isListWithLength : Int -> Claim (List a)
-isListWithLength expected actual =
-  let
-    actualLength = List.length actual
-  in
-    if actualLength == expected then
-      Accept
-    else
-      Reject <| wrongLength expected actualLength
+isListWithLength expected =
+  \actual ->
+    let
+      actualLength = List.length actual
+    in
+      if actualLength == expected then
+        Accept
+      else
+        Reject <| wrongLength expected actualLength
 
 
 {-| Claim that the subject is a list where the following claims are satisfied:
@@ -191,14 +195,15 @@ For example:
 would result in a rejected claim, since 2 is not equal to 27.
 -}
 isListWhere : List (Claim a) -> Claim (List a)
-isListWhere claims actual =
-  if List.length claims == List.length actual then
-    matchList 1 claims actual
-  else
-    Reject <| Report.batch
-      [ Report.note "List failed to match"
-      , wrongLength (List.length claims) (List.length actual)
-      ]
+isListWhere claims =
+  \actual ->
+    if List.length claims == List.length actual then
+      matchList 1 claims actual
+    else
+      Reject <| Report.batch
+        [ Report.note "List failed to match"
+        , wrongLength (List.length claims) (List.length actual)
+        ]
 
 
 wrongLength : Int -> Int -> Report
@@ -210,21 +215,22 @@ wrongLength expected actual =
 
 
 matchList : Int -> List (Claim a) -> Claim (List a)
-matchList position claims actual =
-  case ( claims, List.head actual ) of
-    ( [], Nothing ) ->
-      Accept
-    ( next :: remaining, Just head ) ->
-      case next head of
-        Accept ->
-          matchList (position + 1) remaining <| List.drop 1 actual
-        Reject report ->
-          Reject <| Report.batch
-            [ Report.note <| "List failed to match at position " ++ String.fromInt position
-            , report
-            ]
-    _ ->
-      Reject <| Report.note "Something crazy happened"
+matchList position claims =
+  \actual ->
+    case ( claims, List.head actual ) of
+      ( [], Nothing ) ->
+        Accept
+      ( next :: remaining, Just head ) ->
+        case next head of
+          Accept ->
+            matchList (position + 1) remaining <| List.drop 1 actual
+          Reject report ->
+            Reject <| Report.batch
+              [ Report.note <| "List failed to match at position " ++ String.fromInt position
+              , report
+              ]
+      _ ->
+        Reject <| Report.note "Something crazy happened"
 
 
 {-| Claim that the subject is a list such that:
@@ -233,20 +239,21 @@ matchList position claims actual =
 - that item satisfies the given claim
 -}
 isListWhereItemAt : Int -> Claim a -> Claim (List a)
-isListWhereItemAt index claim actualList =
-  case List.head <| List.drop index actualList of
-    Just actual ->
-      claim actual
-        |> mapRejection (\report -> Report.batch
-            [ Report.note <| "Item at index " ++ String.fromInt index ++ " did not satisfy claim:"
-            , report
-            ]
-        )
-    Nothing ->
-      Reject <| Report.batch
-        [ Report.fact "Expected item at index" <| String.fromInt index
-        , Report.fact "but the list has length" <| String.fromInt <| List.length actualList
-        ]
+isListWhereItemAt index claim =
+  \actualList ->
+    case List.head <| List.drop index actualList of
+      Just actual ->
+        claim actual
+          |> mapRejection (\report -> Report.batch
+              [ Report.note <| "Item at index " ++ String.fromInt index ++ " did not satisfy claim:"
+              , report
+              ]
+          )
+      Nothing ->
+        Reject <| Report.batch
+          [ Report.fact "Expected item at index" <| String.fromInt index
+          , Report.fact "but the list has length" <| String.fromInt <| List.length actualList
+          ]
 
 
 {-| Modify the report associated with a rejected verdict; otherwise, do nothing.
@@ -263,15 +270,16 @@ mapRejection mapper verdict =
 {-| Claim that the subject is the `Just` case of the `Maybe` type.
 -}
 isSomething : Claim (Maybe a)
-isSomething actual =
-  case actual of
-    Just _ ->
-      Accept
-    Nothing ->
-      Reject <| Report.batch
-        [ Report.fact "Expected" "something"
-        , Report.fact "but found" "nothing"
-        ]
+isSomething =
+  \actual ->
+    case actual of
+      Just _ ->
+        Accept
+      Nothing ->
+        Reject <| Report.batch
+          [ Report.fact "Expected" "something"
+          , Report.fact "but found" "nothing"
+          ]
 
 
 {-| Claim that the subject is the `Just` case of the `Maybe` type and that
@@ -301,12 +309,13 @@ isSomethingWhere claim =
 {-| Claim that the subject is the `Nothing` case of the `Maybe` type.
 -}
 isNothing : Claim (Maybe a)
-isNothing actual =
-  case actual of
-    Just _ ->
-      Reject <| Report.batch
-        [ Report.fact "Expected" "nothing"
-        , Report.fact "but found" "something"
-        ]
-    Nothing ->
-      Accept
+isNothing =
+  \actual ->
+    case actual of
+      Just _ ->
+        Reject <| Report.batch
+          [ Report.fact "Expected" "nothing"
+          , Report.fact "but found" "something"
+          ]
+      Nothing ->
+        Accept

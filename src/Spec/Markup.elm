@@ -260,23 +260,24 @@ text claim =
 
 -}
 hasAttribute : ( String, String ) -> Claim HtmlElement
-hasAttribute ( expectedName, expectedValue ) element =
-  attribute expectedName (\maybeValue ->
-    case maybeValue of
-      Just actualValue ->
-        if expectedValue == actualValue then
-          Claim.Accept
-        else
+hasAttribute ( expectedName, expectedValue ) =
+  \element ->
+    attribute expectedName (\maybeValue ->
+      case maybeValue of
+        Just actualValue ->
+          if expectedValue == actualValue then
+            Claim.Accept
+          else
+            Claim.Reject <| Report.batch
+              [ Report.fact "Expected attribute to have value" expectedValue
+              , Report.fact "but it has" actualValue
+              ]
+        Nothing ->
           Claim.Reject <| Report.batch
             [ Report.fact "Expected attribute to have value" expectedValue
-            , Report.fact "but it has" actualValue
+            , Report.note "but the element has no such attribute"
             ]
-      Nothing ->
-        Claim.Reject <| Report.batch
-          [ Report.fact "Expected attribute to have value" expectedValue
-          , Report.note "but the element has no such attribute"
-          ]
-  ) element
+    ) element
 
 
 {-| Claim that the specified attribute value satisfies the given claim.
@@ -335,9 +336,10 @@ see [this](https://github.com/elm-lang/html/blob/master/properties-vs-attributes
 
 -}
 property : Json.Decoder a -> Claim a -> Claim HtmlElement
-property decoder claim (HtmlElement element) =
-  case Json.decodeValue decoder element of
-    Ok propertyValue ->
-      claim propertyValue
-    Err err ->
-      Claim.Reject <| Report.fact "Unable to decode JSON for property" <| Json.errorToString err
+property decoder claim =
+  \(HtmlElement element) ->
+    case Json.decodeValue decoder element of
+      Ok propertyValue ->
+        claim propertyValue
+      Err err ->
+        Claim.Reject <| Report.fact "Unable to decode JSON for property" <| Json.errorToString err
