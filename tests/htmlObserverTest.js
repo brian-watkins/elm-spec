@@ -7,6 +7,20 @@ const {
 } = require("./helpers/SpecHelpers")
 
 describe("html observers", () => {
+  describe("text", () => {
+    it("applies the claim to the text", (done) => {
+      expectSpec("HtmlObserverSpec", "text", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("Claim rejected for selector", "#my-activity"),
+          reportLine("Element text does not satisfy claim"),
+          reportLine("Expected", "\"My activity is: football!\""),
+          reportLine("to equal", "\"football\"")
+        ])
+      })
+    })
+  })
+
   describe("hasText", () => {
     it("observes the text of the selected element", (done) => {
       expectSpec("HtmlObserverSpec", "hasText", done, (observations) => {
@@ -14,8 +28,10 @@ describe("html observers", () => {
 
         expectRejected(observations[1], [
           reportLine("Claim rejected for selector", "#my-activity"),
-          reportLine("Expected text", "Something not present"),
-          reportLine("but the actual text was", "My activity is: Running!")
+          reportLine("Element text does not satisfy claim"),
+          reportLine("Expected", "My activity is: Running!"),
+          reportLine("to contain 1 instance of", "Something not present"),
+          reportLine("but the text was found 0 times")
         ])
       })
     })

@@ -8,6 +8,7 @@ module Spec.Markup exposing
   , property
   , query
   , target
+  , text
   , hasText
   , hasAttribute
   , attribute
@@ -22,7 +23,7 @@ module Spec.Markup exposing
 @docs MarkupObservation, observeElements, observeElement, observe, query, observeTitle
 
 # Make Claims about an HTML Element
-@docs HtmlElement, hasText, hasAttribute, attribute, property
+@docs HtmlElement, hasText, text, hasAttribute, attribute, property
 
 -}
 
@@ -218,18 +219,35 @@ Note that the text belonging to an observed HTML element includes the text
 belonging to all its descendants.
 -}
 hasText : String -> Claim HtmlElement
-hasText expectedText (HtmlElement element) =
-  case Json.decodeValue (Json.field "textContent" Json.string) element of
-    Ok text ->
-      if String.contains expectedText text then
-        Claim.Accept
-      else
-        Claim.Reject <| Report.batch
-          [ Report.fact "Expected text" expectedText
-          , Report.fact "but the actual text was" text
-          ]
-    Err err ->
-      Claim.Reject <| Report.fact "Unable to decode JSON for text" <| Json.errorToString err
+hasText expectedText =
+  text <| Claim.stringContains 1 expectedText
+
+
+{-| Claim that the HTML element's text satisfies the given claim.
+
+    Spec.Markup.observeElement
+      |> Spec.Markup.query << by [ tag "div" ]
+      |> Spec.expect (
+        Spec.Markup.text <|
+          Spec.Claim.stringContains 1 "red"
+      )
+
+Note that an observed HTML element's text includes the text belonging to
+all its descendants.
+-}
+text : Claim String -> Claim HtmlElement
+text claim =
+  \(HtmlElement element) ->
+    case Json.decodeValue (Json.field "textContent" Json.string) element of
+      Ok actualText ->
+        claim actualText
+          |> Claim.mapRejection (\report -> Report.batch
+            [ Report.note "Element text does not satisfy claim"
+            , report
+            ]
+          )
+      Err err ->
+        Claim.Reject <| Report.fact "Unable to decode JSON for text" <| Json.errorToString err
 
 
 {-| Claim that the HTML element has the given attribute with the given value.

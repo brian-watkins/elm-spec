@@ -13,6 +13,34 @@ import Json.Decode as Json
 import Runner
 
 
+textSpec : Spec Model Msg
+textSpec =
+  Spec.describe "text"
+  [ scenario "the text satisfies the claim" (
+      given (
+        Setup.initWithModel { activity = "football" }
+          |> Setup.withView testTextView
+      )
+      |> it "applies the claim to the text" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-activity" ]
+          |> expect (Markup.text <| equals "My activity is: football!")
+      )
+    )
+  , scenario "the claim about the text is rejected" (
+      given (
+        Setup.initWithModel { activity = "football" }
+          |> Setup.withView testTextView
+      )
+      |> it "applies the claim to the text" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-activity" ]
+          |> expect (Markup.text <| equals "football")
+      )
+    )
+  ]
+
+
 hasTextSpec : Spec Model Msg
 hasTextSpec =
   Spec.describe "hasText"
@@ -250,6 +278,7 @@ testPropertyView model =
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
+    "text" -> Just textSpec
     "hasText" -> Just hasTextSpec
     "hasTextContained" -> Just hasTextContainedSpec
     "hasAttribute" -> Just hasAttributeSpec
