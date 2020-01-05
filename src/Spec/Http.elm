@@ -4,7 +4,7 @@ module Spec.Http exposing
   , observeRequests
   , hasHeader
   , hasStringBody
-  , hasJsonBody
+  , jsonBody
   )
 
 {-| Observe, and make claims about HTTP requests during a spec.
@@ -36,7 +36,7 @@ Now, you could write a spec that checks to see if the request body contains a va
           Spec.Http.observeRequests
               (Spec.Http.Route.post "http://fake-api.com/api/sports")
             |> Spec.expect (Spec.Claim.isListWhere
-              [ Spec.Http.hasJsonBody
+              [ Spec.Http.jsonBody
                   (Json.field "name" Json.string)
                   (Spec.Claim.isEqual Debug.toString "bowling")
               ]
@@ -49,7 +49,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, RequestBody, observeRequests
 
 # Make Claims About HTTP Requests
-@docs hasHeader, hasStringBody, hasJsonBody
+@docs hasHeader, hasStringBody, jsonBody
 
 -}
 
@@ -139,15 +139,15 @@ given decoder into a value that satisfies the given claim.
 
 For example, if the body of the observed request was `{"sport":"bowling"}`, then the following claim:
 
-    Spec.Http.hasJsonBody
+    Spec.Http.jsonBody
       (Json.Decode.field "sport" Json.Decode.string)
       (Spec.Claim.isEqualTo Debug.toString "bowling")
 
 would be accepted.
 
 -}
-hasJsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
-hasJsonBody decoder claim =
+jsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
+jsonBody decoder claim =
   \request ->
     case request.body of
       EmptyBody ->
