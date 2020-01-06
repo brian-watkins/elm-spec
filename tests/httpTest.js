@@ -78,8 +78,9 @@ describe('HTTP', () => {
         expectRejected(observations[0], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Expected request to have body with string", "some string body that it does not have"),
-          reportLine("but it has no body at all")
+          reportLine("Claim rejected for string body"),
+          reportLine("Expected", "\"\""),
+          reportLine("to equal", "\"some string body that it does not have\"")
         ])
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
@@ -91,8 +92,9 @@ describe('HTTP', () => {
         expectRejected(observations[3], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Expected request to have body with string", "{\"blah\":3}"),
-          reportLine("but it has", "{\"name\":\"fun person\",\"age\":88}")
+          reportLine("Claim rejected for string body"),
+          reportLine("Expected", "\"{\\\"name\\\":\\\"fun person\\\",\\\"age\\\":88}\""),
+          reportLine("to equal", "\"{\\\"blah\\\":3}\"")
         ])
         expectAccepted(observations[4])
         expectRejected(observations[5], [

@@ -3,7 +3,7 @@ module Spec.Http exposing
   , RequestBody
   , observeRequests
   , header
-  , hasStringBody
+  , stringBody
   , jsonBody
   )
 
@@ -49,7 +49,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, RequestBody, observeRequests
 
 # Make Claims About HTTP Requests
-@docs header, hasStringBody, jsonBody
+@docs stringBody, jsonBody, header
 
 -}
 
@@ -113,25 +113,29 @@ headerList request =
     |> String.join "\n"
 
 
-{-| Claim that the body of an HTTP request is a string that is equal to the given value.
+{-| Claim that the body of an HTTP request is a string that satisfies the given claim.
+
+Note: If you create a request with `Http.emptyBody` then the given claim will be evaluated
+against the empty string.
 -}
-hasStringBody : String -> Claim HttpRequest
-hasStringBody expected =
+stringBody : Claim String -> Claim HttpRequest
+stringBody claim =
   \request ->
     case request.body of
       EmptyBody ->
-        Claim.Reject <| Report.batch
-          [ Report.fact "Expected request to have body with string" expected
-          , Report.note "but it has no body at all"
-          ]
+        evaluateStringBodyClaim claim ""
       StringBody actual ->
-        if actual == expected then
-          Claim.Accept
-        else
-          Claim.Reject <| Report.batch
-            [ Report.fact "Expected request to have body with string" expected
-            , Report.fact "but it has" actual
-            ]
+        evaluateStringBodyClaim claim actual
+
+
+evaluateStringBodyClaim : Claim String -> String -> Claim.Verdict
+evaluateStringBodyClaim claim body =
+  claim body
+    |> Claim.mapRejection (\report -> Report.batch
+      [ Report.note "Claim rejected for string body"
+      , report
+      ]
+    )
 
 
 {-| Claim that the body of an HTTP request is a string that can be decoded with the
@@ -171,7 +175,7 @@ jsonBody decoder claim =
 For example:
 
     Spec.Http.observeRequests (Spec.Http.Route.get "http://fake.com/fake")
-      |> Spec.expect (Spec.Claim.isList
+      |> Spec.expect (Spec.Claim.isListWhere
         [ Spec.Http.header "Authorization" <|
             Spec.Claim.isSomethingWhere <|
             Spec.Claim.isStringContaining 1 "some-fun-token"

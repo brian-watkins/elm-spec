@@ -350,7 +350,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.hasStringBody "some string body that it does not have"
+                  [ Spec.Http.stringBody <| equals "some string body that it does not have"
                   ]
               )
           )
@@ -377,7 +377,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.hasStringBody "{\"name\":\"fun person\",\"age\":88}"
+                  [ Spec.Http.stringBody <| equals "{\"name\":\"fun person\",\"age\":88}"
                   ]
               )
           )
@@ -385,7 +385,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.hasStringBody "{\"blah\":3}"
+                  [ Spec.Http.stringBody <| equals "{\"blah\":3}"
                   ]
               )
           )
