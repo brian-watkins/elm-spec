@@ -242,7 +242,7 @@ text claim =
       Ok actualText ->
         claim actualText
           |> Claim.mapRejection (\report -> Report.batch
-            [ Report.note "Element text does not satisfy claim"
+            [ Report.note "Claim rejected for element text"
             , report
             ]
           )
