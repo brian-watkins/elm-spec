@@ -5,6 +5,7 @@ module Spec.Http exposing
   , header
   , stringBody
   , jsonBody
+  , queryParameter
   )
 
 {-| Observe, and make claims about HTTP requests during a spec.
@@ -51,6 +52,9 @@ Now, you could write a spec that checks to see if the request body contains a va
 # Make Claims About HTTP Requests
 @docs stringBody, jsonBody, header
 
+# Make Claims about an HTTP Request's Route
+@docs queryParameter
+
 -}
 
 import Spec.Observer as Observer exposing (Observer)
@@ -58,10 +62,12 @@ import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report
 import Spec.Message as Message exposing (Message)
-import Spec.Http.Route exposing (HttpRoute)
-import Json.Encode as Encode
+import Spec.Http.Route as Route exposing (HttpRoute)
 import Json.Decode as Json
 import Dict exposing (Dict)
+import Url exposing (Url)
+import Url.Parser
+import Url.Parser.Query
 
 
 
@@ -191,7 +197,7 @@ observeRequests route =
   )
   |> Observer.mapRejection (\report ->
     Report.batch
-    [ Report.fact  "Claim rejected for route" <| route.method ++ " " ++ route.url
+    [ Report.fact  "Claim rejected for route" <| Route.toString route
     , report
     ]
   )
@@ -201,10 +207,7 @@ fetchRequestsFor : HttpRoute -> Message
 fetchRequestsFor route =
   Message.for "_http" "fetch-requests"
     |> Message.withBody (
-      Encode.object
-        [ ( "method", Encode.string route.method )
-        , ( "url", Encode.string route.url )
-        ]
+      Route.encode route
     )
 
 
@@ -223,3 +226,40 @@ requestBodyDecoder =
       Maybe.map StringBody
         >> Maybe.withDefault EmptyBody
     )
+
+
+{-| Claim that a query parameter has a value that satisfies the given claim.
+
+For example, if a request is made to `http://fun.com/fun?activity=bowling`,
+then the following claim would be satisfied:
+
+    Spec.Http.observeRequests (Spec.Http.Route.get "http://fun.com/fun" |> Spec.Http.Route.withAnyQuery)
+      |> Spec.expect (Spec.Claim.isListWhere
+        [ Spec.Http.queryParameter "actvity" <|
+            Spec.Claim.isEqual Debug.toString "bowling"
+        ]
+      )
+
+-}
+queryParameter : String -> Claim (List String) -> Claim HttpRequest
+queryParameter name claim =
+  \request ->
+    case Url.fromString request.url of
+      Just url ->
+        queryParameterValues name url
+          |> claim
+          |> Claim.mapRejection (\report -> Report.batch
+            [ Report.fact "Claim rejected for query parameter" name
+            , report
+            ]
+          )
+      Nothing ->
+        Claim.Reject <| Report.fact "Unable to parse URL" request.url
+
+
+queryParameterValues : String -> Url -> List String
+queryParameterValues param url =
+  { url | path = "" }
+    |> Url.Parser.parse (Url.Parser.query <| Url.Parser.Query.custom param identity) 
+    |> Maybe.withDefault []
+

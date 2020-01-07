@@ -18,6 +18,7 @@ import Runner
 import Json.Decode as Json
 import Json.Encode as Encode
 import Http
+import Url.Builder
 import Dict
 import Specs.Helpers exposing (..)
 
@@ -410,6 +411,84 @@ hasBodySpec =
   ]
 
 
+queryParamsSpec : Spec Model Msg
+queryParamsSpec =
+  Spec.describe "query params"
+  [ scenario "the request has a query string" (
+      given (
+        testSubject (getRequestWithQuery [ ("activity", "bowling") ]) []
+      )
+      |> when "a request is made"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "contains the expected query param" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff" |> withAnyQuery)
+              |> expect (isListWhere
+                [ Spec.Http.queryParameter "activity" <| isListWhere [ equals "bowling" ]
+                ]
+              )
+          )
+        , it "fails when the claim fails" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff" |> withAnyQuery)
+              |> expect (isListWhere
+                [ Spec.Http.queryParameter "activity" <| isListWhere [ equals "nothing" ]
+                ]
+              )
+          )
+        , it "does not find some param that's not there" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff" |> withAnyQuery)
+              |> expect (isListWhere
+                [ Spec.Http.queryParameter "unknown" <| isListWhere [ equals "something" ]
+                ]
+              )
+          )
+        ]
+    )
+  , scenario "the request has no query string" (
+      given (
+        testSubject (getRequestWithQuery []) []
+      )
+      |> when "a request is made"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "does not find a query param" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff" |> withAnyQuery)
+              |> expect (isListWhere
+                [ Spec.Http.queryParameter "unknown" <| isListWithLength 0
+                ]
+              )
+          )
+        ]
+    )
+  ]
+
+
+getRequestWithQuery : List (String, String) -> Cmd Msg
+getRequestWithQuery params =
+  Http.request
+    { method = "GET"
+    , headers =
+      [ Http.header "X-Fun-Header" "some-fun-value"
+      , Http.header "X-Awesome-Header" "some-awesome-value"
+      ]
+    , url = "http://fake-api.com/stuff" ++ toQueryString params
+    , body = Http.emptyBody
+    , expect = Http.expectJson ReceivedResponse responseDecoder
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
+toQueryString : List (String, String) -> String
+toQueryString params =
+  List.map (\(name, value) -> Url.Builder.string name value) params
+    |> Url.Builder.toQuery
+
+
 postRequestWithJson : Json.Value -> Cmd Msg
 postRequestWithJson body =
   Http.request
@@ -512,6 +591,7 @@ selectSpec name =
     "hasBody" -> Just hasBodySpec
     "error" -> Just errorStubSpec
     "header" -> Just headerStubSpec
+    "queryParams" -> Just queryParamsSpec
     _ -> Nothing
 
 

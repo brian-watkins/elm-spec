@@ -23,7 +23,7 @@ module Spec.Http.Stub exposing
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Setup.Internal as Setup
 import Spec.Message as Message exposing (Message)
-import Spec.Http.Route exposing (HttpRoute)
+import Spec.Http.Route as Route exposing (HttpRoute)
 import Dict exposing (Dict)
 import Json.Encode as Encode
 
@@ -155,8 +155,7 @@ httpSetupMessage =
 encodeStub : HttpResponseStub -> Encode.Value
 encodeStub (HttpResponseStub stub) =
   Encode.object
-    [ ( "method", Encode.string stub.route.method )
-    , ( "url", Encode.string stub.route.url )
+    [ ( "route", Route.encode stub.route )
     , ( "status", Encode.int stub.response.status )
     , ( "headers", Encode.dict identity Encode.string stub.response.headers )
     , ( "body", maybeEncodeString stub.response.body )

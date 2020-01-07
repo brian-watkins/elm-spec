@@ -26,7 +26,8 @@ module.exports = class HttpPlugin {
       }
       case "stub": {
         const stub = specMessage.body
-        this.server.respondWith(stub.method, stub.url, (request) => {
+        const route = stub.route
+        this.server.respondWith(route.method, route.url, (request) => {
           if (stub.shouldRespond) {
             if (stub.error === "network") {
               request.error()
@@ -47,7 +48,14 @@ module.exports = class HttpPlugin {
         const route = specMessage.body
 
         const requests = this.server.requests
-          .filter(request => request.url === route.url && request.method === route.method)
+          .filter(request => {
+            if (request.method !== route.method) return false
+            if (route.query.type === "ANY") {
+              return request.url.startsWith(route.url)
+            } else {
+              return request.url === route.url
+            }
+          })
           .map(buildRequest)
 
         out({

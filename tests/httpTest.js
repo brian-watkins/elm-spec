@@ -106,4 +106,29 @@ describe('HTTP', () => {
       })
     })
   })
+
+  context("queryParameter", () => {
+    it("observes the query parameters as expected", (done) => {
+      expectSpec("HttpSpec", "queryParams", done, (observations) => {
+        expectAccepted(observations[0])
+        expectRejected(observations[1], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff?*"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for query parameter", "activity"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Expected", "\"bowling\""),
+          reportLine("to equal", "\"nothing\"")
+        ])
+        expectRejected(observations[2], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff?*"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for query parameter", "unknown"),
+          reportLine("List failed to match"),
+          reportLine("Expected list to have length", "1"),
+          reportLine("but it has length", "0")
+        ])
+        expectAccepted(observations[3])
+      })
+    })
+  })
 })
