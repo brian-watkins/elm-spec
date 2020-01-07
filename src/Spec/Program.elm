@@ -188,7 +188,7 @@ versionMismatchErrorMessage : Int -> Int -> Message
 versionMismatchErrorMessage elmSpecCoreRequiredVersion elmSpecCoreActualVersion =
   Message.for "_spec" "error"
     |> Message.withBody (
-      Report.encoder <| Report.batch
+      Report.encode <| Report.batch
         [ Report.fact "elm-spec requires elm-spec-core at version" <| String.fromInt elmSpecCoreRequiredVersion ++ ".x"
         , Report.fact "but your elm-spec-core version is" <| String.fromInt elmSpecCoreActualVersion ++ ".x"
         , Report.note "Check your JavaScript runner and upgrade to make the versions match."

@@ -3,7 +3,7 @@ module Spec.Report exposing
   , batch
   , note
   , fact
-  , encoder
+  , encode
   , decoder
   )
 
@@ -13,7 +13,7 @@ module Spec.Report exposing
 @docs Report, note, fact, batch
 
 # Convert to and from JSON
-@docs decoder, encoder
+@docs decoder, encode
 -}
 
 import Json.Encode as Encode
@@ -76,8 +76,8 @@ decoder =
 
 {-| Encode a `Report` into a JSON object.
 -}
-encoder : Report -> Encode.Value
-encoder (Report report) =
+encode : Report -> Encode.Value
+encode (Report report) =
   Encode.list (\line ->
     Encode.object
     [ ( "statement", Encode.string line.statement )

@@ -66,6 +66,6 @@ verdictAttributes verdict =
       ]
     Reject report ->
       [ ("summary", Encode.string "REJECT")
-      , ("report", Report.encoder report)
+      , ("report", Report.encode report)
       ]
 
