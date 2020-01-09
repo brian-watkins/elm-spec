@@ -1,7 +1,7 @@
 const nise = require('nise')
 
 const fakeServerForGlobalContext = function(window) {
-  const server = nise.fakeServer.create() 
+  const server = nise.fakeServer.create()
   server.xhr = nise.fakeXhr.fakeXMLHttpRequestFor(window).useFakeXMLHttpRequest()
   server.xhr.onCreate = (xhrObj) => {
     xhrObj.unsafeHeadersEnabled = function () {
@@ -27,7 +27,7 @@ module.exports = class HttpPlugin {
       case "stub": {
         const stub = specMessage.body
         const route = stub.route
-        this.server.respondWith(route.method, route.url, (request) => {
+        this.server.respondWith(route.method, regexForRoute(route), (request) => {
           if (stub.shouldRespond) {
             if (stub.error === "network") {
               request.error()
@@ -46,15 +46,12 @@ module.exports = class HttpPlugin {
       }
       case "fetch-requests": {
         const route = specMessage.body
+        const routeRegex = regexForRoute(route)
 
         const requests = this.server.requests
           .filter(request => {
             if (request.method !== route.method) return false
-            if (route.query.type === "ANY") {
-              return request.url.startsWith(route.url)
-            } else {
-              return request.url === route.url
-            }
+            return routeRegex.test(request.url)
           })
           .map(buildRequest)
 
@@ -78,4 +75,30 @@ const buildRequest = (request) => {
     headers: request.requestHeaders,
     body: request.requestBody || null
   }
+}
+
+const regexForRoute = (route) => {
+  let urlRegexp = '^' + escape(route.origin + route.path)
+
+  switch (route.query.type) {
+    case "ANY": {
+      urlRegexp += '\\?.*$'
+      break
+    }
+    case "EXACT": {
+      urlRegexp += '\\?' + route.query.value + "$"
+      break
+    }
+    case "NONE": {
+      urlRegexp += "$"
+    }
+  }
+
+  return new RegExp(urlRegexp)
+}
+
+const escape = (part) => {
+  return part
+    .replace(/\//g, '\\/')
+    .replace(/\./g, '\\.')
 }

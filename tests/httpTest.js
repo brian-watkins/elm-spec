@@ -127,7 +127,32 @@ describe('HTTP', () => {
           reportLine("Expected list to have length", "1"),
           reportLine("but it has length", "0")
         ])
+        expectRejected(observations[3], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff?activity=running"),
+          reportLine("Expected list to have length", "1"),
+          reportLine("but it has length", "0")
+        ])
+        expectAccepted(observations[4])
+      })
+    })
+  })
+
+  context("route query", () => {
+    it("matches the route as expected", (done) => {
+      expectSpec("HttpSpec", "routeQuery", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
         expectAccepted(observations[3])
+        expectAccepted(observations[4])
+      })
+    })
+  })
+
+  context("route path", () => {
+    it("matches the route as expected", (done) => {
+      expectSpec("HttpSpec", "routePath", done, (observations) => {
+        expectAccepted(observations[0])
       })
     })
   })

@@ -30,10 +30,7 @@ getSpec =
       given (
         testSubject getRequest [ successStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> it "receives a stubbed response" (
         Observer.observeModel .responses
           |> expect ( isListWhere
@@ -49,10 +46,7 @@ getSpec =
       given (
         testSubject (Cmd.batch [ getRequest, getOtherRequest ]) [ successStub, otherSuccessStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> it "receives the stubbed responses" (
         Observer.observeModel .responses
           |> expect ( isListWhere
@@ -66,10 +60,7 @@ getSpec =
       given (
         testSubject getRequest [ unauthorizedStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> it "receives a stubbed response" (
         Observer.observeModel .error
           |> expect (
@@ -163,10 +154,7 @@ errorStubSpec =
       given (
         testSubject getRequest [ networkErrorStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> it "receives an error" (
         Observer.observeModel .error
           |> expect (equals <| Just Http.NetworkError)
@@ -176,10 +164,7 @@ errorStubSpec =
       given (
         testSubject (getRequestWithTimeout <| Just 100) [ timeoutStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> it "receives a timeout error" (
         Observer.observeModel .error
           |> expect (equals <| Just Http.Timeout)
@@ -205,10 +190,7 @@ headerStubSpec =
       given (
         testSubject fancyRequest [ headerStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> it "receives the metadata" (
         Observer.observeModel .metadata
           |> expect (\metadata ->
@@ -264,10 +246,7 @@ abstainSpec =
       given (
         testSubject getRequest [ abstainedStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> observeThat
         [ it "observes the request" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
@@ -295,10 +274,7 @@ hasHeaderSpec =
       given (
         testSubject getRequest [ successStub ]
       )
-      |> when "an http request is triggered"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> observeThat
         [ it "has the expected headers" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
@@ -342,10 +318,7 @@ hasBodySpec =
       given (
         testSubject getRequest [ successStub ]
       )
-      |> when "a request is made"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> observeThat
         [ it "fails to find a string body" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
@@ -369,10 +342,7 @@ hasBodySpec =
       given (
         testSubject (postRequestWithJson postBody) []
       )
-      |> when "a request is made"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> observeThat
         [ it "observes the body of the sent request" (
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
@@ -418,10 +388,7 @@ queryParamsSpec =
       given (
         testSubject (getRequestWithQuery [ ("activity", "bowling") ]) []
       )
-      |> when "a request is made"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> observeThat
         [ it "contains the expected query param" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff" |> withAnyQuery)
@@ -444,38 +411,108 @@ queryParamsSpec =
                 ]
               )
           )
+        , it "does not match with an exact query" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff?activity=running")
+              |> expect (isListWithLength 1)
+          )
         ]
     )
   , scenario "the request has no query string" (
       given (
         testSubject (getRequestWithQuery []) []
       )
-      |> when "a request is made"
-        [ Markup.target << by [ id "trigger" ]
-        , Event.click
-        ]
+      |> whenTheRequestIsTriggered
       |> observeThat
-        [ it "does not find a query param" (
+        [ it "does not observe any requests with a query" (
             Spec.Http.observeRequests (get "http://fake-api.com/stuff" |> withAnyQuery)
-              |> expect (isListWhere
-                [ Spec.Http.queryParameter "unknown" <| isListWithLength 0
-                ]
-              )
+              |> expect (isListWithLength 0)
           )
         ]
     )
   ]
 
 
+routeQuerySpec : Spec Model Msg
+routeQuerySpec =
+  Spec.describe "route query"
+  [ scenario "match request with query when stub requests with any query" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/fun" [ ("activity", "running") ])
+          [ successStubRoute (get "http://fake-api.com/fun" |> withAnyQuery) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> itReceivesTheStubbedResponse
+    )
+  , scenario "fail to match request without query when stub requests with any query" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/fun" [])
+          [ successStubRoute (get "http://fake-api.com/fun" |> withAnyQuery) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> itDoesNotReceiveTheStubbResponse
+    )
+  , scenario "fail to match request with query when do not stub request with any query" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/fun" [ ("activity", "running") ])
+          [ successStubRoute (get "http://fake-api.com/fun") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> itDoesNotReceiveTheStubbResponse
+    )
+  , scenario "matches request when stub specifies exact query" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/fun" [ ("activity", "running walking") ])
+          [ successStubRoute (get "http://fake-api.com/fun?activity=running%20walking") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> itReceivesTheStubbedResponse
+    )
+  , scenario "ignores exact query when any query is specified" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/fun" [ ("activity", "running") ])
+          [ successStubRoute (get "http://fake-api.com/fun?activity=walking" |> withAnyQuery) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> itReceivesTheStubbedResponse
+    )
+  ]
+
+
+routePathSpec : Spec Model Msg
+routePathSpec =
+  Spec.describe "route path"
+  [ scenario "matches request that's just a path" (
+      given (
+        testSubject (getRequestTo "/some/awesome/path" [])
+          [ successStubRoute (get "/some/awesome/path") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> itReceivesTheStubbedResponse
+    )
+  ]
+
+
+whenTheRequestIsTriggered =
+  when "an http request is triggered"
+    [ Markup.target << by [ id "trigger" ]
+    , Event.click
+    ]
+
+
 getRequestWithQuery : List (String, String) -> Cmd Msg
-getRequestWithQuery params =
+getRequestWithQuery =
+  getRequestTo "http://fake-api.com/stuff"
+
+
+getRequestTo : String -> List (String, String) -> Cmd Msg
+getRequestTo origin params =
   Http.request
     { method = "GET"
     , headers =
       [ Http.header "X-Fun-Header" "some-fun-value"
       , Http.header "X-Awesome-Header" "some-awesome-value"
       ]
-    , url = "http://fake-api.com/stuff" ++ toQueryString params
+    , url = origin ++ toQueryString params
     , body = Http.emptyBody
     , expect = Http.expectJson ReceivedResponse responseDecoder
     , timeout = Nothing
@@ -515,6 +552,31 @@ testSubject doRequest stubs =
 successStub =
   Stub.for (get "http://fake-api.com/stuff")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
+
+successStubRoute route =
+  Stub.for route
+    |> Stub.withBody "{\"name\":\"Awesome Person\",\"score\":1944}"
+
+
+itReceivesTheStubbedResponse =
+  it "receives a stubbed response" (
+    Observer.observeModel .responses
+      |> expect (isListWhere
+        [ equals
+          { name = "Awesome Person"
+          , score = 1944
+          }
+        ]
+      )
+  )
+
+
+itDoesNotReceiveTheStubbResponse =
+  it "does not receive the stubbed response" (
+    Observer.observeModel .responses
+      |> expect (isListWithLength 0)
+  )
+
 
 otherSuccessStub =
   Stub.for (get "http://fake-api.com/fun")
@@ -592,6 +654,8 @@ selectSpec name =
     "error" -> Just errorStubSpec
     "header" -> Just headerStubSpec
     "queryParams" -> Just queryParamsSpec
+    "routeQuery" -> Just routeQuerySpec
+    "routePath" -> Just routePathSpec
     _ -> Nothing
 
 
