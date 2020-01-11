@@ -149,10 +149,32 @@ describe('HTTP', () => {
     })
   })
 
-  context("route path", () => {
+  context("route origin", () => {
     it("matches the route as expected", (done) => {
-      expectSpec("HttpSpec", "routePath", done, (observations) => {
+      expectSpec("HttpSpec", "routeOrigin", done, (observations) => {
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+        expectAccepted(observations[4])
+        expectAccepted(observations[5])
+        expectAccepted(observations[6])
+        expectAccepted(observations[7])
+        expectAccepted(observations[8])
+        expectAccepted(observations[9])
+        expectAccepted(observations[10])
+        expectAccepted(observations[11])
+        expectAccepted(observations[12])
+        expectAccepted(observations[13])
+        expectAccepted(observations[14])
+        expectAccepted(observations[15])
+        expectRejected(observations[16], [
+          reportLine("Claim rejected for route", "GET */some/awesome/path"),
+          reportLine("Expected list to have length", "1"),
+          reportLine("but it has length", "0")
+        ])
+        expectAccepted(observations[17])
+        expectAccepted(observations[18])
       })
     })
   })

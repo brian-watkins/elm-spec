@@ -3,6 +3,7 @@ module Spec.Http.Route exposing
   , get
   , post
   , route
+  , withAnyOrigin
   , withAnyQuery
   , encode
   , toString
@@ -13,7 +14,7 @@ module Spec.Http.Route exposing
 @docs HttpRoute
 
 # Define a Route
-@docs get, post, route, withAnyQuery
+@docs get, post, route, withAnyOrigin, withAnyQuery
 
 # Work with Routes
 @docs encode, toString
@@ -29,13 +30,13 @@ import Url exposing (Url, Protocol(..))
 type HttpRoute =
   HttpRoute
     { method: String
-    , origin: String
+    , origin: RoutePart
     , path: String
-    , query: QueryMatcher
+    , query: RoutePart
     }
 
 
-type QueryMatcher
+type RoutePart
   = None
   | Exact String
   | Any
@@ -68,27 +69,47 @@ route method urlString =
         { method = method
         , origin = originFrom url
         , path = url.path
-        , query =
-            url.query
-              |> Maybe.map Exact
-              |> Maybe.withDefault None
+        , query = queryFrom url
+        }
+    Nothing ->
+      if String.startsWith "/" urlString then
+        routeFromPath method urlString
+      else
+        HttpRoute
+          { method = method
+          , origin = None
+          , path = urlString
+          , query = None
+          }
+
+
+routeFromPath : String -> String -> HttpRoute
+routeFromPath method path =
+  case Url.fromString <| "http://localhost" ++ path of
+    Just url ->
+      HttpRoute
+        { method = method
+        , origin = None
+        , path = url.path
+        , query = queryFrom url
         }
     Nothing ->
       HttpRoute
         { method = method
-        , origin = ""
-        , path = urlString
+        , origin = None
+        , path = path
         , query = None
         }
 
 
-originFrom : Url -> String
+originFrom : Url -> RoutePart
 originFrom url =
-  [ protocolFrom url
-  , url.host
-  , portFrom url
-  ]
-    |> String.join ""
+  Exact <|
+    String.join ""
+      [ protocolFrom url
+      , url.host
+      , portFrom url
+      ]
 
 
 protocolFrom : Url -> String
@@ -105,6 +126,32 @@ portFrom url =
   url.port_
     |> Maybe.map (\p -> ":" ++ String.fromInt p)
     |> Maybe.withDefault ""
+
+
+queryFrom : Url -> RoutePart
+queryFrom url =
+  url.query
+    |> Maybe.map Exact
+    |> Maybe.withDefault None
+
+
+{-| Specify that the route must have some origin (but it doesn't matter what it is).
+
+For example, you could write a stub that matches any requests with some path,
+regardless of their origin, like so:
+
+    anyOriginStub =
+      Spec.Http.Stub.for (get "/some/cool/path" |> withAnyOrigin)
+        |> Spec.Http.Stub.withBody "{}"
+
+A request to `http://fun-place.com/some/cool/path` would be matched by this stub
+but a request to `/some/cool/path` (ie without any origin) would not.
+
+-}
+withAnyOrigin : HttpRoute -> HttpRoute
+withAnyOrigin (HttpRoute routeData) =
+  HttpRoute
+    { routeData | origin = Any }
 
 
 {-| Specify that the route must have some query string
@@ -136,23 +183,23 @@ encode : HttpRoute -> Encode.Value
 encode (HttpRoute routeData) =
   Encode.object
     [ ( "method", Encode.string routeData.method )
-    , ( "origin", Encode.string routeData.origin )
+    , ( "origin", encodeRoutePart routeData.origin )
     , ( "path", Encode.string routeData.path )
-    , ( "query", encodeQueryMatcher routeData.query )
+    , ( "query", encodeRoutePart routeData.query )
     ]
 
 
-encodeQueryMatcher : QueryMatcher -> Encode.Value
-encodeQueryMatcher queryMatcher =
-  case queryMatcher of
+encodeRoutePart : RoutePart -> Encode.Value
+encodeRoutePart routePart =
+  case routePart of
     None ->
       Encode.object
         [ ("type", Encode.string "NONE")
         ]
-    Exact query ->
+    Exact part ->
       Encode.object
         [ ("type", Encode.string "EXACT")
-        , ("value", Encode.string query)
+        , ("value", Encode.string part)
         ]
     Any ->
       Encode.object
@@ -164,12 +211,26 @@ encodeQueryMatcher queryMatcher =
 -}
 toString : HttpRoute -> String
 toString (HttpRoute routeData) =
-  routeData.method ++ " " ++ routeData.origin ++ routeData.path ++ (queryMatcherToString routeData.query)
+  routeData.method ++ " "
+    ++ (originPartToString routeData.origin)
+    ++ routeData.path
+    ++ (queryPartToString routeData.query)
 
 
-queryMatcherToString : QueryMatcher -> String
-queryMatcherToString queryMatcher =
-  case queryMatcher of
+originPartToString : RoutePart -> String
+originPartToString routePart =
+  case routePart of
+    None ->
+      ""
+    Exact part ->
+      part
+    Any ->
+      "*"
+
+
+queryPartToString : RoutePart -> String
+queryPartToString routePart =
+  case routePart of
     None ->
       ""
     Exact query ->

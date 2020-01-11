@@ -478,16 +478,117 @@ routeQuerySpec =
   ]
 
 
-routePathSpec : Spec Model Msg
-routePathSpec =
+routeOriginSpec : Spec Model Msg
+routeOriginSpec =
   Spec.describe "route path"
-  [ scenario "matches request that's just a path" (
+  [ scenario "matches request with no origin, just a path" (
       given (
         testSubject (getRequestTo "/some/awesome/path" [])
           [ successStubRoute (get "/some/awesome/path") ]
       )
       |> whenTheRequestIsTriggered
-      |> itReceivesTheStubbedResponse
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "/some/awesome/path")
+        ]
+    )
+  , scenario "does not match path that contains path at end" (
+      given (
+        testSubject (getRequestTo "/api/some/awesome/path" [])
+          [ successStubRoute (get "/some/awesome/path") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "/some/awesome/path")
+        ]
+    )
+  , scenario "does not match path that contains path at beginning" (
+      given (
+        testSubject (getRequestTo "/some/awesome/path/and/something" [])
+          [ successStubRoute (get "/some/awesome/path") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "/some/awesome/path")
+        ]
+    )
+  , scenario "fails to match request with path from any origin" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/some/awesome/path" [])
+          [ successStubRoute (get "/some/awesome/path") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "/some/awesome/path")
+        ]
+    )
+  , scenario "fails to match request to path when looking for any origin" (
+      given (
+        testSubject (getRequestTo "/some/awesome/path" [])
+          [ successStubRoute (get "/some/awesome/path" |> withAnyOrigin) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "/some/awesome/path" |> withAnyOrigin)
+        ]
+    )
+  , scenario "fails to match subset of path from any origin" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/some/cool/awesome/path" [])
+          [ successStubRoute (get "/cool/awesome/path" |> withAnyOrigin) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "/cool/awesome/path" |> withAnyOrigin)
+        ]
+    )
+  , scenario "matches request with path and query string from any origin" (
+      given (
+        testSubject (getRequestTo "http://fake.my-api.on_some_domain.com:9090/some/awesome/path" [ ("activity", "running") ])
+          [ successStubRoute (get "/some/awesome/path?activity=running" |> withAnyOrigin) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "/some/awesome/path?activity=running" |> withAnyOrigin)
+        ]
+    )
+  , scenario "matches request with path and any query string from any origin" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/some/awesome/path" [ ("activity", "running") ])
+          [ successStubRoute (get "/some/awesome/path" |> withAnyOrigin |> withAnyQuery) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "/some/awesome/path" |> withAnyOrigin |> withAnyQuery)
+        ]
+    )
+  , scenario "fails to observe request from any origin with wrong path" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/some/cool/path" []) []
+      )
+      |> whenTheRequestIsTriggered
+      |> it "fails to observe a request" (
+          Spec.Http.observeRequests (get "/some/awesome/path" |> withAnyOrigin)
+            |> expect (isListWithLength 1)
+      )
+    )
+  , scenario "overrides exact origin to match any" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/some/awesome/path" [ ("activity", "running") ])
+          [ successStubRoute (get "http://some-other-place.com/some/awesome/path" |> withAnyOrigin |> withAnyQuery) ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://some-other-place.com/some/awesome/path" |> withAnyOrigin |> withAnyQuery)
+        ]
     )
   ]
 
@@ -568,6 +669,20 @@ itReceivesTheStubbedResponse =
           }
         ]
       )
+  )
+
+
+itObservesTheRequest route =
+  it "observes the request" (
+    Spec.Http.observeRequests route
+      |> expect (isListWithLength 1)
+  )
+
+
+itDoesNotObserveTheRequest route =
+  it "observes no requests" (
+    Spec.Http.observeRequests route
+      |> expect (isListWithLength 0)
   )
 
 
@@ -655,7 +770,7 @@ selectSpec name =
     "header" -> Just headerStubSpec
     "queryParams" -> Just queryParamsSpec
     "routeQuery" -> Just routeQuerySpec
-    "routePath" -> Just routePathSpec
+    "routeOrigin" -> Just routeOriginSpec
     _ -> Nothing
 
 

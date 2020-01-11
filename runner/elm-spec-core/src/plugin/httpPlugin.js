@@ -78,7 +78,24 @@ const buildRequest = (request) => {
 }
 
 const regexForRoute = (route) => {
-  let urlRegexp = '^' + escape(route.origin + route.path)
+  let urlRegexp = ''
+
+  switch (route.origin.type) {
+    case "ANY": {
+      urlRegexp += '^[a-zA-Z]+:\\/\\/[a-zA-Z0-9-._:]+'
+      break
+    }
+    case "EXACT": {
+      urlRegexp += '^' + escape(route.origin)
+      break
+    }
+    case "NONE": {
+      urlRegexp += '^'
+      break
+    }
+  }
+
+  urlRegexp += escape(route.path)
 
   switch (route.query.type) {
     case "ANY": {
