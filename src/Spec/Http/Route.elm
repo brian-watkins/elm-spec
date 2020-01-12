@@ -3,6 +3,8 @@ module Spec.Http.Route exposing
   , get
   , post
   , route
+  , PathComponent(..)
+  , withPath
   , withAnyOrigin
   , withAnyQuery
   , encode
@@ -14,7 +16,7 @@ module Spec.Http.Route exposing
 @docs HttpRoute
 
 # Define a Route
-@docs get, post, route, withAnyOrigin, withAnyQuery
+@docs get, post, route, withAnyOrigin, withAnyQuery, PathComponent, withPath
 
 # Work with Routes
 @docs encode, toString
@@ -31,9 +33,18 @@ type HttpRoute =
   HttpRoute
     { method: String
     , origin: RoutePart
-    , path: String
+    , path: List PathComponent
     , query: RoutePart
     }
+
+
+{-| Define a segment of a path.
+
+Use this type in conjunction with `Spec.Http.Route.withPath` to define a path.
+-}
+type PathComponent
+  = Segment String
+  | Variable String
 
 
 type RoutePart
@@ -68,7 +79,7 @@ route method urlString =
       HttpRoute
         { method = method
         , origin = originFrom url
-        , path = url.path
+        , path = pathFrom url
         , query = queryFrom url
         }
     Nothing ->
@@ -78,7 +89,7 @@ route method urlString =
         HttpRoute
           { method = method
           , origin = None
-          , path = urlString
+          , path = []
           , query = None
           }
 
@@ -90,16 +101,25 @@ routeFromPath method path =
       HttpRoute
         { method = method
         , origin = None
-        , path = url.path
+        , path = pathFrom url
         , query = queryFrom url
         }
     Nothing ->
       HttpRoute
         { method = method
         , origin = None
-        , path = path
+        , path = []
         , query = None
         }
+
+
+pathFrom : Url -> List PathComponent
+pathFrom url =
+  url.path
+    |> String.dropLeft 1
+    |> String.split "/"
+    |> List.filter (not << String.isEmpty)
+    |> List.map Segment
 
 
 originFrom : Url -> RoutePart
@@ -133,6 +153,29 @@ queryFrom url =
   url.query
     |> Maybe.map Exact
     |> Maybe.withDefault None
+
+
+{-| Specify the route's path.
+
+Use this function to specify the route when you want to observe path variables.
+
+    Spec.Http.observeRequests (
+      get "http://fun.com"
+        |> withPath
+          [ Exactly "books"
+          , VariableNamed "id"
+          ]
+    )
+      |> Spec.expect (Spec.Claim.isListWhere
+        [ Spec.Http.pathVariable "id" <|
+            Spec.Claim.isEqual Debug.toString "27"
+        ]
+      )
+-}
+withPath : List PathComponent -> HttpRoute -> HttpRoute
+withPath components (HttpRoute routeData) =
+  HttpRoute
+    { routeData | path = components }
 
 
 {-| Specify that the route must have some origin (but it doesn't matter what it is).
@@ -184,9 +227,24 @@ encode (HttpRoute routeData) =
   Encode.object
     [ ( "method", Encode.string routeData.method )
     , ( "origin", encodeRoutePart routeData.origin )
-    , ( "path", Encode.string routeData.path )
+    , ( "path", Encode.list encodePathComponent routeData.path )
     , ( "query", encodeRoutePart routeData.query )
     ]
+
+
+encodePathComponent : PathComponent -> Encode.Value
+encodePathComponent component =
+  case component of
+    Segment segment ->
+      Encode.object
+        [ ("type", Encode.string "EXACT")
+        , ("value", Encode.string segment)
+        ]
+    Variable name ->
+      Encode.object
+        [ ("type", Encode.string "VARIABLE")
+        , ("value", Encode.string name)
+        ]
 
 
 encodeRoutePart : RoutePart -> Encode.Value
@@ -213,7 +271,7 @@ toString : HttpRoute -> String
 toString (HttpRoute routeData) =
   routeData.method ++ " "
     ++ (originPartToString routeData.origin)
-    ++ routeData.path
+    ++ (List.map pathComponentToString routeData.path |> String.join "")
     ++ (queryPartToString routeData.query)
 
 
@@ -226,6 +284,15 @@ originPartToString routePart =
       part
     Any ->
       "*"
+
+
+pathComponentToString : PathComponent -> String
+pathComponentToString component =
+  case component of
+    Segment segment ->
+      "/" ++ segment
+    Variable name ->
+      "/:" ++ name
 
 
 queryPartToString : RoutePart -> String

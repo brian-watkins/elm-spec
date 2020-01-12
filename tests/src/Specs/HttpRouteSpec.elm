@@ -119,7 +119,7 @@ routeQuerySpec =
 
 routeOriginSpec : Spec Model Msg
 routeOriginSpec =
-  Spec.describe "route path"
+  Spec.describe "route origin"
   [ scenario "matches request with no origin, just a path" (
       given (
         testSubject (getRequestTo "/some/awesome/path" [])
@@ -227,6 +227,264 @@ routeOriginSpec =
       |> observeThat
         [ itReceivesTheStubbedResponse
         , itObservesTheRequest (get "http://some-other-place.com/some/awesome/path" |> withAnyOrigin |> withAnyQuery)
+        ]
+    )
+  , scenario "it matches an origin alone with trailing slash" (
+      given (
+        testSubject (getRequestTo "http://fun-town.com/" [])
+          [ successStubRoute (get "http://fun-town.com") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fun-town.com")
+        ]
+    )
+  , scenario "it matches an origin alone without a trailing slash" (
+      given (
+        testSubject (getRequestTo "http://fun-town.com" [])
+          [ successStubRoute (get "http://fun-town.com/") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fun-town.com/")
+        ]
+    )
+  , scenario "it does not match an origin alone when there is a path" (
+      given (
+        testSubject (getRequestTo "http://fun-town.com/" [])
+          [ successStubRoute (get "http://fun-town.com/fun") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "http://fun-town.com/fun")
+        ]
+    )
+  , scenario "dot in the last path component" (
+      given (
+        testSubject (getRequestTo "http://fun-town.com/funny/funngif" [])
+          [ successStubRoute (get "http://fun-town.com/funny/fun.gif") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "http://fun-town.com/funny/fun.gif")
+        ]
+    )
+  , scenario "dot in a middle path component" (
+      given (
+        testSubject (getRequestTo "http://fun-town.com/funny/things" [])
+          [ successStubRoute (get "http://fun-town.com/fun.y/things") ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itDoesNotReceiveTheStubbResponse
+        , itDoesNotObserveTheRequest (get "http://fun-town.com/fun.y/things")
+        ]
+    )
+  ]
+
+
+routePathSpec : Spec Model Msg
+routePathSpec =
+  Spec.describe "route path"
+  [ scenario "claim about path variable is accepted" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/awesome/stuff/21/children" [])
+          [ successStubRoute
+            ( get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable ""
+                  , Segment "children"
+                  ]
+            )
+          ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , it "accepts good claims about the path variable" (
+            Spec.Http.observeRequests (
+              get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  , Segment "children"
+                  ]
+              )
+              |> expect (isListWhere
+                [ Spec.Http.pathVariable "id" <| equals "21"
+                ]
+              )
+          )
+        , it "rejects bad claims about the path variable" (
+            Spec.Http.observeRequests (
+              get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  , Segment "children"
+                  ]
+              )
+              |> expect (isListWhere
+                [ Spec.Http.pathVariable "id" <| equals "nothing"
+                ]
+              )
+          )
+        , it "rejects the claim if the path variable is not found" (
+            Spec.Http.observeRequests (
+              get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  , Segment "children"
+                  ]
+              )
+              |> expect (isListWhere
+                [ Spec.Http.pathVariable "something-else" <| equals "nothing"
+                ]
+              )
+          )
+        ]
+    )
+  , scenario "path variables with a query string" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/awesome/stuff/21/children" [ ("treat", "cake") ])
+          [ successStubRoute
+            ( get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  , Segment "children"
+                  ]
+                |> withAnyQuery
+            )
+          ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fake-api.com"
+            |> withPath
+              [ Segment "awesome"
+              , Segment "stuff"
+              , Variable "id"
+              , Segment "children"
+              ]
+            |> withAnyQuery
+          )
+        ]
+    )
+  , scenario "request path has trailing slash" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/awesome/stuff/21/children/" [])
+          [ successStubRoute
+            ( get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  , Segment "children"
+                  ]
+            )
+          ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fake-api.com"
+            |> withPath
+              [ Segment "awesome"
+              , Segment "stuff"
+              , Variable "id"
+              , Segment "children"
+              ]
+          )
+        ]
+    )
+  , scenario "path variable is at the end of the path and there is a trailing slash" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/awesome/stuff/21-things/" [])
+          [ successStubRoute
+            ( get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  ]
+            )
+          ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fake-api.com"
+            |> withPath
+              [ Segment "awesome"
+              , Segment "stuff"
+              , Variable "id"
+              ]
+          )
+        ]
+    )
+  , scenario "path variable is at the end of the path and there is no trailing slash" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/awesome/stuff/21-things" [])
+          [ successStubRoute
+            ( get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  ]
+            )
+          ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fake-api.com"
+            |> withPath
+              [ Segment "awesome"
+              , Segment "stuff"
+              , Variable "id"
+              ]
+          )
+        ]
+    )
+  , scenario "path variable is at the end of the path and there is a query" (
+      given (
+        testSubject (getRequestTo "http://fake-api.com/awesome/stuff/21-things" [ ("treat", "cake") ])
+          [ successStubRoute
+            ( get "http://fake-api.com"
+                |> withPath
+                  [ Segment "awesome"
+                  , Segment "stuff"
+                  , Variable "id"
+                  ]
+                |> withAnyQuery
+            )
+          ]
+      )
+      |> whenTheRequestIsTriggered
+      |> observeThat
+        [ itReceivesTheStubbedResponse
+        , itObservesTheRequest (get "http://fake-api.com"
+            |> withPath
+              [ Segment "awesome"
+              , Segment "stuff"
+              , Variable "id"
+              ]
+            |> withAnyQuery
+          )
         ]
     )
   ]
@@ -367,6 +625,7 @@ selectSpec name =
     "queryParams" -> Just queryParamsSpec
     "routeQuery" -> Just routeQuerySpec
     "routeOrigin" -> Just routeOriginSpec
+    "routePath" -> Just routePathSpec
     _ -> Nothing
 
 

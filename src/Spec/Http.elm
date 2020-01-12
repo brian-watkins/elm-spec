@@ -1,11 +1,11 @@
 module Spec.Http exposing
   ( HttpRequest
-  , RequestBody
   , observeRequests
   , header
   , stringBody
   , jsonBody
   , queryParameter
+  , pathVariable
   )
 
 {-| Observe, and make claims about HTTP requests during a spec.
@@ -47,13 +47,13 @@ Now, you could write a spec that checks to see if the request body contains a va
     ]
 
 # Observe HTTP Requests
-@docs HttpRequest, RequestBody, observeRequests
+@docs HttpRequest, observeRequests
 
 # Make Claims About HTTP Requests
 @docs stringBody, jsonBody, header
 
 # Make Claims about an HTTP Request's Route
-@docs queryParameter
+@docs queryParameter, pathVariable
 
 -}
 
@@ -74,10 +74,15 @@ import Url.Parser.Query
 
 {-| Represents an HTTP request made by the program in the course of the scenario.
 -}
-type alias HttpRequest =
+type HttpRequest
+  = HttpRequest RequestData
+
+
+type alias RequestData =
   { url: String
   , headers: Dict String String
   , body: RequestBody
+  , pathVariables: Dict String String
   }
 
 
@@ -102,7 +107,7 @@ would be accepted.
 -}
 header : String -> Claim (Maybe String) -> Claim HttpRequest
 header name claim =
-  \request ->
+  \(HttpRequest request) ->
     Dict.get name request.headers
       |> claim
       |> Claim.mapRejection (\report -> Report.batch
@@ -112,7 +117,7 @@ header name claim =
         ]
       )
 
-headerList : HttpRequest -> String
+headerList : RequestData -> String
 headerList request =
   Dict.toList request.headers
     |> List.map (\(k, v) -> k ++ " = " ++ v)
@@ -126,7 +131,7 @@ against the empty string.
 -}
 stringBody : Claim String -> Claim HttpRequest
 stringBody claim =
-  \request ->
+  \(HttpRequest request) ->
     case request.body of
       EmptyBody ->
         evaluateStringBodyClaim claim ""
@@ -158,7 +163,7 @@ would be accepted.
 -}
 jsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
 jsonBody decoder claim =
-  \request ->
+  \(HttpRequest request) ->
     case request.body of
       EmptyBody ->
         Claim.Reject <| Report.batch
@@ -213,10 +218,12 @@ fetchRequestsFor route =
 
 requestDecoder : Json.Decoder HttpRequest
 requestDecoder =
-  Json.map3 HttpRequest
+  Json.map4 RequestData
     ( Json.field "url" Json.string )
     ( Json.field "headers" <| Json.dict Json.string )
     ( Json.field "body" requestBodyDecoder )
+    ( Json.field "pathVariables" <| Json.dict Json.string )
+  |> Json.map HttpRequest
 
 
 requestBodyDecoder : Json.Decoder RequestBody
@@ -243,7 +250,7 @@ then the following claim would be satisfied:
 -}
 queryParameter : String -> Claim (List String) -> Claim HttpRequest
 queryParameter name claim =
-  \request ->
+  \(HttpRequest request) ->
     case Url.fromString request.url of
       Just url ->
         queryParameterValues name url
@@ -263,3 +270,22 @@ queryParameterValues param url =
     |> Url.Parser.parse (Url.Parser.query <| Url.Parser.Query.custom param identity) 
     |> Maybe.withDefault []
 
+
+{-| Claim that a path variable has a value that satisfies the given claim.
+-}
+pathVariable : String -> Claim String -> Claim HttpRequest
+pathVariable name claim =
+  \(HttpRequest request) ->
+    case Dict.get name request.pathVariables of
+      Just value ->
+        claim value
+          |> Claim.mapRejection (\report -> Report.batch
+            [ Report.fact "Claim rejected for path variable" name
+            , report
+            ]
+          )
+      Nothing ->
+        Claim.Reject <| Report.batch
+          [ Report.fact "No path variable defined with the name" name
+          , Report.note "Make sure to use Spec.Http.Route.withPath and Spec.Http.Route.Variable to define a path variable"
+          ]

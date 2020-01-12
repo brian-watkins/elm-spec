@@ -1,4 +1,5 @@
 const nise = require('nise')
+const { gatherPathVariables, regexForRoute } = require('./httpRoute')
 
 const fakeServerForGlobalContext = function(window) {
   const server = nise.fakeServer.create()
@@ -53,7 +54,7 @@ module.exports = class HttpPlugin {
             if (request.method !== route.method) return false
             return routeRegex.test(request.url)
           })
-          .map(buildRequest)
+          .map(buildRequest(route))
 
         out({
           home: "_http",
@@ -69,53 +70,11 @@ module.exports = class HttpPlugin {
   }
 }
 
-const buildRequest = (request) => {
+const buildRequest = (route) => (request) => {
   return {
     url: request.url,
     headers: request.requestHeaders,
-    body: request.requestBody || null
+    body: request.requestBody || null,
+    pathVariables: gatherPathVariables(route, request.url)
   }
-}
-
-const regexForRoute = (route) => {
-  let urlRegexp = ''
-
-  switch (route.origin.type) {
-    case "ANY": {
-      urlRegexp += '^[a-zA-Z]+:\\/\\/[a-zA-Z0-9-._:]+'
-      break
-    }
-    case "EXACT": {
-      urlRegexp += '^' + escape(route.origin)
-      break
-    }
-    case "NONE": {
-      urlRegexp += '^'
-      break
-    }
-  }
-
-  urlRegexp += escape(route.path)
-
-  switch (route.query.type) {
-    case "ANY": {
-      urlRegexp += '\\?.*$'
-      break
-    }
-    case "EXACT": {
-      urlRegexp += '\\?' + route.query.value + "$"
-      break
-    }
-    case "NONE": {
-      urlRegexp += "$"
-    }
-  }
-
-  return new RegExp(urlRegexp)
-}
-
-const escape = (part) => {
-  return part
-    .replace(/\//g, '\\/')
-    .replace(/\./g, '\\.')
 }

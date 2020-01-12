@@ -74,6 +74,48 @@ describe("Http Route", () => {
         ])
         expectAccepted(observations[17])
         expectAccepted(observations[18])
+        expectAccepted(observations[19])
+        expectAccepted(observations[20])
+        expectAccepted(observations[21])
+        expectAccepted(observations[22])
+        expectAccepted(observations[23])
+        expectAccepted(observations[24])
+        expectAccepted(observations[25])
+        expectAccepted(observations[26])
+        expectAccepted(observations[27])
+        expectAccepted(observations[28])
+      })
+    })
+  })
+
+  context("route path", () => {
+    it("matches the route as expected", (done) => {
+      expectSpec("HttpRouteSpec", "routePath", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectRejected(observations[2], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/awesome/stuff/:id/children"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for path variable", "id"),
+          reportLine("Expected", "\"21\""),
+          reportLine("to equal", "\"nothing\"")
+        ])
+        expectRejected(observations[3], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/awesome/stuff/:id/children"),
+          reportLine("List failed to match at position 1"),
+          reportLine("No path variable defined with the name", "something-else"),
+          reportLine("Make sure to use Spec.Http.Route.withPath and Spec.Http.Route.Variable to define a path variable")
+        ])
+        expectAccepted(observations[4])
+        expectAccepted(observations[5])
+        expectAccepted(observations[6])
+        expectAccepted(observations[7])
+        expectAccepted(observations[8])
+        expectAccepted(observations[9])
+        expectAccepted(observations[10])
+        expectAccepted(observations[11])
+        expectAccepted(observations[12])
+        expectAccepted(observations[13])
       })
     })
   })
