@@ -5,6 +5,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Claim exposing (isStringContaining)
 import Application exposing (Model, Msg)
 import Url
 import Runner
@@ -29,7 +30,7 @@ navigationSpec =
       |> it "shows a different page" (
         Markup.observeElement
           |> Markup.query << by [ id "fun-page" ]
-          |> expect ( Markup.hasText "bowling" )
+          |> expect ( Markup.text <| isStringContaining 1 "bowling" )
       )
     )
   ]

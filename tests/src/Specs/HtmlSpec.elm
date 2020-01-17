@@ -29,12 +29,12 @@ htmlSpecSingle =
         [ it "renders the name based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-name" ]
-              |> expect (Markup.hasText "Hello, Cool Dude!")
+              |> expect (Markup.text <| equals "Hello, Cool Dude!")
           )
         , it "does not find an element that is not there" (
             Markup.observeElement
               |> Markup.query << by [ id "something-not-present" ]
-              |> expect (Markup.hasText "Hello, Cool Dude!")
+              |> expect (Markup.text <| equals "Hello, Cool Dude!")
           )
         ]
     )
@@ -53,12 +53,12 @@ htmlSpecMultiple =
         [ it "renders the name based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-name" ]
-              |> expect (Markup.hasText "Hello, Cool Dude!")
+              |> expect (Markup.text <| equals "Hello, Cool Dude!")
           )
         , it "renders the count based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-count" ]
-              |> expect (Markup.hasText "The count is 78!")
+              |> expect (Markup.text <| equals "The count is 78!")
           )
         ]
     )
@@ -71,12 +71,12 @@ htmlSpecMultiple =
         [ it "finds a third thing" (
             Markup.observeElement
               |> Markup.query << by [ id "my-label" ]
-              |> expect (Markup.hasText "Here is a label")
+              |> expect (Markup.text <| equals "Here is a label")
           )
         , it "finds a fourth thing" (
             Markup.observeElement
               |> Markup.query << by [ id "my-label-2" ]
-              |> expect (Markup.hasText "Another label")
+              |> expect (Markup.text <| equals "Another label")
           )
         ]
     )
@@ -105,7 +105,7 @@ targetUnknownSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "my-count" ]
-          |> expect (Markup.hasText "The count is 30!")
+          |> expect (Markup.text <| equals "The count is 30!")
       )
     )
   , scenario "Should run even though previous spec was rejected" (
@@ -117,7 +117,7 @@ targetUnknownSpec =
       |> it "should pass" (
           Markup.observeElement
             |> Markup.query << by [ id "my-name" ]
-            |> expect (Markup.hasText "Hello, Cool Dude!")
+            |> expect (Markup.text <| equals "Hello, Cool Dude!")
       )
     )
   ]
@@ -141,7 +141,7 @@ subSpec =
         [ it "renders the count" (
             Markup.observeElement
               |> Markup.query << by [ id "my-count" ]
-              |> expect (Markup.hasText "The count is 40!")
+              |> expect (Markup.text <| equals "The count is 40!")
           )
         , it "updates the model" (
             Observer.observeModel .count
@@ -173,7 +173,7 @@ manyElementsSpec =
               |> expect (\elements ->
                 List.drop 2 elements
                   |> List.head
-                  |> Maybe.map (Markup.hasText "The count is 7!")
+                  |> Maybe.map (Markup.text <| equals "The count is 7!")
                   |> Maybe.withDefault (Claim.Reject <| Report.note "Element not found!")
               )
           )
@@ -249,7 +249,7 @@ failingSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "my-label" ]
-          |> expect (Markup.hasText "something else")
+          |> expect (Markup.text <| equals "something else")
       )
     )
   , scenario "some other scenario that passes" (
@@ -261,7 +261,7 @@ failingSpec =
       |> it "passes" (
         Markup.observeElement
           |> Markup.query << by [ id "my-label" ]
-          |> expect (Markup.hasText "Here is a label")
+          |> expect (Markup.text <| equals "Here is a label")
       )
     )
   ]
@@ -285,7 +285,7 @@ elementLinkSpec =
       |> it "handles the clicks" (
         Markup.observeElement
           |> Markup.query << by [ id "count" ]
-          |> expect (Markup.hasText "Count: 3")
+          |> expect (Markup.text <| equals "Count: 3")
       )
     )
   ]
@@ -303,7 +303,7 @@ elementInternalLinkFailureSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "count" ]
-          |> expect (Markup.hasText "Count: 3")
+          |> expect (Markup.text <| equals "Count: 3")
       )
     )
   ]
@@ -321,7 +321,7 @@ elementExternalLinkFailureSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "count" ]
-          |> expect (Markup.hasText "Count: 3")
+          |> expect (Markup.text <| equals "Count: 3")
       )
     )
   ]

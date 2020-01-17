@@ -5,6 +5,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Claim exposing (isStringContaining)
 import Runner
 import Main as App
 
@@ -28,7 +29,7 @@ clickSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "count-results" ]
-          |> expect (Markup.hasText "You clicked the button 3 time(s)")
+          |> expect (Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
       )
     )
   ]

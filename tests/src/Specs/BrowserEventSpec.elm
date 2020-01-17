@@ -37,7 +37,7 @@ keyboardEventsSpec =
       |> it "handles the event" (
         Markup.observeElement
           |> Markup.query << by [ id "message" ]
-          |> expect (Markup.hasText "You wrote: ABACAB")
+          |> expect (Markup.text <| equals "You wrote: ABACAB")
       )
     )
   ]
@@ -267,7 +267,7 @@ noHandlerSpec =
       |> it "does nothing" (
         Markup.observeElement
           |> Markup.query << by [ id "message" ]
-          |> expect (Markup.hasText "You wrote")
+          |> expect (Markup.text <| equals "You wrote: ")
       )
     )
   ]

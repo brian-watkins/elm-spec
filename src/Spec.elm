@@ -33,7 +33,9 @@ Here's a sample spec for a browser program called `App`:
         |> Spec.it "does the right thing" (
           Spec.Markup.observeElement
             |> Spec.Markup.query << by [ id "some-words" ]
-            |> Spec.expect (Spec.Markup.hasText "something awesome")
+            |> Spec.expect (Spec.Markup.text <| 
+              Spec.Claim.isStringContaining "something awesome"
+            )
         )
       )
     ]

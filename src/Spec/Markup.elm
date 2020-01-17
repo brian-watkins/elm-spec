@@ -5,12 +5,10 @@ module Spec.Markup exposing
   , observe
   , observeElement
   , observeElements
-  , property
   , query
   , target
+  , property
   , text
-  , hasText
-  , hasAttribute
   , attribute
   )
 
@@ -23,7 +21,7 @@ module Spec.Markup exposing
 @docs MarkupObservation, observeElements, observeElement, observe, query, observeTitle
 
 # Make Claims about an HTML Element
-@docs HtmlElement, hasText, text, hasAttribute, attribute, property
+@docs HtmlElement, text, attribute, property
 
 -}
 
@@ -98,7 +96,9 @@ observe =
 
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ attribute ("data-attr", "some-value") ]
-      |> Spec.expect (Spec.Markup.hasText "something fun")
+      |> Spec.expect (Spec.Markup.text <| 
+        Spec.Claim.isEqual Debug.toString "something fun"
+      )
 
 If the element cannot be found in the document, the claim will be rejected.
 -}
@@ -213,16 +213,6 @@ htmlDecoder =
   Json.map HtmlElement <| Json.value
 
 
-{-| Claim that the text belonging to the HTML element contains the given text. 
-
-Note that the text belonging to an observed HTML element includes the text
-belonging to all its descendants.
--}
-hasText : String -> Claim HtmlElement
-hasText expectedText =
-  text <| Claim.isStringContaining 1 expectedText
-
-
 {-| Claim that the HTML element's text satisfies the given claim.
 
     Spec.Markup.observeElement
@@ -248,36 +238,6 @@ text claim =
           )
       Err err ->
         Claim.Reject <| Report.fact "Unable to decode JSON for text" <| Json.errorToString err
-
-
-{-| Claim that the HTML element has the given attribute with the given value.
-
-    Spec.Markup.observeElement
-      |> Spec.Markup.query << by [ tag "div" ]
-      |> Spec.expect (
-        Spec.Markup.hasAttribute ("class", "red")
-      )
-
--}
-hasAttribute : ( String, String ) -> Claim HtmlElement
-hasAttribute ( expectedName, expectedValue ) =
-  \element ->
-    attribute expectedName (\maybeValue ->
-      case maybeValue of
-        Just actualValue ->
-          if expectedValue == actualValue then
-            Claim.Accept
-          else
-            Claim.Reject <| Report.batch
-              [ Report.fact "Expected attribute to have value" expectedValue
-              , Report.fact "but it has" actualValue
-              ]
-        Nothing ->
-          Claim.Reject <| Report.batch
-            [ Report.fact "Expected attribute to have value" expectedValue
-            , Report.note "but the element has no such attribute"
-            ]
-    ) element
 
 
 {-| Claim that the specified attribute value satisfies the given claim.

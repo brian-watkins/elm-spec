@@ -39,7 +39,7 @@ could write a scenario like so:
           , Spec.it "shows the message received" (
               Spec.Markup.observeElement
                 |> Spec.Markup.query << by [ id "message" ]
-                |> Spec.expect (Spec.Markup.hasText "Have fun!")
+                |> Spec.expect (Spec.Markup.text <| equals "Have fun!")
             )
           ]
       )

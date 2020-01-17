@@ -2,13 +2,14 @@ module Specs.HtmlTimeSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Markup as Markup exposing (hasText)
+import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Runner
+import Specs.Helpers exposing (..)
 import Time exposing (Posix)
 
 
@@ -31,7 +32,7 @@ intervalSpec =
       |> it "updates the count" (
         Markup.observeElement
           |> Markup.query << by [ id "seconds-passed" ]
-          |> expect (hasText "4 seconds passed")
+          |> expect (Markup.text <| equals "4 seconds passed")
       )
     )
   ]

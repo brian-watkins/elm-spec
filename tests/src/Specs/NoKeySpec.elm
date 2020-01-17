@@ -18,6 +18,7 @@ import Browser.Navigation exposing (Key)
 import Url exposing (Url)
 import Url.Parser exposing ((</>))
 import Url.Builder
+import Specs.Helpers exposing (..)
 import Runner as TestRunner
 
 
@@ -36,7 +37,7 @@ applicationSpec =
         [ it "renders the view based on the url" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.hasText "reading" )
+              |> expect ( Markup.text <| equals "reading" )
           )
         ]
     )

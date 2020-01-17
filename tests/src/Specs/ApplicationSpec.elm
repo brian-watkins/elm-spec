@@ -2,7 +2,7 @@ module Specs.ApplicationSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Claim as Claim
+import Spec.Claim as Claim exposing (isStringContaining)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -41,7 +41,7 @@ applyGivenUrlSpec =
         , it "renders the view based on the url" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.hasText "reading" )
+              |> expect ( Markup.text <| isStringContaining 1 "reading" )
           )
         ]
     )
@@ -77,7 +77,7 @@ changeUrlSpec =
         , it "shows a different page" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.hasText "bowling" )
+              |> expect ( Markup.text <| isStringContaining 1 "bowling" )
           )
         ]
     )
@@ -91,7 +91,7 @@ changeUrlSpec =
           [ it "shows a different page" (
               Markup.observeElement
                 |> Markup.query << by [ id "fun-page" ]
-                |> expect ( Markup.hasText "swimming" )
+                |> expect ( Markup.text <| isStringContaining 1 "swimming" )
             )
           ]
     )
@@ -147,7 +147,7 @@ clickLinkSpec =
         , it "navigates as expected" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.hasText "running" )
+              |> expect ( Markup.text <| isStringContaining 1 "running" )
           )
         ]
     )
@@ -215,7 +215,7 @@ noNavigationConfigSpec =
         , it "updates the view to show we are on some other page" (
             Markup.observeElement
               |> Markup.query << by [ tag "body" ]
-              |> expect (Markup.hasText "[Navigated to a page outside the control of the Elm program: http://my-test-app.com/fun/running]")
+              |> expect (Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://my-test-app.com/fun/running]")
           )
         ]
     )
@@ -238,7 +238,7 @@ noNavigationConfigSpec =
         , it "updates the view to show we are on some other page" (
             Markup.observeElement
               |> Markup.query << by [ tag "body" ]
-              |> expect (Markup.hasText "[Navigated to a page outside the control of the Elm program: http://fun-town.org/fun]")
+              |> expect (Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://fun-town.org/fun]")
           )
         ]
     )
