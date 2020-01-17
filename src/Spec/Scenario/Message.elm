@@ -2,6 +2,7 @@ module Spec.Scenario.Message exposing
   ( isScenarioMessage
   , startScenario
   , configureComplete
+  , configMessage
   , stepMessage
   , startObservation
   , abortScenario
@@ -20,6 +21,16 @@ isScenarioMessage =
 configureComplete : Message
 configureComplete =
   scenarioStateMessage "CONFIGURE_COMPLETE"
+
+
+configMessage : Message -> Message
+configMessage message =
+  Message.for "_scenario" "configure"
+    |> Message.withBody (
+      Encode.object
+        [ ("message", Message.encode message)
+        ]
+    )
 
 
 stepMessage : Message -> Message

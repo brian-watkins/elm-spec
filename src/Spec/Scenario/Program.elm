@@ -58,7 +58,10 @@ start config maybeKey scenario =
       )
     Err error ->
       ( Ready
-      , abortWith config <| Report.note error
+      , Report.note error
+          |> abortWith [] "Scenario Failed" 
+          |> List.map config.send
+          |> Cmd.batch
       )
 
 
@@ -135,6 +138,8 @@ update config msg state =
       case state of
         Start scenario subject ->
           case Configure.init scenario subject of
+            ( updated, Send message ) ->
+              ( Configure updated, config.send message )
             ( updated, SendMany messages ) ->
               ( Configure updated, Cmd.batch <| List.map config.send messages )
             ( updated, _ ) ->
@@ -153,16 +158,28 @@ update config msg state =
     Abort report ->
       case state of
         Exercise model ->
-          case Exercise.update config.outlet msg model of
-            ( updated, SendMany messages ) ->
-              ( Finished <| Finished.init updated.subject updated.programModel
-              , Cmd.batch <| List.map config.send messages
-              )
-            ( updated, _ ) ->
-              badState config state
+          ( Finished <| Finished.init model.subject model.programModel
+          , abortWith model.conditionsApplied "A spec step failed" report
+              |> List.map config.send
+              |> Cmd.batch
+          )
+        Configure model ->
+          ( Ready
+          , abortWith [ model.scenario.specification, model.scenario.description ] "Unable to configure scenario" report
+              |> List.map config.send
+              |> Cmd.batch
+          )
+        Observe model ->
+          ( Finished <| Finished.init model.subject model.programModel
+          , abortWith (model.conditionsApplied ++ [ model.currentDescription ]) "Unable to complete observation" report
+              |> List.map config.send
+              |> Cmd.batch
+          )
         _ ->
           ( Ready
-          , abortWith config report
+          , abortWith [] "Scenario Failed" report
+              |> List.map config.send
+              |> Cmd.batch
           )
 
     OnUrlChange _ ->
@@ -184,11 +201,12 @@ update config msg state =
           badState config state
 
 
-abortWith : Config msg programMsg -> Report -> Cmd msg
-abortWith config report =
-  Claim.Reject report
-    |> Message.observation [] "Scenario Failed"
-    |> config.send
+abortWith : List String -> String -> Report -> List Message
+abortWith conditions description report =
+  [ Claim.Reject report
+      |> Message.observation conditions description
+  , Message.abortScenario
+  ]
 
 
 exerciseUpdate : Config msg programMsg -> Msg programMsg -> Exercise.Model model programMsg -> ( Model model programMsg, Cmd msg )

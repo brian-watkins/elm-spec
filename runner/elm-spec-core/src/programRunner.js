@@ -99,6 +99,11 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "inquiry":
         const inquiry = specMessage.body.message
         this.handleMessage(inquiry, (message) => {
+          // REVISIT: Could move this check inside Elm
+          if (message.home === "_scenario" && message.name === "abort") {
+            out(message)
+            return
+          }
           out({
             home: "_observer",
             name: "inquiryResult",
@@ -150,9 +155,18 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "state":
         this.handleStateChange(specMessage.body, out)
         break
+      case "configure":
+        this.handleMessage(specMessage.body.message, out)
+        this.whenStackIsComplete(() => {
+          this.configureComplete()
+          out(this.continue())
+        })
+        break
       case "step":
         this.handleMessage(specMessage.body.message, out)
-        this.startStepTimer(out)
+        this.whenStackIsComplete(() => {
+          out(this.continue())
+        })
         break
       default:
         console.log("Message for unknown scenario event", specMessage)
@@ -174,7 +188,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         out(this.continue())
         break
       case "ABORT":
-        this.scenarioExerciseComplete()
+        this.detachProgram()
         break
     }
   }
@@ -199,21 +213,23 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   scenarioExerciseComplete() {
-    this.stopStepTimer()
+    this.detachProgram()
+  }
+
+  detachProgram() {
+    this.stopWaitingForStack()
     this.portPlugin.unsubscribe()
   }
 
-  startStepTimer(out) {
-    this.stopStepTimer()
-    this.stepTimeout = setTimeout(() => {
-      out(this.continue())
-    }, 0)
+  whenStackIsComplete(andThen) {
+    this.stopWaitingForStack()
+    this.stackTimeout = setTimeout(andThen, 0)
   }
 
-  stopStepTimer() {
-    if (this.stepTimeout) {
-      clearTimeout(this.stepTimeout)
-      this.stepTimeout = null
+  stopWaitingForStack() {
+    if (this.stackTimeout) {
+      clearTimeout(this.stackTimeout)
+      this.stackTimeout = null
     }
   }
 

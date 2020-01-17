@@ -1,12 +1,9 @@
 module Spec.Http.Route exposing
   ( HttpRoute
+  , UrlDescriptor(..)
   , get
   , post
   , route
-  , PathComponent(..)
-  , withPath
-  , withAnyOrigin
-  , withAnyQuery
   , encode
   , toString
   )
@@ -16,7 +13,7 @@ module Spec.Http.Route exposing
 @docs HttpRoute
 
 # Define a Route
-@docs get, post, route, withAnyOrigin, withAnyQuery, PathComponent, withPath
+@docs get, post, UrlDescriptor, route
 
 # Work with Routes
 @docs encode, toString
@@ -27,197 +24,60 @@ import Json.Encode as Encode
 import Url exposing (Url, Protocol(..))
 
 
-{-| An HTTP route is an HTTP method plus a URL.
+{-| Represents an HTTP route.
 -}
 type HttpRoute =
   HttpRoute
     { method: String
-    , origin: RoutePart
-    , path: List PathComponent
-    , query: RoutePart
+    , uri: UrlDescriptor
     }
 
 
-{-| Define a segment of a path.
+{-| Define a GET route with the given URL.
 
-Use this type in conjunction with `Spec.Http.Route.withPath` to define a path.
--}
-type PathComponent
-  = Segment String
-  | Variable String
+    get "http://fun.com/fun"
 
-
-type RoutePart
-  = None
-  | Exact String
-  | Any
-
-
-{-| Define a GET route.
 -}
 get : String -> HttpRoute
 get =
-  route "GET"
+  route "GET" << Exact
 
 
-{-| Define a POST route.
+{-| Define a POST route with the given URL.
+
+    post "http://fun.com/fun"
+
 -}
 post : String -> HttpRoute
 post =
-  route "POST"
+  route "POST" << Exact
 
 
-{-| Define a route with the given method and url.
+{-| Describe a URL when constructing a Route with the `route` function.
 
-    Spec.Http.Route.route "PATCH" "http://fake-server.com/fake"
+Use the `Exact` case when you want to provide a specific string to match against, for example, an absolute URL.
+
+Use the `Matching` case when you want to provide a JavaScript-style regular expression to match against.
+-}
+type UrlDescriptor
+  = Exact String
+  | Matching String
+
+
+{-| Define a route with the given method and url descriptor.
+
+For example, this route describes any request with the
+protocol `http` and the method `PATCH`:
+
+    Spec.Http.Route.route "PATCH" <| Matching "http:\\/\\/.*"
 
 -}
-route : String -> String -> HttpRoute
-route method urlString =
-  case Url.fromString urlString of
-    Just url ->
-      HttpRoute
-        { method = method
-        , origin = originFrom url
-        , path = pathFrom url
-        , query = queryFrom url
-        }
-    Nothing ->
-      if String.startsWith "/" urlString then
-        routeFromPath method urlString
-      else
-        HttpRoute
-          { method = method
-          , origin = None
-          , path = []
-          , query = None
-          }
-
-
-routeFromPath : String -> String -> HttpRoute
-routeFromPath method path =
-  case Url.fromString <| "http://localhost" ++ path of
-    Just url ->
-      HttpRoute
-        { method = method
-        , origin = None
-        , path = pathFrom url
-        , query = queryFrom url
-        }
-    Nothing ->
-      HttpRoute
-        { method = method
-        , origin = None
-        , path = []
-        , query = None
-        }
-
-
-pathFrom : Url -> List PathComponent
-pathFrom url =
-  url.path
-    |> String.dropLeft 1
-    |> String.split "/"
-    |> List.filter (not << String.isEmpty)
-    |> List.map Segment
-
-
-originFrom : Url -> RoutePart
-originFrom url =
-  Exact <|
-    String.join ""
-      [ protocolFrom url
-      , url.host
-      , portFrom url
-      ]
-
-
-protocolFrom : Url -> String
-protocolFrom url =
-  case url.protocol of
-    Http ->
-      "http://"
-    Https ->
-      "https://"
-
-
-portFrom : Url -> String
-portFrom url =
-  url.port_
-    |> Maybe.map (\p -> ":" ++ String.fromInt p)
-    |> Maybe.withDefault ""
-
-
-queryFrom : Url -> RoutePart
-queryFrom url =
-  url.query
-    |> Maybe.map Exact
-    |> Maybe.withDefault None
-
-
-{-| Specify the route's path.
-
-Use this function to specify the route when you want to observe path variables.
-
-    Spec.Http.observeRequests (
-      get "http://fun.com"
-        |> withPath
-          [ Exactly "books"
-          , VariableNamed "id"
-          ]
-    )
-      |> Spec.expect (Spec.Claim.isListWhere
-        [ Spec.Http.pathVariable "id" <|
-            Spec.Claim.isEqual Debug.toString "27"
-        ]
-      )
--}
-withPath : List PathComponent -> HttpRoute -> HttpRoute
-withPath components (HttpRoute routeData) =
+route : String -> UrlDescriptor -> HttpRoute
+route method urlDescriptor =
   HttpRoute
-    { routeData | path = components }
-
-
-{-| Specify that the route must have some origin (but it doesn't matter what it is).
-
-For example, you could write a stub that matches any requests with some path,
-regardless of their origin, like so:
-
-    anyOriginStub =
-      Spec.Http.Stub.for (get "/some/cool/path" |> withAnyOrigin)
-        |> Spec.Http.Stub.withBody "{}"
-
-A request to `http://fun-place.com/some/cool/path` would be matched by this stub
-but a request to `/some/cool/path` (ie without any origin) would not.
-
--}
-withAnyOrigin : HttpRoute -> HttpRoute
-withAnyOrigin (HttpRoute routeData) =
-  HttpRoute
-    { routeData | origin = Any }
-
-
-{-| Specify that the route must have some query string
-(but it doesn't matter what it is).
-
-For example, if you write a scenario where there are multiple requests
-to the same endpoint with different query parameters, then you could
-observe requests that have some query (it doesn't matter what it is) like so:
-
-    Spec.Http.observeRequests (get "http://fake.com/fake" |> withAnyQuery)
-      |> Spec.expect (Spec.Claim.isListWhere
-        [ Spec.Http.queryParameter "page" <|
-            Spec.Claim.isEqual Debug.toString "1"
-        , Spec.Http.queryParameter "page" <|
-            Spec.Claim.isEqual Debug.toString "2"
-        ]
-      )
-
--}
-withAnyQuery : HttpRoute -> HttpRoute
-withAnyQuery (HttpRoute routeData) =
-  HttpRoute
-    { routeData | query = Any }
+    { method = method
+    , uri = urlDescriptor
+    }
 
 
 {-| Encode an `HttpRoute` into a JSON object.
@@ -226,42 +86,22 @@ encode : HttpRoute -> Encode.Value
 encode (HttpRoute routeData) =
   Encode.object
     [ ( "method", Encode.string routeData.method )
-    , ( "origin", encodeRoutePart routeData.origin )
-    , ( "path", Encode.list encodePathComponent routeData.path )
-    , ( "query", encodeRoutePart routeData.query )
+    , ( "uri", encodeUri routeData.uri )
     ]
 
 
-encodePathComponent : PathComponent -> Encode.Value
-encodePathComponent component =
-  case component of
-    Segment segment ->
+encodeUri : UrlDescriptor -> Encode.Value
+encodeUri urlDescriptor =
+  case urlDescriptor of
+    Exact uri ->
       Encode.object
         [ ("type", Encode.string "EXACT")
-        , ("value", Encode.string segment)
+        , ("value", Encode.string uri)
         ]
-    Variable name ->
+    Matching regex ->
       Encode.object
-        [ ("type", Encode.string "VARIABLE")
-        , ("value", Encode.string name)
-        ]
-
-
-encodeRoutePart : RoutePart -> Encode.Value
-encodeRoutePart routePart =
-  case routePart of
-    None ->
-      Encode.object
-        [ ("type", Encode.string "NONE")
-        ]
-    Exact part ->
-      Encode.object
-        [ ("type", Encode.string "EXACT")
-        , ("value", Encode.string part)
-        ]
-    Any ->
-      Encode.object
-        [ ("type", Encode.string "ANY")
+        [ ("type", Encode.string "REGEXP")
+        , ("value", Encode.string regex)
         ]
 
 
@@ -269,38 +109,13 @@ encodeRoutePart routePart =
 -}
 toString : HttpRoute -> String
 toString (HttpRoute routeData) =
-  routeData.method ++ " "
-    ++ (originPartToString routeData.origin)
-    ++ (List.map pathComponentToString routeData.path |> String.join "")
-    ++ (queryPartToString routeData.query)
+  routeData.method ++ " " ++ uriToString routeData.uri
 
 
-originPartToString : RoutePart -> String
-originPartToString routePart =
-  case routePart of
-    None ->
-      ""
-    Exact part ->
-      part
-    Any ->
-      "*"
-
-
-pathComponentToString : PathComponent -> String
-pathComponentToString component =
-  case component of
-    Segment segment ->
-      "/" ++ segment
-    Variable name ->
-      "/:" ++ name
-
-
-queryPartToString : RoutePart -> String
-queryPartToString routePart =
-  case routePart of
-    None ->
-      ""
-    Exact query ->
-      "?" ++ query
-    Any ->
-      "?*"
+uriToString : UrlDescriptor -> String
+uriToString urlDescriptor =
+  case urlDescriptor of
+    Exact uri ->
+      uri
+    Matching regex ->
+      "/" ++ regex ++ "/"

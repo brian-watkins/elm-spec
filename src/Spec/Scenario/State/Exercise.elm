@@ -111,13 +111,7 @@ update outlet msg model =
                 update outlet Continue updated
 
     Abort report ->
-      ( model
-      , State.SendMany
-        [ Claim.Reject report
-          |> Message.observation model.conditionsApplied "A spec step failed"
-        , Message.abortScenario
-        ]
-      )
+      ( model, State.Do Cmd.none )
 
     OnUrlChange url ->
       case model.subject.navigationConfig of

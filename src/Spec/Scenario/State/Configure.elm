@@ -7,6 +7,7 @@ import Spec.Scenario.Internal exposing (Scenario)
 import Spec.Setup.Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Scenario.Message as Message
+import Spec.Message exposing (Message)
 
 
 type alias Model model msg =
@@ -20,6 +21,13 @@ init scenario subject =
   ( { scenario = scenario
     , subject = subject
     }
-  , List.append subject.configureEnvironment [ Message.configureComplete ]
-      |> State.SendMany
+  , configureWith subject.configureEnvironment
   )
+
+
+configureWith : List Message -> Command msg
+configureWith configMessages =
+  if List.isEmpty configMessages then
+    State.Send Message.configureComplete
+  else
+    State.SendMany <| List.map Message.configMessage configMessages

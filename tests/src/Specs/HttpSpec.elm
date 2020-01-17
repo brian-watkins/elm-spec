@@ -126,8 +126,8 @@ expectRequestSpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (isListWithLength 3)
           )
-        , it "uses the route function as expected" (
-            Spec.Http.observeRequests (route "GET" "http://fake-api.com/stuff")
+        , it "uses the route function as expected to match an exact route" (
+            Spec.Http.observeRequests (route "GET" <| Exact "http://fake-api.com/stuff")
               |> expect (isListWithLength 3)
           )
         , it "does not find requests with a different method" (

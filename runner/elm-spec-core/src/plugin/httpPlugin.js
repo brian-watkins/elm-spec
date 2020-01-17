@@ -1,5 +1,5 @@
 const nise = require('nise')
-const { gatherPathVariables, regexForRoute } = require('./httpRoute')
+const { report, line } = require('../report')
 
 const fakeServerForGlobalContext = function(window) {
   const server = nise.fakeServer.create()
@@ -27,34 +27,52 @@ module.exports = class HttpPlugin {
       }
       case "stub": {
         const stub = specMessage.body
-        const route = stub.route
-        this.server.respondWith(route.method, regexForRoute(route), (request) => {
-          if (stub.shouldRespond) {
-            if (stub.error === "network") {
-              request.error()
-            } else if (stub.error === "timeout") {
-              request.eventListeners.timeout[1].listener()
-              request.readyState = 4
-            } else {
-              request.respond(stub.status, stub.headers, stub.body)
-            }
-          } else {
-            request.readyState = 4
+
+        switch (stub.route.uri.type) {
+          case "EXACT": {
+            this.setupStub(stub, stub.route.uri.value)
+            break
           }
-        })
+          case "REGEXP": {
+            try {
+              this.setupStub(stub, new RegExp(stub.route.uri.value))
+            } catch (err) {
+              abort(report(
+                line("Unable to parse regular expression for stubbed route", `/${stub.route.uri.value}/`)
+              ))
+            }
+            break
+          }
+        }
 
         break
       }
       case "fetch-requests": {
         const route = specMessage.body
-        const routeRegex = regexForRoute(route)
+        let requests = []
 
-        const requests = this.server.requests
-          .filter(request => {
-            if (request.method !== route.method) return false
-            return routeRegex.test(request.url)
-          })
-          .map(buildRequest(route))
+        switch (route.uri.type) {
+          case "EXACT": {
+            requests = this.findRequests(route, (url) => {
+              return url === route.uri.value
+            })
+
+            break
+          }
+          case "REGEXP": {
+            try {
+              const regex = new RegExp(route.uri.value)
+              requests = this.findRequests(route, (url) => {
+                return regex.test(url)
+              })
+            } catch (err) {
+              abort(report(
+                line("Unable to parse regular expression used to observe requests", `/${route.uri.value}/`)
+              ))
+              return
+            }
+          }
+        }
 
         out({
           home: "_http",
@@ -68,13 +86,38 @@ module.exports = class HttpPlugin {
         console.log("Unknown Http message", specMessage)
     }
   }
+
+  setupStub(stub, uriDescriptor) {
+    this.server.respondWith(stub.route.method, uriDescriptor, (request) => {
+      if (stub.shouldRespond) {
+        if (stub.error === "network") {
+          request.error()
+        } else if (stub.error === "timeout") {
+          request.eventListeners.timeout[1].listener()
+          request.readyState = 4
+        } else {
+          request.respond(stub.status, stub.headers, stub.body)
+        }
+      } else {
+        request.readyState = 4
+      }
+    })
+  }
+
+  findRequests(route, matchUrl) {
+    return this.server.requests
+      .filter(request => {
+        if (request.method !== route.method) return false
+        return matchUrl(request.url)
+      })
+      .map(buildRequest)
+  }
 }
 
-const buildRequest = (route) => (request) => {
+const buildRequest = (request) => {
   return {
     url: request.url,
     headers: request.requestHeaders,
-    body: request.requestBody || null,
-    pathVariables: gatherPathVariables(route, request.url)
+    body: request.requestBody || null
   }
 }

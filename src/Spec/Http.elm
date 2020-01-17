@@ -4,8 +4,7 @@ module Spec.Http exposing
   , header
   , stringBody
   , jsonBody
-  , queryParameter
-  , pathVariable
+  , url
   )
 
 {-| Observe, and make claims about HTTP requests during a spec.
@@ -50,10 +49,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, observeRequests
 
 # Make Claims About HTTP Requests
-@docs stringBody, jsonBody, header
-
-# Make Claims about an HTTP Request's Route
-@docs queryParameter, pathVariable
+@docs url, header, stringBody, jsonBody
 
 -}
 
@@ -82,7 +78,6 @@ type alias RequestData =
   { url: String
   , headers: Dict String String
   , body: RequestBody
-  , pathVariables: Dict String String
   }
 
 
@@ -96,13 +91,11 @@ type RequestBody
 {-| Claim that an HTTP request has a header that satisfies the given claim.
 
 For example, if the observed request has an `Authorization` header with the value
-`Bearer some-fun-token`, then the following claim:
+`Bearer some-fun-token`, then the following claim would be accepted:
 
     Spec.Http.header "Authorization" <|
       Spec.Claim.isSomethingWhere <|
       Spec.Claim.isStringContaining 1 "some-fun-token"
-
-would be accepted.
 
 -}
 header : String -> Claim (Maybe String) -> Claim HttpRequest
@@ -152,13 +145,12 @@ evaluateStringBodyClaim claim body =
 {-| Claim that the body of an HTTP request is a string that can be decoded with the
 given decoder into a value that satisfies the given claim.
 
-For example, if the body of the observed request was `{"sport":"bowling"}`, then the following claim:
+For example, if the body of the observed request was `{"sport":"bowling"}`,
+then the following claim would be accepted:
 
     Spec.Http.jsonBody
       (Json.Decode.field "sport" Json.Decode.string)
       (Spec.Claim.isEqualTo Debug.toString "bowling")
-
-would be accepted.
 
 -}
 jsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
@@ -202,7 +194,7 @@ observeRequests route =
   )
   |> Observer.mapRejection (\report ->
     Report.batch
-    [ Report.fact  "Claim rejected for route" <| Route.toString route
+    [ Report.fact "Claim rejected for route" <| Route.toString route
     , report
     ]
   )
@@ -218,11 +210,10 @@ fetchRequestsFor route =
 
 requestDecoder : Json.Decoder HttpRequest
 requestDecoder =
-  Json.map4 RequestData
+  Json.map3 RequestData
     ( Json.field "url" Json.string )
     ( Json.field "headers" <| Json.dict Json.string )
     ( Json.field "body" requestBodyDecoder )
-    ( Json.field "pathVariables" <| Json.dict Json.string )
   |> Json.map HttpRequest
 
 
@@ -235,57 +226,22 @@ requestBodyDecoder =
     )
 
 
-{-| Claim that a query parameter has a value that satisfies the given claim.
+{-| Claim that the url of an HTTP request satisfies the given claim.
 
-For example, if a request is made to `http://fun.com/fun?activity=bowling`,
-then the following claim would be satisfied:
+For example, you could claim that a request has a particular query parameter like so:
 
-    Spec.Http.observeRequests (Spec.Http.Route.get "http://fun.com/fun" |> Spec.Http.Route.withAnyQuery)
+    Spec.Http.observeRequests (Spec.Http.Route.route "GET" <| Matching "fake\\.com")
       |> Spec.expect (Spec.Claim.isListWhere
-        [ Spec.Http.queryParameter "actvity" <|
-            Spec.Claim.isEqual Debug.toString "bowling"
+        [ Spec.Http.url
+            Spec.Claim.isStringContaining 1 "sport=bowling"
         ]
       )
 
+This claims makes the most sense when observing requests that match a route
+defined with a regular expression, as in the example above.
+
 -}
-queryParameter : String -> Claim (List String) -> Claim HttpRequest
-queryParameter name claim =
+url : Claim String -> Claim HttpRequest
+url claim =
   \(HttpRequest request) ->
-    case Url.fromString request.url of
-      Just url ->
-        queryParameterValues name url
-          |> claim
-          |> Claim.mapRejection (\report -> Report.batch
-            [ Report.fact "Claim rejected for query parameter" name
-            , report
-            ]
-          )
-      Nothing ->
-        Claim.Reject <| Report.fact "Unable to parse URL" request.url
-
-
-queryParameterValues : String -> Url -> List String
-queryParameterValues param url =
-  { url | path = "" }
-    |> Url.Parser.parse (Url.Parser.query <| Url.Parser.Query.custom param identity) 
-    |> Maybe.withDefault []
-
-
-{-| Claim that a path variable has a value that satisfies the given claim.
--}
-pathVariable : String -> Claim String -> Claim HttpRequest
-pathVariable name claim =
-  \(HttpRequest request) ->
-    case Dict.get name request.pathVariables of
-      Just value ->
-        claim value
-          |> Claim.mapRejection (\report -> Report.batch
-            [ Report.fact "Claim rejected for path variable" name
-            , report
-            ]
-          )
-      Nothing ->
-        Claim.Reject <| Report.batch
-          [ Report.fact "No path variable defined with the name" name
-          , Report.note "Make sure to use Spec.Http.Route.withPath and Spec.Http.Route.Variable to define a path variable"
-          ]
+    claim request.url
