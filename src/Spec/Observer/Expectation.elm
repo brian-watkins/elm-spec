@@ -67,14 +67,22 @@ update msg model =
 
 handleInquiry : Message -> (Message -> Judgment model) -> Verdict
 handleInquiry message handler =
+  case inquiryResult message handler of
+    Ok verdict ->
+      verdict
+    Err err ->
+      Claim.Reject <| Report.fact "Unable to decode inquiry result" err
+
+
+inquiryResult : Message -> (Message -> Judgment model) -> Result String Verdict
+inquiryResult message handler =
   Message.decode Message.inquiryDecoder message
-    |> Maybe.map .message
-    |> Maybe.map handler
-    |> Maybe.map (\judgment ->
+    |> Result.map .message
+    |> Result.map handler
+    |> Result.map (\judgment ->
       case judgment of
         Complete verdict ->
           verdict
         Inquire _ _ ->
           Claim.Reject <| Report.note "Recursive Inquiry not supported!"
     )
-    |> Maybe.withDefault (Claim.Reject <| Report.note "Unable to decode inquiry result!")

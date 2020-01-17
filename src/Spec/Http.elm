@@ -190,7 +190,7 @@ observeRequests : HttpRoute -> Observer model (List HttpRequest)
 observeRequests route =
   Observer.inquire (fetchRequestsFor route) (
     Message.decode (Json.list requestDecoder)
-      >> Maybe.withDefault []
+      >> Result.withDefault []
   )
   |> Observer.mapRejection (\report ->
     Report.batch

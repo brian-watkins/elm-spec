@@ -47,7 +47,7 @@ observeTitle : Observer model String
 observeTitle =
   Observer.inquire selectTitleMessage <| \message ->
     Message.decode Json.string message
-      |> Maybe.withDefault "FAILED"
+      |> Result.withDefault "FAILED"
 
 
 selectTitleMessage : Message
@@ -84,13 +84,11 @@ observe =
   MarkupObservation
     { query = Single
     , inquiryHandler = \selection message ->
-        case Message.decode maybeHtmlDecoder message of
-          Just maybeElement ->
-            Ok maybeElement
-          Nothing ->
-            Err <| Report.note "Unable to decode element JSON!"
+        Message.decode maybeHtmlDecoder message
+          |> Result.mapError (\err ->
+            Report.fact "Unable to decode element JSON!" err
+          )
     }
-
 
 {-| Observe an HTML element that matches the selector provided to `Spec.Markup.query`.
 
@@ -107,15 +105,17 @@ observeElement =
   MarkupObservation
     { query = Single
     , inquiryHandler = \selection message ->
-        case Message.decode maybeHtmlDecoder message of
-          Just maybeElement ->
+        Message.decode maybeHtmlDecoder message
+          |> Result.mapError (\err ->
+            Report.fact "Unable to decode element JSON!" err
+          )
+          |> Result.andThen (\maybeElement ->
             case maybeElement of
               Just element ->
                 Ok element
               Nothing ->
                 Err <| Report.fact "No element matches selector" (Selector.toString selection)
-          Nothing ->
-            Err <| Report.note "Unable to decode element JSON!"
+          )
     }
 
 
@@ -133,8 +133,9 @@ observeElements =
     { query = All
     , inquiryHandler = \selection message ->
         Message.decode (Json.list htmlDecoder) message
-          |> Maybe.withDefault []
-          |> Ok
+          |> Result.mapError (\err ->
+            Report.fact "Unable to decode element JSON!" err
+          )
     }
 
 

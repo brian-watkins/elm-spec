@@ -92,7 +92,7 @@ subscriptions model =
 handleLocationAssigned : Model model msg -> Message -> ( Model model msg, Command (Msg msg) )
 handleLocationAssigned model message =
   case Message.decode Json.string message of
-    Just location ->
+    Ok location ->
       case model.subject.navigationConfig of
         Just _ ->
           ( model
@@ -102,7 +102,7 @@ handleLocationAssigned model message =
           ( { model | subject = navigatedSubject location model.subject }
           , State.DoAndRender Cmd.none
           )
-    Nothing ->
+    Err _ ->
       ( model
       , State.Do Cmd.none
       )

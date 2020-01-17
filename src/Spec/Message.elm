@@ -81,9 +81,11 @@ is home name message =
   message.home == home && message.name == name
 
 
-{-| Decode the JSON `body` of the message to a `Maybe` type.
+{-| Decode the JSON `body` of the message to a `Result` type.
+
+The `Err` case contains a string that describes the decoding error.
 -}
-decode : Json.Decoder a -> Message -> Maybe a
+decode : Json.Decoder a -> Message -> Result String a
 decode messageDecoder message =
   Json.decodeValue messageDecoder message.body
-    |> Result.toMaybe
+    |> Result.mapError Json.errorToString

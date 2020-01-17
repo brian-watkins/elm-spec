@@ -125,7 +125,7 @@ observe name decoder =
 recordsForPort : String -> List Message -> List PortRecord
 recordsForPort name effects =
   List.filter (Message.is "_port" "received") effects
-    |> List.filterMap (Message.decode recordDecoder)
+    |> List.filterMap (Result.toMaybe << Message.decode recordDecoder)
     |> List.filter (\portRecord -> portRecord.name == name)
 
 

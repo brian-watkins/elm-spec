@@ -162,7 +162,7 @@ addIfUnique list val =
 handleLocationAssigned : Model model msg -> Message -> ( Model model msg, Command (Msg msg) )
 handleLocationAssigned model message =
   case Message.decode Json.string message of
-    Just location ->
+    Ok location ->
       case model.subject.navigationConfig of
         Just _ ->
           ( { model | effects = message :: model.effects }
@@ -172,7 +172,7 @@ handleLocationAssigned model message =
           ( { model | effects = message :: model.effects, subject = navigatedSubject location model.subject }
           , State.Do Cmd.none
           )
-    Nothing ->
+    Err _ ->
       ( { model | effects = message :: model.effects }
       , State.Do Cmd.none
       )

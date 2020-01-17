@@ -282,5 +282,5 @@ targetSelector context =
   Context.effects context
     |> List.filter (Message.is "_html" "target")
     |> List.head
-    |> Maybe.andThen (Message.decode Json.string)
+    |> Maybe.andThen (Result.toMaybe << Message.decode Json.string)
     |> Maybe.withDefault ""

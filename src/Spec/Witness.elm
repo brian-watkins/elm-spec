@@ -132,7 +132,7 @@ observe name decoder =
 statementsForWitness : String -> List Message -> List Statement
 statementsForWitness name messages =
   List.filter (Message.is "_witness" "log") messages
-    |> List.filterMap (Message.decode statementDecoder)
+    |> List.filterMap (Result.toMaybe << Message.decode statementDecoder)
     |> List.filter (\statement -> 
         statement.name == name
     )

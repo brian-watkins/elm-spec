@@ -41,7 +41,7 @@ observeLocation : Observer model String
 observeLocation =
   Observer.inquire observeLocationMessage <| \message ->
     Message.decode Json.string message
-      |> Maybe.withDefault "FAILED"
+      |> Result.withDefault "FAILED"
 
 
 observeLocationMessage : Message

@@ -279,11 +279,11 @@ toMsg message =
   case message.name of
     "state" ->
       Message.decode Json.string message
-        |> Maybe.map toStateMsg
-        |> Maybe.withDefault (Abort <| Report.note "Unable to parse scenario state event!")
+        |> Result.map toStateMsg
+        |> Result.withDefault (Abort <| Report.note "Unable to parse scenario state event!")
     "abort" ->
       Message.decode Report.decoder message
-        |> Maybe.withDefault (Report.note "Unable to parse abort scenario event!")
+        |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
         |> Abort
     unknown ->
       Abort <| Report.fact "Unknown scenario event" unknown

@@ -97,7 +97,7 @@ update config msg model =
 handleSpecMessage : Config msg -> Model model msg -> Message -> ( Model model msg, Cmd (Msg msg) )
 handleSpecMessage config model message =
   Message.decode Json.string message
-    |> Maybe.map (\state ->
+    |> Result.map (\state ->
       case state of
         "FINISH" ->
           ( { model | scenarioModel = ScenarioProgram.finishScenario model.scenarioModel }
@@ -106,7 +106,7 @@ handleSpecMessage config model message =
         _ ->
           update config RunNextScenario model
     )
-    |> Maybe.withDefault ( model, Cmd.none )
+    |> Result.withDefault ( model, Cmd.none )
 
 
 specComplete : Message
