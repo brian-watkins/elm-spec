@@ -5,7 +5,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Claim exposing (isStringContaining)
+import Spec.Claim exposing (isStringContaining, isSomethingWhere)
 import Runner
 import Main as App
 
@@ -25,7 +25,7 @@ inputSpec =
       |> it "renders the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ id "input-results" ]
-          |> expect (Markup.text <| isStringContaining 1 "You typed: Here is some fun text!")
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You typed: Here is some fun text!")
       )
     )
   ]
@@ -48,12 +48,12 @@ differentInputSpec =
         [ it "renders other the text on the view" (
             Markup.observeElement
               |> Markup.query << by [ id "input-results" ]
-              |> expect (Markup.text <| isStringContaining 1 "You typed: Here is some awesome text!")
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You typed: Here is some awesome text!")
           )
         , it "does not record any clicks" (
             Markup.observeElement
               |> Markup.query << by [ id "count-results" ]
-              |> expect (Markup.text <| isStringContaining 1 "You clicked the button 0 time(s)")
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 0 time(s)")
           )
         ]
     )

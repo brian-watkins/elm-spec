@@ -7,6 +7,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Observer as Observer
 import Spec.Step as Step
+import Spec.Claim exposing (isSomethingWhere)
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -37,7 +38,7 @@ keyboardEventsSpec =
       |> it "handles the event" (
         Markup.observeElement
           |> Markup.query << by [ id "message" ]
-          |> expect (Markup.text <| equals "You wrote: ABACAB")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: ABACAB")
       )
     )
   ]
@@ -267,7 +268,7 @@ noHandlerSpec =
       |> it "does nothing" (
         Markup.observeElement
           |> Markup.query << by [ id "message" ]
-          |> expect (Markup.text <| equals "You wrote: ")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: ")
       )
     )
   ]

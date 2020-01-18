@@ -7,6 +7,7 @@ import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
 import Specs.Helpers exposing (equals)
+import Spec.Claim exposing (isSomethingWhere)
 import Runner
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -50,7 +51,7 @@ inputSpec =
       |> it "renders the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.text <| equals "You wrote: Here is some fun text!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: Here is some fun text!")
       )
     )
   , scenario "no element targeted for input" (
@@ -63,7 +64,7 @@ inputSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.text <| equals "You wrote: Here is some fun text!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: Here is some fun text!")
       )
     )
   ]
@@ -133,7 +134,7 @@ submitSpec =
       |> it "handles the onSubmit event" (
         Markup.observeElement
           |> Markup.query << by [ id "submit-indicator" ]
-          |> expect (Markup.text <| equals "You submitted the form!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You submitted the form!")
       )
     )
   , scenario "the submit button refers to a form by the form attribute" (
@@ -147,7 +148,7 @@ submitSpec =
       |> it "handles the onSubmit event" (
         Markup.observeElement
           |> Markup.query << by [ id "submit-indicator" ]
-          |> expect (Markup.text <| equals "You submitted the form!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You submitted the form!")
       )
     )
   ]

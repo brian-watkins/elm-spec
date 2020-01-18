@@ -7,6 +7,7 @@ import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Claim exposing (isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -39,7 +40,9 @@ loadUrlSpec =
         , it "shows a view that says we navigated outside the scope of the Elm program" (
             Markup.observeElement
               |> Markup.query << by [ tag "body" ]
-              |> expect (Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://navigation-test-app.com/some-fun-place]")
+              |> expect (isSomethingWhere <|
+                Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://navigation-test-app.com/some-fun-place]"
+              )
           )
         ]
     )
@@ -62,7 +65,9 @@ loadUrlSpec =
         , it "shows a view that says we navigated outside the scope of the Elm program" (
             Markup.observeElement
               |> Markup.query << by [ tag "body" ]
-              |> expect (Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://some-other-spot.com/]")
+              |> expect (isSomethingWhere <|
+                Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://some-other-spot.com/]"
+              )
           )
         ]
     )

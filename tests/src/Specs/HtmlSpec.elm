@@ -7,7 +7,7 @@ import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Port as Port
-import Spec.Claim as Claim
+import Spec.Claim as Claim exposing (isSomethingWhere)
 import Spec.Report as Report
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -29,12 +29,12 @@ htmlSpecSingle =
         [ it "renders the name based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-name" ]
-              |> expect (Markup.text <| equals "Hello, Cool Dude!")
+              |> expect (isSomethingWhere <| Markup.text <| equals "Hello, Cool Dude!")
           )
         , it "does not find an element that is not there" (
             Markup.observeElement
               |> Markup.query << by [ id "something-not-present" ]
-              |> expect (Markup.text <| equals "Hello, Cool Dude!")
+              |> expect (isSomethingWhere <| Markup.text <| equals "Hello, Cool Dude!")
           )
         ]
     )
@@ -53,12 +53,12 @@ htmlSpecMultiple =
         [ it "renders the name based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-name" ]
-              |> expect (Markup.text <| equals "Hello, Cool Dude!")
+              |> expect (isSomethingWhere <| Markup.text <| equals "Hello, Cool Dude!")
           )
         , it "renders the count based on the model" (
             Markup.observeElement
               |> Markup.query << by [ id "my-count" ]
-              |> expect (Markup.text <| equals "The count is 78!")
+              |> expect (isSomethingWhere <| Markup.text <| equals "The count is 78!")
           )
         ]
     )
@@ -71,12 +71,12 @@ htmlSpecMultiple =
         [ it "finds a third thing" (
             Markup.observeElement
               |> Markup.query << by [ id "my-label" ]
-              |> expect (Markup.text <| equals "Here is a label")
+              |> expect (isSomethingWhere <| Markup.text <| equals "Here is a label")
           )
         , it "finds a fourth thing" (
             Markup.observeElement
               |> Markup.query << by [ id "my-label-2" ]
-              |> expect (Markup.text <| equals "Another label")
+              |> expect (isSomethingWhere <| Markup.text <| equals "Another label")
           )
         ]
     )
@@ -105,7 +105,7 @@ targetUnknownSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "my-count" ]
-          |> expect (Markup.text <| equals "The count is 30!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "The count is 30!")
       )
     )
   , scenario "Should run even though previous spec was rejected" (
@@ -117,7 +117,7 @@ targetUnknownSpec =
       |> it "should pass" (
           Markup.observeElement
             |> Markup.query << by [ id "my-name" ]
-            |> expect (Markup.text <| equals "Hello, Cool Dude!")
+            |> expect (isSomethingWhere <| Markup.text <| equals "Hello, Cool Dude!")
       )
     )
   ]
@@ -141,7 +141,7 @@ subSpec =
         [ it "renders the count" (
             Markup.observeElement
               |> Markup.query << by [ id "my-count" ]
-              |> expect (Markup.text <| equals "The count is 40!")
+              |> expect (isSomethingWhere <| Markup.text <| equals "The count is 40!")
           )
         , it "updates the model" (
             Observer.observeModel .count
@@ -196,7 +196,7 @@ observePresenceSpec =
           |> Setup.withView testView
       )
       |> it "selects nothing" (
-        Markup.observe
+        Markup.observeElement
           |> Markup.query << by [ id "nothing" ]
           |> expect Claim.isNothing
       )
@@ -207,7 +207,7 @@ observePresenceSpec =
           |> Setup.withView testView
       )
       |> it "selects nothing" (
-        Markup.observe
+        Markup.observeElement
           |> Markup.query << by [ id "my-name" ]
           |> expect Claim.isNothing
       )
@@ -218,7 +218,7 @@ observePresenceSpec =
           |> Setup.withView testView
       )
       |> it "selects nothing" (
-        Markup.observe
+        Markup.observeElement
           |> Markup.query << by [ id "my-name" ]
           |> expect Claim.isSomething
       )
@@ -229,7 +229,7 @@ observePresenceSpec =
           |> Setup.withView testView
       )
       |> it "selects nothing" (
-        Markup.observe
+        Markup.observeElement
           |> Markup.query << by [ id "nothing" ]
           |> expect Claim.isSomething
       )
@@ -249,7 +249,7 @@ failingSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "my-label" ]
-          |> expect (Markup.text <| equals "something else")
+          |> expect (isSomethingWhere <| Markup.text <| equals "something else")
       )
     )
   , scenario "some other scenario that passes" (
@@ -261,7 +261,7 @@ failingSpec =
       |> it "passes" (
         Markup.observeElement
           |> Markup.query << by [ id "my-label" ]
-          |> expect (Markup.text <| equals "Here is a label")
+          |> expect (isSomethingWhere <| Markup.text <| equals "Here is a label")
       )
     )
   ]
@@ -285,7 +285,7 @@ elementLinkSpec =
       |> it "handles the clicks" (
         Markup.observeElement
           |> Markup.query << by [ id "count" ]
-          |> expect (Markup.text <| equals "Count: 3")
+          |> expect (isSomethingWhere <| Markup.text <| equals "Count: 3")
       )
     )
   ]
@@ -303,7 +303,7 @@ elementInternalLinkFailureSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "count" ]
-          |> expect (Markup.text <| equals "Count: 3")
+          |> expect (isSomethingWhere <| Markup.text <| equals "Count: 3")
       )
     )
   ]
@@ -321,7 +321,7 @@ elementExternalLinkFailureSpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ id "count" ]
-          |> expect (Markup.text <| equals "Count: 3")
+          |> expect (isSomethingWhere <| Markup.text <| equals "Count: 3")
       )
     )
   ]

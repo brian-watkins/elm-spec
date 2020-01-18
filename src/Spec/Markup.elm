@@ -2,7 +2,6 @@ module Spec.Markup exposing
   ( MarkupObservation
   , HtmlElement
   , observeTitle
-  , observe
   , observeElement
   , observeElements
   , query
@@ -18,7 +17,7 @@ module Spec.Markup exposing
 @docs target
 
 # Observe an HTML Document
-@docs MarkupObservation, observeElements, observeElement, observe, query, observeTitle
+@docs MarkupObservation, observeElements, observeElement, query, observeTitle
 
 # Make Claims about an HTML Element
 @docs HtmlElement, text, attribute, property
@@ -70,26 +69,6 @@ type Query
   | All
 
 
-{-| Observe an HTML element that may not be present in the document.
-
-Use this observer if you want to make a claim about the presence or absence of an HTML element.
-
-    Spec.Markup.observe
-      |> Spec.Markup.query << by [ id "some-element" ]
-      |> Spec.expect Spec.Claim.isNothing
-
--}
-observe : MarkupObservation (Maybe HtmlElement)
-observe =
-  MarkupObservation
-    { query = Single
-    , inquiryHandler = \selection message ->
-        Message.decode maybeHtmlDecoder message
-          |> Result.mapError (\err ->
-            Report.fact "Unable to decode element JSON!" err
-          )
-    }
-
 {-| Observe an HTML element that matches the selector provided to `Spec.Markup.query`.
 
     Spec.Markup.observeElement
@@ -98,9 +77,14 @@ observe =
         Spec.Claim.isEqual Debug.toString "something fun"
       )
 
-If the element cannot be found in the document, the claim will be rejected.
+Claim that an element is not present in the document like so:
+
+    Spec.Markup.observeElement
+      |> Spec.Markup.query << by [ id "not-present" ]
+      |> Spec.expect Spec.Claim.isnNothing
+
 -}
-observeElement : MarkupObservation HtmlElement
+observeElement : MarkupObservation (Maybe HtmlElement)
 observeElement =
   MarkupObservation
     { query = Single
@@ -108,13 +92,6 @@ observeElement =
         Message.decode maybeHtmlDecoder message
           |> Result.mapError (\err ->
             Report.fact "Unable to decode element JSON!" err
-          )
-          |> Result.andThen (\maybeElement ->
-            case maybeElement of
-              Just element ->
-                Ok element
-              Nothing ->
-                Err <| Report.fact "No element matches selector" (Selector.toString selection)
           )
     }
 

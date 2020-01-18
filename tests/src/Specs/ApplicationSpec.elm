@@ -2,7 +2,7 @@ module Specs.ApplicationSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Claim as Claim exposing (isStringContaining)
+import Spec.Claim as Claim exposing (isStringContaining, isSomethingWhere)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -41,7 +41,7 @@ applyGivenUrlSpec =
         , it "renders the view based on the url" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.text <| isStringContaining 1 "reading" )
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "reading")
           )
         ]
     )
@@ -55,7 +55,7 @@ changeUrlSpec =
       given testSubject
         |> observeThat
           [ it "does not show anything fun" (
-              Markup.observe
+              Markup.observeElement
                 |> Markup.query << by [ id "fun-page" ]
                 |> expect Claim.isNothing
             )
@@ -77,7 +77,7 @@ changeUrlSpec =
         , it "shows a different page" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.text <| isStringContaining 1 "bowling" )
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "bowling")
           )
         ]
     )
@@ -91,7 +91,7 @@ changeUrlSpec =
           [ it "shows a different page" (
               Markup.observeElement
                 |> Markup.query << by [ id "fun-page" ]
-                |> expect ( Markup.text <| isStringContaining 1 "swimming" )
+                |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "swimming")
             )
           ]
     )
@@ -147,7 +147,7 @@ clickLinkSpec =
         , it "navigates as expected" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.text <| isStringContaining 1 "running" )
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "running")
           )
         ]
     )
@@ -215,7 +215,7 @@ noNavigationConfigSpec =
         , it "updates the view to show we are on some other page" (
             Markup.observeElement
               |> Markup.query << by [ tag "body" ]
-              |> expect (Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://my-test-app.com/fun/running]")
+              |> expect (isSomethingWhere <| Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://my-test-app.com/fun/running]")
           )
         ]
     )
@@ -238,7 +238,7 @@ noNavigationConfigSpec =
         , it "updates the view to show we are on some other page" (
             Markup.observeElement
               |> Markup.query << by [ tag "body" ]
-              |> expect (Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://fun-town.org/fun]")
+              |> expect (isSomethingWhere <| Markup.text <| equals "[Navigated to a page outside the control of the Elm program: http://fun-town.org/fun]")
           )
         ]
     )

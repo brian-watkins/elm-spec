@@ -6,6 +6,7 @@ import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
 import Spec.Time
+import Spec.Claim exposing (isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Runner
@@ -32,7 +33,7 @@ intervalSpec =
       |> it "updates the count" (
         Markup.observeElement
           |> Markup.query << by [ id "seconds-passed" ]
-          |> expect (Markup.text <| equals "4 seconds passed")
+          |> expect (isSomethingWhere <| Markup.text <| equals "4 seconds passed")
       )
     )
   ]

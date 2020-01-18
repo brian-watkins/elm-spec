@@ -24,7 +24,9 @@ textSpec =
       |> it "applies the claim to the text" (
         Markup.observeElement
           |> Markup.query << by [ id "my-activity" ]
-          |> expect (Markup.text <| equals "My activity is: football!")
+          |> expect (isSomethingWhere <|
+            Markup.text <| equals "My activity is: football!"
+          )
       )
     )
   , scenario "the claim about the text is rejected" (
@@ -35,7 +37,9 @@ textSpec =
       |> it "applies the claim to the text" (
         Markup.observeElement
           |> Markup.query << by [ id "my-activity" ]
-          |> expect (Markup.text <| equals "football")
+          |> expect (isSomethingWhere <|
+            Markup.text <| equals "football"
+          )
       )
     )
   ]
@@ -64,7 +68,9 @@ attributeSpec =
       |> it "finds the attribute for a claim" (
         Markup.observeElement
           |> Markup.query << by [ id "activity" ]
-          |> expect (Markup.attribute "data-fun-activity" <| isSomethingWhere <| equals "bowling")
+          |> expect (isSomethingWhere <| 
+            Markup.attribute "data-fun-activity" <| isSomethingWhere <| equals "bowling"
+          )
       )
     )
   , scenario "the attribute value does not satisfy the claim" (
@@ -75,7 +81,9 @@ attributeSpec =
       |> it "finds the attribute for a claim" (
         Markup.observeElement
           |> Markup.query << by [ id "activity" ]
-          |> expect (Markup.attribute "data-fun-activity" <| isSomethingWhere <| isStringContaining 1 "fishing")
+          |> expect (isSomethingWhere <| 
+            Markup.attribute "data-fun-activity" <| isSomethingWhere <| isStringContaining 1 "fishing"
+          )
       )
     )
   , scenario "the attribute is not found" (
@@ -86,7 +94,9 @@ attributeSpec =
       |> it "finds nothing" (
         Markup.observeElement
           |> Markup.query << by [tag "h1" ]
-          |> expect (Markup.attribute "data-wrong-attribute" isNothing)
+          |> expect (isSomethingWhere <| 
+            Markup.attribute "data-wrong-attribute" isNothing
+          )
       )
     )
   ]
@@ -102,7 +112,7 @@ hasPropertySpec =
       |> it "gets the value of the property" (
         Markup.observeElement
           |> Markup.query << by [ tag "button" ]
-          |> expect (Markup.property (Json.field "disabled" Json.bool) isTrue)
+          |> expect (isSomethingWhere <| Markup.property (Json.field "disabled" Json.bool) isTrue)
       )
     )
   , scenario "the element does not have the property" (
@@ -112,7 +122,7 @@ hasPropertySpec =
       |> it "fails" (
         Markup.observeElement
           |> Markup.query << by [ tag "button" ]
-          |> expect (Markup.property (Json.field "something_it_does_not_have" Json.bool) isTrue)
+          |> expect (isSomethingWhere <| Markup.property (Json.field "something_it_does_not_have" Json.bool) isTrue)
       )
     )
   , scenario "getting a property on all elements" (
@@ -137,7 +147,7 @@ hasPropertySpec =
       |> it "gets the value" (
         Markup.observeElement
           |> Markup.query << by [ id "root" ]
-          |> expect (Markup.property nodeDecoder <| equals "fun-div")
+          |> expect (isSomethingWhere <| Markup.property nodeDecoder <| equals "fun-div")
       )
     )
   ]

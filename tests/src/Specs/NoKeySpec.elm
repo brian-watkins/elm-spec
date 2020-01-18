@@ -9,7 +9,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
-import Spec.Claim exposing (isEqual)
+import Spec.Claim exposing (isEqual, isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -37,7 +37,7 @@ applicationSpec =
         [ it "renders the view based on the url" (
             Markup.observeElement
               |> Markup.query << by [ id "fun-page" ]
-              |> expect ( Markup.text <| equals "reading" )
+              |> expect (isSomethingWhere <| Markup.text <| equals "reading")
           )
         ]
     )

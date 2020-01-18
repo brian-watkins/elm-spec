@@ -255,7 +255,7 @@ abstainSpec =
         , it "does something while the request is in progress" (
             Markup.observeElement
               |> Markup.query << by [ id "request-status" ]
-              |> expect (Markup.text <| equals "In Progress")
+              |> expect (isSomethingWhere <| Markup.text <| equals "In Progress")
           )
         ]
     )

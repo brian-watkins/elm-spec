@@ -5,7 +5,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
-import Spec.Claim as Claim exposing (isListWithLength)
+import Spec.Claim as Claim exposing (isListWithLength, isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -75,7 +75,7 @@ attributeNameSelectorSpec =
       |> it "finds the element" (
         Markup.observeElement
           |> Markup.query << by [ attributeName "data-fun" ]
-          |> expect (Markup.text <| equals "This is fun!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is fun!")
       )
     )
   ]
@@ -92,7 +92,7 @@ attributeSelectorSpec =
       |> it "finds the element" (
         Markup.observeElement
           |> Markup.query << by [ attribute ("data-fun", "something fun") ]
-          |> expect (Markup.text <| equals "This is fun!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is fun!")
       )
     )
   ]
@@ -109,7 +109,7 @@ onlyOneTagAllowedSpec =
       |> it "uses the first tag only" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1", tag "div", tag "a" ]
-          |> expect (Markup.text <| equals "This is an H1 tag")
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is an H1 tag")
       )
     )
   ]
@@ -126,7 +126,7 @@ tagSelectorSpec =
       |> it "renders the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1" ]
-          |> expect (Markup.text <| equals "This is an H1 tag")
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is an H1 tag")
       )
     )
   ]
@@ -143,7 +143,7 @@ combinedTagSelectorSpec =
       |> it "selects the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
-          |> expect (Markup.text <| equals "This is an H1 tag")
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is an H1 tag")
       )
     )
   , scenario "Selects by id and then tag" (
@@ -154,7 +154,7 @@ combinedTagSelectorSpec =
       |> it "selects the text on the view" (
         Markup.observeElement
           |> Markup.query << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
-          |> expect (Markup.text <| equals "This is an H1 tag")
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is an H1 tag")
       )
     )
   ]

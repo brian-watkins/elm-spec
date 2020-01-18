@@ -19,7 +19,9 @@ describe("html plugin", () => {
       expectSpec("HtmlSpec", "single", done, (observations) => {
         expect(observations[1].description).to.equal("It does not find an element that is not there")
         expectRejected(observations[1], [
-          reportLine("No element matches selector", "#something-not-present")
+          reportLine("Claim rejected for selector", "#something-not-present"),
+          reportLine("Expected", "something"),
+          reportLine("but found", "nothing")
         ])
       })
     })

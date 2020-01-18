@@ -9,7 +9,7 @@ import Spec.Markup.Event as Event
 import Spec.Observer as Observer
 import Specs.Helpers exposing (equals)
 import Spec.Report as Report
-import Spec.Claim as Claim
+import Spec.Claim as Claim exposing (isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -38,7 +38,7 @@ clickSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "my-count" ]
-          |> expect (Markup.text <| equals "The count is 30!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "The count is 30!")
       )
     )
   , scenario "mousedown and mouseup events" (
@@ -103,7 +103,7 @@ doubleClickSpec =
         [ it "responds to the event" (
             Markup.observeElement
               |> Markup.query << by [ id "my-message" ]
-              |> expect (Markup.text <| equals "You wrote: DOUBLE CLICK!")
+              |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: DOUBLE CLICK!")
           )
         , it "records two click events" (
             Observer.observeModel .count
@@ -160,7 +160,7 @@ mouseDownSpec =
       |> it "responds to the event" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.text <| equals "You wrote: MOUSE DOWN!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: MOUSE DOWN!")
       )
     )
   , scenario "no element targeted for mouse down" (
@@ -204,7 +204,7 @@ mouseUpSpec =
       |> it "responds to the event" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.text <| equals "You wrote: MOUSE UP!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: MOUSE UP!")
       )
     )
   , scenario "no element targeted for mouse up" (
@@ -348,7 +348,7 @@ customEventSpec =
       |> it "does what it should" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.text <| equals "You wrote: ABC!")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: ABC!")
       )
     )
   , scenario "no element targeted for custom event" (
@@ -407,7 +407,7 @@ noHandlerSpec =
       |> it "does nothing" (
         Markup.observeElement
           |> Markup.query << by [ id "my-message" ]
-          |> expect (Markup.text <| equals "You wrote: !")
+          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: !")
       )
     )
   ]
