@@ -4,6 +4,7 @@ module Spec.Observer exposing
   , observeModel
   , mapRejection
   , observeResult
+  , focus
   )
 
 {-| An observer evaluates a claim with respect to some part of the world.
@@ -17,7 +18,7 @@ more observers.
 @docs Expectation, Observer, observeModel
 
 # Work with Observers
-@docs observeResult, mapRejection
+@docs observeResult, mapRejection, focus
 
 -}
 
@@ -75,7 +76,7 @@ fails then the `Claim` will be rejected.
 -}
 observeResult : Observer model (Result Report a) -> Observer model a
 observeResult =
-  Internal.andThenClaim <| \claim ->
+  focus <| \claim ->
     \actual ->
       case actual of
         Ok value ->
@@ -88,10 +89,45 @@ observeResult =
 -}
 mapRejection : (Report -> Report) -> Observer model a -> Observer model a
 mapRejection mapper =
-  Internal.andThenClaim <| \claim ->
+  focus <| \claim ->
     \actual ->
       case claim actual of
         Claim.Accept ->
           Claim.Accept
         Claim.Reject report ->
           Claim.Reject <| mapper report
+
+
+{-| Create a new `Observer` that evaluates a claim with respect to a particular aspect of the world
+observed by the given observer.
+
+Consider an `Observer model (Maybe HtmlElement)`, which observes all aspects of a `Maybe HtmlElement`.
+Create an `Observer` that focuses on just the text of an existing `HtmlElement` like so:
+
+    Spec.Markup.observeElement
+      |> Spec.Markup.query << by [ id "some-element" ]
+      |> focus Spec.Claim.isSomethingWhere
+      |> focus Spec.Markup.text
+      |> Spec.expect (equals "Something cool!")
+
+If the element doesn't exist, then the `isSomethingWhere` claim would fail, and subsequent claims would not be evaluated by the observer.
+
+You could then abstract this into a helper function like so:
+
+    expectText : Claim String -> Observer model (Maybe HtmlElement) -> Expectation model
+    expectText claim observer =
+      observer
+        |> focus Spec.Claim.isSomethingWhere
+        |> focus Spec.Markup.text
+        |> Spec.expect claim
+
+And then you could write:
+
+    Spec.Markup.observeElement
+      |> Spec.Markup.query << by [ id "some-element" ]
+      |> expectText (equals "Something cool!")
+
+-}
+focus : (Claim b -> Claim a) -> Observer model a -> Observer model b
+focus =
+  Internal.focus
