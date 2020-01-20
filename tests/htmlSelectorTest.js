@@ -31,6 +31,12 @@ describe("Selectors", () => {
     })
   })
 
+  describe("class", () => {
+    it("selects the element as expected", (done) => {
+      expectPassingSpec("SelectorSpec", "class", done)
+    })
+  })
+
   describe("descendantsOf", () => {
     it("selects the elements as expected", (done) => {
       expectPassingSpec("SelectorSpec", "descendants", done)

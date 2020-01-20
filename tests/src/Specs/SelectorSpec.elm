@@ -98,6 +98,23 @@ attributeSelectorSpec =
   ]
 
 
+classSelectorSpec : Spec () Msg
+classSelectorSpec =
+  Spec.describe "class selector"
+  [ scenario "select by class" (
+      given (
+        Setup.initWithModel ()
+          |> Setup.withView testView
+      )
+      |> it "finds the element" (
+        Markup.observeElement
+          |> Markup.query << by [ class "cool-class" ]
+          |> expect (isSomethingWhere <| Markup.text <| equals "This is styled!")
+      )
+    )
+  ]
+
+
 onlyOneTagAllowedSpec : Spec () Msg
 onlyOneTagAllowedSpec =
   Spec.describe "an html program"
@@ -135,14 +152,14 @@ tagSelectorSpec =
 combinedTagSelectorSpec : Spec () Msg
 combinedTagSelectorSpec =
   Spec.describe "an html program"
-  [ scenario "Selects by tag and then id" (
+  [ scenario "Selects by tag and then everything else" (
       given (
         Setup.initWithModel ()
           |> Setup.withView testView
       )
       |> it "selects the text on the view" (
         Markup.observeElement
-          |> Markup.query << by [ tag "h1", attributeName "data-tag", id "fun-id" ]
+          |> Markup.query << by [ tag "h1", attributeName "data-tag", id "fun-id", class "styled-class" ]
           |> expect (isSomethingWhere <| Markup.text <| equals "This is an H1 tag")
       )
     )
@@ -153,7 +170,7 @@ combinedTagSelectorSpec =
       )
       |> it "selects the text on the view" (
         Markup.observeElement
-          |> Markup.query << by [ id "fun-id", attributeName "data-tag", tag "h1" ]
+          |> Markup.query << by [ id "fun-id", attributeName "data-tag", tag "h1", class "styled-class" ]
           |> expect (isSomethingWhere <| Markup.text <| equals "This is an H1 tag")
       )
     )
@@ -169,8 +186,10 @@ testView _ =
   Html.div []
   [ Html.p [] []
   , Html.div []
-    [ Html.h1 [ Attr.id "fun-id", Attr.attribute "data-tag" "tag" ] [ Html.text "This is an H1 tag" ]
+    [ Html.h1 [ Attr.id "fun-id", Attr.attribute "data-tag" "tag", Attr.class "styled-class" ]
+      [ Html.text "This is an H1 tag" ]
     , Html.div [ Attr.attribute "data-fun" "something fun" ] [ Html.text "This is fun!" ]
+    , Html.div [ Attr.class "awesome-class", Attr.class "cool-class super-class" ] [ Html.text "This is styled!" ]
     ]
   ]
 
@@ -183,6 +202,7 @@ selectSpec name =
     "onlyOneTag" -> Just onlyOneTagAllowedSpec
     "attributeName" -> Just attributeNameSelectorSpec
     "attribute" -> Just attributeSelectorSpec
+    "class" -> Just classSelectorSpec
     "descendants" -> Just descendantsOfSpec
     _ -> Nothing
 

@@ -7,6 +7,7 @@ module Spec.Markup.Selector exposing
   , tag
   , attribute
   , attributeName
+  , class
   , by
   , descendantsOf
   , document
@@ -19,7 +20,7 @@ module Spec.Markup.Selector exposing
 @docs Selector, Element, by, descendantsOf, Object, document, toString
 
 # Define Characteristics
-@docs Characteristic, id, tag, attribute, attributeName
+@docs Characteristic, id, tag, class, attribute, attributeName
 
 -}
 
@@ -35,6 +36,7 @@ type Characteristic
   | Tag String
   | AttributeName String
   | Attribute String String
+  | Class String
 
 
 {-| An abstract description of some aspect of an HTML document, usually an HTML element.
@@ -105,6 +107,20 @@ applies to elements having an attribute names `data-some-attr`.
 attributeName : String -> Characteristic
 attributeName =
   AttributeName
+
+
+{-| Generate a characteristic that belongs to elements with the given CSS class.
+
+For example,
+
+    class "fun-class"
+
+applies to elements to which the CSS class `fun-class` has been applied.
+
+-}
+class : String -> Characteristic
+class =
+  Class
 
 
 {-| Generate a selector that matches HTML elements with the given characteristics.
@@ -201,6 +217,8 @@ anyOtherCharacteristics selectors selString =
           output ++ "[" ++ name ++ "]"
         Attribute name value ->
           output ++ "[" ++ name ++ "='" ++ value ++ "']"
+        Class name ->
+          output ++ "." ++ name
         _ ->
           output  
     ) selString
