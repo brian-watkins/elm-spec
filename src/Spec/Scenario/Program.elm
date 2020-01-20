@@ -145,7 +145,7 @@ update config msg state =
             ( updated, _ ) ->
               badState config state
         Configure model ->
-          update config Continue <| Exercise <| Exercise.init model.scenario model.subject
+          ( Exercise <| Exercise.init model.scenario model.subject, continue config )
         Exercise model ->
           exerciseUpdate config msg model
         Observe model ->
