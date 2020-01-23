@@ -102,10 +102,9 @@ targetUnknownSpec =
         [ Markup.target << by [ id "another-button" ]
         , Event.click
         ]
-      |> it "renders the count" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-count" ]
-          |> expect (isSomethingWhere <| Markup.text <| equals "The count is 30!")
+      |> it "should fail before this" (
+        Observer.observeModel (always False)
+          |> expect (\_ -> Claim.Reject <| Report.note "Should not fail here!")
       )
     )
   , scenario "Should run even though previous spec was rejected" (

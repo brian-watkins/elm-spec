@@ -12,7 +12,7 @@ import Html
 import Url
 
 
-handleUrlRequest : model -> UrlRequest -> ( model, Command (Msg msg) )
+handleUrlRequest : model -> UrlRequest -> ( model, Command msg )
 handleUrlRequest model request =
   case request of
     Internal url ->

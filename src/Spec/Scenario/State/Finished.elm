@@ -7,7 +7,7 @@ module Spec.Scenario.State.Finished exposing
   )
 
 import Spec.Setup.Internal as Internal exposing (Subject)
-import Spec.Scenario.State as State exposing (Msg(..), Command)
+import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
 import Spec.Message as Message exposing (Message)
 import Spec.Markup.Message as Message
 import Spec.Scenario.State.NavigationHelpers exposing (..)
@@ -39,30 +39,30 @@ view model =
       documentView model.programModel
 
 
-update : (Message -> Cmd msg) -> Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )
-update outlet msg model =
+update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Command msg )
+update actions msg model =
   case msg of
     ReceivedMessage message ->
       if Message.is "_navigation" "assign" message then
-        handleLocationAssigned model message
+        handleLocationAssigned actions model message
       else
         ( model
         , State.Do Cmd.none
         )
 
     ProgramMsg programMsg ->
-      model.subject.update outlet programMsg model.programModel
+      model.subject.update actions.outlet programMsg model.programModel
         |> Tuple.mapFirst (\updated -> { model | programModel = updated })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then
-            State.Send Message.runToNextAnimationFrame
+            State.send actions Message.runToNextAnimationFrame
           else
             Cmd.map ProgramMsg nextCommand
-              |> State.DoAndRender
+              |> doAndRender actions
         )
 
     Continue ->
-      ( model, State.Do Cmd.none )
+      ( model, State.Do actions.complete )
 
     Abort report ->
       ( model, State.Do Cmd.none )
@@ -70,7 +70,7 @@ update outlet msg model =
     OnUrlChange url ->
       case model.subject.navigationConfig of
         Just config ->
-          update outlet (ProgramMsg <| config.onUrlChange url) model
+          update actions (ProgramMsg <| config.onUrlChange url) model
         Nothing ->
           ( model
           , State.Do Cmd.none
@@ -79,9 +79,17 @@ update outlet msg model =
     OnUrlRequest request ->
       case model.subject.navigationConfig of
         Just config ->
-          update outlet (ProgramMsg <| config.onUrlRequest request) model
+          update actions (ProgramMsg <| config.onUrlRequest request) model
         Nothing ->
           handleUrlRequest model request
+
+
+doAndRender : Actions msg programMsg -> Cmd (Msg programMsg) -> Command msg
+doAndRender actions cmd =
+  State.Do <| Cmd.batch
+    [ Cmd.map actions.sendToSelf cmd
+    , actions.send <| Message.runToNextAnimationFrame
+    ]
 
 
 subscriptions : Model model msg -> Sub msg
@@ -89,8 +97,8 @@ subscriptions model =
   model.subject.subscriptions model.programModel
 
 
-handleLocationAssigned : Model model msg -> Message -> ( Model model msg, Command (Msg msg) )
-handleLocationAssigned model message =
+handleLocationAssigned : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Command msg )
+handleLocationAssigned actions model message =
   case Message.decode Json.string message of
     Ok location ->
       case model.subject.navigationConfig of
@@ -100,7 +108,7 @@ handleLocationAssigned model message =
           )
         Nothing ->
           ( { model | subject = navigatedSubject location model.subject }
-          , State.DoAndRender Cmd.none
+          , doAndRender actions Cmd.none
           )
     Err _ ->
       ( model

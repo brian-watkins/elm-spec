@@ -8,9 +8,10 @@ module Spec.Scenario.State.Exercise exposing
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Step)
 import Spec.Setup.Internal as Internal exposing (Subject)
-import Spec.Scenario.State as State exposing (Msg(..), Command)
+import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
 import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
+import Spec.Markup.Message as Message
 import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Observer.Message as Message
@@ -61,8 +62,8 @@ view model =
       documentView model.programModel
 
 
-update : (Message -> Cmd msg) -> Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )
-update outlet msg model =
+update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Command msg )
+update actions msg model =
   case msg of
     ReceivedMessage message ->
       if Message.is "_navigation" "assign" message then
@@ -73,20 +74,20 @@ update outlet msg model =
         )
 
     ProgramMsg programMsg ->
-      model.subject.update outlet programMsg model.programModel
+      model.subject.update actions.outlet programMsg model.programModel
         |> Tuple.mapFirst (\updated -> { model | programModel = updated })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then
             State.Do Cmd.none
           else
             Cmd.map ProgramMsg nextCommand
-              |> State.DoAndRender
+              |> doAndRender actions
         )
 
     Continue ->
       case model.steps of
         [] ->
-          ( model, State.Transition )
+          ( model, State.Transition <| actions.send Message.startObservation )
         step :: remaining ->
           let
             updated = 
@@ -101,26 +102,28 @@ update outlet msg model =
           in
             case step.run context of
               Step.SendMessage message ->
-                ( updated, State.Send message )
+                ( updated, State.send actions <| Message.stepMessage message )
               Step.SendCommand cmd ->
                 ( updated
                 , Cmd.map ProgramMsg cmd
-                    |> State.DoAndRender
+                    |> doAndRender actions
                 )
               Step.DoNothing ->
-                update outlet Continue updated
+                update actions Continue updated
 
     Abort report ->
-      ( model, State.Do Cmd.none )
+      ( model
+      , State.abortWith actions model.conditionsApplied "A spec step failed" report
+      )
 
     OnUrlChange url ->
       case model.subject.navigationConfig of
         Just config ->
-          update outlet (ProgramMsg <| config.onUrlChange url) model
+          update actions (ProgramMsg <| config.onUrlChange url) model
         Nothing ->
           if model.subject.isApplication then
             ( model
-            , State.updateWith <| Abort <| Report.batch
+            , State.updateWith actions <| Abort <| Report.batch
               [ Report.note "A URL change occurred for an application, but no handler has been provided."
               , Report.note "Use Spec.Setup.forNavigation to set a handler."
               ]
@@ -133,17 +136,25 @@ update outlet msg model =
     OnUrlRequest request ->
       case model.subject.navigationConfig of
         Just config ->
-          update outlet (ProgramMsg <| config.onUrlRequest request) model
+          update actions (ProgramMsg <| config.onUrlRequest request) model
         Nothing ->
           if model.subject.isApplication then
             ( model
-            , State.updateWith <| Abort <| Report.batch
+            , State.updateWith actions <| Abort <| Report.batch
               [ Report.note "A URL request occurred for an application, but no handler has been provided."
               , Report.note "Use Spec.Setup.forNavigation to set a handler."
               ]
             )
           else
             handleUrlRequest model request
+
+
+doAndRender : Actions msg programMsg -> Cmd (Msg programMsg) -> Command msg
+doAndRender actions cmd =
+  State.Do <| Cmd.batch
+    [ Cmd.map actions.sendToSelf cmd
+    , actions.send <| Message.stepMessage <| Message.runToNextAnimationFrame
+    ]
 
 
 subscriptions : Model model msg -> Sub msg
@@ -159,7 +170,7 @@ addIfUnique list val =
     list ++ [ val ]
 
 
-handleLocationAssigned : Model model msg -> Message -> ( Model model msg, Command (Msg msg) )
+handleLocationAssigned : Model model programMsg -> Message -> ( Model model programMsg, Command msg )
 handleLocationAssigned model message =
   case Message.decode Json.string message of
     Ok location ->

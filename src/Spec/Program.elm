@@ -40,7 +40,7 @@ type Msg msg
 
 type alias Model model msg =
   { scenarios: List (Internal.Scenario model msg)
-  , scenarioModel: ScenarioProgram.Model model msg
+  , scenarioState: ScenarioProgram.State model msg
   , key: Maybe Key
   }
 
@@ -51,14 +51,14 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
     ( { scenarios =
           specProvider ()
             |> gatherScenarios flags.tags
-      , scenarioModel = ScenarioProgram.init
+      , scenarioState = ScenarioProgram.init
       , key = maybeKey
       }
     , Cmd.none
     )
   else
     ( { scenarios = []
-      , scenarioModel = ScenarioProgram.init
+      , scenarioState = ScenarioProgram.init
       , key = maybeKey
       }
     , versionMismatchErrorMessage requiredElmSpecCoreVersion flags.version
@@ -68,7 +68,7 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
 
 view : Model model msg -> Document (Msg msg)
 view model =
-  ScenarioProgram.view model.scenarioModel
+  ScenarioProgram.view model.scenarioState
     |> mapDocument ScenarioMsg
 
 
@@ -80,11 +80,11 @@ update config msg model =
         [] ->
           ( model, config.send specComplete )
         next :: remaining ->
-          ScenarioProgram.start (scenarioConfig config) model.key next
-            |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
+          ScenarioProgram.start (scenarioActions config) model.key next
+            |> Tuple.mapFirst (\updated -> { model | scenarioState = updated, scenarios = remaining })
     ScenarioMsg scenarioMsg ->
-      ScenarioProgram.update (scenarioConfig config) scenarioMsg model.scenarioModel
-        |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated })
+      ScenarioProgram.update (scenarioActions config) scenarioMsg model.scenarioState
+        |> Tuple.mapFirst (\updated -> { model | scenarioState = updated })
     SendMessage message ->
       ( model, config.send message )
     ReceivedMessage message ->
@@ -100,7 +100,7 @@ handleSpecMessage config model message =
     |> Result.map (\state ->
       case state of
         "FINISH" ->
-          ( { model | scenarioModel = ScenarioProgram.finishScenario model.scenarioModel }
+          ( { model | scenarioState = ScenarioProgram.finishScenario model.scenarioState }
           , stopSpecSuiteRun
           )
         _ ->
@@ -121,8 +121,8 @@ specFinished =
     |> Message.withBody (Encode.string "FINISHED")
 
 
-scenarioConfig : Config msg -> ScenarioProgram.Config (Msg msg) msg
-scenarioConfig config =
+scenarioActions : Config msg -> ScenarioProgram.Actions (Msg msg) msg
+scenarioActions config =
   { send = config.send
   , outlet = config.outlet
   , sendToSelf = ScenarioMsg
@@ -146,7 +146,7 @@ subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
   Sub.batch
   [ config.listen ReceivedMessage
-  , ScenarioProgram.subscriptions model.scenarioModel
+  , ScenarioProgram.subscriptions model.scenarioState
       |> Sub.map ScenarioMsg
   ]
   

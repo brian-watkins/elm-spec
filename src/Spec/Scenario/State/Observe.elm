@@ -7,7 +7,7 @@ module Spec.Scenario.State.Observe exposing
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Observation)
 import Spec.Setup.Internal as Internal exposing (Subject)
-import Spec.Scenario.State as State exposing (Msg(..), Command)
+import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
 import Spec.Message exposing (Message)
 import Spec.Observer.Expectation as Expectation exposing (Judgment(..))
 import Spec.Observer.Message as Message
@@ -52,13 +52,13 @@ view model =
       documentView model.programModel
 
 
-update : Msg msg -> Model model msg -> ( Model model msg, Command (Msg msg) )
-update msg model =
+update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Command msg )
+update actions msg model =
   case msg of
     ReceivedMessage message ->
       Expectation.update (Expectation.HandleInquiry message) model.expectationModel
         |> Tuple.mapFirst (\updated -> { model | currentDescription = "", expectationModel = updated })
-        |> Tuple.mapSecond (sendExpectationMessage model)
+        |> Tuple.mapSecond (sendExpectationMessage actions model)
 
     ProgramMsg programMsg ->
       ( model, State.Do Cmd.none )
@@ -66,7 +66,7 @@ update msg model =
     Continue ->
       case model.observations of
         [] ->
-          ( model, State.Transition )
+          ( model, State.Transition <| actions.complete )
         observation :: remaining ->
           Expectation.update (Expectation.Run (toObservationContext model) observation.expectation)
             model.expectationModel
@@ -77,10 +77,13 @@ update msg model =
               , observations = remaining 
               }
             )
-          |> mapTuple (\updated command -> ( updated, sendExpectationMessage updated command ))
+          |> mapTuple (\updated command -> ( updated, sendExpectationMessage actions updated command ))
     
-    Abort _ ->
-      ( model, State.Do Cmd.none )
+    Abort report ->
+      ( model
+      , State.abortWith actions
+          (model.conditionsApplied ++ [ model.currentDescription ]) "Unable to complete observation" report
+      )
 
     OnUrlChange url ->
       ( model, State.Do Cmd.none )
@@ -89,14 +92,14 @@ update msg model =
       ( model, State.Do Cmd.none )
 
 
-sendExpectationMessage : Model model msg -> Expectation.Command -> Command (Msg msg)
-sendExpectationMessage model result =
+sendExpectationMessage : Actions msg programMsg -> Model model programMsg -> Expectation.Command -> Command msg
+sendExpectationMessage actions model result =
   case result of
     Expectation.Done verdict ->
       Message.observation model.conditionsApplied model.currentDescription verdict
-        |> State.Send
+        |> State.send actions
     Expectation.Send message ->
-      State.Send message
+      State.send actions message
 
 
 toObservationContext : Model model msg -> Expectation.Context model
