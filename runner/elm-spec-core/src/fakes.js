@@ -10,6 +10,7 @@ exports.registerFakes = (window, clock) => {
     window._elm_spec = {}
     const fakeLocation = new FakeLocation((msg) => window._elm_spec.app.ports.elmSpecIn.send(msg))
     window._elm_spec.requestAnimationFrame = clock.requestAnimationFrame
+    window._elm_spec.cancelAnimationFrame = clock.cancelAnimationFrame
     window._elm_spec.date = fakeDate(clock)
     window._elm_spec.window = fakeWindow(window, fakeLocation)
     window._elm_spec.document = fakeDocument(window, fakeLocation)
@@ -22,6 +23,7 @@ exports.injectFakes = (code) => {
     return `
 (function(theWindow){
   const requestAnimationFrame = theWindow._elm_spec.requestAnimationFrame;
+  const cancelAnimationFrame = theWindow._elm_spec.cancelAnimationFrame;
   const Date = theWindow._elm_spec.date;
   const console = theWindow._elm_spec.console;
   const window = theWindow._elm_spec.window;

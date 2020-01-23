@@ -26,6 +26,6 @@ update : Actions msg programMsg -> State.Msg programMsg -> Model model programMs
 update actions msg model =
   case msg of
     Continue ->
-      ( model, State.Transition Cmd.none )
+      ( model, State.Transition <| State.continue actions )
     _ ->
-      ( model, State.Do Cmd.none )
+      ( model, State.Halt Cmd.none )

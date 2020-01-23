@@ -158,8 +158,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "configure":
         this.handleMessage(specMessage.body.message, out)
         this.whenStackIsComplete(() => {
-          this.configureComplete()
-          out(this.continue())
+          this.configureComplete(out)
         })
         break
       case "step":
@@ -180,8 +179,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         out(this.continue())
         break
       case "CONFIGURE_COMPLETE":
-        this.configureComplete()
-        out(this.continue())
+        this.configureComplete(out)
         break
       case "OBSERVATION_START":
         this.scenarioExerciseComplete()
@@ -208,8 +206,13 @@ module.exports = class ProgramRunner extends EventEmitter {
     setBaseLocation("http://elm-spec", this.context.window)
   }
 
-  configureComplete() {
+  configureComplete(out) {
     this.portPlugin.subscribe({ ignore: [ ELM_SPEC_OUT ]})
+    out({
+      home: "_configure",
+      name: "complete",
+      body: null
+    })
   }
 
   scenarioExerciseComplete() {

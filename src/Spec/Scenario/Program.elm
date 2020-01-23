@@ -109,8 +109,8 @@ updateState actions msg state =
 
     Start model ->
       case Start.update actions msg model of
-        ( updated, Transition _ ) ->
-          transitionToConfigure actions updated
+        ( updated, Transition cmd ) ->
+          ( Configure <| Configure.init updated.scenario updated.subject, cmd )
         _ ->
           badState actions state
 
@@ -120,8 +120,8 @@ updateState actions msg state =
           ( Exercise <| Exercise.init updated.scenario updated.subject, cmd )
         ( updated, Halt cmd ) ->
           ( Finished <| Finished.init updated.subject updated.subject.model, cmd )
-        _ ->
-          badState actions state
+        ( updated, Do cmd ) ->
+          ( Configure updated, cmd )
 
     Exercise model ->
       case Exercise.update actions msg model of
@@ -147,15 +147,6 @@ updateState actions msg state =
           ( Finished updated, cmd )
         _ ->
           badState actions state
-
-
-transitionToConfigure : Actions msg programMsg -> Start.Model model programMsg -> ( State model programMsg, Cmd msg )
-transitionToConfigure actions model =
-  case Configure.init actions model.scenario model.subject of
-    ( initial, Do cmd ) ->
-      ( Configure initial, cmd )
-    _ ->
-      badState actions <| Start model
 
 
 finishScenario : State model programMsg -> State model programMsg
