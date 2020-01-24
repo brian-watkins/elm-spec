@@ -9,7 +9,8 @@ module Spec.Observer.Internal exposing
 
 import Spec.Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observer.Expectation as Expectation exposing (Expectation)
+import Spec.Scenario.Internal exposing (Expectation(..), Judgment(..))
+import Spec.Step.Context as Context
 
 
 type Observer model a =
@@ -36,18 +37,19 @@ expect claim (Observer observer) =
 observeEffects : (List Message -> a) -> Observer model a
 observeEffects mapper =
   Observer <| \claim ->
-    Expectation.Expectation <| \context ->
-      mapper context.effects
+    Expectation <| \context ->
+      Context.effects context
+        |> mapper
         |> claim
-        |> Expectation.Complete
+        |> Complete
 
 
 inquire : Message -> (Message -> a) -> Observer model a
 inquire message mapper =
   Observer <| \claim ->
-    Expectation.Expectation <| \context ->
-      Expectation.Inquire message <|
+    Expectation <| \context ->
+      Inquire message <|
         \response ->
           mapper response
             |> claim
-            |> Expectation.Complete
+            |> Complete

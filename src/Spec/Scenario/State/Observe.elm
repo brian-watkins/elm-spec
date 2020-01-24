@@ -5,11 +5,13 @@ module Spec.Scenario.State.Observe exposing
   , update
   )
 
-import Spec.Scenario.Internal as Internal exposing (Scenario, Observation)
+import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Expectation(..), Judgment(..))
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
-import Spec.Message exposing (Message)
-import Spec.Observer.Expectation as Expectation exposing (Judgment(..))
+import Spec.Step.Context as Context exposing (Context)
+import Spec.Report as Report exposing (Report)
+import Spec.Claim as Claim exposing (Verdict)
+import Spec.Message as Message exposing (Message)
 import Spec.Observer.Message as Message
 import Spec.Scenario.State.Exercise as Exercise
 import Html exposing (Html)
@@ -23,7 +25,7 @@ type alias Model model msg =
   , programModel: model
   , effects: List Message
   , observations: List (Observation model)
-  , expectationModel: Expectation.Model model
+  , inquiryHandler: Maybe (Message -> Judgment model)
   , currentDescription: String
   }
 
@@ -36,7 +38,7 @@ init exerciseModel =
   , programModel = exerciseModel.programModel
   , effects = exerciseModel.effects
   , observations = exerciseModel.scenario.observations
-  , expectationModel = Expectation.init
+  , inquiryHandler = Nothing
   , currentDescription = ""
   }
 
@@ -56,9 +58,11 @@ update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> (
 update actions msg model =
   case msg of
     ReceivedMessage message ->
-      Expectation.update (Expectation.HandleInquiry message) model.expectationModel
-        |> Tuple.mapFirst (\updated -> { model | currentDescription = "", expectationModel = updated })
-        |> Tuple.mapSecond (sendExpectationMessage actions model)
+      Message.decode Message.inquiryDecoder message
+        |> Result.map .message
+        |> Result.map (processInquiryMessage actions model)
+        |> Result.withDefault
+          (abortObservation actions model <| Report.note "Unable to decode inquiry result!")
 
     ProgramMsg programMsg ->
       ( model, State.Do Cmd.none )
@@ -68,16 +72,11 @@ update actions msg model =
         [] ->
           ( model, State.Transition <| actions.complete )
         observation :: remaining ->
-          Expectation.update (Expectation.Run (toObservationContext model) observation.expectation)
-            model.expectationModel
-          |> Tuple.mapFirst (\updated ->
-              { model
-              | currentDescription = observation.description
-              , expectationModel = updated
-              , observations = remaining 
-              }
+          setDescription observation model
+            |> performObservation actions observation
+            |> Tuple.mapFirst (\updated ->
+              { updated | observations = remaining }
             )
-          |> mapTuple (\updated command -> ( updated, sendExpectationMessage actions updated command ))
     
     Abort report ->
       ( model
@@ -92,21 +91,73 @@ update actions msg model =
       ( model, State.Do Cmd.none )
 
 
-sendExpectationMessage : Actions msg programMsg -> Model model programMsg -> Expectation.Command -> Command msg
-sendExpectationMessage actions model result =
-  case result of
-    Expectation.Done verdict ->
-      Message.observation model.conditionsApplied model.currentDescription verdict
-        |> State.send actions
-    Expectation.Send message ->
-      State.send actions message
+abortObservation : Actions msg programMsg -> Model model programMsg -> Report -> ( Model model programMsg, Command msg )
+abortObservation actions model report =
+  update actions (Abort report) model
 
 
-toObservationContext : Model model msg -> Expectation.Context model
+sendVerdict : Actions msg programMsg -> Model model programMsg -> Verdict -> Command msg
+sendVerdict actions model verdict =
+  Message.observation model.conditionsApplied model.currentDescription verdict
+    |> State.send actions
+
+
+toObservationContext : Model model msg -> Context model
 toObservationContext model =
-  { model = model.programModel
-  , effects = model.effects
-  }
+  Context.for model.programModel
+    |> Context.withEffects model.effects
+
+
+setDescription : Observation model -> Model model programMsg -> Model model programMsg
+setDescription observation model =
+  { model | currentDescription = observation.description }
+
+
+performObservation : Actions msg programMsg -> Observation model -> Model model programMsg -> ( Model model programMsg, Command msg )
+performObservation actions observation model =
+  case runExpectation model observation.expectation of
+    Complete verdict ->
+      ( { model | inquiryHandler = Nothing }
+      , sendVerdict actions model verdict 
+      )
+    Inquire message handler ->
+      ( { model | inquiryHandler = Just handler }
+      , State.send actions <| Message.inquiry message
+      )
+
+
+runExpectation : Model model programMsg -> Expectation model -> Judgment model
+runExpectation model (Expectation expectation) =
+  expectation <| toObservationContext model
+
+
+processInquiryMessage : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Command msg )
+processInquiryMessage actions model message =
+  if Message.is "_scenario" "abort" message then
+    Message.decode Report.decoder message
+      |> Result.withDefault (Report.note "Unable to decode abort message!")
+      |> abortObservation actions model
+  else
+    ( model
+    , handleInquiry message model.inquiryHandler
+        |> sendVerdict actions model
+    )
+
+
+handleInquiry : Message -> Maybe (Message -> Judgment model) -> Verdict
+handleInquiry message maybeHandler =
+  maybeHandler
+    |> Maybe.map (inquiryResult message)
+    |> Maybe.withDefault (Claim.Reject <| Report.note "No Inquiry Handler!")
+    
+
+inquiryResult : Message -> (Message -> Judgment model) -> Verdict
+inquiryResult message handler =
+  case handler message of
+    Complete verdict ->
+      verdict
+    Inquire _ _ ->
+      Claim.Reject <| Report.note "Recursive Inquiry not supported!"
 
 
 mapTuple : (a -> b -> (c, d)) -> (a, b) -> (c, d)

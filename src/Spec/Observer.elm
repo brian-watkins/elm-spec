@@ -25,7 +25,8 @@ more observers.
 import Spec.Observer.Internal as Internal
 import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Observer.Expectation as Expectation
+import Spec.Step.Context as Context
+import Spec.Scenario.Internal as Scenario exposing (Judgment(..))
 import Spec.Report exposing (Report)
 
 
@@ -35,7 +36,7 @@ Expectations are checked at the end of the scenario, after all steps of the
 script have been performed.
 -}
 type alias Expectation model =
-  Expectation.Expectation model
+  Scenario.Expectation model
 
 
 {-| An `Observer` determines whether to accept or reject a claim with
@@ -64,10 +65,11 @@ observers that evaluate claims with respect to the world outside the program.
 observeModel : (model -> a) -> Observer model a
 observeModel mapper =
   Internal.for <| \claim ->
-    Expectation.Expectation <| \context ->
-      mapper context.model
+    Scenario.Expectation <| \context ->
+      Context.model context
+        |> mapper
         |> claim
-        |> Expectation.Complete
+        |> Complete
 
 
 {-| Create a new `Observer` that will evaluate a `Claim` with respect to

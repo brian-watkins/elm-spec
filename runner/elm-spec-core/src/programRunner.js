@@ -99,11 +99,6 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "inquiry":
         const inquiry = specMessage.body.message
         this.handleMessage(inquiry, (message) => {
-          // REVISIT: Could move this check inside Elm
-          if (message.home === "_scenario" && message.name === "abort") {
-            out(message)
-            return
-          }
           out({
             home: "_observer",
             name: "inquiryResult",

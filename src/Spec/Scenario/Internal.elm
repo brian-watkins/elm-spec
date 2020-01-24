@@ -1,5 +1,6 @@
 module Spec.Scenario.Internal exposing
   ( Spec(..), Scenario, Script, Plan, Observation, Step
+  , Expectation(..), Judgment(..)
   , buildStep
   , buildObservation
   , describing
@@ -10,7 +11,7 @@ module Spec.Scenario.Internal exposing
 import Spec.Setup.Internal exposing (Setup)
 import Spec.Step exposing (Context, Command)
 import Spec.Message exposing (Message)
-import Spec.Observer.Expectation exposing (Expectation)
+import Spec.Claim exposing (Verdict)
 
 
 type Spec model msg
@@ -44,6 +45,16 @@ type alias Observation model =
   { description: String
   , expectation: Expectation model
   }
+
+
+type Expectation model =
+  Expectation
+    (Context model -> Judgment model)
+
+
+type Judgment model
+  = Complete Verdict
+  | Inquire Message (Message -> Judgment model)
 
 
 type alias Step model msg =

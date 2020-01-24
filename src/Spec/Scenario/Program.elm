@@ -12,7 +12,6 @@ import Spec.Scenario.State as State exposing (Msg(..), Command(..), Actions)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer.Message as Message
 import Spec.Markup.Message as Message
-import Spec.Observer.Expectation as Expectation
 import Spec.Report as Report exposing (Report)
 import Spec.Scenario.State.Start as Start
 import Spec.Scenario.State.Exercise as Exercise
