@@ -4,7 +4,6 @@ module Spec.Scenario.State.NavigationHelpers exposing
   )
 
 import Spec.Setup.Internal as Internal exposing (Subject, ProgramView(..))
-import Spec.Scenario.State as State exposing (Msg(..), Command)
 import Spec.Message as Message exposing (Message)
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation
@@ -12,16 +11,16 @@ import Html
 import Url
 
 
-handleUrlRequest : model -> UrlRequest -> ( model, Command msg )
+handleUrlRequest : model -> UrlRequest -> ( model, Cmd msg )
 handleUrlRequest model request =
   case request of
     Internal url ->
       ( model
-      , State.Do <| Browser.Navigation.load <| Url.toString url
+      , Browser.Navigation.load <| Url.toString url
       )
     External url ->
       ( model
-      , State.Do <| Browser.Navigation.load url
+      , Browser.Navigation.load url
       )
 
 

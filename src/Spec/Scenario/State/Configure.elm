@@ -1,16 +1,16 @@
 module Spec.Scenario.State.Configure exposing
-  ( Model
-  , init
-  , update
+  ( init
   )
 
 import Spec.Scenario.Internal exposing (Scenario)
 import Spec.Setup.Internal exposing (Subject)
-import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
+import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Message as Message
 import Spec.Scenario.Message as Message
 import Spec.Report as Report exposing (Report)
 import Spec.Message exposing (Message)
+import Spec.Scenario.State.Exercise as Exercise
+import Spec.Scenario.State.Error as Error
 
 
 type alias Model model msg =
@@ -19,36 +19,50 @@ type alias Model model msg =
   }
 
 
-init : Scenario model programMsg -> Subject model programMsg -> Model model programMsg
-init scenario subject =
+init : Actions msg programMsg -> Scenario model programMsg -> Subject model programMsg -> (State.Model msg programMsg, Cmd msg)
+init actions scenario subject =
+  ( configure <| initModel scenario subject
+  , State.continue actions
+  )
+
+
+initModel : Scenario model programMsg -> Subject model programMsg -> Model model programMsg
+initModel scenario subject =
   { scenario = scenario
   , subject = subject
   }
 
 
-update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Command msg )
-update actions msg model =
+configure : Model model programMsg -> State.Model msg programMsg
+configure model =
+  State.Running
+    { update = update model
+    , view = Nothing
+    , subscriptions = Nothing
+    }
+
+
+update : Model model programMsg -> Actions msg programMsg -> State.Msg programMsg -> ( State.Model msg programMsg, Cmd msg )
+update configModel actions msg =
   case msg of
     ReceivedMessage message ->
       if Message.is "_configure" "complete" message then
-        ( model, State.Transition <| State.continue actions )
+        Exercise.init actions configModel.scenario configModel.subject
       else
-        ( model
-        , abortWith actions model <| Report.note "Unknown message received!"
-        )
+        Report.note "Unknown message received!"
+          |> abortWith actions configModel
     Continue ->
-      ( model, configureWith actions model.subject.configureEnvironment )
+      ( configure configModel
+      , configureWith actions configModel.subject.configureEnvironment
+      )
     Abort report ->
-      ( model
-      , abortWith actions model report
-      )
+      abortWith actions configModel report
     _ ->
-      ( model
-      , abortWith actions model <| Report.note "Unknown state!"
-      )
+      Report.note "Unknown state!"
+        |> abortWith actions configModel
 
 
-configureWith : Actions msg programMsg -> List Message -> Command msg
+configureWith : Actions msg programMsg -> List Message -> Cmd msg
 configureWith actions configMessages =
   if List.isEmpty configMessages then
     State.send actions Message.configureComplete
@@ -57,11 +71,11 @@ configureWith actions configMessages =
       |> State.sendMany actions
 
 
-abortWith : Actions msg programMsg -> Model model programMsg -> Report -> Command msg
-abortWith actions model report =
-  State.abortWith actions
-    [ model.scenario.specification
-    , model.scenario.description
-    ] 
+abortWith : Actions msg programMsg -> Model model programMsg -> Report -> (State.Model msg programMsg, Cmd msg)
+abortWith actions configModel report =
+  Error.init actions
+    [ configModel.scenario.specification
+    , configModel.scenario.description
+    ]
     "Unable to configure scenario"
     report

@@ -1,19 +1,17 @@
 module Spec.Scenario.State.Observe exposing
-  ( Model
-  , init
-  , view
-  , update
+  ( init
   )
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Expectation, Judgment(..))
 import Spec.Setup.Internal as Internal exposing (Subject)
-import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
+import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Step.Context as Context exposing (Context)
 import Spec.Report as Report exposing (Report)
 import Spec.Claim as Claim exposing (Verdict)
 import Spec.Message as Message exposing (Message)
+import Spec.Scenario.Message as Message
 import Spec.Observer.Message as Message
-import Spec.Scenario.State.Exercise as Exercise
+import Spec.Scenario.State.Interactive as Interactive
 import Html exposing (Html)
 import Browser exposing (Document)
 
@@ -30,17 +28,33 @@ type alias Model model msg =
   }
 
 
-init : Exercise.Model model msg -> Model model msg
-init exerciseModel =
-  { scenario = exerciseModel.scenario
-  , subject = exerciseModel.subject
-  , conditionsApplied = exerciseModel.conditionsApplied
-  , programModel = exerciseModel.programModel
-  , effects = exerciseModel.effects
-  , observations = exerciseModel.scenario.observations
+init : Actions msg programMsg -> Scenario model programMsg -> Subject model programMsg -> List String -> model -> List Message -> (State.Model msg programMsg, Cmd msg)
+init actions scenario subject conditionsApplied programModel effects =
+  ( observe <| initModel scenario subject conditionsApplied programModel effects
+  , State.send actions Message.startObservation
+  )
+
+
+initModel : Scenario model msg -> Subject model msg -> List String -> model -> List Message -> Model model msg
+initModel scenario subject conditionsApplied programModel effects =
+  { scenario = scenario
+  , subject = subject
+  , conditionsApplied = conditionsApplied
+  , programModel = programModel
+  , effects = effects
+  , observations = scenario.observations
   , inquiryHandler = Nothing
   , currentDescription = ""
   }
+
+
+observe : Model model programMsg -> State.Model msg programMsg
+observe observeModel =
+  State.Running
+    { update = update observeModel
+    , view = Just <| view observeModel
+    , subscriptions = Nothing
+    }
 
 
 view : Model model msg -> Document msg
@@ -54,51 +68,54 @@ view model =
       documentView model.programModel
 
 
-update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Command msg )
-update actions msg model =
+update : Model model programMsg -> Actions msg programMsg -> State.Msg programMsg -> ( State.Model msg programMsg, Cmd msg )
+update observeModel actions msg =
   case msg of
     ReceivedMessage message ->
       Message.decode Message.inquiryDecoder message
         |> Result.map .message
-        |> Result.map (processInquiryMessage actions model)
+        |> Result.map (processInquiryMessage actions observeModel)
         |> Result.withDefault
-          (abortObservation actions model <| Report.note "Unable to decode inquiry result!")
+          (abortObservation actions observeModel <| Report.note "Unable to decode inquiry result!")
 
     ProgramMsg programMsg ->
-      ( model, State.Do Cmd.none )
+      ( observe observeModel, Cmd.none )
     
     Continue ->
-      case model.observations of
+      case observeModel.observations of
         [] ->
-          ( model, State.Transition <| actions.complete )
+          ( Interactive.initModel observeModel.subject observeModel.programModel
+          , actions.complete
+          )
         observation :: remaining ->
-          setDescription observation model
+          setDescription observation observeModel
             |> performObservation actions observation
             |> Tuple.mapFirst (\updated ->
-              { updated | observations = remaining }
+              observe { updated | observations = remaining }
             )
     
     Abort report ->
-      ( model
+      ( Interactive.initModel observeModel.subject observeModel.programModel
       , State.abortWith actions
-          (model.conditionsApplied ++ [ model.currentDescription ]) "Unable to complete observation" report
+          (observeModel.conditionsApplied ++ [ observeModel.currentDescription ])
+          "Unable to complete observation" report
       )
 
     OnUrlChange url ->
-      ( model, State.Do Cmd.none )
+      ( observe observeModel, Cmd.none )
 
     OnUrlRequest request ->
-      ( model, State.Do Cmd.none )
+      ( observe observeModel, Cmd.none )
 
 
-abortObservation : Actions msg programMsg -> Model model programMsg -> Report -> ( Model model programMsg, Command msg )
-abortObservation actions model report =
-  update actions (Abort report) model
+abortObservation : Actions msg programMsg -> Model model programMsg -> Report -> ( State.Model msg programMsg, Cmd msg )
+abortObservation actions observeModel report =
+  update observeModel actions (Abort report)
 
 
-sendVerdict : Actions msg programMsg -> Model model programMsg -> Verdict -> Command msg
-sendVerdict actions model verdict =
-  Message.observation model.conditionsApplied model.currentDescription verdict
+sendVerdict : Actions msg programMsg -> Model model programMsg -> Verdict -> Cmd msg
+sendVerdict actions observeModel verdict =
+  Message.observation observeModel.conditionsApplied observeModel.currentDescription verdict
     |> State.send actions
 
 
@@ -113,29 +130,29 @@ setDescription observation model =
   { model | currentDescription = observation.description }
 
 
-performObservation : Actions msg programMsg -> Observation model -> Model model programMsg -> ( Model model programMsg, Command msg )
-performObservation actions observation model =
-  case observation.expectation <| toObservationContext model of
+performObservation : Actions msg programMsg -> Observation model -> Model model programMsg -> ( Model model programMsg, Cmd msg )
+performObservation actions observation observeModel =
+  case observation.expectation <| toObservationContext observeModel of
     Complete verdict ->
-      ( { model | inquiryHandler = Nothing }
-      , sendVerdict actions model verdict 
+      ( { observeModel | inquiryHandler = Nothing }
+      , sendVerdict actions observeModel verdict 
       )
     Inquire message handler ->
-      ( { model | inquiryHandler = Just handler }
+      ( { observeModel | inquiryHandler = Just handler }
       , State.send actions <| Message.inquiry message
       )
 
 
-processInquiryMessage : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Command msg )
-processInquiryMessage actions model message =
+processInquiryMessage : Actions msg programMsg -> Model model programMsg -> Message -> ( State.Model msg programMsg, Cmd msg )
+processInquiryMessage actions observeModel message =
   if Message.is "_scenario" "abort" message then
     Message.decode Report.decoder message
       |> Result.withDefault (Report.note "Unable to decode abort message!")
-      |> abortObservation actions model
+      |> abortObservation actions observeModel
   else
-    ( model
-    , handleInquiry message model.inquiryHandler
-        |> sendVerdict actions model
+    ( observe observeModel
+    , handleInquiry message observeModel.inquiryHandler
+        |> sendVerdict actions observeModel
     )
 
 
@@ -153,8 +170,3 @@ inquiryResult message handler =
       verdict
     Inquire _ _ ->
       Claim.Reject <| Report.note "Recursive Inquiry not supported!"
-
-
-mapTuple : (a -> b -> (c, d)) -> (a, b) -> (c, d)
-mapTuple mapper ( first, second ) =
-  mapper first second

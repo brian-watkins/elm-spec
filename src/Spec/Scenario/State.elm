@@ -1,10 +1,10 @@
 module Spec.Scenario.State exposing
   ( Msg(..)
-  , Command(..)
+  , Model(..)
+  , StateProgram
   , Actions
   , updateWith
   , abortWith
-  , abortMessages
   , send
   , sendMany
   , continue
@@ -15,7 +15,7 @@ import Spec.Scenario.Message as Message
 import Spec.Observer.Message as Message
 import Spec.Claim as Claim
 import Spec.Report as Report exposing (Report)
-import Browser exposing (UrlRequest)
+import Browser exposing (UrlRequest, Document)
 import Url exposing (Url)
 import Task
 
@@ -29,6 +29,18 @@ type Msg msg
   | OnUrlChange Url
 
 
+type Model msg programMsg
+  = Running (StateProgram msg programMsg)
+  | Waiting
+
+
+type alias StateProgram msg programMsg =
+  { update: Actions msg programMsg -> Msg programMsg -> ( Model msg programMsg, Cmd msg )
+  , view: Maybe (Document programMsg)
+  , subscriptions: Maybe (Sub programMsg)
+  }
+
+
 type alias Actions msg programMsg =
   { complete: Cmd msg
   , send: Message -> Cmd msg
@@ -38,44 +50,31 @@ type alias Actions msg programMsg =
   }
 
 
-type Command msg
-  = Do (Cmd msg)
-  | Halt (Cmd msg)
-  | Transition (Cmd msg)
-
-
-updateWith : Actions msg programMsg -> (Msg programMsg) -> Command msg
+updateWith : Actions msg programMsg -> (Msg programMsg) -> Cmd msg
 updateWith actions msg =
   Task.succeed never
     |> Task.perform (always msg)
     |> Cmd.map actions.sendToSelf
-    |> Do
 
 
-abortWith : Actions msg programMsg -> List String -> String -> Report -> Command msg
+abortWith : Actions msg programMsg -> List String -> String -> Report -> Cmd msg
 abortWith actions conditions description report =
-  abortMessages conditions description report
-    |> List.map actions.send
-    |> Cmd.batch
-    |> Halt
-
-
-abortMessages : List String -> String -> Report -> List Message
-abortMessages conditions description report =
   [ Claim.Reject report
       |> Message.observation conditions description
   , Message.abortScenario
   ]
+    |> List.map actions.send
+    |> Cmd.batch
 
 
-send : Actions msg programMsg -> Message -> Command msg
+send : Actions msg programMsg -> Message -> Cmd msg
 send actions message =
-  Do <| actions.send message
+  actions.send message
 
 
-sendMany : Actions msg programMsg -> List Message -> Command msg
+sendMany : Actions msg programMsg -> List Message -> Cmd msg
 sendMany actions messages =
-  Do <| Cmd.batch <| List.map actions.send messages
+  Cmd.batch <| List.map actions.send messages
 
 
 continue : Actions msg programMsg -> Cmd msg

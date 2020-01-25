@@ -1,14 +1,10 @@
 module Spec.Scenario.State.Exercise exposing
-  ( Model
-  , init
-  , update
-  , view
-  , subscriptions
+  ( init
   )
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Step)
 import Spec.Setup.Internal as Internal exposing (Subject)
-import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
+import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Markup.Message as Message
@@ -18,6 +14,8 @@ import Spec.Observer.Message as Message
 import Spec.Report as Report
 import Spec.Claim as Claim
 import Spec.Scenario.State.NavigationHelpers exposing (..)
+import Spec.Scenario.State.Interactive as Interactive
+import Spec.Scenario.State.Observe as Observe
 import Html exposing (Html)
 import Browser exposing (Document)
 import Json.Decode as Json
@@ -33,8 +31,15 @@ type alias Model model msg =
   }
 
 
-init : Scenario model msg -> Subject model msg -> Model model msg
-init scenario subject =
+init : Actions msg programMsg -> Scenario model programMsg -> Subject model programMsg -> (State.Model msg programMsg, Cmd msg)
+init actions scenario subject =
+  ( exercise <| initModel scenario subject
+  , State.continue actions
+  )
+
+
+initModel : Scenario model msg -> Subject model msg -> Model model msg
+initModel scenario subject =
   { scenario = scenario
   , subject = subject
   , conditionsApplied = [ scenario.specification ]
@@ -62,98 +67,114 @@ view model =
       documentView model.programModel
 
 
-update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Command msg )
-update actions msg model =
+exercise : Model model programMsg -> State.Model msg programMsg
+exercise exerciseModel =
+  State.Running
+    { update = update exerciseModel
+    , view = Just <| view exerciseModel
+    , subscriptions = Just <| subscriptions exerciseModel
+    }
+
+
+update : Model model programMsg -> Actions msg programMsg -> State.Msg programMsg -> ( State.Model msg programMsg, Cmd msg )
+update exerciseModel actions msg =
   case msg of
     ReceivedMessage message ->
       if Message.is "_navigation" "assign" message then
-        handleLocationAssigned model message
+        handleLocationAssigned exerciseModel message
       else
-        ( { model | effects = message :: model.effects }
-        , State.Do Cmd.none
+        ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
+        , Cmd.none
         )
 
     ProgramMsg programMsg ->
-      model.subject.update actions.outlet programMsg model.programModel
-        |> Tuple.mapFirst (\updated -> { model | programModel = updated })
+      exerciseModel.subject.update actions.outlet programMsg exerciseModel.programModel
+        |> Tuple.mapFirst (\updated -> exercise { exerciseModel | programModel = updated })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then
-            State.Do Cmd.none
+            Cmd.none
           else
             Cmd.map ProgramMsg nextCommand
               |> doAndRender actions
         )
 
     Continue ->
-      case model.steps of
+      case exerciseModel.steps of
         [] ->
-          ( model, State.Transition <| actions.send Message.startObservation )
+          Observe.init actions
+            exerciseModel.scenario
+            exerciseModel.subject
+            exerciseModel.conditionsApplied
+            exerciseModel.programModel
+            exerciseModel.effects
         step :: remaining ->
           let
             updated = 
-              { model
+              { exerciseModel
               | steps = remaining
               , conditionsApplied =
-                  addIfUnique model.conditionsApplied step.condition
+                  addIfUnique exerciseModel.conditionsApplied step.condition
               }
             context =
-              Context.for model.programModel
-                |> Context.withEffects model.effects
+              Context.for exerciseModel.programModel
+                |> Context.withEffects exerciseModel.effects
           in
             case step.run context of
               Step.SendMessage message ->
-                ( updated, State.send actions <| Message.stepMessage message )
+                ( exercise updated
+                , State.send actions <| Message.stepMessage message
+                )
               Step.SendCommand cmd ->
-                ( updated
+                ( exercise updated
                 , Cmd.map ProgramMsg cmd
                     |> doAndRender actions
                 )
               Step.DoNothing ->
-                update actions Continue updated
+                update updated actions Continue
 
     Abort report ->
-      ( model
-      , State.abortWith actions model.conditionsApplied "A spec step failed" report
+      ( Interactive.initModel exerciseModel.subject exerciseModel.programModel
+      , State.abortWith actions exerciseModel.conditionsApplied "A spec step failed" report
       )
 
     OnUrlChange url ->
-      case model.subject.navigationConfig of
+      case exerciseModel.subject.navigationConfig of
         Just config ->
-          update actions (ProgramMsg <| config.onUrlChange url) model
+          update exerciseModel actions (ProgramMsg <| config.onUrlChange url)
         Nothing ->
-          if model.subject.isApplication then
-            ( model
+          if exerciseModel.subject.isApplication then
+            ( exercise exerciseModel
             , State.updateWith actions <| Abort <| Report.batch
               [ Report.note "A URL change occurred for an application, but no handler has been provided."
               , Report.note "Use Spec.Setup.forNavigation to set a handler."
               ]
             )
           else
-            ( model
-            , State.Do Cmd.none
+            ( exercise exerciseModel
+            , Cmd.none
             )
 
     OnUrlRequest request ->
-      case model.subject.navigationConfig of
+      case exerciseModel.subject.navigationConfig of
         Just config ->
-          update actions (ProgramMsg <| config.onUrlRequest request) model
+          update exerciseModel actions (ProgramMsg <| config.onUrlRequest request)
         Nothing ->
-          if model.subject.isApplication then
-            ( model
+          if exerciseModel.subject.isApplication then
+            ( exercise exerciseModel
             , State.updateWith actions <| Abort <| Report.batch
               [ Report.note "A URL request occurred for an application, but no handler has been provided."
               , Report.note "Use Spec.Setup.forNavigation to set a handler."
               ]
             )
           else
-            handleUrlRequest model request
+            handleUrlRequest (exercise exerciseModel) request
 
 
-doAndRender : Actions msg programMsg -> Cmd (Msg programMsg) -> Command msg
+doAndRender : Actions msg programMsg -> Cmd (Msg programMsg) -> Cmd msg
 doAndRender actions cmd =
-  State.Do <| Cmd.batch
+  Cmd.batch
     [ Cmd.map actions.sendToSelf cmd
-    , actions.send <| Message.stepMessage <| Message.runToNextAnimationFrame
+    , State.send actions <| Message.stepMessage <| Message.runToNextAnimationFrame
     ]
 
 
@@ -170,20 +191,20 @@ addIfUnique list val =
     list ++ [ val ]
 
 
-handleLocationAssigned : Model model programMsg -> Message -> ( Model model programMsg, Command msg )
-handleLocationAssigned model message =
+handleLocationAssigned : Model model programMsg -> Message -> ( State.Model msg programMsg, Cmd msg )
+handleLocationAssigned exerciseModel message =
   case Message.decode Json.string message of
     Ok location ->
-      case model.subject.navigationConfig of
+      case exerciseModel.subject.navigationConfig of
         Just _ ->
-          ( { model | effects = message :: model.effects }
-          , State.Do Cmd.none
+          ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
+          , Cmd.none
           )
         Nothing ->
-          ( { model | effects = message :: model.effects, subject = navigatedSubject location model.subject }
-          , State.Do Cmd.none
+          ( exercise { exerciseModel | effects = message :: exerciseModel.effects, subject = navigatedSubject location exerciseModel.subject }
+          , Cmd.none
           )
     Err _ ->
-      ( { model | effects = message :: model.effects }
-      , State.Do Cmd.none
+      ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
+      , Cmd.none
       )
