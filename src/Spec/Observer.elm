@@ -1,13 +1,12 @@
 module Spec.Observer exposing
   ( Observer
-  , Expectation
   , observeModel
   , mapRejection
   , observeResult
   , focus
   )
 
-{-| An observer evaluates a claim with respect to some part of the world.
+{-| An observer examines some part of the world so a claim can be made about it.
 
 This module contains functions for working with observers at a high level.
 
@@ -15,7 +14,7 @@ Check out `Spec.Markup`, `Spec.Http`, `Spec.Port`, and `Spec.Witness` for
 more observers.
 
 # Build Observers
-@docs Expectation, Observer, observeModel
+@docs Observer, observeModel
 
 # Work with Observers
 @docs observeResult, mapRejection, focus
@@ -30,18 +29,8 @@ import Spec.Scenario.Internal as Scenario exposing (Judgment(..))
 import Spec.Report exposing (Report)
 
 
-{-| Represents what should be the case about some part of the world.
-
-Expectations are checked at the end of the scenario, after all steps of the
-script have been performed.
--}
-type alias Expectation model =
-  Scenario.Expectation model
-
-
-{-| An `Observer` determines whether to accept or reject a claim with
-respect to some particular part of the world. It is a function from a
-claim to an `Expectation` that will be evaluted at the end of the scenario.
+{-| An `Observer` examines some particular part of the world so that a
+claim can be evaluated with respect to it.
 -}
 type alias Observer model a =
   Internal.Observer model a
@@ -65,7 +54,7 @@ observers that evaluate claims with respect to the world outside the program.
 observeModel : (model -> a) -> Observer model a
 observeModel mapper =
   Internal.for <| \claim ->
-    Scenario.Expectation <| \context ->
+    \context ->
       Context.model context
         |> mapper
         |> claim

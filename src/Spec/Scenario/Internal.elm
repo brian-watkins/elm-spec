@@ -1,6 +1,6 @@
 module Spec.Scenario.Internal exposing
   ( Spec(..), Scenario, Script, Plan, Observation, Step
-  , Expectation(..), Judgment(..)
+  , Expectation, Judgment(..)
   , buildStep
   , buildObservation
   , describing
@@ -47,9 +47,8 @@ type alias Observation model =
   }
 
 
-type Expectation model =
-  Expectation
-    (Context model -> Judgment model)
+type alias Expectation model =
+  Context model -> Judgment model
 
 
 type Judgment model

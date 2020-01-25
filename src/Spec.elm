@@ -1,6 +1,6 @@
 module Spec exposing
   ( Spec
-  , Scenario, Script, Plan
+  , Scenario, Script, Plan, Expectation
   , describe
   , scenario
   , tagged
@@ -47,7 +47,7 @@ Here's a sample spec for a browser program called `App`:
 @docs Script, given, when
 
 # Turn a Script into a Plan
-@docs Plan, it, observeThat, expect
+@docs Plan, Expectation, it, observeThat, expect
 
 # Tag a Scenario
 @docs tagged
@@ -57,7 +57,7 @@ Here's a sample spec for a browser program called `App`:
 import Spec.Setup exposing (Setup)
 import Spec.Scenario.Internal as Internal
 import Spec.Step as Step
-import Spec.Observer exposing (Observer, Expectation)
+import Spec.Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
 import Spec.Claim exposing (Claim)
 
@@ -84,6 +84,16 @@ type Script model msg =
 -}
 type Plan model msg =
   Plan (Internal.Plan model msg)
+
+
+{-| Represents what should be the case about some part of the world.
+
+Expectations are checked at the end of the scenario, after all steps of the
+script have been performed.
+-}
+type Expectation model =
+  Expectation
+    (Internal.Expectation model)
 
 
 {-| Specify a description and a list of scenarios that compose the spec.
@@ -172,7 +182,7 @@ observeThat planGenerators (Script script) =
 {-| Specify an expectation to be checked once the scenario's steps have been performed.
 -}
 it : String -> Expectation model -> Script model msg -> Plan model msg
-it description expectation (Script script) =
+it description (Expectation expectation) (Script script) =
   Plan
     { setup = script.setup
     , steps = script.steps
@@ -185,5 +195,5 @@ it description expectation (Script script) =
 {-| Provide an observer with a claim to evaluate.
 -}
 expect : Claim a -> Observer model a -> Expectation model
-expect =
-  Observer.expect
+expect claim observer =
+  Expectation <| Observer.expect claim observer

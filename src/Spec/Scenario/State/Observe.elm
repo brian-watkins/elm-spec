@@ -5,7 +5,7 @@ module Spec.Scenario.State.Observe exposing
   , update
   )
 
-import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Expectation(..), Judgment(..))
+import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Expectation, Judgment(..))
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Command, Actions)
 import Spec.Step.Context as Context exposing (Context)
@@ -115,7 +115,7 @@ setDescription observation model =
 
 performObservation : Actions msg programMsg -> Observation model -> Model model programMsg -> ( Model model programMsg, Command msg )
 performObservation actions observation model =
-  case runExpectation model observation.expectation of
+  case observation.expectation <| toObservationContext model of
     Complete verdict ->
       ( { model | inquiryHandler = Nothing }
       , sendVerdict actions model verdict 
@@ -124,11 +124,6 @@ performObservation actions observation model =
       ( { model | inquiryHandler = Just handler }
       , State.send actions <| Message.inquiry message
       )
-
-
-runExpectation : Model model programMsg -> Expectation model -> Judgment model
-runExpectation model (Expectation expectation) =
-  expectation <| toObservationContext model
 
 
 processInquiryMessage : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Command msg )
