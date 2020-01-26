@@ -81,6 +81,25 @@ This will trigger `mousedown`, `mouseup`, and `click` DOM events on the targeted
 In several cases, you can use `click` to trigger other kinds of events. Use `click` to
 simulate checking or unchecking a checkbox. Use `click` to select a radio button. Use
 `click` to submit a form by clicking the associated button.
+
+You can also use `click` on an anchor tag, but here the behavior is a
+little more complicated.
+
+First of all, any click event handlers associated with the anchor tag will
+be triggered as expected.
+
+If the anchor tag has an `href` attribute, then
+elm-spec can *usually* intercept the navigation, which allows you to use `Spec.Navigation.observeLocation`
+to make a claim about the location to which you've navigated. Elm-spec will simulate going to another
+page by replacing the program's view with a page that states the program has navigated
+outside the Elm context.
+
+If the anchor tag has an `href` attribute *and* a `target` attribute or a `download` attribute
+then elm-spec will *not* intercept the navigation. This means that the navigation will
+proceed as if the program were actually running, and this will usually cause your
+specs to get into a bad state. So, rather than clicking such a link during a scenario, you
+should instead just observe that it has the `href` attribute you expect.
+
 -}
 click : Step.Context model -> Step.Command msg
 click =
