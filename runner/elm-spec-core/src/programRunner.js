@@ -35,6 +35,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.context = context
     this.timer = null
     this.portPlugin = new PortPlugin(app)
+    this.httpPlugin = new HttpPlugin(this.context)
     this.plugins = this.generatePlugins(this.context)
     this.options = options
 
@@ -44,7 +45,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   generatePlugins(context) {
     return {
       "_html": new HtmlPlugin(context),
-      "_http": new HttpPlugin(context),
+      "_http": this.httpPlugin,
       "_time": new TimePlugin(context),
       "_witness": new WitnessPlugin(),
       "_port": this.portPlugin
@@ -199,6 +200,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     clearTimers(this.context.window)
     setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
     setBaseLocation("http://elm-spec", this.context.window)
+    this.httpPlugin.reset()
   }
 
   configureComplete(out) {

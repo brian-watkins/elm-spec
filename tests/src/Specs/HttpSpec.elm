@@ -147,6 +147,52 @@ expectRequestSpec =
   ]
 
 
+resetSpec : Spec Model Msg
+resetSpec =
+  Spec.describe "Reset the request history between scenarios"
+  [ scenario "some requests are made" (
+      given (
+        testSubject getRequest [ successStub ]
+      )
+      |> when "http requests are triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> it "expects the request" (
+        Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+          |> expect (isListWithLength 3)
+      )
+    )
+  , scenario "some other number of requests are made" (
+      given (
+        testSubject getRequest [ successStub ]
+      )
+      |> when "http requests are triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Event.click
+        ]
+      |> it "expects the request" (
+        Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+          |> expect (isListWithLength 2)
+      )
+    )
+  , scenario "no requests are made (and no stubs served)" (
+      given (
+        Setup.initWithModel defaultModel
+          |> Setup.withView testView
+          |> Setup.withUpdate (testUpdate getRequest)
+      )
+      |> it "sees that no requests have been made" (
+        Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+          |> expect (isListWithLength 0)
+      )
+    )
+  ]
+
+
 errorStubSpec : Spec Model Msg
 errorStubSpec =
   Spec.describe "stub an error"
@@ -486,6 +532,7 @@ selectSpec name =
     "get" -> Just getSpec
     "abstain" -> Just abstainSpec
     "expectRequest" -> Just expectRequestSpec
+    "reset" -> Just resetSpec
     "hasHeader" -> Just hasHeaderSpec
     "hasBody" -> Just hasBodySpec
     "error" -> Just errorStubSpec

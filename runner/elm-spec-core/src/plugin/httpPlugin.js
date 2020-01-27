@@ -19,12 +19,12 @@ module.exports = class HttpPlugin {
     this.server = fakeServerForGlobalContext(context.window)
   }
 
+  reset() {
+    this.server.reset()
+  }
+
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
-      case "setup": {
-        this.server.reset()
-        break
-      }
       case "stub": {
         const stub = specMessage.body
 

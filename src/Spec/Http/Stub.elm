@@ -133,23 +133,16 @@ abstain (HttpResponseStub stub) =
 {-| Set up a fake HTTP server to serve a stubbed response when a matching request is made.
 -}
 serve : List HttpResponseStub -> Setup model msg -> Setup model msg
-serve stubs subjectProvider =
-  List.foldl (\stub updatedSubject ->
-    Setup.configure
-      (httpStubMessage stub)
-      updatedSubject
-  ) (Setup.configure httpSetupMessage subjectProvider) stubs
+serve stubs setup =
+  List.foldl (\stub ->
+    Setup.configure <| httpStubMessage stub
+  ) setup stubs
 
 
 httpStubMessage : HttpResponseStub -> Message
 httpStubMessage stub =
   Message.for "_http" "stub"
     |> Message.withBody (encodeStub stub)
-
-
-httpSetupMessage : Message
-httpSetupMessage =
-  Message.for "_http" "setup"
 
 
 encodeStub : HttpResponseStub -> Encode.Value

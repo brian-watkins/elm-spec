@@ -29,6 +29,16 @@ describe('HTTP', () => {
     })
   })
 
+  context("reset request history", () => {
+    it("resets the request history as expected", (done) => {
+      expectSpec("HttpSpec", "reset", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+      })
+    })
+  })
+
   context("abstain from responding", () => {
     it("abstains from responding as expected", (done) => {
       expectSpec("HttpSpec", "abstain", done, (observations) => {
