@@ -77,7 +77,7 @@ import Main as App
 
 clickSpec : Spec App.Model App.Msg
 clickSpec =
-  Spec.describe "an html program"
+  describe "an html program"
   [ scenario "a click event" (
       given (
         Setup.initWithModel App.defaultModel

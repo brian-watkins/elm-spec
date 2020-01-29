@@ -228,6 +228,13 @@ text claim =
           Spec.Claim.isStringContaining 1 "red"
       )
 
+If you receive an error that the attribute you're interested in is not found, try `Spec.Markup.property`
+instead. Elm-spec is examining the actual DOM element, and it's not always clear whether Elm uses
+the attribute or the associated property to configure the element.
+
+On the difference between attributes and properties,
+see [this](https://github.com/elm-lang/html/blob/master/properties-vs-attributes.md).
+
 -}
 attribute : String -> Claim (Maybe String) -> Claim HtmlElement
 attribute name claim =
@@ -268,6 +275,13 @@ a button is disabled like so:
           (Json.Decode.field "disabled" Json.Decode.bool)
           Spec.Claim.isTrue
       )
+
+Some common properties one might make claims about:
+
+- `style` => an object
+- `hidden` => a boolean value
+- `checked` => a boolean value
+- `value` (for an input element) => a string
 
 On the difference between attributes and properties,
 see [this](https://github.com/elm-lang/html/blob/master/properties-vs-attributes.md).
