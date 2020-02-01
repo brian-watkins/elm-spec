@@ -60,6 +60,7 @@ describe("browser events", () => {
     it("handles the window visibility change as expected", (done) => {
       expectSpec("BrowserEventSpec", "windowVisibility", done, (observations) => {
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
   })

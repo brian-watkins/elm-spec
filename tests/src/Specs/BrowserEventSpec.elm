@@ -182,6 +182,21 @@ windowVisibilitySpec =
           |> expect (equals [ Hidden, Visible, Hidden ])
       )
     )
+  , scenario "another scenario simulates the visibility change" (
+      given (
+        testSubject
+      )
+      |> when "a window visibility change occurs"
+        [ Event.hideWindow
+        , Event.showWindow
+        , Event.hideWindow
+        , Event.showWindow
+        ]
+      |> it "triggers the visibility change event" (
+        Observer.observeModel .visibility
+          |> expect (equals [ Hidden, Visible, Hidden, Visible ])
+      )
+    )
   ]
 
 
