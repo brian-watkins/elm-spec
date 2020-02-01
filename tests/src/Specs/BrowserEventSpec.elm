@@ -162,6 +162,18 @@ windowResizeSpec =
           |> expect (equals [(100, 300)])
       )
     )
+  , scenario "another scenario simulates a resize" (
+      given (
+        testSubject
+      )
+      |> when "a window resize occurs"
+        [ Event.resizeWindow (200, 450)
+        ]
+      |> it "triggers the resize event" (
+        Observer.observeModel .resize
+          |> expect (equals [(200, 450)])
+      )
+    )
   ]
 
 

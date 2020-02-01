@@ -52,6 +52,7 @@ describe("browser events", () => {
     it("handles the window resize as expected", (done) => {
       expectSpec("BrowserEventSpec", "windowResize", done, (observations) => {
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
   })

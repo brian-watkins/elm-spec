@@ -1,5 +1,6 @@
 
 exports.fakeWindow = (theWindow, location) => {
+  theWindow._elm_spec.resizeListeners = []
   const viewport = {
     x: 0,
     y: 0,
@@ -9,6 +10,9 @@ exports.fakeWindow = (theWindow, location) => {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
         return customAddEventListener(theWindow, target)
+      }
+      if (prop === 'removeEventListener') {
+        return customRemoveEventListener(theWindow, target)
       }
       if (prop === 'location') {
         return location
@@ -43,10 +47,22 @@ exports.fakeWindow = (theWindow, location) => {
 
 const customAddEventListener = (theWindow, target) => (type, handler) => {
   if (type === "resize") {
-    target.addEventListener(type, (e) => {
-      handler({ target: { innerWidth: theWindow._elm_spec.innerWidth, innerHeight: theWindow._elm_spec.innerHeight }})
-    })
+    const listener = resizeListener(theWindow, handler)
+    theWindow._elm_spec.resizeListeners.push(listener)
+    target.addEventListener(type, listener)
   } else {
     target.addEventListener(type, handler)
   }
+}
+
+const customRemoveEventListener = (theWindow, target) => (type, fun) => {
+  if (type === 'resize') {
+    target.removeEventListener(type, theWindow._elm_spec.resizeListeners.pop())
+  } else {
+    target.removeEventListener(type, fun)
+  }
+}
+
+const resizeListener = (theWindow, handler) => (e) => {
+  handler({ target: { innerWidth: theWindow._elm_spec.innerWidth, innerHeight: theWindow._elm_spec.innerHeight }})
 }
