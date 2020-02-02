@@ -1,6 +1,5 @@
 
 exports.fakeWindow = (theWindow, location) => {
-  theWindow._elm_spec.resizeListeners = []
   const viewport = {
     x: 0,
     y: 0,
@@ -46,18 +45,21 @@ exports.fakeWindow = (theWindow, location) => {
 }
 
 const customAddEventListener = (theWindow, target) => (type, handler) => {
-  if (type === "resize") {
-    const listener = resizeListener(theWindow, handler)
-    theWindow._elm_spec.resizeListeners.push(listener)
-    target.addEventListener(type, listener)
-  } else {
-    target.addEventListener(type, handler)
+  const listener = (type === "resize")
+    ? resizeListener(theWindow, handler)
+    : handler
+  
+  if (theWindow._elm_spec.windowEventListeners[type] === undefined) {
+    theWindow._elm_spec.windowEventListeners[type] = []
   }
+  theWindow._elm_spec.windowEventListeners[type].push(listener)
+
+  target.addEventListener(type, listener)
 }
 
 const customRemoveEventListener = (theWindow, target) => (type, fun) => {
   if (type === 'resize') {
-    target.removeEventListener(type, theWindow._elm_spec.resizeListeners.pop())
+    target.removeEventListener(type, theWindow._elm_spec.windowEventListeners['resize'].pop())
   } else {
     target.removeEventListener(type, fun)
   }

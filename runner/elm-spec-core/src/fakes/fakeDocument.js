@@ -1,7 +1,5 @@
 
 exports.fakeDocument = (theWindow, location) => {
-  theWindow._elm_spec.visibilityChangeListeners = []
-
   return new Proxy(theWindow.document, {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
@@ -30,18 +28,20 @@ exports.fakeDocument = (theWindow, location) => {
 }
 
 const customAddEventListener = (theWindow, target) => (type, handler) => {
-  if (type === "visibilitychange") {
-    const listener = visibilityChangeListener(theWindow, handler)
-    theWindow._elm_spec.visibilityChangeListeners.push(listener)
-    target.addEventListener(type, listener)
-  } else {
-    target.addEventListener(type, handler)
+  let listener = (type === "visibilitychange")
+    ? visibilityChangeListener(theWindow, handler)
+    : handler
+   
+  if (theWindow._elm_spec.documentEventListeners[type] === undefined) {
+    theWindow._elm_spec.documentEventListeners[type] = []
   }
+  theWindow._elm_spec.documentEventListeners[type].push(listener)
+  target.addEventListener(type, listener)
 }
 
 const customRemoveEventListener = (theWindow, target) => (type, fun) => {
   if (type === 'visibilitychange') {
-    target.removeEventListener(type, theWindow._elm_spec.visibilityChangeListeners.pop())
+    target.removeEventListener(type, theWindow._elm_spec.documentEventListeners['visibilitychange'].pop())
   } else {
     target.removeEventListener(type, fun)
   }

@@ -37,6 +37,33 @@ describe("Suite Runner", () => {
     })
   })
   
+  context("when the suite has multiple programs with global event listeners", () => {
+    it("resets visibility change events as expected", (done) => {
+      expectScenarios('WithMultiVisibilityChange', { tags: [], endOnFailure: false }, done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+      })
+    })
+    it("resets resize events as expected", (done) => {
+      expectScenarios("WithMultiResize", { tags: [], endOnFailure: false }, done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+      })
+    })
+    it("resets arbitrary document events as expected", (done) => {
+      expectScenarios("WithMultiDocumentClick", { tags: [], endOnFailure: false }, done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])
+      })
+    })
+  })
+
   context("when the code does not compile", () => {
     it("reports zero tests", (done) => {
       expectScenarios('WithCompilationError', { tags: [], endOnFailure: false }, done, (observations, error) => {

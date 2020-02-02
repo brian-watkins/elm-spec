@@ -4,16 +4,27 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Browser
+import Browser.Events exposing (Visibility(..))
+import Http
+import Json.Decode as Json
 
 
 type Msg
   = ClickedButton
   | InputText String
+  | VisibilityChange Visibility
+  | WindowResize Int Int
+  | SendRequest Bool
+  | GotResponse (Result Http.Error String)
+  | DocumentClick
 
 
 type alias Model =
   { count: Int
   , text: String
+  , visibilityChanges: Int
+  , sizes: List (Int, Int)
+  , clicks: Int
   }
 
 
@@ -21,6 +32,9 @@ defaultModel : Model
 defaultModel =
   { count = 0
   , text = ""
+  , visibilityChanges = 0
+  , sizes = []
+  , clicks = 0
   }
 
 
@@ -45,6 +59,24 @@ update msg model =
       ( { model | count = model.count + 1 }, Cmd.none )
     InputText text ->
       ( { model | text = text }, Cmd.none )
+    VisibilityChange visibility ->
+      ( { model | visibilityChanges = model.visibilityChanges + 1 }, Cmd.none )
+    SendRequest shouldSendRequest ->
+      ( model
+      , if shouldSendRequest then
+          Http.get
+            { url = "http://fun.com/fun"
+            , expect = Http.expectString GotResponse
+            }
+        else
+          Cmd.none
+      )
+    GotResponse _ ->
+      ( model, Cmd.none )
+    WindowResize width height ->
+      ( { model | sizes = (width, height) :: model.sizes }, Cmd.none )
+    DocumentClick ->
+      ( { model | clicks = model.clicks + 1 }, Cmd.none )
 
 
 init : () -> ( Model, Cmd Msg )
@@ -52,10 +84,31 @@ init _ =
   ( defaultModel, Cmd.none )
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Sub.batch
+  [ Browser.Events.onVisibilityChange VisibilityChange
+  , Browser.Events.onVisibilityChange sendRequestWhenVisible
+  , Browser.Events.onResize WindowResize
+  , Browser.Events.onResize <| \_ _ -> SendRequest True
+  , Browser.Events.onClick <| Json.succeed DocumentClick
+  , Browser.Events.onClick <| Json.succeed <| SendRequest True
+  ]
+
+
+sendRequestWhenVisible : Visibility -> Msg
+sendRequestWhenVisible visibility =
+  case visibility of
+    Visible ->
+      SendRequest True
+    Hidden ->
+      SendRequest False
+
+
 main =
   Browser.element
     { init = init
     , view = view
     , update = update
-    , subscriptions = \_ -> Sub.none
+    , subscriptions = subscriptions
     }

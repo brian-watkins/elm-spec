@@ -11,6 +11,7 @@ import Spec.Claim exposing (isSomethingWhere)
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
+import Html.Events as Events
 import Browser.Events exposing (Visibility(..))
 import Runner
 import Json.Decode as Json exposing (Decoder)
@@ -174,6 +175,25 @@ windowResizeSpec =
           |> expect (equals [(200, 450)])
       )
     )
+  , scenario "the app stops subscribing during the spec" (
+      given (
+        testSubject
+      )
+      |> when "a window resize occurs"
+        [ Event.resizeWindow (200, 450)
+        ]
+      |> when "the app unsubscribes from resize events"
+        [ Markup.target << by [ id "toggle-subs" ]
+        , Event.click
+        ]
+      |> when "another window resize occurs"
+        [ Event.resizeWindow (300, 550)
+        ]
+      |> it "triggers the resize event" (
+        Observer.observeModel .resize
+          |> expect (equals [(200, 450)])
+      )
+    )
   ]
 
 
@@ -207,6 +227,29 @@ windowVisibilitySpec =
       |> it "triggers the visibility change event" (
         Observer.observeModel .visibility
           |> expect (equals [ Hidden, Visible, Hidden, Visible ])
+      )
+    )
+  , scenario "the app stops subscribing during the scenario" (
+      given (
+        testSubject
+      )
+      |> when "a window visibility change occurs"
+        [ Event.hideWindow
+        , Event.showWindow
+        ]
+      |> when "the app unsubscribes from visibility change events"
+        [ Markup.target << by [ id "toggle-subs" ]
+        , Event.click
+        ]
+      |> when "another window visibility change occurs"
+        [ Event.hideWindow
+        , Event.showWindow
+        , Event.hideWindow
+        , Event.showWindow
+        ]
+      |> it "only records the changes when the app was subscribed" (
+        Observer.observeModel .visibility
+          |> expect (equals [ Hidden, Visible ])
       )
     )
   ]
@@ -302,7 +345,7 @@ noHandlerSpec =
 
 
 testSubject =
-  Setup.initWithModel { message = "", click = 0, mouseUp = 0, mouseDown = 0, mouseMove = [], resize = [], visibility = [], animationFrames = 0 }
+  Setup.initWithModel testModel
     |> Setup.withView testView
     |> Setup.withUpdate testUpdate
     |> Setup.withSubscriptions testSubscriptions
@@ -317,6 +360,7 @@ type Msg
   | Resize Int Int
   | VisibilityChange Visibility
   | AnimationFrame Posix
+  | ShouldSubscribe Bool
 
 
 type alias Model =
@@ -327,7 +371,22 @@ type alias Model =
   , mouseMove: List (Int, Int)
   , resize: List (Int, Int)
   , visibility: List Visibility
+  , subscribe: Bool
   , animationFrames: Int
+  }
+
+
+testModel : Model
+testModel =
+  { message = ""
+  , click = 0
+  , mouseUp = 0
+  , mouseDown = 0
+  , mouseMove = []
+  , resize = []
+  , visibility = []
+  , subscribe = True
+  , animationFrames = 0
   }
 
 
@@ -335,6 +394,13 @@ testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.div [ Attr.id "message" ] [ Html.text <| "You wrote: " ++ model.message ]
+  , Html.input
+    [ Attr.id "toggle-subs"
+    , Attr.type_ "checkbox"
+    , Attr.checked model.subscribe
+    , Events.onCheck ShouldSubscribe
+    ]
+    [ Html.text "Subscribe to Events" ]
   ]
 
 
@@ -357,20 +423,28 @@ testUpdate msg model =
       ( { model | visibility = model.visibility ++ [ visibility ] }, Cmd.none )
     AnimationFrame posix ->
       ( { model | animationFrames = model.animationFrames + 1 }, Cmd.none )
+    ShouldSubscribe shouldSubscribe ->
+      ( { model | subscribe = shouldSubscribe }, Cmd.none )
 
 
 testSubscriptions : Model -> Sub Msg
 testSubscriptions model =
   Sub.batch
-  [ Browser.Events.onKeyPress <| keyDecoder GotKey
-  , Browser.Events.onClick <| Json.succeed Click
-  , Browser.Events.onMouseDown <| Json.succeed MouseDown
-  , Browser.Events.onMouseUp <| Json.succeed MouseUp
-  , Browser.Events.onMouseMove <| mouseMoveDecoder MouseMove
-  , Browser.Events.onResize Resize
-  , Browser.Events.onVisibilityChange VisibilityChange
-  , Browser.Events.onAnimationFrame AnimationFrame
-  ]
+    [ Browser.Events.onKeyPress <| keyDecoder GotKey
+    , Browser.Events.onClick <| Json.succeed Click
+    , Browser.Events.onMouseDown <| Json.succeed MouseDown
+    , Browser.Events.onMouseUp <| Json.succeed MouseUp
+    , Browser.Events.onMouseMove <| mouseMoveDecoder MouseMove
+    , if model.subscribe then
+        Browser.Events.onResize Resize
+      else
+        Sub.none
+    , if model.subscribe then 
+        Browser.Events.onVisibilityChange VisibilityChange 
+      else
+        Sub.none
+    , Browser.Events.onAnimationFrame AnimationFrame
+    ]
 
 
 mouseMoveDecoder : ((Int, Int) -> Msg) -> Decoder Msg

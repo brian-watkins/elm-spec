@@ -53,6 +53,7 @@ describe("browser events", () => {
       expectSpec("BrowserEventSpec", "windowResize", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
+        expectAccepted(observations[2])
       })
     })
   })
@@ -62,6 +63,7 @@ describe("browser events", () => {
       expectSpec("BrowserEventSpec", "windowVisibility", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
+        expectAccepted(observations[2])
       })
     })
   })

@@ -4,7 +4,7 @@ const TimePlugin = require('./plugin/timePlugin')
 const HtmlPlugin = require('./plugin/htmlPlugin')
 const HttpPlugin = require('./plugin/httpPlugin')
 const WitnessPlugin = require('./plugin/witnessPlugin')
-const { registerApp, setBaseLocation, clearTimers, setTimezoneOffset } = require('./fakes')
+const { registerApp, setBaseLocation, clearTimers, clearEventListeners, setTimezoneOffset } = require('./fakes')
 const { report, line } = require('./report')
 
 const ELM_SPEC_OUT = "elmSpecOut"
@@ -197,6 +197,7 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   prepareForScenario() {
     this.context.clock.runToFrame()
+    clearEventListeners(this.context.window)
     clearTimers(this.context.window)
     setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
     setBaseLocation("http://elm-spec", this.context.window)
