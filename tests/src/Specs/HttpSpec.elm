@@ -44,7 +44,7 @@ getSpec =
     )
   , scenario "multiple stubbed requests" (
       given (
-        testSubject (Cmd.batch [ getRequest, getOtherRequest ]) [ successStub, otherSuccessStub ]
+        testSubject (\model -> Cmd.batch [ getRequest model, getOtherRequest model ]) [ successStub, otherSuccessStub ]
       )
       |> whenTheRequestIsTriggered
       |> it "receives the stubbed responses" (
@@ -71,13 +71,13 @@ getSpec =
   ]
 
 
-getRequest : Cmd Msg
+getRequest : Model -> Cmd Msg
 getRequest =
   getRequestWithTimeout Nothing
 
 
-getRequestWithTimeout : Maybe Float -> Cmd Msg
-getRequestWithTimeout timeout =
+getRequestWithTimeout : Maybe Float -> Model -> Cmd Msg
+getRequestWithTimeout timeout _ =
   Http.request
     { method = "GET"
     , headers =
@@ -92,8 +92,8 @@ getRequestWithTimeout timeout =
     }
 
 
-getOtherRequest : Cmd Msg
-getOtherRequest =
+getOtherRequest : Model -> Cmd Msg
+getOtherRequest _ =
   Http.request
     { method = "GET"
     , headers =
@@ -193,6 +193,71 @@ resetSpec =
   ]
 
 
+clearRequestHistorySpec : Spec Model Msg
+clearRequestHistorySpec =
+  Spec.describe "Clear request history"
+  [ scenario "the request history is cleared" (
+      given (
+        testSubject (getRequestWithParam "fun") [ successStubWithParam "fun" ]
+      )
+      |> when "some requests are triggered"
+        [ Markup.target << by [ id "value-input" ]
+        , Event.input "football"
+        , Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> when "the requests are cleared"
+        [ Spec.Http.clearRequestHistory
+        ]
+      |> when "more requests are made"
+        [ Markup.target << by [ id "value-input" ]
+        , Event.input "running"
+        , Markup.target << by [ id "trigger" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "observes only requests after clearing the history" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff?fun=running")
+              |> expect (isListWithLength 1)
+          )
+        , it "does not clear the stub" (
+            Observer.observeModel .responses
+              |> expect ( isListWhere
+                [ equals { name = "Cool Dude", score = 1034 }
+                , equals { name = "Cool Dude", score = 1034 }
+                , equals { name = "Cool Dude", score = 1034 }
+                , equals { name = "Cool Dude", score = 1034 }
+                ]
+              )
+          )
+        ]
+    )
+  ]
+
+
+successStubWithParam key =
+  Stub.for (route "GET" <| Matching <| "http:\\/\\/fake\\-api\\.com\\/stuff\\?" ++ key ++ "=.+")
+    |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
+
+
+getRequestWithParam : String -> Model -> Cmd Msg
+getRequestWithParam key model =
+  Http.request
+    { method = "GET"
+    , headers =
+      [ Http.header "X-Fun-Header" "some-fun-value"
+      , Http.header "X-Awesome-Header" "some-awesome-value"
+      ]
+    , url = "http://fake-api.com/stuff?" ++ key ++ "=" ++ model.value
+    , body = Http.emptyBody
+    , expect = Http.expectJson ReceivedResponse responseDecoder
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 errorStubSpec : Spec Model Msg
 errorStubSpec =
   Spec.describe "stub an error"
@@ -263,8 +328,8 @@ headerStub =
     |> Stub.withHeader ( "Location", "http://fun-place.com/fun" )
 
 
-fancyRequest : Cmd Msg
-fancyRequest =
+fancyRequest : Model -> Cmd Msg
+fancyRequest _ =
   Http.request
     { method = "GET"
     , headers = []
@@ -434,8 +499,8 @@ whenTheRequestIsTriggered =
     ]
 
 
-postRequestWithJson : Json.Value -> Cmd Msg
-postRequestWithJson body =
+postRequestWithJson : Json.Value -> Model -> Cmd Msg
+postRequestWithJson body _ =
   Http.request
     { method = "POST"
     , headers =
@@ -470,14 +535,16 @@ unauthorizedStub =
     |> Stub.withStatus 401
 
 type alias Model =
-  { responses: List ResponseObject
+  { value: String
+  , responses: List ResponseObject
   , error: Maybe Http.Error
   , requestStatus: String
   , metadata: Maybe Http.Metadata
   }
 
 defaultModel =
-  { responses = []
+  { value = ""
+  , responses = []
   , error = Nothing
   , requestStatus = "Idle"
   , metadata = Nothing
@@ -489,24 +556,28 @@ type alias ResponseObject =
   }
 
 type Msg
-  = MakeRequest
+  = ValueInput String
+  | MakeRequest
   | ReceivedResponse (Result Http.Error ResponseObject)
   | ReceivedMetadata (Result () Http.Metadata)
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.button [ Attr.id "trigger", Events.onClick MakeRequest ]
+  [ Html.input [ Attr.id "value-input", Events.onInput ValueInput ] []
+  , Html.button [ Attr.id "trigger", Events.onClick MakeRequest ]
     [ Html.text "Click to make request!" ]
   , Html.hr [] []
   , Html.div [ Attr.id "request-status" ] [ Html.text model.requestStatus ]
   ]
 
-testUpdate : Cmd Msg -> Msg -> Model -> ( Model, Cmd Msg )
+testUpdate : (Model -> Cmd Msg) -> Msg -> Model -> ( Model, Cmd Msg )
 testUpdate doRequest msg model =
   case msg of
+    ValueInput val ->
+      ( { model | value = val }, Cmd.none )
     MakeRequest ->
-      ( { model | requestStatus = "In Progress" }, doRequest )
+      ( { model | requestStatus = "In Progress" }, doRequest model )
     ReceivedResponse response ->
       case response of
         Ok data ->
@@ -533,6 +604,7 @@ selectSpec name =
     "abstain" -> Just abstainSpec
     "expectRequest" -> Just expectRequestSpec
     "reset" -> Just resetSpec
+    "clear" -> Just clearRequestHistorySpec
     "hasHeader" -> Just hasHeaderSpec
     "hasBody" -> Just hasBodySpec
     "error" -> Just errorStubSpec

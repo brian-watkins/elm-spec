@@ -1,6 +1,7 @@
 module Spec.Http exposing
   ( HttpRequest
   , observeRequests
+  , clearRequestHistory
   , header
   , stringBody
   , jsonBody
@@ -46,7 +47,7 @@ Now, you could write a spec that checks to see if the request body contains a va
     ]
 
 # Observe HTTP Requests
-@docs HttpRequest, observeRequests
+@docs HttpRequest, observeRequests, clearRequestHistory
 
 # Make Claims About HTTP Requests
 @docs url, header, stringBody, jsonBody
@@ -59,6 +60,8 @@ import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Route as Route exposing (HttpRoute)
+import Spec.Step as Step
+import Spec.Step.Command as Command
 import Json.Decode as Json
 import Dict exposing (Dict)
 import Url exposing (Url)
@@ -224,6 +227,19 @@ requestBodyDecoder =
       Maybe.map StringBody
         >> Maybe.withDefault EmptyBody
     )
+
+
+{-| Clear the history of HTTP requests received.
+
+Any HTTP requests made prior to executing this step will not be observed.
+
+It can be useful to clear the HTTP request history when a scenario results in
+many HTTP requests, but you care about observing only those that occur
+after a certain point.
+-}
+clearRequestHistory : Step.Context model -> Step.Command msg
+clearRequestHistory _ =
+  Command.sendMessage <| Message.for "_http" "clear-history"
 
 
 {-| Claim that the url of an HTTP request satisfies the given claim.

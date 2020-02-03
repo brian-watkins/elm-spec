@@ -25,6 +25,10 @@ module.exports = class HttpPlugin {
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
+      case "clear-history": {
+        this.server.resetHistory()
+        break
+      }
       case "stub": {
         const stub = specMessage.body
 
