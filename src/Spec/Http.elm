@@ -229,7 +229,7 @@ requestBodyDecoder =
     )
 
 
-{-| Clear the history of HTTP requests received.
+{-| A step that clears the history of HTTP requests received.
 
 Any HTTP requests made prior to executing this step will not be observed.
 

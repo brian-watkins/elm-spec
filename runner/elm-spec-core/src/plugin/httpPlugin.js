@@ -30,21 +30,13 @@ module.exports = class HttpPlugin {
         break
       }
       case "stub": {
-        const stub = specMessage.body
+        this.server.resetBehavior()
 
-        switch (stub.route.uri.type) {
-          case "EXACT": {
-            this.setupStub(stub, stub.route.uri.value)
-            break
-          }
-          case "REGEXP": {
-            try {
-              this.setupStub(stub, new RegExp(stub.route.uri.value))
-            } catch (err) {
-              abort(report(
-                line("Unable to parse regular expression for stubbed route", `/${stub.route.uri.value}/`)
-              ))
-            }
+        for (const stub of specMessage.body) {
+          try {
+            this.setupStub(stub, this.uriDescriptor(stub))
+          } catch (err) {
+            abort(err.report)
             break
           }
         }
@@ -88,6 +80,25 @@ module.exports = class HttpPlugin {
       }
       default:
         console.log("Unknown Http message", specMessage)
+    }
+  }
+
+  uriDescriptor(stub) {
+    switch (stub.route.uri.type) {
+      case "EXACT": {
+        return stub.route.uri.value
+      }
+      case "REGEXP": {
+        try {
+          return new RegExp(stub.route.uri.value)
+        } catch (err) {
+          const error = new Error()
+          error.report = report(
+            line("Unable to parse regular expression for stubbed route", `/${stub.route.uri.value}/`)
+          )
+          throw error
+        }
+      }
     }
   }
 

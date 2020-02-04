@@ -24,7 +24,7 @@ import Spec.Message as Message
 import Browser
 
 
-requiredElmSpecCoreVersion = 3
+requiredElmSpecCoreVersion = 4
 
 
 {-| The spec suite runner must provide a Config, which must be implemented as follows:

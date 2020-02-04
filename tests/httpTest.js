@@ -48,6 +48,15 @@ describe('HTTP', () => {
     })
   })
 
+  context("now serve different stubs", () => {
+    it("resets the stubs as expected", (done) => {
+      expectSpec("HttpSpec", "nowServe", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
+  })
+
   context("abstain from responding", () => {
     it("abstains from responding as expected", (done) => {
       expectSpec("HttpSpec", "abstain", done, (observations) => {

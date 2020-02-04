@@ -1,6 +1,7 @@
 module Spec.Http.Stub exposing
   ( HttpResponseStub
   , serve
+  , nowServe
   , for
   , withBody
   , withStatus
@@ -12,8 +13,8 @@ module Spec.Http.Stub exposing
 
 {-| Define and set up stubs for HTTP requests made during a spec.
 
-# Set Up Stubs
-@docs HttpResponseStub, serve
+# Register Stubs
+@docs HttpResponseStub, serve, nowServe
 
 # Define Stubs
 @docs for, withBody, withStatus, withHeader, withNetworkError, withTimeout, abstain
@@ -22,6 +23,8 @@ module Spec.Http.Stub exposing
 
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Setup.Internal as Setup
+import Spec.Step as Step
+import Spec.Step.Command as Command
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Route as Route exposing (HttpRoute)
 import Dict exposing (Dict)
@@ -130,19 +133,56 @@ abstain (HttpResponseStub stub) =
     { stub | shouldRespond = False }
 
 
-{-| Set up a fake HTTP server to serve a stubbed response when a matching request is made.
+{-| Set up a fake HTTP server with the given `HttpResponseStubs`.
+
+When a matching HTTP request is made, the relevant stubbed response will be returned.
 -}
 serve : List HttpResponseStub -> Setup model msg -> Setup model msg
-serve stubs setup =
-  List.foldl (\stub ->
-    Setup.configure <| httpStubMessage stub
-  ) setup stubs
+serve stubs =
+  Setup.configure <| httpStubMessage stubs
 
 
-httpStubMessage : HttpResponseStub -> Message
-httpStubMessage stub =
+{-| Reconfigure the fake HTTP server to serve the given `HttpResponseStubs`.
+
+Use this function if you want to change the stubs during a scenario.
+
+For example, suppose you are writing a scenario that describes an application that
+polls some HTTP endpoint every 5 seconds. You could change the stubbed response
+during the scenario like so:
+
+    Spec.scenario "polling" (
+      Spec.given (
+        Spec.Setup.init (App.init testFlags)
+          |> Spec.Setup.withView App.view
+          |> Spec.Setup.withUpdate App.update
+          |> Stub.serve [ pollFailsStub ]
+      )
+      |> when "time passes"
+        [ Spec.Time.tick 5000
+        , Spec.Time.tick 5000
+        ]
+      |> when "the poll succeeds"
+        [ Spec.Http.Stub.nowServe [ pollSucceedsStub ]
+        , Spec.Time.tick 5000
+        ]
+      |> it "does the right thing" (
+        ...
+      )
+    )
+
+Note that `Spec.Http.Stub.nowServe` will clear any existing stubs and
+register only the ones provided.
+
+-}
+nowServe : List HttpResponseStub -> Step.Context model -> Step.Command msg
+nowServe stubs _ =
+  Command.sendMessage <| httpStubMessage stubs
+
+
+httpStubMessage : List HttpResponseStub -> Message
+httpStubMessage stubs =
   Message.for "_http" "stub"
-    |> Message.withBody (encodeStub stub)
+    |> Message.withBody (Encode.list encodeStub stubs)
 
 
 encodeStub : HttpResponseStub -> Encode.Value

@@ -8,7 +8,7 @@ module Spec.Step exposing
 which represents the current scenario state, to a `Command`, which describes an action to be
 executed before moving to the next step.
 
-See `Spec.Command`, `Spec.Markup`, `Spec.Markup.Event`, `Spec.Port`, and `Spec.Time` for
+See `Spec.Command`, `Spec.Http`, `Spec.Markup`, `Spec.Markup.Event`, `Spec.Port`, and `Spec.Time` for
 steps you can use to build a scenario script.
 
 @docs Context, Command

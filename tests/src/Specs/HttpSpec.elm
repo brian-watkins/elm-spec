@@ -237,6 +237,51 @@ clearRequestHistorySpec =
   ]
 
 
+nowServeSpec : Spec Model Msg
+nowServeSpec =
+  Spec.describe "nowServe new stubs"
+  [ scenario "overwriting an existing stub" (
+      given (
+        testSubject getRequest [ someStub ("me", 2984) ]
+      )
+      |> when "some requests are triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Event.click
+        ]
+      |> when "the stub is reset"
+        [ Stub.nowServe [ someStub ("you", 2112) ]
+        ]
+      |> when "more requests are triggered"
+        [ Markup.target << by [ id "trigger" ]
+        , Event.click
+        , Event.click
+        ]
+      |> observeThat
+        [ it "records the requests" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+              |> expect (isListWithLength 4)
+          )
+        , it "records the various responses" (
+            Observer.observeModel .responses
+              |> expect (isListWhere
+                [ equals { name = "you", score = 2112 }
+                , equals { name = "you", score = 2112 }
+                , equals { name = "me", score = 2984 }
+                , equals { name = "me", score = 2984 }
+                ]
+              )
+          )
+        ]
+    )
+  ]
+
+
+someStub (name, number) =
+  Stub.for (get "http://fake-api.com/stuff")
+    |> Stub.withBody ("{\"name\":\"" ++ name ++ "\",\"score\":" ++ String.fromInt number ++ "}")
+
+
 successStubWithParam key =
   Stub.for (route "GET" <| Matching <| "http:\\/\\/fake\\-api\\.com\\/stuff\\?" ++ key ++ "=.+")
     |> Stub.withBody "{\"name\":\"Cool Dude\",\"score\":1034}"
@@ -605,6 +650,7 @@ selectSpec name =
     "expectRequest" -> Just expectRequestSpec
     "reset" -> Just resetSpec
     "clear" -> Just clearRequestHistorySpec
+    "nowServe" -> Just nowServeSpec
     "hasHeader" -> Just hasHeaderSpec
     "hasBody" -> Just hasBodySpec
     "error" -> Just errorStubSpec
