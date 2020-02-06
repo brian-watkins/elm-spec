@@ -1,7 +1,9 @@
 module Spec.Markup exposing
   ( MarkupObservation
   , HtmlElement
+  , ViewportOffset
   , observeTitle
+  , observeViewportOffset
   , observeElement
   , observeElements
   , query
@@ -17,7 +19,7 @@ module Spec.Markup exposing
 @docs target
 
 # Observe an HTML Document
-@docs MarkupObservation, observeElements, observeElement, query, observeTitle
+@docs MarkupObservation, observeElements, observeElement, query, observeTitle, ViewportOffset, observeViewportOffset
 
 # Make Claims about an HTML Element
 @docs HtmlElement, text, attribute, property
@@ -46,13 +48,49 @@ observeTitle : Observer model String
 observeTitle =
   Observer.inquire selectTitleMessage <| \message ->
     Message.decode Json.string message
-      |> Result.withDefault "FAILED"
+      |> Result.withDefault "<Failed to decode title!>"
 
 
 selectTitleMessage : Message
 selectTitleMessage =
   Message.for "_html" "application"
     |> Message.withBody (Encode.string "select-title")
+
+
+{-| Represents the position of the browser's viewport.
+-}
+type alias ViewportOffset =
+  { x: Float
+  , y: Float
+  }
+
+
+{-| Observe the browser's viewport offset.
+
+Use this function to observe that the viewport of the browser window
+has been set to a certain position via `Browser.Dom.setViewport`.
+
+Note: If you'd like to observe the viewport offset of an *element* set via `Browser.Dom.setViewportOf`,
+use `observeElement` and `property` to make a claim about its `scrollLeft` and `scrollTop` properties.
+
+-}
+observeViewportOffset : Observer model ViewportOffset
+observeViewportOffset =
+  Observer.inquire selectViewportMessage <| \message ->
+    Message.decode viewportDecoder message
+      |> Result.withDefault { x = -1, y = -1 }
+
+
+selectViewportMessage : Message
+selectViewportMessage =
+  Message.for "_html" "select-viewport"
+
+
+viewportDecoder : Json.Decoder ViewportOffset
+viewportDecoder =
+  Json.map2 ViewportOffset
+    (Json.field "x" Json.float)
+    (Json.field "y" Json.float)
 
 
 {-| Represents an observation of HTML.
@@ -276,12 +314,13 @@ a button is disabled like so:
           Spec.Claim.isTrue
       )
 
-Some common properties one might make claims about:
+Some common properties one might make claims about and the type of the corresponding value:
 
-- `style` => an object
-- `hidden` => a boolean value
-- `checked` => a boolean value
-- `value` (for an input element) => a string
+- `style`  (an object)
+- `hidden` (a boolean value)
+- `scrollLeft`, `scrollTop` (the element's viewport offset, float values)
+- `checked` (a boolean value)
+- `value` (a string)
 
 On the difference between attributes and properties,
 see [this](https://github.com/elm-lang/html/blob/master/properties-vs-attributes.md).

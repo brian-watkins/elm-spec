@@ -3,7 +3,8 @@ const {
   getLocation,
   setBaseLocation,
   resizeWindowTo,
-  setWindowVisibility
+  setWindowVisibility,
+  getViewportOffset
 } = require('../fakes')
 
 module.exports = class HtmlPlugin {
@@ -187,6 +188,15 @@ module.exports = class HtmlPlugin {
         })
 
         break
+      }
+      case "select-viewport": {
+        out({
+          home: "_html",
+          name: "viewport",
+          body: getViewportOffset(this.window)
+        })
+
+        break;
       }
       default:
         console.log("Unknown message:", specMessage)

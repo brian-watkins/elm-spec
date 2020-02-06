@@ -1,10 +1,5 @@
 
 exports.fakeWindow = (theWindow, location) => {
-  const viewport = {
-    x: 0,
-    y: 0,
-  }
-
   return new Proxy(theWindow, {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
@@ -18,15 +13,15 @@ exports.fakeWindow = (theWindow, location) => {
       }
       if (prop === 'scroll') {
         return (x, y) => {
-          viewport.x = x
-          viewport.y = y
+          theWindow._elm_spec.viewportOffset.x = x
+          theWindow._elm_spec.viewportOffset.y = y
         }
       }
       if (prop === 'pageXOffset') {
-        return viewport.x
+        return theWindow._elm_spec.viewportOffset.x
       }
       if (prop === 'pageYOffset') {
-        return viewport.y
+        return theWindow._elm_spec.viewportOffset.y
       }
       const val = target[prop]
       return typeof val === "function"

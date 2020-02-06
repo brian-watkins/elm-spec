@@ -12,6 +12,7 @@ exports.registerFakes = (window, clock) => {
   window._elm_spec.requestAnimationFrame = clock.requestAnimationFrame
   window._elm_spec.cancelAnimationFrame = clock.cancelAnimationFrame
   window._elm_spec.date = fakeDate(clock)
+  window._elm_spec.viewportOffset = { x: 0, y: 0 }
   window._elm_spec.windowEventListeners = {}
   window._elm_spec.window = fakeWindow(window, fakeLocation)
   window._elm_spec.documentEventListeners = {}
@@ -65,6 +66,14 @@ exports.clearTimers = (window) => {
 
 exports.setTimezoneOffset = (window, offset) => {
   window._elm_spec.date.fakeTimezoneOffset = offset
+}
+
+exports.getViewportOffset = (window) => {
+  return window._elm_spec.viewportOffset
+}
+
+exports.setViewportOffset = (window, offset) => {
+  window._elm_spec.viewportOffset = offset
 }
 
 exports.clearEventListeners = (window) => {

@@ -63,6 +63,47 @@ viewportSpec =
   ]
 
 
+observeViewportSpec : Spec Model Msg
+observeViewportSpec =
+  Spec.describe "observeViewport"
+  [ scenario "the viewport has not been changed" (
+      given (
+        testSubject
+      )
+      |> it "observes that the viewport is offset at (0, 0)" (
+        Markup.observeViewportOffset
+          |> expect (equals { x = 0, y = 0 })
+      )
+    )
+  , scenario "the viewport has been set" (
+      given (
+        testSubject
+      )
+      |> when "the viewport is updated"
+        [ Markup.target << by [ id "x-position" ]
+        , Event.input "81"
+        , Markup.target << by [ id "y-position" ]
+        , Event.input "9.7"
+        , Markup.target << by [ id "set-viewport-button" ]
+        , Event.click
+        ]
+      |> it "observes that the viewport is offset at the expected position" (
+        Markup.observeViewportOffset
+          |> expect (equals { x = 81, y = 9.7 })
+      )
+    )
+  , scenario "the viewport is observed in another scenario" (
+      given (
+        testSubject
+      )
+      |> it "observes that the viewport is reset to (0, 0)" (
+        Markup.observeViewportOffset
+          |> expect (equals { x = 0, y = 0 })
+      )
+    )
+  ]
+
+
 type alias Model =
   { viewport: { x: Float, y: Float }
   , scrollTo: { x: Float, y: Float }
@@ -138,6 +179,7 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "viewport" -> Just viewportSpec
+    "observeViewport" -> Just observeViewportSpec
     _ -> Nothing
 
 
