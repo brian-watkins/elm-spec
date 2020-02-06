@@ -15,6 +15,7 @@ import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim
 import Spec.Report as Report
 import Spec.Message as Message exposing (Message)
+import Spec.Markup.Message as Message
 import Json.Encode as Encode
 import Json.Decode as Json
 
@@ -39,17 +40,14 @@ of the document at the start of the scenario.
 -}
 observeLocation : Observer model String
 observeLocation =
-  Observer.inquire observeLocationMessage <| \message ->
-    Message.decode Json.string message
+  Observer.inquire Message.fetchWindow <| \message ->
+    Message.decode locationDecoder message
       |> Result.withDefault "FAILED"
 
 
-observeLocationMessage : Message
-observeLocationMessage =
-  Message.for "_html" "navigation"
-    |> Message.withBody (
-      Encode.string "select-location"
-    )
+locationDecoder : Json.Decoder String
+locationDecoder =
+  Json.at [ "location", "href" ] Json.string
 
 
 {-| Expect that a `Browser.Navigation.reload` or `Browser.Navigation.reloadAndSkipCache`

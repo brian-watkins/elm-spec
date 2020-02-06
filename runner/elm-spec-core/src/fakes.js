@@ -43,10 +43,6 @@ exports.registerApp = (app, window) => {
   window._elm_spec.app = app
 }
 
-exports.getLocation = (window) => {
-  return window._elm_spec.window.location
-}
-
 exports.setBaseLocation = (location, window) => {
   window._elm_spec.window.location.setBase(window.document, location)
 }
@@ -66,10 +62,6 @@ exports.clearTimers = (window) => {
 
 exports.setTimezoneOffset = (window, offset) => {
   window._elm_spec.date.fakeTimezoneOffset = offset
-}
-
-exports.getViewportOffset = (window) => {
-  return window._elm_spec.viewportOffset
 }
 
 exports.setViewportOffset = (window, offset) => {

@@ -34,6 +34,7 @@ import Spec.Markup.Selector as Selector exposing (Selector, Element)
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Message as Message exposing (Message)
+import Spec.Markup.Message as Message
 import Json.Encode as Encode
 import Json.Decode as Json
 import Dict exposing (Dict)
@@ -46,15 +47,14 @@ Note: It only makes sense to observe the title if your program is constructed wi
 -}
 observeTitle : Observer model String
 observeTitle =
-  Observer.inquire selectTitleMessage <| \message ->
-    Message.decode Json.string message
-      |> Result.withDefault "<Failed to decode title!>"
+  Observer.inquire Message.fetchWindow <| \message ->
+    Message.decode documentTitleDecoder message
+      |> Result.withDefault ""
 
 
-selectTitleMessage : Message
-selectTitleMessage =
-  Message.for "_html" "application"
-    |> Message.withBody (Encode.string "select-title")
+documentTitleDecoder : Json.Decoder String
+documentTitleDecoder =
+  Json.at [ "document", "title" ] Json.string
 
 
 {-| Represents the position of the browser's viewport.
@@ -76,21 +76,16 @@ use `observeElement` and `property` to make a claim about its `scrollLeft` and `
 -}
 observeViewportOffset : Observer model ViewportOffset
 observeViewportOffset =
-  Observer.inquire selectViewportMessage <| \message ->
-    Message.decode viewportDecoder message
+  Observer.inquire Message.fetchWindow <| \message ->
+    Message.decode viewportOffsetDecoder message
       |> Result.withDefault { x = -1, y = -1 }
 
 
-selectViewportMessage : Message
-selectViewportMessage =
-  Message.for "_html" "select-viewport"
-
-
-viewportDecoder : Json.Decoder ViewportOffset
-viewportDecoder =
+viewportOffsetDecoder : Json.Decoder ViewportOffset
+viewportOffsetDecoder =
   Json.map2 ViewportOffset
-    (Json.field "x" Json.float)
-    (Json.field "y" Json.float)
+    (Json.field "pageXOffset" Json.float)
+    (Json.field "pageYOffset" Json.float)
 
 
 {-| Represents an observation of HTML.

@@ -1,17 +1,18 @@
 const { report, line } = require('../report')
 const {
-  getLocation,
   setBaseLocation,
   resizeWindowTo,
-  setWindowVisibility,
-  getViewportOffset
+  setWindowVisibility
 } = require('../fakes')
 
 module.exports = class HtmlPlugin {
   constructor(context) {
     this.context = context
     this.window = this.context.window
-    this.document = this.window.document
+  }
+
+  get document() {
+    return this.window._elm_spec.document
   }
 
   handle(specMessage, out, next, abort) {
@@ -31,6 +32,10 @@ module.exports = class HtmlPlugin {
 
   handleMessage(specMessage, out, next, abort) {
     switch (specMessage.name) {
+      case "query-window": {
+        out(this.selected(this.window._elm_spec.window))
+        break;
+      }
       case "query": {
         const selector = specMessage.body.selector
         const element = this.document.querySelector(selector)
@@ -167,36 +172,10 @@ module.exports = class HtmlPlugin {
         this.document.dispatchEvent(this.getEvent("visibilitychange"))
         break
       }
-      case "navigation": {
-        out({
-          home: "navigation",
-          name: "current-location",
-          body: getLocation(this.window).href
-        })
-        break
-      }
       case "set-location": {
         const location = specMessage.body
         setBaseLocation(location, this.window)
         break
-      }
-      case "application": {
-        out({
-          home: "application",
-          name: "current-title",
-          body: this.window.document.title
-        })
-
-        break
-      }
-      case "select-viewport": {
-        out({
-          home: "_html",
-          name: "viewport",
-          body: getViewportOffset(this.window)
-        })
-
-        break;
       }
       default:
         console.log("Unknown message:", specMessage)
