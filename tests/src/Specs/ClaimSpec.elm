@@ -125,6 +125,21 @@ isSomethingWhereSpec =
   ]
 
 
+requireSpec : Spec Model Msg
+requireSpec =
+  Spec.describe "require"
+  [ scenario "make a claim about part of a record" (
+      given (
+        specSetup
+      )
+      |> it "checks the value" (
+        Observer.observeModel identity
+          |> expect (Claim.require .name <| equals "Cool Dude")
+      )
+    )
+  ]
+
+
 specSetup =
   specSetupForMaybe Nothing
 
@@ -158,6 +173,7 @@ selectSpec specName =
     "satisfying" -> Just satisfyingSpec
     "boolean" -> Just booleanSpec
     "isSomethingWhere" -> Just isSomethingWhereSpec
+    "require" -> Just requireSpec
     _ -> Nothing
 
 

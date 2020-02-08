@@ -2,6 +2,7 @@ module Spec.Claim exposing
   ( Claim
   , Verdict(..)
   , satisfying
+  , require
   , isTrue
   , isFalse
   , isEqual
@@ -20,7 +21,7 @@ module Spec.Claim exposing
 @docs Claim, Verdict
 
 # Basic Claims
-@docs isEqual, isTrue, isFalse, satisfying
+@docs isEqual, isTrue, isFalse
 
 # Claims about Strings
 @docs isStringContaining
@@ -32,7 +33,7 @@ module Spec.Claim exposing
 @docs isSomething, isSomethingWhere, isNothing
 
 # Working with Claims
-@docs mapRejection
+@docs satisfying, require, mapRejection
 
 -}
 
@@ -168,14 +169,11 @@ pluralize times word =
 -}
 isListWithLength : Int -> Claim (List a)
 isListWithLength expected =
-  \actual ->
-    let
-      actualLength = List.length actual
-    in
-      if actualLength == expected then
-        Accept
-      else
-        Reject <| wrongLength expected actualLength
+  require List.length <| \actualLength ->
+    if actualLength == expected then
+      Accept
+    else
+      Reject <| wrongLength expected actualLength
 
 
 {-| Claim that the subject is a list where the following claims are satisfied:
@@ -319,3 +317,19 @@ isNothing =
           ]
       Nothing ->
         Accept
+
+
+{-| Claim that a value derived from the subject satisfies the given claim.
+
+For example, the following claim:
+
+    { x = 27, y = 31 }
+      |> require .y (isEqual Debug.toString 31)
+
+would be accepted.
+
+-}
+require : (a -> b) -> Claim b -> Claim a
+require mapper claim =
+  \actual ->
+    claim <| mapper actual
