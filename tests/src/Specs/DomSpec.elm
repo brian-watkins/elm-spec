@@ -2,11 +2,13 @@ module Specs.DomSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
+import Spec.Claim as Claim exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
-import Specs.Helpers exposing (equals)
+import Specs.Helpers exposing (..)
+import Specs.EventHelpers
 import Spec.Command as Command
 import Runner
 import Html exposing (Html)
@@ -14,6 +16,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Task
 import Browser.Dom
+import Json.Decode as Json
 
 
 viewportSpec : Spec Model Msg
@@ -99,6 +102,40 @@ observeBrowserViewportSpec =
   ]
 
 
+setElementViewportSpec : Spec Model Msg
+setElementViewportSpec =
+  Spec.describe "setElementViewport"
+  [ scenario "success" (
+      given (
+        testSubject
+      )
+      |> when "the element is scrolled"
+        [ Markup.target << by [ id "scrollable-element" ]
+        , Event.setElementViewport { x = 19, y = 200 }
+        ]
+      |> it "adjusts the element viewport" (
+        Markup.observeElement
+          |> Markup.query << by [ id "scrollable-element" ]
+          |> expect (isSomethingWhere <| satisfying
+            [ Markup.property (Json.field "scrollTop" Json.float) <| equals 200
+            , Markup.property (Json.field "scrollLeft" Json.float) <| equals 19
+            ]
+          )
+      )
+    )
+  , eventStepFailsWhenNoElementTargeted <| Event.setElementViewport { x = 19, y = 200 }
+  , eventStepFailsWhenDocumentTargeted <| Event.setElementViewport { x = 19, y = 200 }
+  ]
+
+
+eventStepFailsWhenNoElementTargeted =
+  Specs.EventHelpers.eventStepFailsWhenNoElementTargeted testSubject
+
+
+eventStepFailsWhenDocumentTargeted =
+  Specs.EventHelpers.eventStepFailsWhenDocumentTargeted testSubject
+
+
 type alias Model =
   { viewport: { x: Float, y: Float }
   , scrollTo: { x: Float, y: Float }
@@ -127,6 +164,19 @@ testView model =
   , Html.input [ Attr.id "y-position", Events.onInput GotY ] []
   , Html.button [ Attr.id "set-viewport-button", Events.onClick SetViewport ] [ Html.text "Set!" ]
   , Html.button [ Attr.id "request-viewport-button", Events.onClick RequestViewport ] [ Html.text "Get!"]
+  , Html.hr [] []
+  , Html.div
+    [ Attr.id "scrollable-element"
+    , Attr.style "width" "300px"
+    , Attr.style "height" "200px"
+    , Attr.style "overflow" "hidden"
+    ]
+    [ Html.div
+      [ Attr.id "element-with-large-content"
+      , Attr.style "width" "500px"
+      , Attr.style "height" "1000px"
+      ] [ Html.text "Lots of content!" ]
+    ]
   ]
 
 
@@ -175,6 +225,7 @@ selectSpec name =
   case name of
     "viewport" -> Just viewportSpec
     "observeBrowserViewport" -> Just observeBrowserViewportSpec
+    "setElementViewport" -> Just setElementViewportSpec
     _ -> Nothing
 
 

@@ -13,6 +13,7 @@ module Spec.Markup.Event exposing
   , focus
   , blur
   , setBrowserViewport
+  , setElementViewport
   , trigger
   )
 
@@ -64,7 +65,7 @@ For example,
 @docs trigger
 
 # Control the Viewport
-@docs setBrowserViewport
+@docs setBrowserViewport, setElementViewport
 
 -}
 
@@ -278,18 +279,46 @@ Use this step to simulate a user scrolling the web page.
 
 Note that elm-spec fakes the browser viewport offset. So if you are viewing elm-spec
 specs in a real browser (via Karma), then you won't actually see the viewport offset
-change, but the Elm program will think it has.
+change, but the Elm program will think it has. This allows you to get consistent
+results without making your specs dependent on properties of the browser that your
+specs are running in.
+
 -}
 setBrowserViewport : ViewportOffset -> Step.Context model -> Step.Command msg
 setBrowserViewport offset _ =
   Message.for "_html" "set-browser-viewport"
+    |> Message.withBody (encodeViewportOffset offset)
+    |> Command.sendMessage
+
+
+{-| A step that changes the offset of the targeted element's viewport.
+
+Use this step to simulate a user scrolling the content within an element.
+
+Note that elm-spec does not fake the element viewport offset. So, if you are running
+specs in a real browser (via Karma), then the element must be scrollable for this step
+to do anything (i.e., it probably needs a fixed height or width, and it's `overflow`
+CSS property must be set appropriately).
+
+-}
+setElementViewport : ViewportOffset -> Step.Context model -> Step.Command msg
+setElementViewport offset context =
+  Message.for "_html" "set-element-viewport"
     |> Message.withBody (
       Encode.object
-        [ ("x", Encode.float offset.x)
-        , ("y", Encode.float offset.y)
+        [ ( "selector", Encode.string <| targetSelector context )
+        , ( "viewport", encodeViewportOffset offset )
         ]
     )
     |> Command.sendMessage
+
+
+encodeViewportOffset : ViewportOffset -> Encode.Value
+encodeViewportOffset offset =
+  Encode.object
+  [ ("x", Encode.float offset.x)
+  , ("y", Encode.float offset.y)
+  ]
 
 
 {-| A step that triggers a custom DOM event on the targeted item.

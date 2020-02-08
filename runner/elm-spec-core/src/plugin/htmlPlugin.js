@@ -80,29 +80,15 @@ module.exports = class HtmlPlugin {
       case "click": {
         this.verifySelector("click", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
           const element = this.getElement(props.selector)
-          element.dispatchEvent(this.getEvent("mousedown"))
-          element.dispatchEvent(this.getEvent("mouseup"))
-          if ('click' in element) {
-            element.click()
-          } else {
-            element.dispatchEvent(this.getEvent("click"))
-          }
+          this.dispatchClick(element)
         })
         break
       }
       case "doubleClick": {
-        this.verifySelector("doubleClick", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const clickMessage = {
-            home: "_html",
-            name: "click",
-            body: {
-              selector: props.selector
-            }
-          }
-          this.handle(clickMessage, out, next, abort)
-          this.handle(clickMessage, out, next, abort)
-          
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("doubleClick", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
+          const element = this.getElement(props.selector)
+          this.dispatchClick(element)
+          this.dispatchClick(element)
           element.dispatchEvent(this.getEvent("dblclick"))
         })
         break
@@ -182,9 +168,29 @@ module.exports = class HtmlPlugin {
         setBrowserViewport(this.window, specMessage.body)
         break
       }
+      case "set-element-viewport": {
+        this.verifySelector("setElementViewport", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
+          const element = this.getElement(props.selector)
+          const viewport = props.viewport
+          element.scrollLeft = viewport.x
+          element.scrollTop = viewport.y
+        })
+
+        break
+      }
       default:
         console.log("Unknown message:", specMessage)
         break
+    }
+  }
+
+  dispatchClick(element) {
+    element.dispatchEvent(this.getEvent("mousedown"))
+    element.dispatchEvent(this.getEvent("mouseup"))
+    if ('click' in element) {
+      element.click()
+    } else {
+      element.dispatchEvent(this.getEvent("click"))
     }
   }
 
