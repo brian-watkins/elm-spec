@@ -6,7 +6,8 @@ import Spec.Markup as Markup
 import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
 import Spec.Observer as Observer
-import Specs.Helpers exposing (equals)
+import Specs.Helpers exposing (..)
+import Specs.EventHelpers
 import Spec.Claim exposing (isSomethingWhere)
 import Runner
 import Html exposing (Html)
@@ -54,19 +55,8 @@ inputSpec =
           |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: Here is some fun text!")
       )
     )
-  , scenario "no element targeted for input" (
-      given (
-        testSubject
-      )
-      |> when "some text is input without targeting an element"
-        [ Event.input "Here is some fun text!"
-        ]
-      |> it "fails" (
-        Markup.observeElement
-          |> Markup.query << by [ id "my-message" ]
-          |> expect (isSomethingWhere <| Markup.text <| equals "You wrote: Here is some fun text!")
-      )
-    )
+  , eventStepFailsWhenNoElementTargeted <| Event.input "Some fun text!"
+  , eventStepFailsWhenDocumentTargeted <| Event.input "Some fun text!"
   ]
 
 
@@ -93,30 +83,10 @@ focusBlurSpec =
           )
         ]
     )
-   , scenario "no element targeted for focus" (
-      given (
-        testSubject
-      )
-      |> when "focus event occurs"
-        [ Event.focus
-        ]
-      |> it "fails" (
-        Observer.observeModel .focused
-          |> expect (equals True)
-      )
-    )
-    , scenario "no element targeted for blur" (
-      given (
-        testSubject
-      )
-      |> when "blur event occurs"
-        [ Event.blur
-        ]
-      |> it "fails" (
-        Observer.observeModel .blurred
-          |> expect (equals True)
-      )
-    )
+  , eventStepFailsWhenNoElementTargeted Event.focus
+  , eventStepFailsWhenDocumentTargeted Event.focus
+  , eventStepFailsWhenNoElementTargeted Event.blur
+  , eventStepFailsWhenDocumentTargeted Event.blur
   ]
 
 
@@ -216,7 +186,17 @@ selectOptionByTextSpec =
           |> expect (equals [ "two-value", "three-value" ])
       )
     )
+  , eventStepFailsWhenNoElementTargeted <| Event.selectOption "two-label"
+  , eventStepFailsWhenDocumentTargeted <| Event.selectOption "two-label"
   ]
+
+
+eventStepFailsWhenNoElementTargeted =
+  Specs.EventHelpers.eventStepFailsWhenNoElementTargeted testSubject
+
+
+eventStepFailsWhenDocumentTargeted =
+  Specs.EventHelpers.eventStepFailsWhenDocumentTargeted testSubject
 
 
 testSubject =

@@ -1,4 +1,11 @@
-const { expectSpec, expectAccepted, expectRejected, reportLine } = require("./helpers/SpecHelpers")
+const {
+  expectSpec,
+  expectAccepted
+} = require("./helpers/SpecHelpers")
+const {
+  expectRejectedWhenDocumentTargeted,
+  expectRejectedWhenNoElementTargeted
+} = require("./helpers/eventTestHelpers")
 
 describe("form inputs", () => {
   describe("checking a box", () => {
@@ -14,9 +21,8 @@ describe("form inputs", () => {
       it("updates the model and renders the view as expected", (done) => {
         expectSpec("FormSpec", "input", done, (observations) => {
           expectAccepted(observations[0])
-          expectRejected(observations[1], [
-            reportLine("No element targeted for event", "input")
-          ])
+          expectRejectedWhenNoElementTargeted("input", observations[1])
+          expectRejectedWhenDocumentTargeted("input", observations[2])
         })
       })
     })
@@ -28,12 +34,10 @@ describe("form inputs", () => {
         expectSpec("FormSpec", "focusBlur", done, (observations) => {
           expectAccepted(observations[0])
           expectAccepted(observations[1])
-          expectRejected(observations[2], [
-            reportLine("No element targeted for event", "focus")
-          ])
-          expectRejected(observations[3], [
-            reportLine("No element targeted for event", "blur")
-          ])
+          expectRejectedWhenNoElementTargeted("focus", observations[2])
+          expectRejectedWhenDocumentTargeted("focus", observations[3])
+          expectRejectedWhenNoElementTargeted("blur", observations[4])
+          expectRejectedWhenDocumentTargeted("blur", observations[5])
         })
       })
     })
@@ -54,6 +58,8 @@ describe("form inputs", () => {
           expectAccepted(observations[0])
           expectAccepted(observations[1])
           expectAccepted(observations[2])
+          expectRejectedWhenNoElementTargeted("select", observations[3])
+          expectRejectedWhenDocumentTargeted("select", observations[4])
         })
       })
     })

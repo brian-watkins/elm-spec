@@ -7,7 +7,8 @@ import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Observer as Observer
-import Specs.Helpers exposing (equals)
+import Specs.Helpers exposing (..)
+import Specs.EventHelpers
 import Spec.Report as Report
 import Spec.Claim as Claim exposing (isSomethingWhere)
 import Html exposing (Html)
@@ -68,7 +69,7 @@ clickSpec =
       |> when "no element is targeted for a click"
         [ Event.click
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   , scenario "view re-renders before click event" (
       given (
@@ -83,7 +84,7 @@ clickSpec =
         , Event.click
         , Event.click
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
 
@@ -119,15 +120,7 @@ doubleClickSpec =
           )
         ]
     )
-  , scenario "no element targeted for double click" (
-      given (
-        testSubject
-      )
-      |> when "a double click event occurs but no element is targeted"
-        [ Event.doubleClick
-        ]
-      |> itFails
-    )
+  , eventStepFailsWhenNoElementTargeted Event.doubleClick
   , scenario "view re-renders before double click event" (
       given (
         testSubjectWithConditionalElement <|
@@ -141,7 +134,7 @@ doubleClickSpec =
         , Event.doubleClick
         , Event.doubleClick
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
 
@@ -170,7 +163,7 @@ mouseDownSpec =
       |> when "a mouse down event occurs but no element is targeted"
         [ Event.mouseDown
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   , scenario "view re-renders before mouseDown event" (
       given (
@@ -185,7 +178,7 @@ mouseDownSpec =
         , Event.mouseDown
         , Event.mouseDown
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
 
@@ -214,7 +207,7 @@ mouseUpSpec =
       |> when "a mouse up event occurs but no element is targeted"
         [ Event.mouseUp
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   , scenario "view re-renders before mouseUp event" (
       given (
@@ -229,7 +222,7 @@ mouseUpSpec =
         , Event.mouseUp
         , Event.mouseUp
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
 
@@ -256,15 +249,8 @@ mouseMoveInSpec =
           )
         ]
     )
-  , scenario "no element targeted for mouse move in" (
-      given (
-        testSubject
-      )
-      |> when "no element is targeted for the mouse moves in event"
-        [ Event.mouseMoveIn
-        ]
-      |> itFails
-    )
+  , eventStepFailsWhenNoElementTargeted Event.mouseMoveIn
+  , eventStepFailsWhenDocumentTargeted Event.mouseMoveIn
   , scenario "view re-renders before mouseMoveIn event" (
       given (
         testSubjectWithConditionalElement <|
@@ -278,7 +264,7 @@ mouseMoveInSpec =
         , Event.mouseMoveIn
         , Event.mouseMoveIn
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
 
@@ -305,15 +291,8 @@ mouseMoveOutSpec =
           )
         ]
     )
-  , scenario "no element targeted for mouse move out" (
-      given (
-        testSubject
-      )
-      |> when "no element is targeted for the mouse move out event"
-        [ Event.mouseMoveOut
-        ]
-      |> itFails
-    )
+  , eventStepFailsWhenNoElementTargeted Event.mouseMoveOut
+  , eventStepFailsWhenDocumentTargeted Event.mouseMoveOut
   , scenario "view re-renders before mouseMoveOut event" (
       given (
         testSubjectWithConditionalElement <|
@@ -327,7 +306,7 @@ mouseMoveOutSpec =
         , Event.mouseMoveOut
         , Event.mouseMoveOut
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
 
@@ -358,7 +337,7 @@ customEventSpec =
       |> when "some event is triggered without targeting an element first"
         [ keyUpEvent 65
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   , scenario "view re-renders before event" (
       given (
@@ -373,16 +352,9 @@ customEventSpec =
         , keyUpEvent 66
         , keyUpEvent 67
         ]
-      |> itFails
+      |> itShouldHaveFailedAlready
     )
   ]
-
-
-itFails =
-  it "should fail before it gets here" (
-    Observer.observeModel (always True)
-      |> expect (always << Claim.Reject <| Report.note "Should have already failed!")
-  )
 
 
 noHandlerSpec : Spec Model Msg
@@ -411,6 +383,14 @@ noHandlerSpec =
       )
     )
   ]
+
+
+eventStepFailsWhenNoElementTargeted =
+  Specs.EventHelpers.eventStepFailsWhenNoElementTargeted testSubject
+
+
+eventStepFailsWhenDocumentTargeted =
+  Specs.EventHelpers.eventStepFailsWhenDocumentTargeted testSubject
 
 
 testSubjectWithConditionalElement elementSwitch =
