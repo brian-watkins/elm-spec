@@ -10,9 +10,9 @@ describe("dom functions", () => {
     })
   })
 
-  context("observeViewport", () => {
-    it("observes the viewport as expected", (done) => {
-      expectSpec("DomSpec", "observeViewport", done, (observations) => {
+  context("observeBrowserViewport", () => {
+    it("observes the browser viewport as expected", (done) => {
+      expectSpec("DomSpec", "observeBrowserViewport", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])

@@ -10,7 +10,7 @@ const {
   clearTimers,
   clearEventListeners,
   setTimezoneOffset,
-  setViewportOffset
+  setBrowserViewport
 } = require('./fakes')
 const { report, line } = require('./report')
 
@@ -208,7 +208,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     clearTimers(this.context.window)
     setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
     setBaseLocation("http://elm-spec", this.context.window)
-    setViewportOffset(this.context.window, { x: 0, y: 0 })
+    setBrowserViewport(this.context.window, { x: 0, y: 0 })
     this.httpPlugin.reset()
   }
 

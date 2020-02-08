@@ -12,6 +12,7 @@ module Spec.Markup.Event exposing
   , showWindow
   , focus
   , blur
+  , setBrowserViewport
   , trigger
   )
 
@@ -62,8 +63,12 @@ For example,
 # Custom Events
 @docs trigger
 
+# Control the Viewport
+@docs setBrowserViewport
+
 -}
 
+import Spec.Markup exposing (ViewportOffset)
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
@@ -262,6 +267,26 @@ setWindowVisible isVisible _ =
     |> Message.withBody (
       Encode.object
         [ ( "isVisible", Encode.bool isVisible )
+        ]
+    )
+    |> Command.sendMessage
+
+
+{-| A step that changes the offset of the browser viewport.
+
+Use this step to simulate a user scrolling the web page.
+
+Note that elm-spec fakes the browser viewport offset. So if you are viewing elm-spec
+specs in a real browser (via Karma), then you won't actually see the viewport offset
+change, but the Elm program will think it has.
+-}
+setBrowserViewport : ViewportOffset -> Step.Context model -> Step.Command msg
+setBrowserViewport offset _ =
+  Message.for "_html" "set-browser-viewport"
+    |> Message.withBody (
+      Encode.object
+        [ ("x", Encode.float offset.x)
+        , ("y", Encode.float offset.y)
         ]
     )
     |> Command.sendMessage

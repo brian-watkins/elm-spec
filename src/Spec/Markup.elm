@@ -3,7 +3,7 @@ module Spec.Markup exposing
   , HtmlElement
   , ViewportOffset
   , observeTitle
-  , observeViewportOffset
+  , observeBrowserViewport
   , observeElement
   , observeElements
   , query
@@ -19,10 +19,13 @@ module Spec.Markup exposing
 @docs target
 
 # Observe an HTML Document
-@docs MarkupObservation, observeElements, observeElement, query, observeTitle, ViewportOffset, observeViewportOffset
+@docs MarkupObservation, observeElements, observeElement, query, observeTitle
 
 # Make Claims about an HTML Element
 @docs HtmlElement, text, attribute, property
+
+# Observe the Browser
+@docs ViewportOffset, observeBrowserViewport
 
 -}
 
@@ -57,7 +60,7 @@ documentTitleDecoder =
   Json.at [ "document", "title" ] Json.string
 
 
-{-| Represents the position of the browser's viewport.
+{-| Represents the offset of a viewport.
 -}
 type alias ViewportOffset =
   { x: Float
@@ -74,8 +77,8 @@ Note: If you'd like to observe the viewport offset of an *element* set via `Brow
 use `observeElement` and `property` to make a claim about its `scrollLeft` and `scrollTop` properties.
 
 -}
-observeViewportOffset : Observer model ViewportOffset
-observeViewportOffset =
+observeBrowserViewport : Observer model ViewportOffset
+observeBrowserViewport =
   Observer.inquire Message.fetchWindow <| \message ->
     Message.decode viewportOffsetDecoder message
       |> Result.withDefault { x = -1, y = -1 }
@@ -313,6 +316,7 @@ Some common properties one might make claims about and the type of the correspon
 
 - `style`  (an object)
 - `hidden` (a boolean value)
+- `disabled` (a boolean value)
 - `scrollLeft`, `scrollTop` (the element's viewport offset, float values)
 - `checked` (a boolean value)
 - `value` (a string)

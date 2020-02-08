@@ -64,7 +64,7 @@ exports.setTimezoneOffset = (window, offset) => {
   window._elm_spec.date.fakeTimezoneOffset = offset
 }
 
-exports.setViewportOffset = (window, offset) => {
+exports.setBrowserViewport = (window, offset) => {
   window._elm_spec.viewportOffset = offset
 }
 

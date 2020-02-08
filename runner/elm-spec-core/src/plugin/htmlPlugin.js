@@ -2,7 +2,8 @@ const { report, line } = require('../report')
 const {
   setBaseLocation,
   resizeWindowTo,
-  setWindowVisibility
+  setWindowVisibility,
+  setBrowserViewport
 } = require('../fakes')
 
 module.exports = class HtmlPlugin {
@@ -175,6 +176,10 @@ module.exports = class HtmlPlugin {
       case "set-location": {
         const location = specMessage.body
         setBaseLocation(location, this.window)
+        break
+      }
+      case "set-browser-viewport": {
+        setBrowserViewport(this.window, specMessage.body)
         break
       }
       default:
