@@ -1,6 +1,6 @@
 {
   "name": "elm-spec-core",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Core Library for Elm-Spec Runners",
   "keywords": [
     "elm"
