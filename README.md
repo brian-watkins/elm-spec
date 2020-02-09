@@ -70,7 +70,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Claim exposing (isStringContaining)
+import Spec.Claim as Claim
 import Runner
 import Main as App
 
@@ -93,7 +93,11 @@ clickSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "count-results" ]
-          |> expect (Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
+          |> expect (
+            Claim.isSomethingWhere <|
+            Markup.text <|
+            Claim.isStringContaining 1 "You clicked the button 3 time(s)"
+          )
       )
     )
   ]
@@ -137,7 +141,7 @@ for more details.
 ## More Examples
 
 For more examples, see the [docs for elm-spec](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/).
-In particular, there are examples of describing behavior related to [HTTP requests](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Http), describing behavior related to [ports](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Port), controlling [time](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Time) during a spec, and using [witnesses](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Witness) to ensure one part of a program acts in an expected way.
+In particular, there are examples demonstrating how to describe behavior related to [HTTP requests](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Http), describe behavior related to [ports](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Port), control [time](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Time) during a spec, and use [witnesses](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Witness) to ensure one part of a program acts in an expected way.
 
 For even more examples, see the [specs for elm-spec](https://github.com/brian-watkins/elm-spec/tree/master/tests/src/Specs).
 
@@ -146,7 +150,7 @@ For a real-world test suite, see the [specs for a simple code-guessing game](htt
 
 ## Extra
 
-I suggest adding one more file to your spec suite: `Spec/Extra.elm`
+I suggest adding one more file to your spec suite: `Spec/Extra.elm`.
 
 ```
 module Spec.Extra exposing (equals)

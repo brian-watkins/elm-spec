@@ -69,7 +69,14 @@ type UrlDescriptor
 For example, this route describes any request with the
 protocol `http` and the method `PATCH`:
 
-    Spec.Http.Route.route "PATCH" <| Matching "http:\\/\\/.*"
+    Spec.Http.Route.route "PATCH" <|
+      Matching "http:\\/\\/.+"
+
+And this route describes any `GET` request to `http://someplace.com/api` with any value
+for the query parameter `key` (and any additional query parameters):
+
+    Spec.Http.Route.route "GET" <|
+      Matching "http:\\/\\/someplace\\.com\\/api\\?key=.+"
 
 -}
 route : String -> UrlDescriptor -> HttpRoute
