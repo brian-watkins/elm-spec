@@ -33,5 +33,6 @@ $ npm test
   - Where 1.1.0 is your new version
 7. `git push --tags`
 8. `npx elm publish`
+9. Check out develop; rebase master; push.
 
 
