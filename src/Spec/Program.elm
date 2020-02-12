@@ -19,8 +19,7 @@ import Url exposing (Url)
 
 
 type alias Flags =
-  { tags: List String
-  , version: Int
+  { version: Int
   }
 
 
@@ -48,9 +47,7 @@ type alias Model model msg =
 init : (() -> List (Internal.Spec model msg)) -> Int -> Config msg -> Flags -> Maybe Key -> ( Model model msg, Cmd (Msg msg) )
 init specProvider requiredElmSpecCoreVersion config flags maybeKey =
   if requiredElmSpecCoreVersion == flags.version then
-    ( { scenarios =
-          specProvider ()
-            |> gatherScenarios flags.tags
+    ( { scenarios = specProvider () |> gatherScenarios
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
       }
@@ -89,23 +86,38 @@ update config msg model =
       ( model, config.send message )
     ReceivedMessage message ->
       if Message.belongsTo "_spec" message then
-        handleSpecMessage config model message
+        case message.name of
+          "start" ->
+            startSuite message model
+          _ ->
+            haltSuite config model
       else
         update config (ScenarioMsg <| ScenarioProgram.receivedMessage message) model
 
 
-handleSpecMessage : Config msg -> Model model msg -> Message -> ( Model model msg, Cmd (Msg msg) )
-handleSpecMessage config model message =
-  Message.decode Json.string message
-    |> Result.map (\state ->
-      case state of
-        "FINISH" ->
-          update config (ScenarioMsg <| ScenarioProgram.halt) model
-            |> Tuple.mapSecond (\_ -> stopSpecSuiteRun)
-        _ ->
-          update config RunNextScenario model
-    )
-    |> Result.withDefault ( model, Cmd.none )
+haltSuite : Config msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+haltSuite config model =
+  update config (ScenarioMsg <| ScenarioProgram.halt) model
+    |> Tuple.mapSecond (\_ -> stopSpecSuiteRun)
+
+
+startSuite : Message -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+startSuite message model =
+  Message.decode tagsDecoder message
+    |> Result.map (\tags -> runScenarios tags model)
+    |> Result.withDefault (runScenarios [] model)
+
+
+runScenarios : List String -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+runScenarios tags model =
+  ( { model | scenarios = filterScenarios tags model.scenarios }
+  , sendUpdateMsg RunNextScenario
+  )
+
+
+tagsDecoder : Json.Decoder (List String)
+tagsDecoder =
+  Json.field "tags" <| Json.list Json.string
 
 
 specComplete : Message
@@ -160,15 +172,18 @@ onUrlChange =
   ScenarioMsg << ScenarioProgram.OnUrlChange
 
 
-gatherScenarios : List String -> List (Internal.Spec model msg) -> List (Internal.Scenario model msg)
-gatherScenarios tags specs =
-  List.map (\(Internal.Spec scenarios) -> 
-    if List.isEmpty tags then
-      scenarios
-    else
-      List.filter (withTags tags) scenarios
-  ) specs
+gatherScenarios : List (Internal.Spec model msg) -> List (Internal.Scenario model msg)
+gatherScenarios specs =
+  List.map (\(Internal.Spec scenarios) -> scenarios) specs
     |> List.concat
+
+
+filterScenarios : List String -> List (Internal.Scenario model msg) -> List (Internal.Scenario model msg)
+filterScenarios tags scenarios =
+  if List.isEmpty tags then
+    scenarios
+  else
+    List.filter (withTags tags) scenarios
 
 
 withTags : List String -> Internal.Scenario model msg -> Bool

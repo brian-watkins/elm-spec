@@ -49,7 +49,7 @@ Here's a sample spec for a browser program called `App`:
 # Turn a Script into a Plan
 @docs Plan, Expectation, it, observeThat, expect
 
-# Tag a Scenario
+# Run Only Certain Scenarios
 @docs tagged
 
 -}
@@ -122,8 +122,12 @@ scenario description (Plan plan) =
 
 {-| Associate one or more tags with a scenario.
 
-When you run the spec suite with specific tags specified, only the scenarios
+When you run the spec suite with tags specified, only the scenarios
 tagged with those tags will be executed.
+
+If you just want to run one or more specific scenarios for debugging or development
+purposes, see `Spec.Runner.pick`, which is more convenient to use for those
+cases.
 -}
 tagged : List String -> Scenario model msg -> Scenario model msg
 tagged tags (Scenario scenarioData) =

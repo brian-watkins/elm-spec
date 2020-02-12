@@ -3,7 +3,7 @@ const ProgramRunner = require('./programRunner')
 const Program = require('./program')
 const { report, line } = require('./report')
 
-const ELM_SPEC_CORE_VERSION = 4
+const ELM_SPEC_CORE_VERSION = 5
 
 module.exports = class SuiteRunner extends EventEmitter {
   constructor(context, reporter, options, version) {
@@ -60,7 +60,6 @@ module.exports = class SuiteRunner extends EventEmitter {
     try {
       app = program.init({
         flags: {
-          tags: this.options.tags,
           version: this.version
         }
       })

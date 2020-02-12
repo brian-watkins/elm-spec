@@ -24,6 +24,35 @@ describe("Suite Runner", () => {
     })
   })
 
+  context("when some scenarios are picked", () => {
+    context("when no tags are supplied", () => {
+      it("runs only the picked scenarios", (done) => {
+        expectScenarios("WithPicked", { tags: [], endOnFailure: false }, done, (observations) => {
+          expect(observations).to.have.length(2)
+
+          expectAccepted(observations[0])
+          expect(observations[0].description).to.equal("It renders the count [PICKED]")
+
+          expectAccepted(observations[1])
+          expect(observations[1].description).to.equal("It renders the text on the view [PICKED]")
+        })
+      })
+    })
+    context("when some tags are supplied", (done) => {
+      it("runs the picked scenarios", (done) => {
+        expectScenarios("WithPicked", { tags: [ "tagged" ], endOnFailure: false }, done, (observations) => {
+          expect(observations).to.have.length(2)
+
+          expectAccepted(observations[0])
+          expect(observations[0].description).to.equal("It renders the count [PICKED]")
+
+          expectAccepted(observations[1])
+          expect(observations[1].description).to.equal("It renders the text on the view [PICKED]")
+        })
+      })
+    })
+  })
+
   context("when the suite should report all results", () => {
     it("reports all results", (done) => {
       expectScenarios('WithFailure', { tags: [], endOnFailure: false }, done, (observations) => {

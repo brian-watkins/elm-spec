@@ -6,9 +6,16 @@ module Spec.Runner exposing
   , Flags
   , program
   , browserProgram
+  , pick
   )
 
 {-| Use these functions and types to create the program that will run the spec suite.
+
+See the README for a full example of how to use these functions to set up a
+spec suite.
+
+# Run Only Certain Scenarios
+@docs pick
 
 # Create a Spec Suite Program
 @docs Config, browserProgram, program
@@ -24,7 +31,7 @@ import Spec.Message as Message
 import Browser
 
 
-requiredElmSpecCoreVersion = 4
+requiredElmSpecCoreVersion = 5
 
 
 {-| The spec suite runner must provide a Config, which must be implemented as follows:
@@ -79,7 +86,7 @@ type alias Msg msg =
 
 {-| Create a spec suite program for describing the behavior of headless programs.
 
-Once you've created the `Config` value in your `Runner` module, I suggest adding a function like so:
+Once you've created the `Config` value, I suggest adding a function like so:
 
     program : List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
     program =
@@ -106,7 +113,7 @@ program config specs =
 
 {-| Create a spec suite program for describing the behavior of browser-based programs.
 
-Once you've created the `Config` value in your `Runner` module, I suggest adding a function like so:
+Once you've created the `Config` value, I suggest adding a function like so:
 
     program : List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
     program =
@@ -132,3 +139,25 @@ browserProgram config specs =
     , onUrlRequest = Program.onUrlRequest
     , onUrlChange = Program.onUrlChange
     }
+
+
+{-| Pick this scenario to be executed when the spec suite runs.
+
+When one or more scenarios are picked, only picked scenarios will be executed,
+regardless of whether tags are specified via the spec runner.
+
+Note that the first argument to this function must be a port defined like so:
+
+    port elmSpecPick : () -> Cmd msg
+
+I suggest adding a function:
+
+    pick =
+      Spec.Runner.pick elmSpecPick
+
+which you can use whenever you need to pick a scenario to run.
+
+-}
+pick : (() -> Cmd msg) -> Spec.Scenario model msg -> Spec.Scenario model msg
+pick _ =
+  Spec.tagged [ "_elm_spec_pick" ]

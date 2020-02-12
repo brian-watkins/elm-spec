@@ -16,6 +16,7 @@ const { report, line } = require('./report')
 
 const ELM_SPEC_OUT = "elmSpecOut"
 const ELM_SPEC_IN = "elmSpecIn"
+const ELM_SPEC_PICK = "elmSpecPick"
 
 module.exports = class ProgramRunner extends EventEmitter {
   static hasElmSpecPorts(app) {
@@ -70,8 +71,13 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.stopHandlingMessages = () => { this.app.ports[ELM_SPEC_OUT].unsubscribe(messageHandler) }
 
     setTimeout(() => {
-      this.app.ports[ELM_SPEC_IN].send(this.specStateMessage("START"))
+      this.startSuite()
     }, 0)
+  }
+
+  startSuite() {
+    const tags = this.app.ports[ELM_SPEC_PICK] ? [ "_elm_spec_pick" ] : this.options.tags
+    this.app.ports[ELM_SPEC_IN].send(this.specStateMessage("start", { tags }))
   }
 
   handleMessage(specMessage, out) {
@@ -120,7 +126,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         const observation = specMessage.body
         this.emit('observation', observation)
         if (this.options.endOnFailure && observation.summary === "REJECT") {
-          out(this.specStateMessage("FINISH"))
+          out(this.specStateMessage("finish"))
         } else {
           out(this.continue())
         }
@@ -246,11 +252,11 @@ module.exports = class ProgramRunner extends EventEmitter {
     return this.scenarioStateMessage("CONTINUE")
   }
 
-  specStateMessage (state) {
+  specStateMessage (state, message = null) {
     return {
       home: "_spec",
-      name: "state",
-      body: state
+      name: state,
+      body: message
     }
   }
 

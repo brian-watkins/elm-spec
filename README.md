@@ -38,6 +38,10 @@ import Spec.Runner exposing (Message)
 
 port elmSpecOut : Message -> Cmd msg
 port elmSpecIn : (Message -> msg) -> Sub msg
+port elmSpecPick : () -> Cmd msg
+
+pick =
+  Spec.Runner.pick elmSpecPick
 
 config : Spec.Runner.Config msg
 config =
@@ -56,9 +60,14 @@ browserProgram specs =
 You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec.Runner.program` or `Spec.Runner.browserProgram` via a `Spec.Runner.Config` value. And, yes, `send` and `outlet` should reference the
 very same port, `elmSpecOut`. 
 
+You must also create the `elmSpecPick` port and provide it to `Spec.Runner.pick`.
+
 Now you can write spec modules. Each spec module is an elm program and so must have a `main` function. To construct
 the `main` function, just reference `program` or `browserProgram` from your `Runner.elm` and
-provide a `List Spec` to run. 
+provide a `List Spec` to run.
+
+During the course of development, it's often useful to run only certain scenarios.
+In that case, use `pick` from your `Runner.elm` to designate those scenarios.
 
 Here's an example spec module:
 

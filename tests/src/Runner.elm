@@ -41,7 +41,7 @@ initForTests specConfig specLocator flags maybeKey =
         [ spec ]
       Nothing ->
         Debug.todo <| "Unknown spec: " ++ flags.specName
-  ) 1 specConfig { version = 1, tags = [] } maybeKey
+  ) 1 specConfig { version = 1 } maybeKey
 
 
 program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Runner.Model model msg) (Spec.Runner.Msg msg)
