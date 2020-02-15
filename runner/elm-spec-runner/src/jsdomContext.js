@@ -1,27 +1,20 @@
 const { JSDOM } = require("jsdom");
+const { ElmContext } = require('elm-spec-core')
 
-module.exports = class JsdomContext {
-  constructor() {
-    this.dom = new JSDOM(
-      "<html><head><base href='http://elm-spec'></head><body></body></html>",
-      { pretendToBeVisual: true,
-        runScripts: "dangerously",
-        url: "http://elm-spec"
-      }
-    )
-  }
-
-  loadElm(compiler) {
-    try {
-      const compiledCode = compiler.compile()
-      this.dom.window.eval(compiledCode)
-    } catch (error) {
-      console.log(error)
-      process.exit(1)
+exports.loadElmContext = (compiler) => (specFiles) => {
+  const dom = new JSDOM(
+    "<html><head><base href='http://elm-spec'></head><body></body></html>",
+    { pretendToBeVisual: true,
+      runScripts: "dangerously",
+      url: "http://elm-spec"
     }
-  }
+  )
 
-  get window () {
-    return this.dom.window
-  }
+  const context = new ElmContext(dom.window)
+
+  const compiledCode = compiler.compileFiles(specFiles)
+  
+  dom.window.eval(compiledCode)
+
+  return context
 }

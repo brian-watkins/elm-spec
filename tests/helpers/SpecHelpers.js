@@ -1,9 +1,11 @@
 const chai = require('chai')
 const expect = chai.expect
-const { SuiteRunner, ProgramRunner, ElmContext, Compiler } = require('elm-spec-core')
-const JsdomContext = require('../../runner/elm-spec-runner/src/jsdomContext')
+const { SuiteRunner, ProgramRunner, Compiler } = require('elm-spec-core')
+const ProgramReference = require('../../runner/elm-spec-core/src/programReference')
+const { loadElmContext } = require('../../runner/elm-spec-runner/src/jsdomContext')
 const TestReporter = require('./testReporter')
 const path = require('path')
+const glob = require('glob')
 
 
 const elmSpecContext = process.env.ELM_SPEC_CONTEXT
@@ -70,15 +72,15 @@ let elmContext = null
 
 const prepareJsdom = () => {
   if (!elmContext) {
-    const jsdom = new JsdomContext()
-    elmContext = new ElmContext(jsdom.window)
+    const specSrcDir = path.join(__dirname, "..", "src")
 
     const compiler = new Compiler({
-      cwd: path.join(__dirname, "..", "src"),
-      specPath: "./Specs/*Spec.elm"
+      cwd: specSrcDir,
     })
-        
-    jsdom.loadElm(compiler)
+
+    const specFiles = glob.sync("./Specs/*Spec.elm", { cwd: specSrcDir })
+
+    elmContext = loadElmContext(compiler)(specFiles)
   }
 }
 
@@ -102,7 +104,7 @@ const runProgramInJsdom = (specProgram, version, done, matcher) => {
           done()
         }, 0)
       })
-      .run([program])
+      .run([new ProgramReference(program, ['Specs', specProgram])])
   })
 }
 

@@ -1,31 +1,33 @@
 const { Command, flags } = require('@oclif/command')
-const { Compiler, SuiteRunner, ElmContext } = require('elm-spec-core')
-const Reporter = require('./consoleReporter')
-const JsdomContext = require('./jsdomContext')
+const { Compiler, SuiteRunner } = require('elm-spec-core')
+const ConsoleReporter = require('./consoleReporter')
+const { loadElmContext } = require('./jsdomContext')
 const commandExists = require('command-exists').sync
 const glob = require("glob")
 const process = require('process')
 const path = require('path')
 
-class ElmSpecRunnerCommand extends Command {
+class RunSuite extends Command {
   async run() {
-    const {flags} = this.parse(ElmSpecRunnerCommand)
+    const {flags} = this.parse(RunSuite)
 
     if (!commandExists(flags.elm)) {
       this.error(`No elm executable found at: ${flags.elm}`)
     }
 
-    const specPath = flags.specs
-    if (glob.sync(specPath, { cwd: flags.cwd }).length == 0) {
-      this.error(`No spec modules found matching: ${specPath}`)
+    const specFiles = glob.sync(flags.specs, { cwd: flags.cwd, absolute: true })
+
+    if (specFiles.length == 0) {
+      this.error(`No spec modules found matching: ${flags.specs}`)
     }    
 
     const tags = flags.tag || []
 
-    this.runSpecs({
-      cwd: flags.cwd,
-      specPath,
-      elmPath: flags.elm,
+    await this.runSpecs(specFiles, {
+      compilerOptions: {
+        cwd: flags.cwd,
+        elmPath: flags.elm,
+      },
       runnerOptions: {
         tags,
         endOnFailure: flags.endOnFailure
@@ -33,26 +35,40 @@ class ElmSpecRunnerCommand extends Command {
     })
   }
 
-  runSpecs(options) {
-    const jsdom = new JsdomContext()
-    const context = new ElmContext(jsdom.window)
-    const reporter = new Reporter((c) => process.stdout.write(c), this.log)
-    const runner = new SuiteRunner(context, reporter, options.runnerOptions)
+  async runSpecs(specFiles, options) {
+    const elmContext = this.getElmContext(specFiles, options.compilerOptions)
+    const reporter = this.getReporter(specFiles)
 
+    await new Promise((resolve) => {
+      new SuiteRunner(elmContext, reporter, options.runnerOptions)
+        .on('complete', () => {
+          if (reporter.hasError) {
+            process.exit(1)
+          }
+
+          resolve()
+        })
+        .runAll()
+    })
+  }
+
+  getElmContext(specFiles, options) {
     const compiler = new Compiler(options)
-    jsdom.loadElm(compiler)
+    return loadElmContext(compiler)(specFiles)
+  }
 
-    runner.runAll()
-
-    if (reporter.hasError) {
-      process.exit(1)
-    }
+  getReporter(specFiles) {
+    return new ConsoleReporter({
+      write: (c) => process.stdout.write(c),
+      writeLine: this.log, 
+      specFiles
+    })
   }
 }
 
-ElmSpecRunnerCommand.description = `Run Elm-Spec specs from the command line`
+RunSuite.description = `Run Elm-Spec specs from the command line`
 
-ElmSpecRunnerCommand.flags = {
+RunSuite.flags = {
   // add --version flag to show CLI version
   version: flags.version({char: 'v'}),
   // add --help flag to show CLI version
@@ -64,4 +80,4 @@ ElmSpecRunnerCommand.flags = {
   endOnFailure: flags.boolean({char: 'f', description: 'end spec suite run on first failure', default: false}),
 }
 
-module.exports = ElmSpecRunnerCommand
+module.exports = RunSuite

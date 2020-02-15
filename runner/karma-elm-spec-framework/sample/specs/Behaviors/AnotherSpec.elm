@@ -27,7 +27,7 @@ eightClicksSpec =
       |> it "renders the count" (
         Markup.observeElement
           |> Markup.query << by [ id "count-results" ]
-          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 8 time(s)")
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 81 time(s)")
       )
     )
   ]

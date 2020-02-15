@@ -1,13 +1,37 @@
 const chai = require('chai')
 const expect = chai.expect
 const Compiler = require('../src/compiler')
-const JsdomContext = require('../../elm-spec-runner/src/jsdomContext')
+const glob = require('glob')
+const { loadElmContext } = require('../../elm-spec-runner/src/jsdomContext')
 const SuiteRunner = require('../src/suiteRunner')
-const ElmContext = require('../src/elmContext')
 
 describe("Suite Runner", () => {
   it("runs a suite of tests", (done) => {
-    expectPassingScenarios('Passing', 8, [], done)
+    expectScenarios("Passing", { tags: [], endOnFailure: false }, done, (observation) => {
+      expectAccepted(observation[0])
+      expect(observation[0].modulePath).to.deep.equal(["Passing", "Behaviors", "AnotherSpec"])
+
+      expectAccepted(observation[1])
+      expect(observation[1].modulePath).to.deep.equal(["Passing", "Behaviors", "NavigationSpec"])
+
+      expectAccepted(observation[2])
+      expect(observation[2].modulePath).to.deep.equal(["Passing", "WorkerSpec"])
+
+      expectAccepted(observation[3])
+      expect(observation[3].modulePath).to.deep.equal(["Passing", "WorkerSpec"])
+
+      expectAccepted(observation[4])
+      expect(observation[4].modulePath).to.deep.equal(["Passing", "InputSpec"])
+
+      expectAccepted(observation[5])
+      expect(observation[5].modulePath).to.deep.equal(["Passing", "InputSpec"])
+
+      expectAccepted(observation[6])
+      expect(observation[6].modulePath).to.deep.equal(["Passing", "InputSpec"])
+
+      expectAccepted(observation[7])
+      expect(observation[7].modulePath).to.deep.equal(["Passing", "ClickSpec"])
+    })
   })
 
   it("runs only the tagged scenarios", (done) => {
@@ -176,13 +200,13 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
 }
 
 const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
-  const jsdom = new JsdomContext()
-  const context = new ElmContext(jsdom.window)
+  const compiler = new Compiler(compilerOptions)
+  const specFiles = glob.sync(compilerOptions.specPath, { cwd: compilerOptions.cwd })
+
+  const context = loadElmContext(compiler)(specFiles)
+
   const reporter = new TestReporter()
   const runner = new SuiteRunner(context, reporter, options, version)
-
-  const compiler = new Compiler(compilerOptions)
-  jsdom.loadElm(compiler)
 
   runner
     .on('complete', () => {

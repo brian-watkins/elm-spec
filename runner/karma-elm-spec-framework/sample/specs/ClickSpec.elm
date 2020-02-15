@@ -27,6 +27,7 @@ clickSpec =
         , Event.click
         , Event.click
         , Event.click
+        , Event.click
         ]
       |> it "renders the count" (
         Markup.observeElement

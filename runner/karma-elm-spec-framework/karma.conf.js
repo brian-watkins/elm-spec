@@ -24,7 +24,7 @@ module.exports = function(config) {
     client: {
       elmSpec: {
         tags: [ 'fun' ],
-        endOnFailure: true
+        endOnFailure: false
       }
     },
 
@@ -72,8 +72,8 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['MyChrome'],
-    // browsers: ['MyChromeHeadless'],
+    // browsers: ['MyChrome'],
+    browsers: ['MyChromeHeadless'],
 
     customLaunchers: {
       MyChrome: {
@@ -81,11 +81,11 @@ module.exports = function(config) {
         flags: [
           '--disable-backgrounding-occluded-windows', // necessary to run tests when browser is not visible
         ]
+      },
+      MyChromeHeadless: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox']
       }
-    //   MyChromeHeadless: {
-    //     base: 'ChromeHeadless',
-    //     flags: ['--no-sandbox']
-    //   }
     },
 
 

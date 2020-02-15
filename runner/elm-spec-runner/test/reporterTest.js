@@ -4,7 +4,7 @@ const Reporter = require('../src/consoleReporter')
 
 describe("reporter", () => {
   it("counts the number of accepted observations", () => {
-    const reporter = new Reporter((character) => {}, (line) => {})
+    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {}, specFiles: [] })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -14,7 +14,7 @@ describe("reporter", () => {
   })
 
   it("counts the number of rejected observations", () => {
-    const reporter = new Reporter((character) => {}, (line) => {})
+    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {}, specFiles: [] })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -29,14 +29,14 @@ describe("reporter", () => {
 
     beforeEach(() => {
       lines = []
-      const subject = new Reporter((character) => {}, (line) => lines.push(line))
+      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
 
       subject.record(acceptedMessage())
       subject.record(acceptedMessage())
       subject.finish()
     })
 
-    it("writes the reason for rejection", () => {
+    it("writes just the number accepted", () => {
       expectToContain(lines, [
         "Accepted: 2"
       ])
@@ -49,7 +49,15 @@ describe("reporter", () => {
 
     beforeEach(() => {
       lines = []
-      subject = new Reporter((character) => {}, (line) => lines.push(line))
+      subject = new Reporter({
+        write: (character) => {},
+        writeLine: (line) => lines.push(line),
+        specFiles: [
+          "/base/path/elm/specs/Some/Funny/PassingSpec.elm",
+          "/base/path/elm/specs/Some/Funny/RejectedSpec.elm",
+          "/base/path/elm/specs/Some/Funny/OtherPassingSpec.elm"
+        ]
+      })
 
       subject.record(rejectedMessage({
         conditions: [ "Given a subject", "When something happens" ],
@@ -58,7 +66,8 @@ describe("reporter", () => {
           { statement: "Expected the following", detail: "something" },
           { statement: "to be", detail: "something else\nwith\nmultiple lines" },
           { statement: "and a final statement\nthat has multiple\nlines", detail: null }
-        ]
+        ],
+        modulePath: [ "Some", "Funny", "RejectedSpec" ]
       }))
       subject.finish()
     })
@@ -68,6 +77,7 @@ describe("reporter", () => {
         "Accepted: 0",
         "Rejected: 1",
         "Failed to satisfy spec:",
+        "/base/path/elm/specs/Some/Funny/RejectedSpec.elm",
         "Given a subject",
         "When something happens",
         "It does something else",
@@ -94,7 +104,7 @@ describe("reporter", () => {
 
     beforeEach(() => {
       lines = []
-      subject = new Reporter((character) => {}, (line) => lines.push(line))
+      subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
 
       subject.error([
         { statement: "You received an error", detail: "something" },
@@ -132,15 +142,17 @@ const acceptedMessage = (data = { conditions: [], description: '' }) => {
   return {
     summary: 'ACCEPT',
     conditions: data.conditions,
-    description: data.description
+    description: data.description,
+    modulePath: [ "Some", "Behavior", "PassingSpec" ]
   }
 }
 
-const rejectedMessage = (data = { conditions: [], description: '', message: '', report: [] }) => {
+const rejectedMessage = (data = { conditions: [], description: '', message: '', report: [], modulePath: [ "Some", "FailingSpec" ] }) => {
   return {
     summary: 'REJECT',
     conditions: data.conditions,
     description: data.description,
-    report: data.report
+    report: data.report,
+    modulePath: data.modulePath
   }
 }

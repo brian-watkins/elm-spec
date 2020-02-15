@@ -1,6 +1,6 @@
 const EventEmitter = require('events')
 const ProgramRunner = require('./programRunner')
-const Program = require('./program')
+const ProgramReference = require('./programReference')
 const { report, line } = require('./report')
 
 const ELM_SPEC_CORE_VERSION = 5
@@ -22,32 +22,34 @@ module.exports = class SuiteRunner extends EventEmitter {
         return
       }
 
-      this.run(Program.discover(Elm))
+      this.run(ProgramReference.findAll(Elm))
     })
   }
 
-  run(programs) {
+  run(programReferences) {
     this.reporter.startSuite()
-    this.runNextSpecProgram(programs)
+    this.runNextSpecProgram(programReferences)
   }
 
-  runNextSpecProgram(programs) {
-    const program = programs.shift()
+  runNextSpecProgram(programReferences) {
+    const programReference = programReferences.shift()
   
-    if (program === undefined) {
+    if (programReference === undefined) {
       this.finish()
       return
     }
   
     this.prepareForApp()
-    const app = this.initializeApp(program)
+    const app = this.initializeApp(programReference.program)
 
     if (!app) {
       this.finish()
       return
     }
 
-    this.runApp(app, programs)
+    this.runApp(app, programReference.path, () => {
+      this.runNextSpecProgram(programReferences)
+    })
   }
 
   prepareForApp() {
@@ -77,14 +79,15 @@ module.exports = class SuiteRunner extends EventEmitter {
     return app
   }
 
-  runApp(app, programs) {
+  runApp(app, modulePath, runNextSpec) {
     new ProgramRunner(app, this.context, this.options)
-      .on("observation", (observation) => {
+      .on("observation", (obs) => {
+        const observation = Object.assign(obs, { modulePath })
         this.reporter.record(observation)
       })
       .on("complete", (shouldContinue) => {
         if (shouldContinue) {
-          this.runNextSpecProgram(programs)
+          runNextSpec()
         } else {
           this.finish()
         }

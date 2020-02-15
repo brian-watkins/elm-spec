@@ -5,13 +5,19 @@ const { ElmSpecReporter } = require('../lib/elmSpecReporter')
 describe("elm-spec reporter", () => {
   let subject
   let lines
+  let fakeFileProvider = { files: () => [
+    '/some/full/path/elm/specs/Some/FailingSpec.elm',
+    '/some/full/path/elm/specs/Some/PassingSpec.elm',
+    '/some/full/path/elm/specs/Some/OtherFailingSpec.elm',
+    '/some/full/path/elm/specs/Some/OtherPassingSpec.elm',
+  ] }
 
   beforeEach(() => {
     lines = []
 
     subject = new ElmSpecReporter((self) => {
       self.write = (line) => lines.push(line)
-    })
+    }, fakeFileProvider)
   })
 
   describe("when there are no rejected specs", () => {
@@ -46,7 +52,8 @@ describe("elm-spec reporter", () => {
         "Accepted: 3",
         "Rejected: 2",
         "Failed to satisfy spec:",
-        "Describing: Something",
+        "/some/full/path/elm/specs/Some/FailingSpec.elm",
+        "Something",
         "Scenario: Something happens",
         "When some event occurs",
         "it failed to do something",
@@ -55,7 +62,8 @@ describe("elm-spec reporter", () => {
         "to equal",
         "5",
         "Failed to satisfy spec:",
-        "Describing: Another Thing",
+        "/some/full/path/elm/specs/Some/OtherFailingSpec.elm",
+        "Another Thing",
         "Scenario: Something else happens",
         "When some other event occurs",
         "it failed to do another thing",
@@ -130,7 +138,7 @@ const failureResult = () => {
     id: "obs-1",
     description: "it failed to do something",
     suite: [
-      "Describing: Something",
+      "Something",
       "Scenario: Something happens",
       "When some event occurs"
     ],
@@ -142,6 +150,9 @@ const failureResult = () => {
         detail: "5"
       }
     ],
+    elmSpec: {
+      modulePath: [ "Some", "FailingSpec" ]
+    },
     success: false,
     skipped: false
   }
@@ -152,7 +163,7 @@ const failureResultTwo = () => {
     id: "obs-1",
     description: "it failed to do another thing",
     suite: [
-      "Describing: Another Thing",
+      "Another Thing",
       "Scenario: Something else happens",
       "When some other event occurs"
     ],
@@ -167,6 +178,9 @@ const failureResultTwo = () => {
         detail: null
       }
     ],
+    elmSpec: {
+      modulePath: [ "Some", "OtherFailingSpec" ]
+    },
     success: false,
     skipped: false
   }

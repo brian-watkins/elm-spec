@@ -1,15 +1,17 @@
 const chalk = require('chalk')
+const path = require('path')
 
 const ok = chalk.green
 const error = chalk.red
 
 module.exports = class ConsoleReporter {
-  constructor(write, writeLine) {
+  constructor({ write, writeLine, specFiles }) {
     this.accepted = 0
     this.rejected = []
     this.write = write
     this.writeLine = writeLine
     this.hasError = false
+    this.specFiles = specFiles
   }
 
   startSuite() {
@@ -59,6 +61,7 @@ module.exports = class ConsoleReporter {
   printRejection(observation) {
     this.writeLine(error("\nFailed to satisfy spec:"))
     this.writeLine()
+    this.printModulePath(observation.modulePath)
     this.printConditions(observation.conditions)
     this.writeLine(`    ${observation.description}`)
     this.writeLine()
@@ -76,6 +79,13 @@ module.exports = class ConsoleReporter {
         this.writeLine(error(`      ${line}`))
       })
     }
+    this.writeLine()
+  }
+
+  printModulePath(modulePath) {
+    const modulePathString = path.join(...modulePath) + ".elm"
+    const fullPath = this.specFiles.find(filePath => filePath.endsWith(modulePathString))
+    this.writeLine(`  ${fullPath}`)
     this.writeLine()
   }
 }

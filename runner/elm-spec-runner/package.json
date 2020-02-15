@@ -22,9 +22,7 @@
     "@oclif/test": "^1.2.5",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
-    "nyc": "^13.3.0",
-    "rewire": "^4.0.1",
-    "sinon": "^7.5.0"
+    "nyc": "^13.3.0"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -45,6 +43,7 @@
   },
   "repository": "https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner",
   "scripts": {
+    "start": "./bin/run --cwd ../karma-elm-spec-framework/sample/ --tag fun",
     "test": "mocha --forbid-only \"test/**/*Test.js\""
   }
 }

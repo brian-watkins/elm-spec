@@ -20,11 +20,9 @@
   "author": "Brian Watkins",
   "license": "MIT",
   "dependencies": {
-    "glob": "^7.1.6",
     "lolex": "^4.2.0",
     "nise": "^1.5.2",
-    "node-elm-compiler": "^5.0.4",
-    "path-to-regexp": "^6.1.0"
+    "node-elm-compiler": "^5.0.4"
   },
   "devDependencies": {
     "chai": "^4.2.0",

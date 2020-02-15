@@ -1,4 +1,5 @@
 const { SuiteRunner, ProgramRunner, ElmContext } = require('elm-spec-core')
+const ProgramReference = require('../../runner/elm-spec-core/src/programReference')
 const TestReporter = require('./testReporter')
 
 const elmContext = new ElmContext(window)
@@ -28,7 +29,7 @@ window._elm_spec.runProgram = (specProgram, version) => {
           error: reporter.specError
         })
       })
-      .run([program])
+      .run([new ProgramReference(program, ['Specs', specProgram])])
   })
 }
 

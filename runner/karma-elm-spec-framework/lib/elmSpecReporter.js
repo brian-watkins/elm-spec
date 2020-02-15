@@ -1,9 +1,10 @@
 const chalk = require('chalk')
+const path = require('path')
 
 const ok = chalk.green
 const error = chalk.red
 
-var ElmSpecReporter = function (baseReporterDecorator) {
+var ElmSpecReporter = function (baseReporterDecorator, specFileProvider) {
   baseReporterDecorator(this);
 
   var self = this;
@@ -49,8 +50,14 @@ var ElmSpecReporter = function (baseReporterDecorator) {
     })
   }
 
+  self.specFilePath = function(modulePath) {
+    const moduleFile = path.join(...modulePath) + ".elm"
+    return self.specFiles.find(f => f.endsWith(moduleFile))
+  }
+
   self.printRejection = function(result) {
     self.write(error("\nFailed to satisfy spec:\n\n"))
+    self.write(`  ${self.specFilePath(result.elmSpec.modulePath)}\n\n`)
     self.printSuite(result.suite)
     self.write(`    ${result.description}\n\n`)
     result.log.forEach(report => self.printReport(report))
@@ -73,6 +80,8 @@ var ElmSpecReporter = function (baseReporterDecorator) {
   self.onRunComplete = function(browsers, results) {
     if (self.hasError) return
 
+    self.specFiles = specFileProvider.files()
+
     self.write("\n\n")
     self.write(ok(`Accepted: ${results.success}\n`))
     if (results.failed > 0) {
@@ -84,7 +93,7 @@ var ElmSpecReporter = function (baseReporterDecorator) {
   }
 }
 
-ElmSpecReporter.$inject = ['baseReporterDecorator'];
+ElmSpecReporter.$inject = ['baseReporterDecorator', 'elmSpec:fileProvider'];
 
 module.exports = {
   ElmSpecReporter

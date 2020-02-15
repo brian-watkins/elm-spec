@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Program = require('../src/program')
+const ProgramReference = require('../src/programReference')
 
 describe("Find All Programs", () => {
   context("when there are top level spec programs", () => {
@@ -10,8 +10,14 @@ describe("Find All Programs", () => {
         TestTwo: fakeSpecProgram(2),
         TestThree: fakeSpecProgram(3)
       }
-      const programs = Program.discover(testElm)
-      expect(programs.map(p => p.id)).to.deep.equal([ 1, 2, 3 ])
+      const programs = ProgramReference.findAll(testElm)
+
+      expect(programs.map(p => p.path)).to.deep.equal([
+        [ "TestOne" ],
+        [ "TestTwo" ],
+        [ "TestThree" ]
+      ])
+      expect(programs.map(p => p.program.id)).to.deep.equal([ 1, 2, 3 ])
     })
   })
 
@@ -22,7 +28,7 @@ describe("Find All Programs", () => {
         TestTwo: fakeSpecProgram(2),
         Behaviors: {
           BehaviorOne: fakeSpecProgram(3),
-          BevaiorTwo: fakeSpecProgram(4),
+          BehaviorTwo: fakeSpecProgram(4),
           OtherBehaviors: {
             SomeOtherBehaviorOne: fakeSpecProgram(6),
             SomeOtherBehaviorTwo: fakeSpecProgram(7)
@@ -30,8 +36,18 @@ describe("Find All Programs", () => {
         },
         TestThree: fakeSpecProgram(5)
       }
-      const programs = Program.discover(testElm)
-      expect(programs.map(p => p.id)).to.deep.equal([1, 2, 3, 4, 6, 7, 5])
+      const programs = ProgramReference.findAll(testElm)
+
+      expect(programs.map(p => p.path)).to.deep.equal([
+        [ "TestOne" ],
+        [ "TestTwo" ],
+        [ "Behaviors", "BehaviorOne" ],
+        [ "Behaviors", "BehaviorTwo" ],
+        [ "Behaviors", "OtherBehaviors", "SomeOtherBehaviorOne" ],
+        [ "Behaviors", "OtherBehaviors", "SomeOtherBehaviorTwo" ],
+        [ "TestThree" ]
+      ])
+      expect(programs.map(p => p.program.id)).to.deep.equal([1, 2, 3, 4, 6, 7, 5])
     })
   })
 })

@@ -2,10 +2,12 @@ const puppeteer = require('puppeteer');
 const browserify = require('browserify');
 const { Compiler } = require('elm-spec-core')
 const path = require('path')
+const glob = require('glob')
+
+const specSrcDir = path.join(__dirname, "..", "src")
 
 const compiler = new Compiler({
-  cwd: path.join(__dirname, "..", "src"),
-  specPath: "./Specs/*Spec.elm"
+  cwd: specSrcDir,
 })
 
 
@@ -14,7 +16,10 @@ before(async () => {
   global.page = await browser.newPage()
 
   const bundle = await bundleRunnerCode()
-  const compiledCode = compiler.compile()
+
+  const specFiles = glob.sync("./Specs/*Spec.elm", { cwd: specSrcDir })
+
+  const compiledCode = compiler.compileFiles(specFiles)
 
   page.on('console', async (msg) => {
     const logParts = await Promise.all(msg.args().map((arg) => arg.jsonValue()))

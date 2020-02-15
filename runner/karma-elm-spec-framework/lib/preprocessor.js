@@ -1,6 +1,4 @@
-const compiler = require('./compiler')
-
-const create = (config) => {
+const create = (compiler) => {
   let processedFiles = {}
 
   return (content, file, done) => {
@@ -11,13 +9,13 @@ const create = (config) => {
       return
     }
 
-    compiler.compile(config.elmSpec)
+    compiler.compile()
 
     done(null, "")
   }
 }
 create.$inject = [
-  'config'
+  'elmSpec:compiler'
 ]
 
 module.exports = {
