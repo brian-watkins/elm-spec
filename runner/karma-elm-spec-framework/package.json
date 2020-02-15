@@ -8,7 +8,7 @@
     "start": "karma start --single-run",
     "watch": "karma start",
     "test": "mocha 'tests/**/*Test.js' --timeout 5000",
-    "build": "browserify ./src/adapter_entry.js -o ./lib/adapter.js"
+    "build": "browserify -p tinyify ./src/adapter_entry.js -o ./lib/adapter.js"
   },
   "author": "Brian Watkins",
   "license": "MIT",
@@ -32,6 +32,7 @@
     "karma": "^4.4.1",
     "karma-chrome-launcher": "^3.1.0",
     "mocha": "^6.2.2",
-    "shelljs": "^0.8.3"
+    "shelljs": "^0.8.3",
+    "tinyify": "^2.5.2"
   }
 }
