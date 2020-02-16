@@ -20,6 +20,7 @@ Here's an example of the config properties relevant to elm-spec:
 ```
     frameworks: ['elm-spec'],
 
+    // Optional elm-spec configuration
     elmSpec: {
       // Root directory for your specs; must contain elm.json.
       // By default this is './specs'
@@ -36,8 +37,10 @@ Here's an example of the config properties relevant to elm-spec:
     },
 
     client: {
+      // Optional elm-spec configuration
       elmSpec: {
         // Only scenarios tagged with one of these tags will be executed
+        // By default, this is []
         tags: [ 'fun' ],
 
         // End the spec suite run on the first failure.

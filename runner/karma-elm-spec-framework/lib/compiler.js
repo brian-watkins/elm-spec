@@ -9,12 +9,14 @@ const defaultConfig = {
 
 const CompilerFactory = (config) => {
 
-  const workDir = config.elmSpec.cwd || defaultConfig.cwd
+  const elmSpecConfig = config.elmSpec || {}
+
+  const workDir = elmSpecConfig.cwd || defaultConfig.cwd
 
   const compiler = new Compiler({
     cwd: workDir,
-    specPath: config.elmSpec.specs || defaultConfig.specPath,
-    elmPath: config.elmSpec.pathToElm
+    specPath: elmSpecConfig.specs || defaultConfig.specPath,
+    elmPath: elmSpecConfig.pathToElm
   })
 
   const compile = function() {
