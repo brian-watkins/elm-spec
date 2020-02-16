@@ -5,7 +5,6 @@ const ProgramReference = require('../../runner/elm-spec-core/src/programReferenc
 const { loadElmContext } = require('../../runner/elm-spec-runner/src/jsdomContext')
 const TestReporter = require('./testReporter')
 const path = require('path')
-const glob = require('glob')
 
 
 const elmSpecContext = process.env.ELM_SPEC_CONTEXT
@@ -76,11 +75,10 @@ const prepareJsdom = () => {
 
     const compiler = new Compiler({
       cwd: specSrcDir,
+      specPath: "./Specs/*Spec.elm"
     })
 
-    const specFiles = glob.sync("./Specs/*Spec.elm", { cwd: specSrcDir })
-
-    elmContext = loadElmContext(compiler)(specFiles)
+    elmContext = loadElmContext(compiler)
   }
 }
 

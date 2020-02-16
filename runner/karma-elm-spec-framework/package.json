@@ -8,7 +8,8 @@
     "start": "karma start --single-run",
     "watch": "karma start",
     "test": "mocha 'tests/**/*Test.js' --timeout 5000",
-    "build": "browserify -p tinyify ./src/adapter_entry.js -o ./lib/adapter.js"
+    "build": "browserify -p tinyify ./src/adapter_entry.js -o ./lib/adapter.js",
+    "build:fast": "browserify ./src/adapter_entry.js -o ./lib/adapter.js"
   },
   "author": "Brian Watkins",
   "license": "MIT",
@@ -23,8 +24,7 @@
   ],
   "dependencies": {
     "chalk": "^3.0.0",
-    "elm-spec-core": "^4.0.0",
-    "glob": "^7.1.6"
+    "elm-spec-core": "^4.0.0"
   },
   "devDependencies": {
     "browserify": "^16.5.0",

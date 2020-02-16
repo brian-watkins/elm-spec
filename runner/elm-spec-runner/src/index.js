@@ -3,7 +3,6 @@ const { Compiler, SuiteRunner } = require('elm-spec-core')
 const ConsoleReporter = require('./consoleReporter')
 const { loadElmContext } = require('./jsdomContext')
 const commandExists = require('command-exists').sync
-const glob = require("glob")
 const process = require('process')
 const path = require('path')
 
@@ -15,17 +14,12 @@ class RunSuite extends Command {
       this.error(`No elm executable found at: ${flags.elm}`)
     }
 
-    const specFiles = glob.sync(flags.specs, { cwd: flags.cwd, absolute: true })
-
-    if (specFiles.length == 0) {
-      this.error(`No spec modules found matching: ${flags.specs}`)
-    }    
-
     const tags = flags.tag || []
 
-    await this.runSpecs(specFiles, {
+    await this.runSpecs({
       compilerOptions: {
         cwd: flags.cwd,
+        specPath: flags.specs,
         elmPath: flags.elm,
       },
       runnerOptions: {
@@ -35,15 +29,15 @@ class RunSuite extends Command {
     })
   }
 
-  async runSpecs(specFiles, options) {
-    const elmContext = this.getElmContext(specFiles, options.compilerOptions)
-    const reporter = this.getReporter(specFiles)
+  async runSpecs({ compilerOptions, runnerOptions }) {
+    const elmContext = this.getElmContext(compilerOptions)
+    const reporter = this.getReporter()
 
     await new Promise((resolve) => {
-      new SuiteRunner(elmContext, reporter, options.runnerOptions)
+      new SuiteRunner(elmContext, reporter, runnerOptions)
         .on('complete', () => {
           if (reporter.hasError) {
-            process.exit(1)
+            this.exit(1)
           }
 
           resolve()
@@ -52,16 +46,15 @@ class RunSuite extends Command {
     })
   }
 
-  getElmContext(specFiles, options) {
+  getElmContext(options) {
     const compiler = new Compiler(options)
-    return loadElmContext(compiler)(specFiles)
+    return loadElmContext(compiler)
   }
 
-  getReporter(specFiles) {
+  getReporter() {
     return new ConsoleReporter({
       write: (c) => process.stdout.write(c),
-      writeLine: this.log, 
-      specFiles
+      writeLine: this.log
     })
   }
 }
@@ -73,8 +66,8 @@ RunSuite.flags = {
   version: flags.version({char: 'v'}),
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
-  cwd: flags.string({char: 'c', description: 'current working directory', default: process.cwd()}),
-  specs: flags.string({char: 's', description: 'glob for spec modules', default: path.join(".", "specs", "**", "*Spec.elm")}),
+  cwd: flags.string({char: 'c', description: 'current working directory', default: path.join(process.cwd(), "specs")}),
+  specs: flags.string({char: 's', description: 'glob for spec modules', default: path.join(".", "**", "*Spec.elm")}),
   elm: flags.string({char: 'e', description: 'path to elm', default: 'elm'}),
   tag: flags.string({char: 't', description: 'execute scenarios with this tag only (may specify multiple)', multiple: true}),
   endOnFailure: flags.boolean({char: 'f', description: 'end spec suite run on first failure', default: false}),

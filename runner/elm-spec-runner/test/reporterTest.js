@@ -4,7 +4,7 @@ const Reporter = require('../src/consoleReporter')
 
 describe("reporter", () => {
   it("counts the number of accepted observations", () => {
-    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {}, specFiles: [] })
+    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {} })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -14,7 +14,7 @@ describe("reporter", () => {
   })
 
   it("counts the number of rejected observations", () => {
-    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {}, specFiles: [] })
+    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {} })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -29,7 +29,7 @@ describe("reporter", () => {
 
     beforeEach(() => {
       lines = []
-      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
+      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line) })
 
       subject.record(acceptedMessage())
       subject.record(acceptedMessage())
@@ -51,12 +51,7 @@ describe("reporter", () => {
       lines = []
       subject = new Reporter({
         write: (character) => {},
-        writeLine: (line) => lines.push(line),
-        specFiles: [
-          "/base/path/elm/specs/Some/Funny/PassingSpec.elm",
-          "/base/path/elm/specs/Some/Funny/RejectedSpec.elm",
-          "/base/path/elm/specs/Some/Funny/OtherPassingSpec.elm"
-        ]
+        writeLine: (line) => lines.push(line)
       })
 
       subject.record(rejectedMessage({
@@ -67,7 +62,7 @@ describe("reporter", () => {
           { statement: "to be", detail: "something else\nwith\nmultiple lines" },
           { statement: "and a final statement\nthat has multiple\nlines", detail: null }
         ],
-        modulePath: [ "Some", "Funny", "RejectedSpec" ]
+        modulePath: "/base/path/elm/specs/Some/Funny/RejectedSpec.elm"
       }))
       subject.finish()
     })

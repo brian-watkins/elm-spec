@@ -1,36 +1,36 @@
 const chai = require('chai')
 const expect = chai.expect
 const Compiler = require('../src/compiler')
-const glob = require('glob')
 const { loadElmContext } = require('../../elm-spec-runner/src/jsdomContext')
 const SuiteRunner = require('../src/suiteRunner')
+const path = require('path')
 
 describe("Suite Runner", () => {
   it("runs a suite of tests", (done) => {
-    expectScenarios("Passing", { tags: [], endOnFailure: false }, done, (observation) => {
-      expectAccepted(observation[0])
-      expect(observation[0].modulePath).to.deep.equal(["Passing", "Behaviors", "AnotherSpec"])
+    expectScenarios("Passing", { tags: [], endOnFailure: false }, done, (observations) => {
+      expectAccepted(observations[0])
+      expectModulePath(observations[0], "Passing/Behaviors/AnotherSpec.elm")
 
-      expectAccepted(observation[1])
-      expect(observation[1].modulePath).to.deep.equal(["Passing", "Behaviors", "NavigationSpec"])
+      expectAccepted(observations[1])
+      expectModulePath(observations[1], "Passing/Behaviors/NavigationSpec.elm")
 
-      expectAccepted(observation[2])
-      expect(observation[2].modulePath).to.deep.equal(["Passing", "WorkerSpec"])
+      expectAccepted(observations[2])
+      expectModulePath(observations[2], "Passing/WorkerSpec.elm")
 
-      expectAccepted(observation[3])
-      expect(observation[3].modulePath).to.deep.equal(["Passing", "WorkerSpec"])
+      expectAccepted(observations[3])
+      expectModulePath(observations[3], "Passing/WorkerSpec.elm")
 
-      expectAccepted(observation[4])
-      expect(observation[4].modulePath).to.deep.equal(["Passing", "InputSpec"])
+      expectAccepted(observations[4])
+      expectModulePath(observations[4], "Passing/InputSpec.elm")
 
-      expectAccepted(observation[5])
-      expect(observation[5].modulePath).to.deep.equal(["Passing", "InputSpec"])
+      expectAccepted(observations[5])
+      expectModulePath(observations[5], "Passing/InputSpec.elm")
 
-      expectAccepted(observation[6])
-      expect(observation[6].modulePath).to.deep.equal(["Passing", "InputSpec"])
+      expectAccepted(observations[6])
+      expectModulePath(observations[6], "Passing/InputSpec.elm")
 
-      expectAccepted(observation[7])
-      expect(observation[7].modulePath).to.deep.equal(["Passing", "ClickSpec"])
+      expectAccepted(observations[7])
+      expectModulePath(observations[7], "Passing/ClickSpec.elm")
     })
   })
 
@@ -113,6 +113,19 @@ describe("Suite Runner", () => {
         expectAccepted(observations[1])
         expectAccepted(observations[2])
         expectAccepted(observations[3])
+      })
+    })
+  })
+
+  context("when no specs are found", () => {
+    it("reports an error", (done) => {
+      expectScenarios('WithNoSpecs', { tags: [], endOnFailure: false }, done, (observations, error) => {
+        expect(observations).to.have.length(0)
+        expect(error).to.deep.equal([
+          reportLine("No spec modules found!"),
+          reportLine("Working directory (with elm.json)", "./tests/sample"),
+          reportLine("Spec Path (relative to working directory)", "./specs/WithNoSpecs/**/*Spec.elm")
+        ])
       })
     })
   })
@@ -201,9 +214,8 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
 
 const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
   const compiler = new Compiler(compilerOptions)
-  const specFiles = glob.sync(compilerOptions.specPath, { cwd: compilerOptions.cwd })
 
-  const context = loadElmContext(compiler)(specFiles)
+  const context = loadElmContext(compiler)
 
   const reporter = new TestReporter()
   const runner = new SuiteRunner(context, reporter, options, version)
@@ -247,6 +259,11 @@ const expectAccepted = (observation) => {
 
 const expectRejected = (observation) => {
   expect(observation.summary).to.equal("REJECT")
+}
+
+const expectModulePath = (observation, modulePathPart) => {
+  const fullPath = path.resolve(path.join("./tests/sample/specs/", modulePathPart))
+  expect(observation.modulePath).to.equal(fullPath)
 }
 
 const reportLine = (statement, detail = null) => ({

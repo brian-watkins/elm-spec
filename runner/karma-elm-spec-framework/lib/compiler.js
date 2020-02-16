@@ -3,31 +3,35 @@ const path = require('path')
 const fs = require('fs')
 
 const defaultConfig = {
-  cwd: process.cwd(),
-  elmPath: "elm"
+  cwd: path.join(process.cwd(), "specs"),
+  specPath: "./**/*Spec.elm",
 }
 
-const CompilerFactory = (config, specFileProvider) => {
+const CompilerFactory = (config) => {
 
-  const compilerOptions = Object.assign(defaultConfig, config.elmSpec)
-  const compiler = new Compiler(compilerOptions)
+  const workDir = config.elmSpec.cwd || defaultConfig.cwd
+
+  const compiler = new Compiler({
+    cwd: workDir,
+    specPath: config.elmSpec.specs || defaultConfig.specPath,
+    elmPath: config.elmSpec.pathToElm
+  })
 
   const compile = function() {
-    specFileProvider.findFiles()
-    const compiledCode = compiler.compileFiles(specFileProvider.files())
-  
-    const outputPath = path.resolve(compilerOptions.cwd, 'elm-stuff', 'elm-spec.js')
+    const compiledCode = compiler.compile()
+
+    const outputPath = path.resolve(workDir, 'elm-stuff', 'elm-spec.js')
     fs.writeFileSync(outputPath, compiledCode)
     return outputPath
   }
-  
+
   return {
     compile
   }
 
 }
 
-CompilerFactory.$inject = ['config', 'elmSpec:fileProvider']
+CompilerFactory.$inject = ['config']
 
 module.exports = {
   CompilerFactory

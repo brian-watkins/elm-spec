@@ -15,6 +15,12 @@ module.exports = class SuiteRunner extends EventEmitter {
   }
 
   runAll() {
+    if (this.context.specFiles().length == 0) {
+      this.reporter.error(this.noSpecModulesError())
+      this.finish()
+      return
+    }
+
     this.context.evaluate((Elm) => {
       if (!Elm) {
         this.reporter.error(this.compilationError())
@@ -47,7 +53,9 @@ module.exports = class SuiteRunner extends EventEmitter {
       return
     }
 
-    this.runApp(app, programReference.path, () => {
+    const modulePath = this.context.fullPathToModule(programReference.moduleName)
+    
+    this.runApp(app, modulePath, () => {
       this.runNextSpecProgram(programReferences)
     })
   }
@@ -102,6 +110,14 @@ module.exports = class SuiteRunner extends EventEmitter {
   finish() {
     this.reporter.finish()
     this.emit('complete')
+  }
+
+  noSpecModulesError() {
+    return report(
+      line("No spec modules found!"),
+      line("Working directory (with elm.json)", this.context.workDir()),
+      line("Spec Path (relative to working directory)", this.context.specPath())
+    )
   }
 
   compilationError() {

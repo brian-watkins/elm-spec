@@ -5,19 +5,13 @@ const { ElmSpecReporter } = require('../lib/elmSpecReporter')
 describe("elm-spec reporter", () => {
   let subject
   let lines
-  let fakeFileProvider = { files: () => [
-    '/some/full/path/elm/specs/Some/FailingSpec.elm',
-    '/some/full/path/elm/specs/Some/PassingSpec.elm',
-    '/some/full/path/elm/specs/Some/OtherFailingSpec.elm',
-    '/some/full/path/elm/specs/Some/OtherPassingSpec.elm',
-  ] }
 
   beforeEach(() => {
     lines = []
 
     subject = new ElmSpecReporter((self) => {
       self.write = (line) => lines.push(line)
-    }, fakeFileProvider)
+    })
   })
 
   describe("when there are no rejected specs", () => {
@@ -151,7 +145,7 @@ const failureResult = () => {
       }
     ],
     elmSpec: {
-      modulePath: [ "Some", "FailingSpec" ]
+      modulePath: "/some/full/path/elm/specs/Some/FailingSpec.elm"
     },
     success: false,
     skipped: false
@@ -179,7 +173,7 @@ const failureResultTwo = () => {
       }
     ],
     elmSpec: {
-      modulePath: [ "Some", "OtherFailingSpec" ]
+      modulePath: "/some/full/path/elm/specs/Some/OtherFailingSpec.elm",
     },
     success: false,
     skipped: false

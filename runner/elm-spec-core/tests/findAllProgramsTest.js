@@ -12,7 +12,7 @@ describe("Find All Programs", () => {
       }
       const programs = ProgramReference.findAll(testElm)
 
-      expect(programs.map(p => p.path)).to.deep.equal([
+      expect(programs.map(p => p.moduleName)).to.deep.equal([
         [ "TestOne" ],
         [ "TestTwo" ],
         [ "TestThree" ]
@@ -38,7 +38,7 @@ describe("Find All Programs", () => {
       }
       const programs = ProgramReference.findAll(testElm)
 
-      expect(programs.map(p => p.path)).to.deep.equal([
+      expect(programs.map(p => p.moduleName)).to.deep.equal([
         [ "TestOne" ],
         [ "TestTwo" ],
         [ "Behaviors", "BehaviorOne" ],

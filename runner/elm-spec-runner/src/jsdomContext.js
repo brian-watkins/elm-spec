@@ -1,7 +1,7 @@
 const { JSDOM } = require("jsdom");
 const { ElmContext } = require('elm-spec-core')
 
-exports.loadElmContext = (compiler) => (specFiles) => {
+exports.loadElmContext = (compiler) => {
   const dom = new JSDOM(
     "<html><head><base href='http://elm-spec'></head><body></body></html>",
     { pretendToBeVisual: true,
@@ -12,7 +12,7 @@ exports.loadElmContext = (compiler) => (specFiles) => {
 
   const context = new ElmContext(dom.window)
 
-  const compiledCode = compiler.compileFiles(specFiles)
+  const compiledCode = compiler.compile()
   
   dom.window.eval(compiledCode)
 

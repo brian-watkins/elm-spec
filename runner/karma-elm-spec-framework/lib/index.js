@@ -1,7 +1,6 @@
 const path = require('path')
 const preprocessor = require('./preprocessor')
 const { ElmSpecReporter } = require('./elmSpecReporter')
-const { SpecFileProvider } = require('./specFileProvider')
 const { CompilerFactory } = require('./compiler')
 
 
@@ -24,6 +23,5 @@ module.exports = {
   "framework:elm-spec":["factory", initElmSpec],
   "preprocessor:elm-spec": ["factory", preprocessor.create],
   "reporter:elm-spec": ['type', ElmSpecReporter],
-  "elmSpec:fileProvider": [ 'type', SpecFileProvider ],
   "elmSpec:compiler": [ 'factory', CompilerFactory ]
 };

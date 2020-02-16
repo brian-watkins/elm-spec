@@ -22,17 +22,17 @@ Here's an example of the config properties relevant to elm-spec:
 
     elmSpec: {
       // Root directory for your specs; must contain elm.json.
-      // By default this is '.'
-      cwd: './specs',
+      // By default this is './specs'
+      cwd: './my-specs',
 
       // A glob to locate your spec modules, relative to the current
       // working directory.
-      // By default, this is './specs/**/*Spec.elm'
-      specs: './**/*Spec.elm',
+      // By default, this is './**/*Spec.elm'
+      specs: './SpecificBehavior/**/*Spec.elm',
 
       // Path to the elm executable
       // By default, this looks for elm on your path
-      pathToElm: './node_modules/.bin/elm'
+      pathToElm: '/some/path/to/elm'
     },
 
     client: {
