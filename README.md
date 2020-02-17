@@ -22,14 +22,16 @@ run in a browser (via Karma) and they exercise your code just like it will be ex
 
 ## Getting Started
 
-1. Create a directory for your specs and initialize a new elm app with `elm init`. Add your program's source
+1. Create a directory called `specs` for your specs and change into that directory.
+
+2. Initialize a new elm app with `elm init`. Add your program's source
 directory to the `source-directories` field of `elm.json`.
 
-2. Install elm-spec: `elm install brian-watkins/elm-spec`.
+3. Install elm-spec: `elm install brian-watkins/elm-spec`.
 
-3. Install any other dependencies your app needs.
+4. Install any other dependencies your app needs.
 
-3. Add a file called `Runner.elm` to your specs src directory. It should look something like this:
+5. Add a file called `Runner.elm` to your specs src directory. It should look something like this:
 
 ```
 port module Runner exposing (program, browserProgram)
@@ -40,15 +42,15 @@ port elmSpecOut : Message -> Cmd msg
 port elmSpecIn : (Message -> msg) -> Sub msg
 port elmSpecPick : () -> Cmd msg
 
-pick =
-  Spec.Runner.pick elmSpecPick
-
 config : Spec.Runner.Config msg
 config =
   { send = elmSpecOut
   , outlet = elmSpecOut
   , listen = elmSpecIn
   }
+
+pick =
+  Spec.Runner.pick elmSpecPick
 
 program specs =
   Spec.Runner.program config specs
@@ -67,7 +69,8 @@ the `main` function, just reference `program` or `browserProgram` from your `Run
 provide a `List Spec` to run.
 
 During the course of development, it's often useful to run only certain scenarios.
-In that case, use `pick` from your `Runner.elm` to designate those scenarios.
+In that case, use `pick` from your `Runner.elm` to designate those scenarios. See the docs for `Spec.Runner`
+for more information.
 
 Here's an example spec module:
 
@@ -129,11 +132,10 @@ You can run your specs from the command line in a [JSDOM](https://github.com/jsd
 $ npm install --save-dev elm-spec-runner
 ```
 
-Then just run your specs like so:
+Then, assuming your specs are in a directory called `./specs`, just run your spec suite like so:
 
 ```
-$ cd specs
-$ npx elm-spec --specs './**/*Spec.elm'
+$ npx elm-spec
 ```
 
 See [elm-spec-runner](https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner) for more

@@ -9,10 +9,10 @@ can use this library to run elm-spec suites in a particular environment.
 1. Create an ElmContext with a DOM window object.
 2. Use the Compiler to compile the code and evaluate it in the DOM window.
 3. Construct a new SuiteRunner with the ElmContext and a Reporter.
-4. Run all the spec programs.
+4. Call `runAll()` on the SuiteRunner to run all the spec programs.
 
 
-# API
+# Publis API
 
 You may import four modules from elm-spec-core:
 
@@ -32,7 +32,7 @@ Create an instance:
 ```
 new Compiler({
   // Switch to the given directory for compilation; must contain an elm.json file.
-  // By default, the current working directory is process.cwd()
+  // By default, the current working directory is `process.cwd()`
   cwd: './specs',
 
   // Glob that specifies how to find spec modules, relative to the current working directory
@@ -40,7 +40,7 @@ new Compiler({
   specPath: './**/*Spec.elm',
 
   // Path to the elm executable
-  // By default, the compiler uses the elm executable in the current path
+  // By default, the compiler uses the `elm` executable in the current path
   elmPath: './node_modules/.bin/elm'
 })
 ```
@@ -90,10 +90,6 @@ where `options` is:
 
   // stop the test suite run after the first failure
   endOnFailure: true,
-
-  // maximum duration of a step during a scenario in milliseconds
-  // By default, the timeout is 500
-  timeout: 750
 }
 ```
 
@@ -120,6 +116,9 @@ A Reporter is an object with the following functions:
   // Called with a Report. If there is an error, the spec suite will immediately end.
   error: (err) => {},
 
+  // Called with a Report.
+  log: (report) => {},
+
   // Called at the end of the spec suite run.
   finish: () => {}
 }
@@ -141,7 +140,10 @@ An object like this:
   summary: 'ACCEPT',
 
   // If the expectation is rejected, a report that explains why
-  report: null
+  report: null,
+
+  // Absolute path to the file containing the elm-spec program that produced this observation.
+  modulePath: "/some/path/to/some/elm/SomeSpec.elm"
 }
 ```
 
@@ -189,6 +191,8 @@ The following events are emitted:
 `observation` -- emits an Observation object
 
 `error` -- emits a Report describing the error
+
+`log` -- emits a Report
 
 `complete` -- the spec program run is complete; emits a boolean indicating whether the
 next spec program (if any) should be executed. Under some conditions (like an error),

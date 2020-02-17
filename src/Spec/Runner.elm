@@ -150,12 +150,20 @@ Note that the first argument to this function must be a port defined like so:
 
     port elmSpecPick : () -> Cmd msg
 
-I suggest adding a function:
+I suggest adding a function to the main Runner file in your spec suite, where
+you've defined your `Config` and so on:
 
     pick =
       Spec.Runner.pick elmSpecPick
 
-which you can use whenever you need to pick a scenario to run.
+Then, to pick a scenario to run, do something like this:
+
+    myFunSpec =
+      Spec.describe "Some fun stuff"
+      [ Runner.pick <| Spec.scenario "fun things happen" (
+          ...
+        )
+      ]
 
 -}
 pick : (() -> Cmd msg) -> Spec.Scenario model msg -> Spec.Scenario model msg
