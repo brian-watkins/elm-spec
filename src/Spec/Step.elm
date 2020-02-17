@@ -2,6 +2,7 @@ module Spec.Step exposing
   ( Context
   , Command
   , model
+  , log
   )
 
 {-| A scenario script is a sequence of steps. A step is a function from a `Context`,
@@ -16,11 +17,15 @@ steps you can use to build a scenario script.
 # Using the Context
 @docs model
 
+# Basic Commands
+@docs log
+
 -}
 
-import Spec.Message exposing (Message)
+import Spec.Message as Message exposing (Message)
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
+import Spec.Report as Report exposing (Report)
 
 
 {-| Represents the current state of the program.
@@ -40,3 +45,12 @@ type alias Command msg =
 model : Context model -> model
 model =
   Context.model
+
+
+{-| The spec runner will log the given report to the console.
+-}
+log : Report -> Command msg
+log report =
+  Message.for "_scenario" "log"
+    |> Message.withBody (Report.encode report)
+    |> Command.sendMessage

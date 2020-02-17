@@ -8,6 +8,8 @@ import Spec.Markup.Event as Event
 import Spec.Claim as Claim exposing (isStringContaining, isSomethingWhere)
 import Spec.Http
 import Spec.Http.Route exposing (..)
+import Spec.Step as Step
+import Spec.Report as Report
 import Runner
 import Main as App
 
@@ -44,6 +46,7 @@ clickSpec =
       )
       |> when "the button is clicked three times"
         [ Markup.target << by [ id "request-button" ]
+        , \_ -> Step.log <| Report.fact "Hey this is a fun log message!" "2778"
         , Event.click
         ]
       |> it "makes the request" (

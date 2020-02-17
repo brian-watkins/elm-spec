@@ -30,6 +30,25 @@ describe("elm-spec reporter", () => {
     })
   })
 
+  describe("when there are logs", () => {
+    beforeEach(() => {
+      subject.onRunStart()
+      const report = [
+        { statement: "This is a message", detail: "with some detail" },
+        { statement: "This is another line", detail: null }
+      ]
+      subject.onBrowserLog(null, report, "elm-spec")
+    })
+
+    it("prints the logs", () => {
+      expectToContain(lines, [
+        "This is a message",
+        "with some detail",
+        "This is another line"
+      ])
+    })
+  })
+
   describe("when there are rejected specs", () => {
     beforeEach(() => {
       subject.onRunStart()

@@ -124,8 +124,8 @@ const runProgramInBrowser = (specProgram, version, done, matcher) => {
 const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {  
   page.evaluate((program, name, options) => { 
     return _elm_spec.runSpec(program, name, options)
-  }, specProgram, specName, options).then(({ observations, error }) => {
-    matcher(observations, error)
+  }, specProgram, specName, options).then(({ observations, error, logs }) => {
+    matcher(observations, error, logs)
     done()
   }).catch((err) => {
     if (err.name === "AssertionError") {
@@ -154,6 +154,7 @@ const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
 const runSpec = (app, context, done, matcher, options) => {
   const observations = []
   let error = null
+  let logs = []
   const programOptions = options || {}
 
   new ProgramRunner(app, context, programOptions)
@@ -162,7 +163,7 @@ const runSpec = (app, context, done, matcher, options) => {
     })
     .on('complete', () => {
       try {
-        matcher(observations, error)
+        matcher(observations, error, logs)
         done()
       } catch (err) {
         done(err)
@@ -170,6 +171,9 @@ const runSpec = (app, context, done, matcher, options) => {
     })
     .on('error', (err) => {
       error = err
+    })
+    .on('log', (report) => {
+      logs.push(report)
     })
     .run()
 }

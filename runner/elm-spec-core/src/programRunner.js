@@ -176,6 +176,9 @@ module.exports = class ProgramRunner extends EventEmitter {
           out(this.continue())
         })
         break
+      case "log":
+        this.emit('log', specMessage.body)
+        break
       default:
         console.log("Message for unknown scenario event", specMessage)
     }

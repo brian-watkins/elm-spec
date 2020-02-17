@@ -24,6 +24,10 @@ module.exports = class KarmaReporter {
     })
   }
 
+  log(report) {
+    this.karma.info({type: "elm-spec", log: report})
+  }
+
   error(err) {
     this.karma.error(err)
   }

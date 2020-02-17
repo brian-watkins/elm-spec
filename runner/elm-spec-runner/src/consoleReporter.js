@@ -2,6 +2,7 @@ const chalk = require('chalk')
 
 const ok = chalk.green
 const error = chalk.red
+const logMessage = chalk.cyan
 
 module.exports = class ConsoleReporter {
   constructor({ write, writeLine }) {
@@ -25,6 +26,12 @@ module.exports = class ConsoleReporter {
       this.rejected.push(observation)
       this.write(error('x'))
     }
+  }
+
+  log(report) {
+    this.writeLine()
+    this.writeLine()
+    report.forEach(line => this.printReport(line, "", logMessage))
   }
 
   error(err) {
@@ -66,15 +73,15 @@ module.exports = class ConsoleReporter {
     observation.report.forEach(r => this.printReport(r))
   }
 
-  printReport(report) {
+  printReport(report, padding = "    ", render = error) {
     const statementLines = report.statement.split("\n")
     statementLines.forEach(line => {
-      this.writeLine(error(`    ${line}`))
+      this.writeLine(render(`${padding}${line}`))
     })
     if (report.detail) {
       const detailLines = report.detail.split("\n")
       detailLines.forEach(line => {
-        this.writeLine(error(`      ${line}`))
+        this.writeLine(render(`${padding}  ${line}`))
       })
     }
     this.writeLine()

@@ -51,13 +51,17 @@ window._elm_spec.runSpec = (specProgram, specName, options) => {
 const runProgram = (app, context, options, resolve, reject) => {
   const observations = []
   let error = null
+  let logs = []
 
   new ProgramRunner(app, context, options || { tags: [], endOnFailure: false })
       .on('observation', (observation) => {
         observations.push(observation)
       })
       .on('complete', () => {
-        resolve({ observations, error })
+        resolve({ observations, error, logs })
+      })
+      .on('log', (report) => {
+        logs.push(report)
       })
       .on('error', (err) => {
         error = err

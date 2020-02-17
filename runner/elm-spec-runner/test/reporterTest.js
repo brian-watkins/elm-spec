@@ -122,6 +122,35 @@ describe("reporter", () => {
       expect(subject.hasError).to.be.true
     })
   })
+
+  context("when there is a log message", () => {
+    let lines
+    let subject
+
+    beforeEach(() => {
+      lines = []
+      subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
+
+      subject.log([
+        { statement: "Log message one", detail: "with some detail" },
+      ])
+
+      subject.log([
+        { statement: "Log message two!", detail: null }
+      ])
+
+      subject.finish()
+    })
+
+    it("writes the log message", () => {
+      expectToContain(lines, [
+        "Log message one",
+        "with some detail",
+        "Log message two!",
+        "Accepted: 0"
+      ])
+    })
+  })
 })
 
 const expectToContain = (actualLines, expectedLines) => {

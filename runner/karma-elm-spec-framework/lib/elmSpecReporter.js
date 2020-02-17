@@ -2,6 +2,7 @@ const chalk = require('chalk')
 
 const ok = chalk.green
 const error = chalk.red
+const logMessage = chalk.cyan
 
 var ElmSpecReporter = function (baseReporterDecorator) {
   baseReporterDecorator(this);
@@ -35,6 +36,17 @@ var ElmSpecReporter = function (baseReporterDecorator) {
     self.hasError = true
   }
 
+  const defaultBrowserLog = self.onBrowserLog
+
+  self.onBrowserLog = function(browser, log, type) {
+    if (type === "elm-spec") {
+      self.write("\n\n")
+      log.forEach(line => this.printReport(line, "", logMessage))
+    } else {
+      defaultBrowserLog(browser, log, type)
+    }
+  }
+
   self.specFailure = function(browser, result) {
     self.failures.push(result)
     self.write(error("x"))
@@ -57,15 +69,15 @@ var ElmSpecReporter = function (baseReporterDecorator) {
     result.log.forEach(report => self.printReport(report))
   }  
 
-  self.printReport = function(report) {
+  self.printReport = function(report, padding = "    ", render = error) {
     const statementLines = report.statement.split("\n")
     statementLines.forEach(line => {
-      self.write(error(`    ${line}\n`))
+      self.write(render(`${padding}${line}\n`))
     })
     if (report.detail) {
       const detailLines = report.detail.split("\n")
       detailLines.forEach(line => {
-        self.write(error(`      ${line}\n`))
+        self.write(render(`${padding}  ${line}\n`))
       })
     }
     self.write('\n')

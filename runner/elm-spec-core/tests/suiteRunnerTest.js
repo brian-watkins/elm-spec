@@ -117,6 +117,17 @@ describe("Suite Runner", () => {
     })
   })
 
+  context("when a scenario logs a message", () => {
+    it("sends the message to the reporter", (done) => {
+      expectScenarios("WithLogs", { tags: [], endOnFailure: false }, done, (observations, error, logs) => {
+        expectAccepted(observations[0])
+        expect(logs).to.deep.equal([
+          [ reportLine("After two clicks!") ]
+        ])
+      })
+    })
+  })
+
   context("when no specs are found", () => {
     it("reports an error", (done) => {
       expectScenarios('WithNoSpecs', { tags: [], endOnFailure: false }, done, (observations, error) => {
@@ -202,7 +213,7 @@ const expectScenarios = (specDir, options, done, matcher) => {
   expectScenariosAt({
     cwd: './tests/sample',
     specPath: `./specs/${specDir}/**/*Spec.elm`
-  }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError) })
+  }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) })
 }
 
 const expectScenariosForVersion = (version, specDir, options, done, matcher) => {
@@ -234,6 +245,7 @@ const TestReporter = class {
   constructor() {
     this.observations = []
     this.specError = null
+    this.logs = []
     this.errorCount = 0
   }
 
@@ -250,6 +262,10 @@ const TestReporter = class {
   error(err) {
     this.errorCount += 1
     this.specError = err
+  }
+
+  log(report) {
+    this.logs.push(report)
   }
 }
 
