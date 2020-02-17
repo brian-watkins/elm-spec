@@ -27,17 +27,12 @@ isObservationMessage =
 inquiry : Message -> Message
 inquiry message =
   Message.for "_observer" "inquiry"
-    |> Message.withBody (
-      Encode.object
-        [ ( "message", Message.encode message )
-        ]
-    )
+    |> Message.withBody (Message.encode message)
 
 
 inquiryDecoder : Json.Decoder Inquiry
 inquiryDecoder =
-  Json.map Inquiry
-    ( Json.field "message" Message.decoder )
+  Json.map Inquiry Message.decoder
 
 
 observation : List String -> String -> Verdict -> Message

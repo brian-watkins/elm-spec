@@ -114,14 +114,11 @@ module.exports = class ProgramRunner extends EventEmitter {
   handleObserverEvent(specMessage, out) {
     switch (specMessage.name) {
       case "inquiry":
-        const inquiry = specMessage.body.message
-        this.handleMessage(inquiry, (message) => {
+        this.handleMessage(specMessage.body, (message) => {
           out({
             home: "_observer",
             name: "inquiryResult",
-            body: {
-              message
-            }
+            body: message
           })
         })
         break

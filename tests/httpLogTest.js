@@ -3,7 +3,7 @@ const expect = chai.expect
 const { expectSpec, expectAccepted, reportLine } = require("./helpers/SpecHelpers")
 
 describe("log http requests", () => {
-  it.only("logs the http requests", (done) => {
+  it("logs the http requests", (done) => {
     expectSpec("HttpLogSpec", "logRequests", done, (observations, error, logs) => {
       expectLogReport(logs[0], [
         reportLine("HTTP requests received", "GET http://fun.com/fun/1")
