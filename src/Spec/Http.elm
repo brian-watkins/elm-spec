@@ -61,6 +61,7 @@ import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report exposing (Report)
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Route as Route exposing (HttpRoute)
+import Spec.Http.Request as Request exposing (RequestData, RequestBody)
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Json.Decode as Json
@@ -76,21 +77,6 @@ import Url.Parser.Query
 -}
 type HttpRequest
   = HttpRequest RequestData
-
-
-type alias RequestData =
-  { method: String
-  , url: String
-  , headers: Dict String String
-  , body: RequestBody
-  }
-
-
-{-| Represents the body of an HTTP request.
--}
-type RequestBody
-  = EmptyBody
-  | StringBody String
 
 
 {-| Claim that an HTTP request has a header that satisfies the given claim.
@@ -111,15 +97,9 @@ header name claim =
       |> Claim.mapRejection (\report -> Report.batch
         [ Report.fact "Claim rejected for header" name
         , report
-        , Report.fact "The request actually had these headers" <| headerList request
+        , Report.fact "The request actually had these headers" <| Request.headersToString "\n" request
         ]
       )
-
-headerList : RequestData -> String
-headerList request =
-  Dict.toList request.headers
-    |> List.map (\(k, v) -> k ++ " = " ++ v)
-    |> String.join "\n"
 
 
 {-| Claim that the body of an HTTP request is a string that satisfies the given claim.
@@ -131,9 +111,9 @@ stringBody : Claim String -> Claim HttpRequest
 stringBody claim =
   \(HttpRequest request) ->
     case request.body of
-      EmptyBody ->
+      Request.EmptyBody ->
         evaluateStringBodyClaim claim ""
-      StringBody actual ->
+      Request.StringBody actual ->
         evaluateStringBodyClaim claim actual
 
 
@@ -162,12 +142,12 @@ jsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
 jsonBody decoder claim =
   \(HttpRequest request) ->
     case request.body of
-      EmptyBody ->
+      Request.EmptyBody ->
         Claim.Reject <| Report.batch
           [ Report.note "Expected to decode request body as JSON"
           , Report.note "but it has no body at all"
           ]
-      StringBody actual ->
+      Request.StringBody actual ->
         case Json.decodeString decoder actual of
           Ok value ->
             claim value
@@ -193,9 +173,9 @@ For example:
 -}
 observeRequests : HttpRoute -> Observer model (List HttpRequest)
 observeRequests route =
-  Observer.inquire (fetchRequestsFor route) (
-    Message.decode (Json.list requestDecoder)
-      >> Result.withDefault []
+  Observer.inquire (fetchRequestsFor route) (\message ->
+    Message.decode (Json.list <| Json.map HttpRequest Request.decoder) message
+      |> Result.withDefault []
   )
   |> Observer.mapRejection (\report ->
     Report.batch
@@ -210,25 +190,6 @@ fetchRequestsFor route =
   Message.for "_http" "fetch-requests"
     |> Message.withBody (
       Route.encode route
-    )
-
-
-requestDecoder : Json.Decoder HttpRequest
-requestDecoder =
-  Json.map4 RequestData
-    ( Json.field "methpd" Json.string )
-    ( Json.field "url" Json.string )
-    ( Json.field "headers" <| Json.dict Json.string )
-    ( Json.field "body" requestBodyDecoder )
-  |> Json.map HttpRequest
-
-
-requestBodyDecoder : Json.Decoder RequestBody
-requestBodyDecoder =
-  Json.nullable Json.string
-    |> Json.map (
-      Maybe.map StringBody
-        >> Maybe.withDefault EmptyBody
     )
 
 
@@ -252,34 +213,20 @@ You might use this step to help debug a rejected observation.
 log : Step.Context model -> Step.Command msg
 log _ =
   fetchRequestsFor (Route.route "ANY" <| Route.Matching ".+")
-    |> Command.sendRequest logRequests
+    |> Command.sendRequest andThenLogRequests
 
 
-logRequests : Message -> Step.Command msg
-logRequests message =
-  Message.decode (Json.list requestDecoder) message
-    |> Result.map (Command.log << requestReport)
+andThenLogRequests : Message -> Step.Command msg
+andThenLogRequests message =
+  Message.decode (Json.list Request.decoder) message
+    |> Result.map (Command.log << Request.toReport)
     |> Result.withDefault (Command.log <| Report.note "Unable to decode HTTP requests!")
-
-
-requestReport : List HttpRequest -> Report
-requestReport requests =
-  if List.isEmpty requests then
-    Report.note "No HTTP requests received"
-  else
-    List.map (\(HttpRequest data) -> requestDataToString data) requests
-      |> String.join "\n"
-      |> Report.fact "HTTP requests received"
-
-
-requestDataToString : RequestData -> String
-requestDataToString data =
-  data.method ++ " " ++ data.url
 
 
 {-| Claim that the url of an HTTP request satisfies the given claim.
 
-For example, you could claim that a request has a particular query parameter like so:
+In the example below, we claim that there is one `GET` request to a url containing
+`fake.com` and that url has the query parameter `sport=bowling`.
 
     Spec.Http.observeRequests (Spec.Http.Route.route "GET" <| Matching "fake\\.com")
       |> Spec.expect (Spec.Claim.isListWhere

@@ -21,13 +21,14 @@ httpRequestLogSpec =
   [ scenario "there are requests" (
       given (
         testSubject
-          [ getRequest "http://fun.com/fun/1"
-          , getRequest "http://awesome.com/awesome?name=cool"
+          [ getRequest "http://fun.com/fun/1" [ Http.header "Content-Type" "text/plain;charset=utf-8", Http.header "X-Fun-Header" "my-header" ]
+          , getRequest "http://awesome.com/awesome?name=cool" [ Http.header "Content-Type" "text/plain;charset=utf-8" ]
           , postRequest "http://super.com/super"
           ]
       )
       |> when "requests are sent"
-        [ Markup.target << by [ id "request-button" ]
+        [ Spec.Http.log
+        , Markup.target << by [ id "request-button" ]
         , Event.click
         , Spec.Http.log
         , Event.click
@@ -46,33 +47,34 @@ httpRequestLogSpec =
           )
         ]
     )
-  , scenario "there are no requests" (
-      given (
-        testSubject []
-      )
-      |> when "the requests are logged"
-        [ Spec.Http.log
-        ]
-      |> it "makes no GET requests" (
-        Spec.Http.observeRequests (route "GET" <| Matching ".+")
-          |> expect (isListWithLength 0)
-      )
-    )
   ]
 
 
-getRequest url =
-  Http.get
-    { url = url
+getRequest url headers =
+  Http.request
+    { method = "GET"
+    , headers = headers
+    , url = url
+    , body = Http.emptyBody
     , expect = Http.expectString ReceivedRequest
+    , timeout = Nothing
+    , tracker = Nothing
     }
 
 
 postRequest url =
-  Http.post
-    { url = url
+  Http.request
+    { method = "POST"
+    , headers =
+      [ Http.header "Content-Type" "text/plain;charset=utf-8"
+      , Http.header "X-Fun-Header" "my-header"
+      , Http.header "X-Super-Header" "super"
+      ]
+    , url = url
     , body = Http.emptyBody
     , expect = Http.expectString ReceivedRequest
+    , timeout = Nothing
+    , tracker = Nothing
     }
 
 

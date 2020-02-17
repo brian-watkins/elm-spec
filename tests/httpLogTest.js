@@ -6,21 +6,26 @@ describe("log http requests", () => {
   it("logs the http requests", (done) => {
     expectSpec("HttpLogSpec", "logRequests", done, (observations, error, logs) => {
       expectLogReport(logs[0], [
-        reportLine("HTTP requests received", "GET http://fun.com/fun/1")
+        reportLine("No HTTP requests received")
       ])
       expectLogReport(logs[1], [
-        reportLine("HTTP requests received", "GET http://fun.com/fun/1\nGET http://awesome.com/awesome?name=cool")
+        reportLine("Received 1 HTTP request"),
+        reportLine("GET http://fun.com/fun/1", "Headers: { Content-Type = text/plain;charset=utf-8, X-Fun-Header = my-header }")
       ])
       expectLogReport(logs[2], [
-        reportLine("HTTP requests received", "GET http://fun.com/fun/1\nGET http://awesome.com/awesome?name=cool\nPOST http://super.com/super")
+        reportLine("Received 2 HTTP requests"),
+        reportLine("GET http://fun.com/fun/1", "Headers: { Content-Type = text/plain;charset=utf-8, X-Fun-Header = my-header }"),
+        reportLine("GET http://awesome.com/awesome?name=cool", "Headers: { Content-Type = text/plain;charset=utf-8 }")
       ])
       expectLogReport(logs[3], [
-        reportLine("No HTTP requests received")
+        reportLine("Received 3 HTTP requests"),
+        reportLine("GET http://fun.com/fun/1", "Headers: { Content-Type = text/plain;charset=utf-8, X-Fun-Header = my-header }"),
+        reportLine("GET http://awesome.com/awesome?name=cool", "Headers: { Content-Type = text/plain;charset=utf-8 }"),
+        reportLine("POST http://super.com/super", "Headers: { Content-Type = text/plain;charset=utf-8, X-Fun-Header = my-header, X-Super-Header = super }")
       ])
 
       expectAccepted(observations[0])
       expectAccepted(observations[1])
-      expectAccepted(observations[2])
     })
   }) 
 })
