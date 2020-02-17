@@ -12,6 +12,7 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Http
+import Json.Encode as Encode
 import Runner
 
 
@@ -71,7 +72,7 @@ postRequest url =
       , Http.header "X-Super-Header" "super"
       ]
     , url = url
-    , body = Http.emptyBody
+    , body = Http.jsonBody <| Encode.object [ ("name", Encode.string "Cool Dude"), ( "count", Encode.int 27) ]
     , expect = Http.expectString ReceivedRequest
     , timeout = Nothing
     , tracker = Nothing

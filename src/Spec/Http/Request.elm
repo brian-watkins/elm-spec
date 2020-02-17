@@ -44,12 +44,13 @@ requestsReceived requests =
 
 requestDataToReport : RequestData -> Report
 requestDataToReport data =
-  Report.fact (data.method ++ " " ++ data.url) <| headers data
+  headers data ++ "\n" ++ body data
+    |> Report.fact (data.method ++ " " ++ data.url)
 
 
 headers : RequestData -> String
 headers data =
-  "Headers: { " ++ (headersToString ", " data) ++ " }"
+  "Headers: [ " ++ (headersToString ", " data) ++ " ]"
 
 
 headersToString : String -> RequestData -> String
@@ -57,6 +58,15 @@ headersToString delimiter data =
   Dict.toList data.headers
     |> List.map (\(key, value) -> key ++ " = " ++ value)
     |> String.join delimiter
+
+
+body : RequestData -> String
+body data =
+  case data.body of
+    EmptyBody ->
+      "Empty Body"
+    StringBody stringBody ->
+      "Body: " ++ stringBody
 
 
 decoder : Json.Decoder RequestData
