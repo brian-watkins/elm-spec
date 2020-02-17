@@ -12,7 +12,7 @@ can use this library to run elm-spec suites in a particular environment.
 4. Call `runAll()` on the SuiteRunner to run all the spec programs.
 
 
-# Publis API
+# Public API
 
 You may import four modules from elm-spec-core:
 
