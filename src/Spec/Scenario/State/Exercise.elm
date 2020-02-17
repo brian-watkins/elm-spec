@@ -6,6 +6,7 @@ import Spec.Scenario.Internal as Internal exposing (Scenario, Step)
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Message as Message exposing (Message)
+import Spec.Message.Internal as Message
 import Spec.Scenario.Message as Message
 import Spec.Markup.Message as Message
 import Spec.Step.Context as Context
@@ -28,6 +29,7 @@ type alias Model model msg =
   , programModel: model
   , effects: List Message
   , steps: List (Step model msg)
+  , responseHandler : Maybe (Message -> Step.Command msg)
   }
 
 
@@ -46,6 +48,7 @@ initModel scenario subject =
   , programModel = subject.model
   , effects = []
   , steps = initialCommandStep scenario subject :: scenario.steps
+  , responseHandler = Nothing
   }
 
 
@@ -82,6 +85,8 @@ update exerciseModel actions msg =
     ReceivedMessage message ->
       if Message.is "_navigation" "assign" message then
         handleLocationAssigned exerciseModel message
+      else if Message.is "_step" "response" message then
+        handleStepResponse actions exerciseModel message
       else
         ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
         , Cmd.none
@@ -119,18 +124,8 @@ update exerciseModel actions msg =
               Context.for exerciseModel.programModel
                 |> Context.withEffects exerciseModel.effects
           in
-            case step.run context of
-              Step.SendMessage message ->
-                ( exercise updated
-                , State.send actions <| Message.stepMessage message
-                )
-              Step.SendCommand cmd ->
-                ( exercise updated
-                , Cmd.map ProgramMsg cmd
-                    |> doAndRender actions
-                )
-              Step.DoNothing ->
-                update updated actions Continue
+            step.run context
+              |> handleStepCommand actions updated
 
     Abort report ->
       ( Interactive.initModel exerciseModel.subject exerciseModel.programModel
@@ -178,6 +173,12 @@ doAndRender actions cmd =
     ]
 
 
+stepRequest : Message -> Message
+stepRequest message =
+  Message.for "_step" "request"
+    |> Message.withBody (Message.encode message)
+
+
 subscriptions : Model model msg -> Sub msg
 subscriptions model =
   model.subject.subscriptions model.programModel
@@ -208,3 +209,37 @@ handleLocationAssigned exerciseModel message =
       ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
       , Cmd.none
       )
+
+
+handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message -> ( State.Model msg programMsg, Cmd msg )
+handleStepResponse actions exerciseModel message =
+  case Message.decode Message.decoder message of
+    Ok responseMessage ->
+      case exerciseModel.responseHandler of
+        Just responseHandler ->
+          responseHandler responseMessage
+            |> handleStepCommand actions { exerciseModel | responseHandler = Nothing }
+        Nothing ->
+          ( exercise exerciseModel, Cmd.none )
+    Err _ ->
+      ( exercise exerciseModel, Cmd.none )
+
+
+handleStepCommand : Actions msg programMsg -> Model model programMsg -> Step.Command programMsg -> ( State.Model msg programMsg, Cmd msg)
+handleStepCommand actions exerciseModel command =
+  case command of
+    Step.SendMessage message ->
+      ( exercise exerciseModel
+      , State.send actions <| Message.stepMessage message
+      )
+    Step.SendRequest message responseHandler ->
+      ( exercise { exerciseModel | responseHandler = Just responseHandler }
+      , State.send actions <| Message.stepMessage <| stepRequest message
+      )
+    Step.SendCommand cmd ->
+      ( exercise exerciseModel
+      , Cmd.map ProgramMsg cmd
+          |> doAndRender actions
+      )
+    Step.DoNothing ->
+      update exerciseModel actions Continue

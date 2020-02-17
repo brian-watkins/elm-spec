@@ -122,7 +122,7 @@ module.exports = class HttpPlugin {
   findRequests(route, matchUrl) {
     return this.server.requests
       .filter(request => {
-        if (request.method !== route.method) return false
+        if (route.method !== "ANY" && request.method !== route.method) return false
         return matchUrl(request.url)
       })
       .map(buildRequest)
@@ -131,6 +131,7 @@ module.exports = class HttpPlugin {
 
 const buildRequest = (request) => {
   return {
+    methpd: request.method,
     url: request.url,
     headers: request.requestHeaders,
     body: request.requestBody || null

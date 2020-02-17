@@ -22,7 +22,6 @@ steps you can use to build a scenario script.
 
 -}
 
-import Spec.Message as Message exposing (Message)
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
 import Spec.Report as Report exposing (Report)
@@ -50,7 +49,5 @@ model =
 {-| The spec runner will log the given report to the console.
 -}
 log : Report -> Command msg
-log report =
-  Message.for "_scenario" "log"
-    |> Message.withBody (Report.encode report)
-    |> Command.sendMessage
+log =
+  Command.log

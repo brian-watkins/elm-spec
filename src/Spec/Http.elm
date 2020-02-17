@@ -1,5 +1,6 @@
 module Spec.Http exposing
   ( HttpRequest
+  , log
   , observeRequests
   , clearRequestHistory
   , header
@@ -47,7 +48,7 @@ Now, you could write a spec that checks to see if the request body contains a va
     ]
 
 # Observe HTTP Requests
-@docs HttpRequest, observeRequests, clearRequestHistory
+@docs HttpRequest, observeRequests, clearRequestHistory, log
 
 # Make Claims About HTTP Requests
 @docs url, header, stringBody, jsonBody
@@ -57,7 +58,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
 import Spec.Claim as Claim exposing (Claim)
-import Spec.Report as Report
+import Spec.Report as Report exposing (Report)
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Route as Route exposing (HttpRoute)
 import Spec.Step as Step
@@ -78,7 +79,8 @@ type HttpRequest
 
 
 type alias RequestData =
-  { url: String
+  { method: String
+  , url: String
   , headers: Dict String String
   , body: RequestBody
   }
@@ -213,7 +215,8 @@ fetchRequestsFor route =
 
 requestDecoder : Json.Decoder HttpRequest
 requestDecoder =
-  Json.map3 RequestData
+  Json.map4 RequestData
+    ( Json.field "methpd" Json.string )
     ( Json.field "url" Json.string )
     ( Json.field "headers" <| Json.dict Json.string )
     ( Json.field "body" requestBodyDecoder )
@@ -240,6 +243,38 @@ after a certain point.
 clearRequestHistory : Step.Context model -> Step.Command msg
 clearRequestHistory _ =
   Command.sendMessage <| Message.for "_http" "clear-history"
+
+
+{-| A step that logs to the console any HTTP requests received prior to executing this step.
+
+You might use this step to help debug a rejected observation.
+-}
+log : Step.Context model -> Step.Command msg
+log _ =
+  fetchRequestsFor (Route.route "ANY" <| Route.Matching ".+")
+    |> Command.sendRequest logRequests
+
+
+logRequests : Message -> Step.Command msg
+logRequests message =
+  Message.decode (Json.list requestDecoder) message
+    |> Result.map (Command.log << requestReport)
+    |> Result.withDefault (Command.log <| Report.note "Unable to decode HTTP requests!")
+
+
+requestReport : List HttpRequest -> Report
+requestReport requests =
+  if List.isEmpty requests then
+    Report.note "No HTTP requests received"
+  else
+    List.map (\(HttpRequest data) -> requestDataToString data) requests
+      |> String.join "\n"
+      |> Report.fact "HTTP requests received"
+
+
+requestDataToString : RequestData -> String
+requestDataToString data =
+  data.method ++ " " ++ data.url
 
 
 {-| Claim that the url of an HTTP request satisfies the given claim.

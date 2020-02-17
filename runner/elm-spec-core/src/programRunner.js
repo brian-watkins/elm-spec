@@ -88,6 +88,9 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "_scenario":
         this.handleScenarioEvent(specMessage, out)
         break
+      case "_step":
+        this.handleStepEvent(specMessage, out)
+        break
       case "_observer":
         this.handleObserverEvent(specMessage, out)
         break
@@ -136,6 +139,23 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
+  handleStepEvent(specMessage, out) {
+    switch (specMessage.name) {
+      case "request":
+        this.handleMessage(specMessage.body, (message) => {
+          out({
+            home: "_step",
+            name: "response",
+            body: message
+          })
+        })
+        break
+      case "log":
+        this.emit('log', specMessage.body)
+        break
+    }
+  }
+
   handleSpecEvent(specMessage) {
     switch (specMessage.name) {
       case "state": {
@@ -175,9 +195,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.whenStackIsComplete(() => {
           out(this.continue())
         })
-        break
-      case "log":
-        this.emit('log', specMessage.body)
         break
       default:
         console.log("Message for unknown scenario event", specMessage)
