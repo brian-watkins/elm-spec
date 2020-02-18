@@ -98,4 +98,20 @@ describe("html plugin", () => {
       })
     })
   })
+
+  context("log element", () => {
+    it("logs the element", (done) => {
+      expectSpec("HtmlSpec", "logElement", done, (observations, error, logs) => {
+        expectAccepted(observations[0])
+        expect(logs[0]).to.deep.equal([
+          reportLine("HTML for element: #my-name", "<div id=\"my-name\" class=\"pretty\">Hello, Fun Person!</div>")
+        ])
+
+        expectAccepted(observations[1])
+        expect(logs[1]).to.deep.equal([
+          reportLine("No element found for selector", "#unknown-element")
+        ])
+      })
+    })
+  })
 })

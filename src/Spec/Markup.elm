@@ -11,6 +11,7 @@ module Spec.Markup exposing
   , property
   , text
   , attribute
+  , log
   )
 
 {-| Target, observe and make claims about aspects of an HTML document.
@@ -27,6 +28,9 @@ module Spec.Markup exposing
 # Observe the Browser
 @docs ViewportOffset, observeBrowserViewport
 
+# Debug
+@docs log
+
 -}
 
 import Spec.Observer as Observer exposing (Observer)
@@ -36,6 +40,7 @@ import Spec.Report as Report exposing (Report)
 import Spec.Markup.Selector as Selector exposing (Selector, Element)
 import Spec.Step as Step
 import Spec.Step.Command as Command
+import Spec.Step.Context as Context
 import Spec.Message as Message exposing (Message)
 import Spec.Markup.Message as Message
 import Json.Encode as Encode
@@ -333,3 +338,55 @@ property decoder claim =
         claim propertyValue
       Err err ->
         Claim.Reject <| Report.fact "Unable to decode JSON for property" <| Json.errorToString err
+
+
+{-| A step that logs the selected element to the console.
+
+    Spec.when "the button is clicked twice"
+      [ Spec.Markup.target << by [ tag "button" ]
+      , Spec.Markup.Event.click
+      , Spec.Markup.log << by [ id "click-counter" ]
+      , Spec.Markup.Event.click
+      ]
+
+If an element is currently targeted, logging a different element does not change
+the targeted element.
+
+You might use this to help debug a rejected observation.
+
+-}
+log : (Selector Element, Step.Context model) -> Step.Command msg
+log (selector, context) =
+  fetchElementMessage selector
+    |> Command.sendRequest (andThenLogElement selector)
+
+
+andThenLogElement : Selector Element -> Message -> Step.Command msg
+andThenLogElement selector message =
+  Message.decode maybeHtmlDecoder message
+    |> Result.withDefault Nothing
+    |> Maybe.map (elementToReport selector)
+    |> Maybe.withDefault (
+      Report.fact "No element found for selector" (Selector.toString selector)
+    )
+    |> Command.log
+
+
+elementToReport : Selector Element -> HtmlElement -> Report
+elementToReport selector (HtmlElement element) =
+  case Json.decodeValue (Json.field "outerHTML" Json.string) element of
+    Ok html ->
+      Report.fact ("HTML for element: " ++ Selector.toString selector) html
+    Err err ->
+      Json.errorToString err
+        |> Report.fact ("Unable to decode outerHTML for element: " ++ Selector.toString selector)
+
+
+fetchElementMessage : Selector Element -> Message
+fetchElementMessage selector =
+  Message.for "_html" (queryName Single)
+    |> Message.withBody (
+      Encode.object
+        [ ( "selector", Encode.string <| Selector.toString selector )
+        ]
+    )

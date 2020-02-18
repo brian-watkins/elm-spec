@@ -326,10 +326,46 @@ elementExternalLinkFailureSpec =
   ]
 
 
+logElementSpec : Spec Model Msg
+logElementSpec =
+  Spec.describe "log element"
+  [ scenario "existing element" (
+      given (
+        Setup.initWithModel { name = "Fun Person", count = 21 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
+      )
+      |> when "an element is logged"
+        [ Markup.log << by [ id "my-name" ]
+        ]
+      |> it "completes the spec" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-name" ]
+          |> expect (isSomethingWhere <| Markup.text <| equals "Hello, Fun Person!")
+      )
+    )
+  , scenario "element does not exist" (
+      given (
+        Setup.initWithModel { name = "Fun Person", count = 21 }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withView testView
+      )
+      |> when "an unknown element is logged"
+        [ Markup.log << by [ id "unknown-element" ]
+        ]
+      |> it "completes the spec" (
+        Markup.observeElement
+          |> Markup.query << by [ id "my-name" ]
+          |> expect (isSomethingWhere <| Markup.text <| equals "Hello, Fun Person!")
+      )
+    )
+  ]
+
+
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.div [ Attr.id "my-name" ] [ Html.text <| "Hello, " ++ model.name ++ "!" ]
+  [ Html.div [ Attr.id "my-name", Attr.class "pretty" ] [ Html.text <| "Hello, " ++ model.name ++ "!" ]
   , Html.div [ Attr.id "my-count" ] [ Html.text <| "The count is " ++ String.fromInt model.count ++ "!" ]
   , Html.div []
     [ Html.div [ Attr.id "my-label" ] [ Html.text "Here is a label" ]
@@ -417,6 +453,7 @@ selectSpec name =
     "elementLink" -> Just elementLinkSpec
     "elementInternalLinkFailure" -> Just elementInternalLinkFailureSpec
     "elementExternalLinkFailure" -> Just elementExternalLinkFailureSpec
+    "logElement" -> Just logElementSpec
     _ -> Nothing
 
 
