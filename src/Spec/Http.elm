@@ -48,10 +48,13 @@ Now, you could write a spec that checks to see if the request body contains a va
     ]
 
 # Observe HTTP Requests
-@docs HttpRequest, observeRequests, clearRequestHistory, log
+@docs HttpRequest, observeRequests, clearRequestHistory
 
 # Make Claims About HTTP Requests
 @docs url, header, stringBody, jsonBody
+
+# Debug
+@docs log
 
 -}
 
