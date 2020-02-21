@@ -2,6 +2,7 @@ module Spec.Witness exposing
   ( Witness
   , forUpdate
   , log
+  , record
   , observe
   )
 
@@ -37,7 +38,7 @@ Now, I can write a spec that uses a witness to record the score passed to the in
             |> Spec.Setup.withView App.view
             |> Witness.forUpdate (\witness ->
               App.update <| \score ->
-                Witness.log "saved-score"
+                Witness.record "saved-score"
                   (Json.Encode.int score) witness
             )
         )
@@ -55,7 +56,7 @@ Now, I can write a spec that uses a witness to record the score passed to the in
       )
     ]
 
-@docs Witness, forUpdate, log, observe
+@docs Witness, forUpdate, record, observe, log
 
 -}
 
@@ -93,9 +94,9 @@ forUpdate updateWithWitness =
     { subject | update = \witness -> updateWithWitness <| Witness witness }
 
 
-{-| Create a `Cmd` that logs some information.
+{-| DEPRECATED
 
-Provide the name of this witness and a JSON value with any information to be logged.
+Use `Spec.Witness.record` instead.
 -}
 log : String -> Encode.Value -> Witness msg -> Cmd msg
 log name statement (Witness witness) =
@@ -109,7 +110,18 @@ log name statement (Witness witness) =
     |> witness
 
 
-{-| Observe the logs recorded by a witness.
+{-| Create a `Cmd` that records some information.
+
+Provide the name of this witness and a JSON value with any information to be recorded.
+Use `Spec.Witness.observe` to make a claim about the recorded value.
+
+-}
+record : String -> Encode.Value -> Witness msg -> Cmd msg
+record =
+  log
+
+
+{-| Observe the values recorded by a witness.
 
 Provide the name of the witness and a JSON decoder that can decode whatever
 value you need to observe.

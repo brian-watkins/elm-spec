@@ -54,7 +54,7 @@ testSubject =
   Setup.initWithModel { count = 0 }
     |> Witness.forUpdate (\witness ->
         testUpdate <| \num -> 
-          Witness.log "injected" (Encode.int num) witness
+          Witness.record "injected" (Encode.int num) witness
       )
     |> Setup.withSubscriptions testSubscriptions
 
