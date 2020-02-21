@@ -7,16 +7,18 @@ const TestReporter = require('./testReporter')
 const path = require('path')
 
 
-const elmSpecContext = process.env.ELM_SPEC_CONTEXT
+exports.isForRealBrowser = () => {
+  return process.env.ELM_SPEC_CONTEXT === "browser"
+}
 
 exports.runInContext = (runner) => {
-  if (elmSpecContext === "jsdom") {
-    prepareJsdom()
-    return runner(elmContext.window)
-  } else if (elmSpecContext === "browser") {
+  if (this.isForRealBrowser()) {
     return page.evaluate((fun) => {
       return eval(fun)(window)
     }, runner.toString())
+  } else {
+    prepareJsdom()
+    return runner(elmContext.window)
   }
 }
 
@@ -30,10 +32,10 @@ exports.expectPassingSpec = (specProgram, specName, done, matcher) => {
 }
 
 exports.expectSpec = (specProgram, specName, done, matcher, options) => {
-  if (elmSpecContext === "jsdom") {
-    runSpecInJsdom(specProgram, specName, done, matcher, options)
-  } else if (elmSpecContext === "browser") {
+  if (this.isForRealBrowser()) {
     runSpecInBrowser(specProgram, specName, done, matcher, options)
+  } else {
+    runSpecInJsdom(specProgram, specName, done, matcher, options)
   }
 }
 
@@ -42,10 +44,10 @@ exports.expectProgram = (specProgram, done, matcher) => {
 }
 
 exports.expectProgramAtVersion = (specProgram, version, done, matcher) => {
-  if (elmSpecContext === "jsdom") {
-    runProgramInJsdom(specProgram, version, done, matcher)
-  } else if (elmSpecContext === "browser") {
+  if (this.isForRealBrowser()) {
     runProgramInBrowser(specProgram, version, done, matcher)
+  } else {
+    runProgramInJsdom(specProgram, version, done, matcher)
   }
 }
 

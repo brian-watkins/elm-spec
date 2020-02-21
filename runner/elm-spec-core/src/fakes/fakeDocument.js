@@ -1,3 +1,4 @@
+const { fakeElement } = require('./fakeElement')
 
 exports.fakeDocument = (theWindow, location) => {
   return new Proxy(theWindow.document, {
@@ -10,6 +11,9 @@ exports.fakeDocument = (theWindow, location) => {
       }
       if (prop === 'location') {
         return location
+      }
+      if (prop === 'getElementById') {
+        return customDocumentElementById(theWindow, target)
       }
       const val = target[prop]
       return typeof val === "function"
@@ -25,6 +29,12 @@ exports.fakeDocument = (theWindow, location) => {
       return true
     }
   })
+}
+
+const customDocumentElementById = (theWindow, target) => (elementId) => {
+  const element = target.getElementById(elementId)
+  if (!element) return null
+  return fakeElement(theWindow, element)
 }
 
 const customAddEventListener = (theWindow, target) => (type, handler) => {

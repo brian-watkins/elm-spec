@@ -1,4 +1,4 @@
-module Specs.DomSpec exposing (main)
+module Specs.HtmlViewportSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
@@ -136,9 +136,95 @@ eventStepFailsWhenDocumentTargeted =
   Specs.EventHelpers.eventStepFailsWhenDocumentTargeted testSubject
 
 
+elementPositionSpec : Spec Model Msg
+elementPositionSpec =
+  Spec.describe "element position as the broswer viewport changes"
+  [ scenario "initial browser viewport" (
+      given (
+        testSubject
+      )
+      |> whenTheElementIsRequested
+      |> observeThat
+        [ itObservesXPositionToBe 8
+        , itObservesYPositionToBe 245
+        ]
+    )
+  , scenario "the browser viewport moves" (
+      given (
+        testSubject
+      )
+      |> when "the browser viewport moves"
+        [ Event.setBrowserViewport { x = 30, y = 94 }
+        ]
+      |> whenTheElementIsRequested
+      |> observeThat
+        [ itObservesXPositionToBe 8
+        , itObservesYPositionToBe 245
+        ]
+    )
+  , scenario "an element is not found" (
+      given (
+        testSubject
+      )
+      |> when "an element is not found"
+        [ Command.send <| Command.fake <| RequestElement "some-unknown-element"
+        ]
+      |> it "does not find an element" (
+        Observer.observeModel .element
+          |> expect isNothing
+      )
+    )
+  ]
+
+
+jsdomElementSpec : Spec Model Msg
+jsdomElementSpec =
+  Spec.describe "jsdom element"
+  [ scenario "get an element" (
+      given (
+        testSubject
+      )
+      |> whenTheElementIsRequested
+      |> observeThat
+        [ itObservesXPositionToBe 0
+        , itObservesYPositionToBe 0
+        ]
+    )
+  ]
+
+
+whenTheElementIsRequested =
+  when "the element is requested"
+    [ Markup.target << by [ id "get-footer-button" ]
+    , Event.click
+    ]
+
+
+itObservesXPositionToBe expected =
+  it "finds the x position of the element" (
+    Observer.observeModel .element
+      |> expect (isSomethingWhere <| require .element <| require .x <| equals expected)
+  )
+
+
+itObservesYPositionToBe expected =
+  it "finds the y position of the element" (
+    Observer.observeModel .element
+      |> expect (isSomethingWhere <| require .element <| require .y <| equals expected)
+  )
+
+
 type alias Model =
   { viewport: { x: Float, y: Float }
   , scrollTo: { x: Float, y: Float }
+  , element: Maybe Browser.Dom.Element
+  }
+
+
+defaultModel =
+  { viewport = { x = 0, y = 0 }
+  , scrollTo = { x = 0, y = 0 }
+  , element = Nothing
   }
 
 
@@ -149,10 +235,12 @@ type Msg
   | GotY String
   | SetViewport
   | DidSetViewport ()
+  | RequestElement String
+  | GotElement (Result Browser.Dom.Error Browser.Dom.Element)
 
 
 testSubject =
-  Setup.initWithModel { viewport = { x = 0, y = 0 }, scrollTo = { x = 0, y = 0 } }
+  Setup.initWithModel defaultModel
     |> Setup.withView testView
     |> Setup.withUpdate testUpdate
 
@@ -164,6 +252,7 @@ testView model =
   , Html.input [ Attr.id "y-position", Events.onInput GotY ] []
   , Html.button [ Attr.id "set-viewport-button", Events.onClick SetViewport ] [ Html.text "Set!" ]
   , Html.button [ Attr.id "request-viewport-button", Events.onClick RequestViewport ] [ Html.text "Get!"]
+  , Html.button [ Attr.id "get-footer-button", Events.onClick <| RequestElement "footer" ] [ Html.text "Get Footer!" ]
   , Html.hr [] []
   , Html.div
     [ Attr.id "scrollable-element"
@@ -177,6 +266,7 @@ testView model =
       , Attr.style "height" "1000px"
       ] [ Html.text "Lots of content!" ]
     ]
+  , Html.div [ Attr.id "footer" ] [ Html.text "This is the footer element!" ]
   ]
 
 
@@ -211,6 +301,14 @@ testUpdate msg model =
       ( model, getViewport GotViewport )
     GotViewport viewport ->
       ( { model | viewport = viewport }, Cmd.none )
+    RequestElement elementId ->
+      ( model, Browser.Dom.getElement elementId |> Task.attempt GotElement )
+    GotElement elementResult ->
+      case elementResult of
+        Ok element ->
+          ( { model | element = Just element }, Cmd.none )
+        Err _ ->
+          ( { model | element = Nothing }, Cmd.none )
 
 
 getViewport tagger =
@@ -226,6 +324,8 @@ selectSpec name =
     "viewport" -> Just viewportSpec
     "observeBrowserViewport" -> Just observeBrowserViewportSpec
     "setElementViewport" -> Just setElementViewportSpec
+    "elementPosition" -> Just elementPositionSpec
+    "jsdomElement" -> Just jsdomElementSpec
     _ -> Nothing
 
 
