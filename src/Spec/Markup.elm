@@ -114,7 +114,9 @@ type Query
 
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ attribute ("data-attr", "some-value") ]
-      |> Spec.expect (Spec.Markup.text <| 
+      |> Spec.expect (
+        Spec.Claim.isSomethingWhere <|
+        Spec.Markup.text <|
         Spec.Claim.isEqual Debug.toString "something fun"
       )
 
@@ -237,8 +239,9 @@ htmlDecoder =
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ tag "div" ]
       |> Spec.expect (
+        Spec.Claim.isSomethingWhere <|
         Spec.Markup.text <|
-          Spec.Claim.isStringContaining 1 "red"
+        Spec.Claim.isStringContaining 1 "red"
       )
 
 Note that an observed HTML element's text includes the text belonging to
@@ -264,9 +267,10 @@ text claim =
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ tag "div" ]
       |> Spec.expect (
+        Spec.Claim.isSomethingWhere <|
         Spec.Markup.attribute "class" <|
-          Spec.Claim.isSomethingWhere <|
-          Spec.Claim.isStringContaining 1 "red"
+        Spec.Claim.isSomethingWhere <|
+        Spec.Claim.isStringContaining 1 "red"
       )
 
 If you receive an error that the attribute you're interested in is not found, try `Spec.Markup.property`
@@ -312,6 +316,7 @@ a button is disabled like so:
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ tag "button" ]
       |> Spec.expect (
+        Spec.Claim.isSomethingWhere <|
         Spec.Markup.property
           (Json.Decode.field "disabled" Json.Decode.bool)
           Spec.Claim.isTrue
@@ -340,7 +345,7 @@ property decoder claim =
         Claim.Reject <| Report.fact "Unable to decode JSON for property" <| Json.errorToString err
 
 
-{-| A step that logs the selected element to the console.
+{-| A step that logs the selected HTML element to the console.
 
     Spec.when "the button is clicked twice"
       [ Spec.Markup.target << by [ tag "button" ]

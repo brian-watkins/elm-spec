@@ -47,7 +47,7 @@ Now, I can write a spec that uses a witness to record the score passed to the in
           ]
         |> it "saves the proper score" (
           Witness.observe "saved-score" (Json.Decode.int)
-            |> Spec.expect (Spec.Claim.isList
+            |> Spec.expect (Spec.Claim.isListWhere
               [ Spec.Claim.isEqual Debug.toString 28
               ]
             )

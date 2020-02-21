@@ -98,7 +98,9 @@ Create an `Observer` that focuses on just the text of an existing `HtmlElement` 
       |> Spec.Markup.query << by [ id "some-element" ]
       |> focus Spec.Claim.isSomethingWhere
       |> focus Spec.Markup.text
-      |> Spec.expect (equals "Something cool!")
+      |> Spec.expect (
+        Spec.Claim.isEqual Debug.toString "Something cool!"
+      )
 
 If the element doesn't exist, then the `isSomethingWhere` claim would fail, and subsequent claims would not be evaluated by the observer.
 
@@ -115,7 +117,9 @@ And then you could write:
 
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ id "some-element" ]
-      |> expectText (equals "Something cool!")
+      |> expectText (
+        Spec.Claim.isEqual Debug.toString "Something cool!"
+      )
 
 -}
 focus : (Claim b -> Claim a) -> Observer model a -> Observer model b

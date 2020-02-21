@@ -168,8 +168,8 @@ For example:
     Spec.Http.observeRequests (Spec.Http.Route.get "http://fake.com/fake")
       |> Spec.expect (Spec.Claim.isListWhere
         [ Spec.Http.header "Authorization" <|
-            Spec.Claim.isSomethingWhere <|
-            Spec.Claim.isStringContaining 1 "some-fun-token"
+          Spec.Claim.isSomethingWhere <|
+          Spec.Claim.isStringContaining 1 "some-fun-token"
         ]
       )
 
@@ -233,8 +233,8 @@ In the example below, we claim that there is one `GET` request to a url containi
 
     Spec.Http.observeRequests (Spec.Http.Route.route "GET" <| Matching "fake\\.com")
       |> Spec.expect (Spec.Claim.isListWhere
-        [ Spec.Http.url
-            Spec.Claim.isStringContaining 1 "sport=bowling"
+        [ Spec.Http.url <|
+          Spec.Claim.isStringContaining 1 "sport=bowling"
         ]
       )
 
