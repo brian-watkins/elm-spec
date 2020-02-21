@@ -1,6 +1,6 @@
 module Spec.Http exposing
   ( HttpRequest
-  , log
+  , logRequests
   , observeRequests
   , clearRequestHistory
   , header
@@ -54,7 +54,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs url, header, stringBody, jsonBody
 
 # Debug
-@docs log
+@docs logRequests
 
 -}
 
@@ -213,8 +213,8 @@ clearRequestHistory _ =
 
 You might use this step to help debug a rejected observation.
 -}
-log : Step.Context model -> Step.Command msg
-log _ =
+logRequests : Step.Context model -> Step.Command msg
+logRequests _ =
   fetchRequestsFor (Route.route "ANY" <| Route.Matching ".+")
     |> Command.sendRequest andThenLogRequests
 

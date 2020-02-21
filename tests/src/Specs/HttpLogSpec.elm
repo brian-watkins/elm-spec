@@ -28,14 +28,14 @@ httpRequestLogSpec =
           ]
       )
       |> when "requests are sent"
-        [ Spec.Http.log
+        [ Spec.Http.logRequests
         , Markup.target << by [ id "request-button" ]
         , Event.click
-        , Spec.Http.log
+        , Spec.Http.logRequests
         , Event.click
-        , Spec.Http.log
+        , Spec.Http.logRequests
         , Event.click
-        , Spec.Http.log
+        , Spec.Http.logRequests
         ]
       |> observeThat
         [ it "makes the GET requests" (
