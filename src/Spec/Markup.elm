@@ -345,7 +345,7 @@ property decoder claim =
         Claim.Reject <| Report.fact "Unable to decode JSON for property" <| Json.errorToString err
 
 
-{-| A step that logs the selected HTML element to the console.
+{-| A step that logs to the console the selected HTML element and its descendants.
 
     Spec.when "the button is clicked twice"
       [ Spec.Markup.target << by [ tag "button" ]
