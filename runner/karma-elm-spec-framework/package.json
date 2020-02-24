@@ -1,6 +1,6 @@
 {
   "name": "karma-elm-spec-framework",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Run elm-spec specs with Karma",
   "main": "lib/index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "chalk": "^3.0.0",
-    "elm-spec-core": "^4.0.0"
+    "elm-spec-core": "^5.0.0"
   },
   "devDependencies": {
     "browserify": "^16.5.0",
