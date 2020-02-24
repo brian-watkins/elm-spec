@@ -124,7 +124,7 @@ Claim that an element is not present in the document like so:
 
     Spec.Markup.observeElement
       |> Spec.Markup.query << by [ id "not-present" ]
-      |> Spec.expect Spec.Claim.isnNothing
+      |> Spec.expect Spec.Claim.isNothing
 
 -}
 observeElement : MarkupObservation (Maybe HtmlElement)
