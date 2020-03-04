@@ -25,7 +25,6 @@ type alias Flags =
 
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
-  , outlet: Message -> Cmd msg
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
   }
 
@@ -135,7 +134,6 @@ specFinished =
 scenarioActions : Config msg -> ScenarioProgram.Actions (Msg msg) msg
 scenarioActions config =
   { send = config.send
-  , outlet = config.outlet
   , sendToSelf = ScenarioMsg
   , complete = sendUpdateMsg RunNextScenario
   , stop = stopSpecSuiteRun

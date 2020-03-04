@@ -117,7 +117,7 @@ initializeSubject : Bool -> ( model, Cmd msg ) -> Internal.Subject model msg
 initializeSubject isApplication ( model, initialCommand ) =
   { model = model
   , initialCommand = initialCommand
-  , update = \_ _ m -> (m, Cmd.none)
+  , update = \_ m -> (m, Cmd.none)
   , view = Internal.Document <| \_ -> { title = "", body = [ Html.text "" ] }
   , subscriptions = \_ -> Sub.none
   , configureEnvironment = []
@@ -141,7 +141,7 @@ defaultUrl =
 withUpdate : (msg -> model -> (model, Cmd msg)) -> Setup model msg -> Setup model msg
 withUpdate programUpdate =
   Internal.mapSubject <| \subject ->
-    { subject | update = \_ -> programUpdate }
+    { subject | update = programUpdate }
 
 
 {-| Provide the `view` function for the program whose behavior the scenario describes, where

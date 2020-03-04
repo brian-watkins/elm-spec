@@ -11,7 +11,6 @@ port elmSpecPick : () -> Cmd msg
 config : Spec.Runner.Config msg
 config =
   { send = elmSpecOut
-  , outlet = elmSpecOut
   , listen = elmSpecIn
   }
 
@@ -20,9 +19,9 @@ pick =
   Spec.Runner.pick elmSpecPick
 
 
-program specs =
-  Spec.Runner.browserProgram config specs
+program =
+  Spec.Runner.browserProgram config
 
 
-workerProgram specs =
-  Spec.Runner.program config specs
+workerProgram =
+  Spec.Runner.program config

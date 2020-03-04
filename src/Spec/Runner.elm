@@ -46,16 +46,12 @@ And then create a `Config` like so:
     config : Spec.Runner.Config msg
     config =
       { send = elmSpecOut
-      , outlet = elmSpecOut
       , listen = elmSpecIn
       }
-
-The `send` and `outlet` attributes must reference the same port, `elmSpecOut`.
 
 -}
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
-  , outlet: Message -> Cmd msg
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
   }
 

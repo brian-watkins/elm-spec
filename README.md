@@ -45,22 +45,20 @@ port elmSpecPick : () -> Cmd msg
 config : Spec.Runner.Config msg
 config =
   { send = elmSpecOut
-  , outlet = elmSpecOut
   , listen = elmSpecIn
   }
 
 pick =
   Spec.Runner.pick elmSpecPick
 
-program specs =
-  Spec.Runner.program config specs
+program =
+  Spec.Runner.program config
 
-browserProgram specs =
-  Spec.Runner.browserProgram config specs
+browserProgram =
+  Spec.Runner.browserProgram config
 ```
 
-You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec.Runner.program` or `Spec.Runner.browserProgram` via a `Spec.Runner.Config` value. And, yes, `send` and `outlet` should reference the
-very same port, `elmSpecOut`. 
+You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec.Runner.program` or `Spec.Runner.browserProgram` via a `Spec.Runner.Config` value.
 
 You must also create the `elmSpecPick` port and provide it to `Spec.Runner.pick`.
 

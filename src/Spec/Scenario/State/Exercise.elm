@@ -93,7 +93,7 @@ update exerciseModel actions msg =
         )
 
     ProgramMsg programMsg ->
-      exerciseModel.subject.update actions.outlet programMsg exerciseModel.programModel
+      exerciseModel.subject.update programMsg exerciseModel.programModel
         |> Tuple.mapFirst (\updated -> exercise { exerciseModel | programModel = updated })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then

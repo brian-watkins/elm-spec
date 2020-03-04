@@ -35,7 +35,7 @@ navigatedView location =
     Html.text <| "[Navigated to a page outside the control of the Elm program: " ++ location ++ "]"
 
 
-navigatedUpdate : (Message -> Cmd msg) -> msg -> model -> (model, Cmd msg)
+navigatedUpdate : msg -> model -> (model, Cmd msg)
 navigatedUpdate =
-  \_ _ model ->
+  \_ model ->
     ( model, Cmd.none )

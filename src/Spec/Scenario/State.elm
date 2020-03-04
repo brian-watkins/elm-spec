@@ -45,7 +45,6 @@ type alias Actions msg programMsg =
   { complete: Cmd msg
   , send: Message -> Cmd msg
   , sendToSelf: Msg programMsg -> msg
-  , outlet: Message -> Cmd programMsg
   , stop: Cmd msg
   }
 

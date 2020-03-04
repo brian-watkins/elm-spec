@@ -1,7 +1,6 @@
 module Spec.Witness exposing
   ( Witness
-  , forUpdate
-  , log
+  , connect
   , record
   , observe
   )
@@ -28,6 +27,21 @@ Here's the update function:
           ( model, scoreSaver score )
         ...
 
+To use a Witness, you must reference the `elmSpecOut` port defined when configuring
+`Spec.Runner.program` or `Spec.Runner.browserProgram`. I suggest creating a file called
+`Spec.Witness.Extra` like so:
+
+    module Spec.Witness.Extra exposing (record)
+
+    import Runner -- your own setup module
+    import Spec.Witness
+
+    record =
+      Runner.elmSpecOut
+        |> Spec.Witness.connect
+        |> Spec.Witness.record
+
+
 Now, I can write a spec that uses a witness to record the score passed to the injected
 `scoreSaver` function like so:
 
@@ -36,10 +50,11 @@ Now, I can write a spec that uses a witness to record the score passed to the in
         Spec.given (
           Spec.Setup.init (App.init testFlags)
             |> Spec.Setup.withView App.view
-            |> Witness.forUpdate (\witness ->
-              App.update <| \score ->
-                Witness.record "saved-score"
-                  (Json.Encode.int score) witness
+            |> Spec.Setup.withUpdate (
+              App.update (\score ->
+                Json.Encode.int score
+                  |> Spec.Witness.Extra.record "saved-score"
+              )
             )
         )
         |> Spec.when "the score is saved"
@@ -56,7 +71,7 @@ Now, I can write a spec that uses a witness to record the score passed to the in
       )
     ]
 
-@docs Witness, forUpdate, record, observe, log
+@docs Witness, connect, record, observe
 
 -}
 
@@ -83,31 +98,31 @@ type alias Statement =
   }
 
 
-{-| Set up the scenario with the update function from the program whose behavior is being
-described. You'll have access to a `Witness` to use in constructing this function.
+{-| Create a Witness by connecting it with the `elmSpecOut` port.
 
-See the example above.
+When you configure `Spec.Runner.program` or `Spec.Runner.browserProgram` you must
+provide a reference to a port called `elmSpecOut`. Pass that same port to this
+function to create a Witness.
+
+For example, you might create a file called `Spec.Witness.Extra` that sets up
+a `record` function for you to use in your specs:
+
+    module Spec.Witness.Extra exposing (record)
+
+    import Runner -- your own setup module
+    import Spec.Witness
+
+    record =
+      Runner.elmSpecOut
+        |> Spec.Witness.connect
+        |> Spec.Witness.record
+
+
+See the docs for `Spec.Runner.Config` and the README for more information on the `elmSpecOut` port.
 -}
-forUpdate : (Witness msg -> msg -> model -> (model, Cmd msg)) -> Setup model msg -> Setup model msg
-forUpdate updateWithWitness =
-  Internal.mapSubject <| \subject ->
-    { subject | update = \witness -> updateWithWitness <| Witness witness }
-
-
-{-| DEPRECATED
-
-Use `Spec.Witness.record` instead.
--}
-log : String -> Encode.Value -> Witness msg -> Cmd msg
-log name statement (Witness witness) =
-  Message.for "_witness" "log"
-    |> Message.withBody (
-      Encode.object
-        [ ("name", Encode.string name)
-        , ("fact", statement)
-        ]
-    )
-    |> witness
+connect : (Message -> Cmd msg) -> Witness msg
+connect =
+  Witness
 
 
 {-| Create a `Cmd` that records some information.
@@ -116,9 +131,16 @@ Provide the name of this witness and a JSON value with any information to be rec
 Use `Spec.Witness.observe` to make a claim about the recorded value.
 
 -}
-record : String -> Encode.Value -> Witness msg -> Cmd msg
-record =
-  log
+record : Witness msg -> String -> Encode.Value -> Cmd msg
+record (Witness witness) name statement =
+  Message.for "_witness" "log"
+    |> Message.withBody (
+      Encode.object
+        [ ("name", Encode.string name)
+        , ("fact", statement)
+        ]
+    )
+    |> witness
 
 
 {-| Observe the values recorded by a witness.

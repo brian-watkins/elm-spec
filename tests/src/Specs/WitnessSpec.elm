@@ -50,11 +50,17 @@ recordSpec =
   ]
 
 
+record =
+  Runner.elmSpecOut
+    |> Witness.connect
+    |> Witness.record
+
+
 testSubject =
   Setup.initWithModel { count = 0 }
-    |> Witness.forUpdate (\witness ->
+    |> Setup.withUpdate (
         testUpdate <| \num -> 
-          Witness.record "injected" (Encode.int num) witness
+          record "injected" (Encode.int num)
       )
     |> Setup.withSubscriptions testSubscriptions
 

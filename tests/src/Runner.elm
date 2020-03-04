@@ -3,6 +3,7 @@ port module Runner exposing
   , browserProgram
   , runSuiteWithVersion
   , config
+  , elmSpecOut
   )
 
 import Spec exposing (Spec)
@@ -23,7 +24,6 @@ port elmSpecIn : (Message -> msg) -> Sub msg
 config : Spec.Runner.Config msg
 config =
   { send = elmSpecOut
-  , outlet = elmSpecOut
   , listen = elmSpecIn
   }
 

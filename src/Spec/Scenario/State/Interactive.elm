@@ -55,7 +55,7 @@ update interactiveModel actions msg =
         ( interactive interactiveModel, Cmd.none )
 
     ProgramMsg programMsg ->
-      interactiveModel.subject.update actions.outlet programMsg interactiveModel.programModel
+      interactiveModel.subject.update programMsg interactiveModel.programModel
         |> Tuple.mapFirst (\updated -> interactive { interactiveModel | programModel = updated })
         |> Tuple.mapSecond (\nextCommand ->
           if nextCommand == Cmd.none then

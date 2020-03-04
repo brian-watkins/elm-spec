@@ -25,7 +25,7 @@ type Setup model msg =
 type alias Subject model msg =
   { model: model
   , initialCommand: Cmd msg
-  , update: (Message -> Cmd msg) -> msg -> model -> ( model, Cmd msg )
+  , update: msg -> model -> ( model, Cmd msg )
   , view: ProgramView model msg
   , subscriptions: model -> Sub msg
   , configureEnvironment: List Message

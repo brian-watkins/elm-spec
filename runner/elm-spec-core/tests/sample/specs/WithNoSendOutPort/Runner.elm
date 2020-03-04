@@ -12,14 +12,13 @@ port elmSpecIn : (Message -> msg) -> Sub msg
 config : Spec.Runner.Config msg
 config =
   { send = somerthingOtherThanSendOut
-  , outlet = somerthingOtherThanSendOut
   , listen = elmSpecIn
   }
 
 
-program specs =
-  Spec.Runner.browserProgram config specs
+program =
+  Spec.Runner.browserProgram config
 
 
-workerProgram specs =
-  Spec.Runner.program config specs
+workerProgram =
+  Spec.Runner.program config
