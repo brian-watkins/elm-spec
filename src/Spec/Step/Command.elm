@@ -3,6 +3,7 @@ module Spec.Step.Command exposing
   , sendCommand
   , sendMessage
   , sendRequest
+  , recordCondition
   , log
   )
 
@@ -15,6 +16,7 @@ type Command msg
   = SendMessage Message
   | SendRequest Message (Message -> Command msg)
   | SendCommand (Cmd msg)
+  | RecordCondition String
   | DoNothing
 
 
@@ -29,6 +31,11 @@ sendCommand cmd =
 sendMessage : Message -> Command msg
 sendMessage =
   SendMessage
+
+
+recordCondition : String -> Command msg
+recordCondition =
+  RecordCondition
 
 
 sendRequest : (Message -> Command msg) -> Message -> Command msg

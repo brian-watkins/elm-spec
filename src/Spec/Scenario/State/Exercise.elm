@@ -47,16 +47,17 @@ initModel scenario subject =
   , conditionsApplied = [ scenario.specification ]
   , programModel = subject.model
   , effects = []
-  , steps = initialCommandStep scenario subject :: scenario.steps
+  , steps = initialCommandSteps scenario subject ++ scenario.steps
   , responseHandler = Nothing
   }
 
 
-initialCommandStep : Scenario model msg -> Subject model msg -> Step model msg
-initialCommandStep scenario subject =
-  Internal.buildStep scenario.description <|
-    \_ ->
-      Step.sendCommand subject.initialCommand
+initialCommandSteps : Scenario model msg -> Subject model msg -> List (Step model msg)
+initialCommandSteps scenario subject =
+  [ \_ -> Step.recordCondition scenario.description
+  , \_ -> Step.sendCommand subject.initialCommand
+  ]
+    |> List.map Internal.buildStep
 
 
 view : Model model msg -> Document msg
@@ -113,19 +114,10 @@ update exerciseModel actions msg =
             exerciseModel.programModel
             exerciseModel.effects
         step :: remaining ->
-          let
-            updated = 
-              { exerciseModel
-              | steps = remaining
-              , conditionsApplied =
-                  addIfUnique exerciseModel.conditionsApplied step.condition
-              }
-            context =
-              Context.for exerciseModel.programModel
-                |> Context.withEffects exerciseModel.effects
-          in
-            step.run context
-              |> handleStepCommand actions updated
+          Context.for exerciseModel.programModel
+            |> Context.withEffects exerciseModel.effects
+            |> step.run
+            |> handleStepCommand actions { exerciseModel | steps = remaining }
 
     Abort report ->
       ( Interactive.initModel exerciseModel.subject exerciseModel.programModel
@@ -184,14 +176,6 @@ subscriptions model =
   model.subject.subscriptions model.programModel
 
 
-addIfUnique : List a -> a -> List a
-addIfUnique list val =
-  if List.member val list then
-    list
-  else
-    list ++ [ val ]
-
-
 handleLocationAssigned : Model model programMsg -> Message -> ( State.Model msg programMsg, Cmd msg )
 handleLocationAssigned exerciseModel message =
   case Message.decode Json.string message of
@@ -241,5 +225,7 @@ handleStepCommand actions exerciseModel command =
       , Cmd.map ProgramMsg cmd
           |> doAndRender actions
       )
+    Step.RecordCondition condition ->
+      update { exerciseModel | conditionsApplied = exerciseModel.conditionsApplied ++ [ condition ] } actions Continue
     Step.DoNothing ->
       update exerciseModel actions Continue

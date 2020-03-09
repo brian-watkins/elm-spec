@@ -34,6 +34,27 @@ multipleWhenSpec =
             |> expect (equals [ 39, 78, 41 ])
       )
     )
+  , scenario "multiple when block with the same description" (
+      given (
+        testSubject
+      )
+      |> when "a stub is sent"
+        [ sendMessageWith 41
+        ]
+      |> when "something else happens"
+        [ sendMessageWith 79
+        ]
+      |> when "a stub is sent"
+        [ sendMessageWith 41
+        ]
+      |> when "a stub is sent"
+        [ sendMessageWith 41
+        ]
+      |> it "updates the model with the subscriptions" (
+        Observer.observeModel .counts
+          |> expect (equals [ 41, 41, 79, 41 ])
+      )
+    )
   ]
 
 

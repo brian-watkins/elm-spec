@@ -59,6 +59,7 @@ Here's a sample spec for a browser program called `App`:
 import Spec.Setup exposing (Setup)
 import Spec.Scenario.Internal as Internal
 import Spec.Step as Step
+import Spec.Step.Command as Command
 import Spec.Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
 import Spec.Claim exposing (Claim)
@@ -157,14 +158,20 @@ you will use steps that are provided by other modules, like `Spec.Markup.Event`.
 You may provide multiple `when` blocks as part of a scenario.
 -}
 when : String -> List (Step.Context model -> Step.Command msg) -> Script model msg -> Script model msg
-when condition messageSteps (Script script) =
+when condition steps (Script script) =
   Script
     { script
     | steps =
-        messageSteps
-          |> List.map (Internal.buildStep <| Internal.formatCondition condition)
+        recordConditionStep condition :: steps
+          |> List.map Internal.buildStep
           |> List.append script.steps
     }
+
+
+recordConditionStep : String -> Step.Context model -> Step.Command msg
+recordConditionStep condition _ =
+  Internal.formatCondition condition
+    |> Command.recordCondition
 
 
 {-| Specify multiple expectations to be checked once the scenario's steps have been performed.

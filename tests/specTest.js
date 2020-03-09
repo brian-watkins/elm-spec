@@ -31,6 +31,14 @@ describe("spec", () => {
           "When the first two subs are sent",
           "When a third sub is sent"
         ])
+        expect(observations[1].conditions).to.deep.equal([
+          "A Spec",
+          "Scenario: multiple when block with the same description",
+          "When a stub is sent",
+          "When something else happens",
+          "When a stub is sent",
+          "When a stub is sent"
+        ])
       })
     })
   })
