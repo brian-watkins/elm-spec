@@ -219,7 +219,7 @@ clearRequestHistorySpec =
         ]
       |> observeThat
         [ it "observes only requests after clearing the history" (
-            Spec.Http.observeRequests (get "http://fake-api.com/stuff?fun=running")
+            Spec.Http.observeRequests (route "GET" <| Matching "http\\:\\/\\/fake\\-api\\.com\\/stuff\\?fun\\=.+")
               |> expect (isListWithLength 1)
           )
         , it "does not clear the stub" (
@@ -353,9 +353,9 @@ headerStubSpec =
             case metadata of
               Just data ->
                 Dict.fromList
-                  [ ("X-Fun-Header", "fun-value" )
-                  , ("X-Super-Header", "super-value" )
-                  , ("Location", "http://fun-place.com/fun")
+                  [ ("x-fun-header", "fun-value" )
+                  , ("x-super-header", "super-value" )
+                  , ("location", "http://fun-place.com/fun")
                   ]
                 |> equals data.headers
               Nothing ->

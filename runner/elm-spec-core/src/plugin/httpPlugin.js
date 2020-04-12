@@ -1,36 +1,53 @@
-const nise = require('nise')
+const MockXHR = require('xhr-mock/lib/MockXMLHttpRequest').default
+const stubFor = require('xhr-mock/lib/createMockFunction').default
 const { report, line } = require('../report')
 
 const fakeServerForGlobalContext = function(window) {
-  const server = nise.fakeServer.create()
-  server.xhr = nise.fakeXhr.fakeXMLHttpRequestFor(window).useFakeXMLHttpRequest()
-  server.xhr.onCreate = (xhrObj) => {
-    xhrObj.unsafeHeadersEnabled = function () {
-        return !(server.unsafeHeadersEnabled === false);
-    };
-    server.addRequest(xhrObj);
-  }
-  server.respondImmediately = true
-  return server
+  window.XMLHttpRequest = new Proxy(MockXHR, {
+    construct: (target, args) => {
+      const request = new target(...args)
+      request.req.xhr = () => { return request }
+      return request
+    }
+  })
+  return window.XMLHttpRequest
 }
 
 module.exports = class HttpPlugin {
   constructor(context) {
     this.server = fakeServerForGlobalContext(context.window)
+    this.server.errorCallback = function() {}
+    this.reset()
   }
 
   reset() {
-    this.server.reset()
+    this.resetHistory()
+    this.resetStubs()
+  }
+
+  resetHistory() {
+    this.requests = []
+  }
+
+  resetStubs() {
+    this.server.removeAllHandlers()
+    this.server.addHandler(this.recordRequests())
+  }
+
+  recordRequests() {
+    return (request) => {
+      this.requests.push(request)
+    }
   }
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
       case "clear-history": {
-        this.server.resetHistory()
+        this.resetHistory()
         break
       }
       case "stub": {
-        this.server.resetBehavior()
+        this.resetStubs()
 
         for (const stub of specMessage.body) {
           try {
@@ -103,27 +120,27 @@ module.exports = class HttpPlugin {
   }
 
   setupStub(stub, uriDescriptor) {
-    this.server.respondWith(stub.route.method, uriDescriptor, (request) => {
+    this.server.addHandler(stubFor(stub.route.method, uriDescriptor, (request, response) => {
       if (stub.shouldRespond) {
         if (stub.error === "network") {
-          request.error()
+          return Promise.reject(new Error())
         } else if (stub.error === "timeout") {
-          request.eventListeners.timeout[1].listener()
-          request.readyState = 4
+          request.xhr().listeners.timeout[0]()
+          request.xhr().abort()
         } else {
-          request.respond(stub.status, stub.headers, stub.body)
+          return response.status(stub.status).headers(stub.headers).body(stub.body)
         }
       } else {
-        request.readyState = 4
+        request.xhr().abort()
       }
-    })
+    }))
   }
 
   findRequests(route, matchUrl) {
-    return this.server.requests
+    return this.requests
       .filter(request => {
-        if (route.method !== "ANY" && request.method !== route.method) return false
-        return matchUrl(request.url)
+        if (route.method !== "ANY" && request.method() !== route.method) return false
+        return matchUrl(request.url().toString())
       })
       .map(buildRequest)
   }
@@ -131,9 +148,9 @@ module.exports = class HttpPlugin {
 
 const buildRequest = (request) => {
   return {
-    methpd: request.method,
-    url: request.url,
-    headers: request.requestHeaders,
-    body: request.requestBody || null
+    methpd: request.method(),
+    url: request.url().toString(),
+    headers: request.headers(),
+    body: request.body() || null
   }
 }

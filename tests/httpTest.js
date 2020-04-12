@@ -95,7 +95,7 @@ describe('HTTP', () => {
         expect(observations[2].report[3]).to.deep.equal(reportLine("Expected", "\"some-awesome-value\""))
         expect(observations[2].report[4]).to.deep.equal(reportLine("to equal", "\"some-fun-value\""))
         expect(observations[2].report[5].statement).to.equal("The request actually had these headers")
-        expect(observations[2].report[5].detail).to.contain("X-Awesome-Header = some-awesome-value\nX-Fun-Header = some-fun-value")
+        expect(observations[2].report[5].detail).to.contain("x-awesome-header = some-awesome-value\nx-fun-header = some-fun-value")
       })
     })
   })

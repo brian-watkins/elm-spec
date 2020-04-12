@@ -91,11 +91,14 @@ For example, if the observed request has an `Authorization` header with the valu
       Spec.Claim.isSomethingWhere <|
       Spec.Claim.isStringContaining 1 "some-fun-token"
 
+Note that HTTP header names are case-insensitive, so the capitalization of the first argument
+doesn't matter.
+
 -}
 header : String -> Claim (Maybe String) -> Claim HttpRequest
 header name claim =
   \(HttpRequest request) ->
-    Dict.get name request.headers
+    Dict.get (String.toLower name) request.headers
       |> claim
       |> Claim.mapRejection (\report -> Report.batch
         [ Report.fact "Claim rejected for header" name
