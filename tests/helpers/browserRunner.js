@@ -1,5 +1,7 @@
-const { SuiteRunner, ProgramRunner, ElmContext } = require('elm-spec-core')
-const ProgramReference = require('../../runner/elm-spec-core/src/programReference')
+const SuiteRunner = require('elm-spec-core/src/suiteRunner')
+const ProgramRunner = require('elm-spec-core/src/programRunner')
+const ElmContext = require('elm-spec-core/src/elmContext')
+const ProgramReference = require('elm-spec-core/src/programReference')
 const TestReporter = require('./testReporter')
 
 const elmContext = new ElmContext(window)
@@ -8,6 +10,10 @@ const base = document.createElement("base")
 base.setAttribute("href", "http://localhost")
 window.document.head.appendChild(base)
 
+const css = document.createElement("style")
+css.type = 'text/css';
+css.innerHTML = 'body { margin: 0px; padding: 0px; }';
+window.document.head.appendChild(css)
 
 window._elm_spec.runProgram = (specProgram, version) => {
   return new Promise((resolve, reject) => {

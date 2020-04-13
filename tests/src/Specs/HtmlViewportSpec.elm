@@ -145,8 +145,8 @@ elementPositionSpec =
       )
       |> whenTheElementIsRequested
       |> observeThat
-        [ itObservesXPositionToBe 8
-        , itObservesYPositionToBe 245
+        [ itObservesXPositionToBe 0
+        , itObservesYPositionToBe 239
         ]
     )
   , scenario "the browser viewport moves" (
@@ -158,8 +158,8 @@ elementPositionSpec =
         ]
       |> whenTheElementIsRequested
       |> observeThat
-        [ itObservesXPositionToBe 8
-        , itObservesYPositionToBe 245
+        [ itObservesXPositionToBe 0
+        , itObservesYPositionToBe 239
         ]
     )
   , scenario "an element is not found" (

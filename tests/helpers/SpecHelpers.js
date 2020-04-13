@@ -109,9 +109,9 @@ const runProgramInJsdom = (specProgram, version, done, matcher) => {
 }
 
 const runProgramInBrowser = (specProgram, version, done, matcher) => {
-  page.evaluate((program, version) => {
+  page.evaluate(({ program, version }) => {
     return _elm_spec.runProgram(program, version)
-  }, specProgram, version).then(({ observations, error }) => {
+  }, { program: specProgram, version }).then(({ observations, error }) => {
     matcher(observations, error)
     done()
   }).catch((err) => {
@@ -123,10 +123,10 @@ const runProgramInBrowser = (specProgram, version, done, matcher) => {
   })
 }
 
-const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {  
-  page.evaluate((program, name, options) => { 
+const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
+  page.evaluate(({ program, name, options }) => {
     return _elm_spec.runSpec(program, name, options)
-  }, specProgram, specName, options).then(({ observations, error, logs }) => {
+  }, { program: specProgram, name: specName, options }).then(({ observations, error, logs }) => {
     matcher(observations, error, logs)
     done()
   }).catch((err) => {

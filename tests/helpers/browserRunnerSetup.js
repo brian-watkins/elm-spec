@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright')
 const browserify = require('browserify');
 const { Compiler } = require('elm-spec-core')
 const path = require('path')
@@ -12,8 +12,9 @@ const compiler = new Compiler({
 
 
 before(async () => {
-  global.browser = await puppeteer.launch()
-  global.page = await browser.newPage()
+  global.browser = await chromium.launch()
+  const context = await browser.newContext()
+  global.page = await context.newPage()
 
   const bundle = await bundleRunnerCode()
 
