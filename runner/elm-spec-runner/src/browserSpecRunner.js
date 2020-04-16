@@ -10,6 +10,7 @@ module.exports = class BrowserSpecRunner {
   }
 
   async init(options) {
+    this.browserOptions = options
     this.browser = await Playwright[this.browserName].launch({
       headless: !options.visible
     })
@@ -18,19 +19,17 @@ module.exports = class BrowserSpecRunner {
   async run(reporter, compilerOptions, runnerOptions) {
     const page = await this.getPage()
 
-    const bundle = fs.readFileSync(path.join(__dirname, 'browserAdapter.js'), "utf8")
-    await page.evaluate(bundle)
-
     await this.adaptReporterToBrowser(page, reporter)
 
-    const compiledCode = this.compile(compilerOptions)
-    await page.evaluate(compiledCode)
+    await this.compile(page, compilerOptions)
 
     await page.evaluate((options) => {
       return window._elm_spec.run(options)
     }, runnerOptions)
 
-    await this.browser.close()
+    if (!this.browserOptions.visible) {
+      await this.browser.close()
+    }
   }
 
   async adaptReporterToBrowser(page, reporter) {
@@ -41,9 +40,10 @@ module.exports = class BrowserSpecRunner {
     await page.exposeFunction('_elm_spec_reporter_finish', () => { reporter.finish() })
   }
 
-  compile(options) {
+  async compile(page, options) {
     const compiler = new Compiler(options)
-    return compiler.compile()
+    const compiledCode = compiler.compile()
+    await page.evaluate(compiledCode)
   }
 
   async getPage() {
@@ -58,6 +58,9 @@ module.exports = class BrowserSpecRunner {
     page.on('pageerror', async (err) => {
       console.log(err)
     })
+
+    const bundle = fs.readFileSync(path.join(__dirname, 'browserAdapter.js'), "utf8")
+    await page.evaluate(bundle)
 
     return page
   }
