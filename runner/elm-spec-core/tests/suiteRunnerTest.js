@@ -1,7 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Compiler = require('../src/compiler')
-const { loadElmContext } = require('../../elm-spec-runner/src/jsdomContext')
+const JSDOMSpecRunner = require('../../elm-spec-runner/src/jsdomSpecRunner')
 const SuiteRunner = require('../src/suiteRunner')
 const path = require('path')
 
@@ -225,12 +224,12 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
 }
 
 const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
-  const compiler = new Compiler(compilerOptions)
-
-  const context = loadElmContext(compiler)
+  const jsdom = new JSDOMSpecRunner()
+  jsdom.init()
+  jsdom.compile(compilerOptions)
 
   const reporter = new TestReporter()
-  const runner = new SuiteRunner(context, reporter, options, version)
+  const runner = new SuiteRunner(jsdom.context, reporter, options, version)
 
   runner
     .on('complete', () => {
