@@ -26,11 +26,18 @@ clickSpec =
         , Event.click
         , Event.click
         ]
-      |> it "renders the count" (
-        Markup.observeElement
-          |> Markup.query << by [ id "count-results" ]
-          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
-      )
+      |> observeThat
+        [ it "renders the count" (
+            Markup.observeElement
+              |> Markup.query << by [ id "count-results" ]
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
+          )
+        , it "fails in another way" (
+            Markup.observeElement
+              |> Markup.query << by [ id "does-not-exist" ]
+              |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "Something")
+          )
+        ]
     )
   ]
 

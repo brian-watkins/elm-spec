@@ -80,12 +80,13 @@ describe("Suite Runner", () => {
   context("when the suite should report all results", () => {
     it("reports all results", (done) => {
       expectScenarios('WithFailure', { tags: [], endOnFailure: false }, done, (observations) => {
-        expect(observations).to.have.length(5)
+        expect(observations).to.have.length(6)
         expectAccepted(observations[0])
         expectRejected(observations[1])
-        expectAccepted(observations[2])
+        expectRejected(observations[2])
         expectAccepted(observations[3])
         expectAccepted(observations[4])
+        expectAccepted(observations[5])
       })
     })
   })
