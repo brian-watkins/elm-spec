@@ -10,7 +10,7 @@ const expectBehaviorFor = (browserName, runner) => {
     context(`when there is an error running the specs in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
-        await runner.init()
+        await runner.init(testBrowserOptions)
         await runner.run(testReporter, errorSpecs, { tags: [], endOnFailure: false })
       })
       
@@ -22,7 +22,7 @@ const expectBehaviorFor = (browserName, runner) => {
     context(`when all the specs are accepted in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
-        await runner.init()
+        await runner.init(testBrowserOptions)
         await runner.run(testReporter, allSpecs, { tags: [], endOnFailure: false })
       })
  
@@ -39,7 +39,7 @@ const expectBehaviorFor = (browserName, runner) => {
     context(`when tags are used and specs are accepted in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
-        await runner.init()
+        await runner.init(testBrowserOptions)
         await runner.run(testReporter, allSpecs, {
           tags: [ 'fun', 'tagged' ],
           endOnFailure: false
@@ -54,7 +54,7 @@ const expectBehaviorFor = (browserName, runner) => {
     context(`when the spec emits log messages in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
-        await runner.init()
+        await runner.init(testBrowserOptions)
         await runner.run(testReporter, specsWithLogs, { tags: [], endOnFailure: false })
       })
 
@@ -66,7 +66,7 @@ const expectBehaviorFor = (browserName, runner) => {
     context(`when specs are rejected in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
-        await runner.init()
+        await runner.init(testBrowserOptions)
         await runner.run(testReporter, failingSpec, { tags: [], endOnFailure: false })
       })
 
@@ -78,7 +78,7 @@ const expectBehaviorFor = (browserName, runner) => {
     context(`when end on first failure in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
-        await runner.init()
+        await runner.init(testBrowserOptions)
         await runner.run(testReporter, failingSpec, { tags: [], endOnFailure: true })
       })
 
@@ -93,6 +93,10 @@ describe("Spec Runners", () => {
   expectBehaviorFor('JSDOM', new JSDOMSpecRunner())
   expectBehaviorFor('Chromium', new BrowserSpecSunner('chromium'))
 })
+
+const testBrowserOptions = {
+  visible: false
+}
 
 const failingSpec = {
   cwd: "../elm-spec-core/tests/sample/",

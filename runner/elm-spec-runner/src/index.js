@@ -14,7 +14,11 @@ class RunSuite extends Command {
       this.error(`No elm executable found at: ${flags.elm}`)
     }
 
-    await this.runSpecs(flags.browser, {
+    await this.runSpecs({
+      browserOptions: {
+        name: flags.browser,
+        visible: flags.visible
+      },
       compilerOptions: {
         cwd: flags.cwd,
         specPath: flags.specs,
@@ -27,9 +31,9 @@ class RunSuite extends Command {
     })
   }
 
-  async runSpecs(browser, { compilerOptions, runnerOptions }) {
-    const runner = this.runnerFor(browser)
-    await runner.init()
+  async runSpecs({ browserOptions, compilerOptions, runnerOptions }) {
+    const runner = this.runnerFor(browserOptions.name)
+    await runner.init(browserOptions)
     await runner.run(this.getReporter(), compilerOptions, runnerOptions)
   }
 
@@ -59,13 +63,14 @@ RunSuite.flags = {
   specs: flags.string({char: 's', description: 'glob for spec modules', default: path.join(".", "**", "*Spec.elm")}),
   elm: flags.string({char: 'e', description: 'path to elm', default: 'elm'}),
   tag: flags.string({char: 't', description: 'execute scenarios with this tag only (may specify multiple)', multiple: true}),
-  endOnFailure: flags.boolean({char: 'f', description: 'end spec suite run on first failure', default: false}),
+  endOnFailure: flags.boolean({description: 'end spec suite run on first failure'}),
   browser: flags.string({
     char: 'b',
     description: 'browser environment for specs',
     options: ['jsdom', 'chromium', 'webkit', 'firefox'],
     default: 'jsdom'
-  })
+  }),
+  visible: flags.boolean({description: 'show browser while running specs (does nothing for jsdom)'})
 }
 
 module.exports = RunSuite
