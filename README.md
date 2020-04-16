@@ -124,7 +124,7 @@ To run your specs, you need to install a runner. There are currently two options
 
 ### elm-spec-runner
 
-You can run your specs from the command line in a [JSDOM](https://github.com/jsdom/jsdom) environment.
+You can run your specs in JSDOM or a real browser, right from the command line.
 
 ```
 $ npm install --save-dev elm-spec-runner
@@ -135,6 +135,10 @@ Then, assuming your specs are in a directory called `./specs`, just run your spe
 ```
 $ npx elm-spec
 ```
+
+By default, elm-spec-runner will execute your specs in a [JSDOM](https://github.com/jsdom/jsdom) environment.
+You can configure elm-spec-runner to execute your specs in a real browser via a command line option;
+chromium, webkit, and firefox are all available.
 
 See [elm-spec-runner](https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner) for more
 details on command line options.
