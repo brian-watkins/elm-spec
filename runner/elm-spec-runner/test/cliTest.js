@@ -1,5 +1,7 @@
 const shell = require('shelljs')
-const {expect} = require('chai')
+const chai = require('chai')
+chai.use(require('chai-string'))
+const expect = chai.expect
 
 describe('elm-spec-runner', () => {
   context("when the spec runs", () => {
@@ -14,7 +16,7 @@ describe('elm-spec-runner', () => {
   })
 
   context("when files are watched", () => {
-    it("executes the spec once and waits for changes", async () => {
+    it("executes the spec once and on each change, and it ignores changes while running", async () => {
       const command = "./bin/run" +
         " --elm ../../node_modules/.bin/elm" +
         " --cwd ../elm-spec-core/tests/sample/" +
@@ -26,13 +28,21 @@ describe('elm-spec-runner', () => {
           resolve(stdout)
         })
   
-        setTimeout(() => { runner.kill() }, 2000)  
+        setTimeout(() => {
+          shell.touch("../elm-spec-core/tests/sample/specs/Passing/ClickSpec.elm")
+          shell.touch("../elm-spec-core/tests/sample/specs/Passing/ClickSpec.elm")
+          setTimeout(() => {
+            runner.kill()
+          }, 2000)
+        }, 2000)
       })
 
       expect(runnerOutput).to.contain("Watching Files")
       expect(runnerOutput).to.contain("../elm-spec-core/tests/sample/src/**/*.elm")
       expect(runnerOutput).to.contain("../elm-spec-core/tests/sample/specs/**/*.elm")
-      expect(runnerOutput).to.contain("Accepted: 8")
+      expect(runnerOutput).to.contain("File Changed")
+      expect(runnerOutput).to.contain("../elm-spec-core/tests/sample/specs/Passing/ClickSpec.elm")
+      expect(runnerOutput).to.have.entriesCount("Accepted: 8", 2)
     })
   })
 
