@@ -47,6 +47,10 @@ module.exports = class BrowserSpecRunner {
   }
 
   async getPage() {
+    if (this.browser.contexts().length > 0) {
+      this.browser.contexts().map(async (context) => await context.close())
+    }
+
     const context = await this.browser.newContext()
     const page = await context.newPage()
 
