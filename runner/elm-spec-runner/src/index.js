@@ -34,6 +34,7 @@ class RunSuite extends Command {
         cwd: flags.cwd,
         specPath: flags.specs,
         elmPath: flags.elm,
+        silent: true
       },
       runOptions: {
         tags: flags.tag || [],

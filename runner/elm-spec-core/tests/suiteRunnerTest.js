@@ -214,14 +214,16 @@ const expectPassingScenarios = (specDir, number, tags, done) => {
 const expectScenarios = (specDir, options, done, matcher) => {
   expectScenariosAt({
     cwd: './tests/sample',
-    specPath: `./specs/${specDir}/**/*Spec.elm`
+    specPath: `./specs/${specDir}/**/*Spec.elm`,
+    silent: true
   }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) })
 }
 
 const expectScenariosForVersion = (version, specDir, options, done, matcher) => {
   expectScenariosAt({
     cwd: './tests/sample',
-    specPath: `./specs/${specDir}/**/*Spec.elm`
+    specPath: `./specs/${specDir}/**/*Spec.elm`,
+    silent: true
   }, options, done, matcher, version)
 }
 

@@ -1,4 +1,5 @@
 const chai = require('chai')
+chai.use(require('chai-things'));
 const expect = chai.expect
 const RunSpecsCommand = require("../src/runSpecsCommand")
 const path = require('path')
@@ -115,9 +116,9 @@ describe("Run Specs Command", () => {
       })
 
       it("prints the globs that will be watched", async () => {
-        expect(testReporter.logs[0][0].statement).to.equal("Watching Files")
-        expect(testReporter.logs[0][0].detail).to.contain("/some/path/src/**/*.elm")
-        expect(testReporter.logs[0][0].detail).to.contain("/some/other/path/specs/**/*.elm")
+        expect(testReporter.logs).to.contain("Watching Files")
+        expect(testReporter.logs).to.include.something.that.satisfies(x => x.includes("/some/path/src/**/*.elm"))
+        expect(testReporter.logs).to.include.something.that.satisfies(x => x.includes("/some/other/path/specs/**/*.elm"))
       })
 
       it("watches files", () => {
@@ -138,8 +139,7 @@ describe("Run Specs Command", () => {
         })
 
         it("prints the path to the file that changed", () => {
-          expect(testReporter.logs[1][0].statement).to.equal("File Changed")
-          expect(testReporter.logs[1][0].detail).to.equal("/some/path/to/a/file.elm")
+          expect(testReporter.logs).to.contain("File changed: /some/path/to/a/file.elm")
         })
 
         it("runs the specs again", () => {
@@ -190,9 +190,11 @@ class TestReporter {
     this.didReset = false
   }
 
-  log(message) {
-    this.logs.push(message)
+  printLine(line) {
+    this.logs.push(line)
   }
+
+  log(message) {}
 
   reset() {
     this.didReset = true

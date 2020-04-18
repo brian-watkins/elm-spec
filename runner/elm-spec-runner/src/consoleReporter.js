@@ -17,6 +17,14 @@ module.exports = class ConsoleReporter {
     this.hasError = false
   }
 
+  print(message = "") {
+    this.write(message)
+  }
+
+  printLine(message = "") {
+    this.writeLine(message)
+  }
+
   startSuite() {
     this.write("\nRunning specs: ")
   }

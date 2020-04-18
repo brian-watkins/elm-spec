@@ -8,7 +8,9 @@ module.exports = class JSDOMSpecRunner {
     const dom = this.getDom()
 
     const context = new ElmContext(dom.window)
+    reporter.print("Compiling Elm ...")
     this.compile(dom, compilerOptions)
+    reporter.printLine(" Done!")
 
     await this.execute(context, reporter, runnerOptions)
   }

@@ -7,9 +7,9 @@ const specSrcDir = path.join(__dirname, "..", "src")
 
 const compiler = new Compiler({
   cwd: specSrcDir,
-  specPath: "./Specs/*Spec.elm"
+  specPath: "./Specs/*Spec.elm",
+  silent: true
 })
-
 
 before(async () => {
   global.browser = await chromium.launch()

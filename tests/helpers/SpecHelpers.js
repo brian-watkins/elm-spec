@@ -82,7 +82,8 @@ const prepareJsdom = () => {
 
     const compiler = new Compiler({
       cwd: specSrcDir,
-      specPath: "./Specs/*Spec.elm"
+      specPath: "./Specs/*Spec.elm",
+      silent: true
     })
     const code = compiler.compile()
     dom.window.eval(code)

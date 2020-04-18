@@ -39,7 +39,8 @@ describe("compiler", () => {
 const compileSpecsAt = (cwd, specPath) => {
   const compiler = new Compiler({
     cwd,
-    specPath
+    specPath,
+    silent: true
   })
 
   const code = compiler.compile()

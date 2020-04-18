@@ -117,24 +117,28 @@ const failingSpec = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithFailure/MoreSpec.elm",
   elmPath: "../../node_modules/.bin/elm",
+  silent: true
 }
 
 const allSpecs = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/Passing/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
+  silent: true
 }
 
 const errorSpecs = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithNoSendInPort/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
+  silent: true
 }
 
 const specsWithLogs = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithLogs/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
+  silent: true
 }
 
 
@@ -146,6 +150,9 @@ const TestReporter = class {
     this.startCount = 0
     this.finishCount = 0
   }
+
+  print() {}
+  printLine() {}
 
   startSuite() {
     this.startCount += 1

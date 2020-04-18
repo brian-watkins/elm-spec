@@ -13,10 +13,10 @@ module.exports = class RunSpecsCommand {
     await this.runner.start(browserOptions)
 
     if (shouldWatch(watchOptions)) {
-      this.log("Watching Files", watchOptions.globs)
+      this.logList("Watching Files", watchOptions.globs)
 
       this.fileWatcher.watch(watchOptions.globs, async (path) => {
-        this.log("File Changed", path)
+        this.log(`File changed: ${path}`)
         this.reporter.reset()
         await this.runner.run(this.reporter, compilerOptions, runOptions)
       })
@@ -31,11 +31,19 @@ module.exports = class RunSpecsCommand {
     await this.runner.stop()
   }
 
-  log(statement, details) {
-    this.reporter.log([{
-      statement, 
-      detail: Array.isArray(details) ? details.join("\n") : details
-    }])
+  log(message) {
+    this.reporter.printLine(message)
+    this.reporter.printLine()
+  }
+
+  logList(message, details) {
+    this.log(message)
+    if (details) {
+      details.forEach((detail) => {
+        this.reporter.printLine(`- ${detail}`)
+      })
+    }
+    this.reporter.printLine()
   }
 }
 

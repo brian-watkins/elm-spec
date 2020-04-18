@@ -21,7 +21,9 @@ module.exports = class BrowserSpecRunner {
 
     await this.adaptReporterToBrowser(page, reporter)
 
+    reporter.print("Compiling Elm ...")
     await this.compile(page, compilerOptions)
+    reporter.printLine(" Done!")
 
     await page.evaluate((options) => {
       return window._elm_spec.run(options)
