@@ -8,7 +8,7 @@ const specSrcDir = path.join(__dirname, "..", "src")
 const compiler = new Compiler({
   cwd: specSrcDir,
   specPath: "./Specs/*Spec.elm",
-  silent: true
+  logLevel: Compiler.LOG_LEVEL.SILENT
 })
 
 before(async () => {

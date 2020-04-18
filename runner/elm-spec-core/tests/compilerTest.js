@@ -40,7 +40,7 @@ const compileSpecsAt = (cwd, specPath) => {
   const compiler = new Compiler({
     cwd,
     specPath,
-    silent: true
+    logLevel: Compiler.LOG_LEVEL.SILENT
   })
 
   const code = compiler.compile()

@@ -2,13 +2,14 @@ const ElmContext = require('./elmContext')
 const compiler = require("node-elm-compiler/dist/index")
 const glob = require('glob')
 
+const LOG_LEVEL = Object.freeze({ ALL: 0, QUIET: 1, SILENT: 2 })
 
-module.exports = class Compiler {
-  constructor ({ cwd, specPath, elmPath, silent }) {
+const Compiler = class {
+  constructor ({ cwd, specPath, elmPath, logLevel }) {
     this.cwd = cwd || process.cwd()
     this.specPath = specPath
     this.elmPath = elmPath
-    this.silent = silent
+    this.logLevel = logLevel || LOG_LEVEL.ALL
   }
 
   compile() {
@@ -19,7 +20,13 @@ module.exports = class Compiler {
     if (files.length > 0) {
       const compiledElm = compiler.compileToStringSync(files, {
         cwd: this.cwd,
-        processOpts: { stdio: this.silent ? 'ignore' : 'inherit' },
+        processOpts: {
+          stdio: [
+            'ignore',
+            this.logLevel >= LOG_LEVEL.QUIET ? 'ignore' : 'inherit',
+            this.logLevel >= LOG_LEVEL.SILENT ? 'ignore' : 'inherit'
+          ] 
+        },
         pathToElm: this.elmPath
       })
 
@@ -31,3 +38,7 @@ module.exports = class Compiler {
     return code
   }
 }
+
+Compiler.LOG_LEVEL = LOG_LEVEL
+
+module.exports = Compiler

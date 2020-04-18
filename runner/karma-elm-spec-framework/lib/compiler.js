@@ -16,7 +16,8 @@ const CompilerFactory = (config) => {
   const compiler = new Compiler({
     cwd: workDir,
     specPath: elmSpecConfig.specs || defaultConfig.specPath,
-    elmPath: elmSpecConfig.pathToElm
+    elmPath: elmSpecConfig.pathToElm,
+    logLevel: Compiler.LOG_LEVEL.ALL
   })
 
   const compile = function() {

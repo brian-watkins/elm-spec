@@ -2,6 +2,7 @@ const chai = require('chai')
 const expect = chai.expect
 const JSDOMSpecRunner = require('../src/jsdomSpecRunner')
 const BrowserSpecSunner = require('../src/browserSpecRunner')
+const { Compiler } = require('elm-spec-core')
 
 const expectBehaviorFor = (browserName, runner) => {
   describe(browserName, () => {
@@ -117,28 +118,28 @@ const failingSpec = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithFailure/MoreSpec.elm",
   elmPath: "../../node_modules/.bin/elm",
-  silent: true
+  logLevel: Compiler.LOG_LEVEL.SILENT
 }
 
 const allSpecs = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/Passing/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
-  silent: true
+  logLevel: Compiler.LOG_LEVEL.SILENT
 }
 
 const errorSpecs = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithNoSendInPort/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
-  silent: true
+  logLevel: Compiler.LOG_LEVEL.SILENT
 }
 
 const specsWithLogs = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithLogs/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
-  silent: true
+  logLevel: Compiler.LOG_LEVEL.SILENT
 }
 
 

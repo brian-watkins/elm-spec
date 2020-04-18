@@ -3,6 +3,7 @@ const commandExists = require('command-exists').sync
 const process = require('process')
 const path = require('path')
 const fs = require('fs')
+const { Compiler } = require('elm-spec-core')
 const ConsoleReporter = require('./consoleReporter')
 const JSDOMSpecRunner = require('./jsdomSpecRunner')
 const BrowserSpecRunner = require('./browserSpecRunner')
@@ -34,7 +35,7 @@ class RunSuite extends Command {
         cwd: flags.cwd,
         specPath: flags.specs,
         elmPath: flags.elm,
-        silent: true
+        logLevel: Compiler.LOG_LEVEL.QUIET
       },
       runOptions: {
         tags: flags.tag || [],
