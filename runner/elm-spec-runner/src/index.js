@@ -71,7 +71,7 @@ class RunSuite extends Command {
 
   getFilesToWatch(specRoot, elmJsonPath) {
     const elmJson = JSON.parse(fs.readFileSync(elmJsonPath))
-    return elmJson["source-directories"].map(f => path.join(specRoot, f))
+    return elmJson["source-directories"].map(f => path.join(specRoot, f, "**/*.elm"))
   }
 
   getReporter() {
