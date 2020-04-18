@@ -7,6 +7,10 @@ const expectBehaviorFor = (browserName, runner) => {
   describe(browserName, () => {
     let testReporter
 
+    afterEach(() => {
+      runner.close()
+    })
+
     context(`when there is an error running the specs in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
@@ -33,6 +37,17 @@ const expectBehaviorFor = (browserName, runner) => {
 
       it("reports all accepted", () => {
         expect(testReporter.accepted).to.equal(8)
+      })
+
+      context("when the specs are executed again, like in watch mode", () => {
+        beforeEach(async () => {
+          testReporter = new TestReporter()
+          await runner.run(testReporter, allSpecs, { tags: [], endOnFailure: false })
+        })
+
+        it("reports all are still accepted", () => {
+          expect(testReporter.accepted).to.equal(8)
+        })
       })
     })
 

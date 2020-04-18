@@ -11,6 +11,16 @@ describe('elm-spec-runner', () => {
     .it('gives an error message')
   })
 
+  context("when the elm.json cannot be found", () => {
+    test
+    .do(async () => await cmd.run([
+      "--elm", "../../node_modules/.bin/elm",
+      "--cwd", "../elm-spec-core/tests"
+    ]))
+    .catch(err => expect(err.message).to.contain("Expected an elm.json at: ../elm-spec-core/tests/elm.json"))
+    .it('prints an error message')
+  })
+
   context("when the spec passes", () => {
     test
     .stdout()

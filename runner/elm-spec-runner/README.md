@@ -29,6 +29,8 @@ $ elm-spec [options]
 
 `--visible` -- Show the browser while the specs are running. Does nothing if the browser is `jsdom`.
 
+`--watch` -- Rerun the spec when files change in directories listed in the `source-directories` of your specs' elm.json file.
+
 `--tag` -- Specify a tag. Only scenarios with this tag will be executable. You may specify several tags.
 
 `--endOnFailure` -- Stop the spec suite run on the first failure.

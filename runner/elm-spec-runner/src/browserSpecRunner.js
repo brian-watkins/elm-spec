@@ -26,10 +26,10 @@ module.exports = class BrowserSpecRunner {
     await page.evaluate((options) => {
       return window._elm_spec.run(options)
     }, runnerOptions)
+  }
 
-    if (!this.browserOptions.visible) {
-      await this.browser.close()
-    }
+  async close() {
+    await this.browser.close()
   }
 
   async adaptReporterToBrowser(page, reporter) {
@@ -59,7 +59,8 @@ module.exports = class BrowserSpecRunner {
       console.log(err)
     })
 
-    const bundle = fs.readFileSync(path.join(__dirname, 'browserAdapter.js'), "utf8")
+    const browserAdapter = path.join(__dirname, 'browserAdapter.js')
+    const bundle = fs.readFileSync(browserAdapter, "utf8")
     await page.evaluate(bundle)
 
     return page
