@@ -3,7 +3,7 @@ const ElmContext = require('elm-spec-core/src/elmContext')
 const BrowserReporter = require('./browserReporter')
 
 const base = document.createElement("base")
-base.setAttribute("href", "http://localhost")
+base.setAttribute("href", "http://elm-spec")
 window.document.head.appendChild(base)
 
 const elmContext = new ElmContext(window)
