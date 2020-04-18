@@ -2,7 +2,7 @@ const { JSDOM } = require("jsdom");
 const { Compiler, SuiteRunner, ElmContext } = require('elm-spec-core')
 
 module.exports = class JSDOMSpecRunner {
-  async init() {}
+  async start() {}
 
   async run(reporter, compilerOptions, runnerOptions) {
     const dom = this.getDom()
@@ -13,7 +13,7 @@ module.exports = class JSDOMSpecRunner {
     await this.execute(context, reporter, runnerOptions)
   }
 
-  async close() {}
+  async stop() {}
 
   getDom() {
     return new JSDOM(

@@ -6,10 +6,14 @@ const logMessage = chalk.cyan
 
 module.exports = class ConsoleReporter {
   constructor({ write, writeLine }) {
-    this.accepted = 0
-    this.rejected = []
     this.write = write
     this.writeLine = writeLine
+    this.reset()
+  }
+
+  reset() {
+    this.accepted = 0
+    this.rejected = []
     this.hasError = false
   }
 

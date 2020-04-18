@@ -9,7 +9,7 @@ module.exports = class BrowserSpecRunner {
     this.browserName = browserName
   }
 
-  async init(options) {
+  async start(options) {
     this.browserOptions = options
     this.browser = await Playwright[this.browserName].launch({
       headless: !options.visible
@@ -28,7 +28,7 @@ module.exports = class BrowserSpecRunner {
     }, runnerOptions)
   }
 
-  async close() {
+  async stop() {
     await this.browser.close()
   }
 

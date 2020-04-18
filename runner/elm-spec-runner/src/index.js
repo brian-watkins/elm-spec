@@ -1,12 +1,14 @@
 const { Command, flags } = require('@oclif/command')
-const ConsoleReporter = require('./consoleReporter')
 const commandExists = require('command-exists').sync
 const process = require('process')
 const path = require('path')
+const fs = require('fs')
+const ConsoleReporter = require('./consoleReporter')
 const JSDOMSpecRunner = require('./jsdomSpecRunner')
 const BrowserSpecRunner = require('./browserSpecRunner')
-const chokidar = require('chokidar')
-const fs = require('fs')
+const RunSpecsCommand = require('./runSpecsCommand')
+const FileWatcher = require('./fileWatcher')
+const ElmFiles = require('./elmFiles')
 
 class RunSuite extends Command {
   async run() {
@@ -22,11 +24,10 @@ class RunSuite extends Command {
       this.error(`Expected an elm.json at: ${elmJsonPath}\nCheck the --cwd flag to set the directory containing the elm.json for your specs.`)
     }
 
-    let filesToWatch = flags.watch ? this.getFilesToWatch(flags.cwd, elmJsonPath) : []
+    const command = new RunSpecsCommand(this.runnerFor(flags.browser), this.getReporter(), FileWatcher)
 
-    await this.runSpecs({
+    await command.execute({
       browserOptions: {
-        name: flags.browser,
         visible: flags.visible
       },
       compilerOptions: {
@@ -34,30 +35,12 @@ class RunSuite extends Command {
         specPath: flags.specs,
         elmPath: flags.elm,
       },
-      runnerOptions: {
+      runOptions: {
         tags: flags.tag || [],
         endOnFailure: flags.endOnFailure
-      }
-    }, filesToWatch)
-  }
-
-  async runSpecs({ browserOptions, compilerOptions, runnerOptions }, filesToWatch) {
-    const runner = this.runnerFor(browserOptions.name)
-    await runner.init(browserOptions)
-
-    if (filesToWatch.length > 0) {
-      console.log("Files to watch", filesToWatch)
-      chokidar.watch(filesToWatch, { ignoreInitial: true }).on('all', async (event, path) => {
-        console.log("File changed", path)
-        await runner.run(this.getReporter(), compilerOptions, runnerOptions)
-      })
-    }
-
-    await runner.run(this.getReporter(), compilerOptions, runnerOptions)
-
-    if (filesToWatch.length == 0 && !browserOptions.visible) {
-      await runner.close()
-    }
+      },
+      watchOptions: flags.watch ? ElmFiles.find(elmJsonPath) : { globs: [] }
+    })
   }
 
   runnerFor(browser) {
@@ -67,11 +50,6 @@ class RunSuite extends Command {
       default:
         return new BrowserSpecRunner(browser)
     }
-  }
-
-  getFilesToWatch(specRoot, elmJsonPath) {
-    const elmJson = JSON.parse(fs.readFileSync(elmJsonPath))
-    return elmJson["source-directories"].map(f => path.join(specRoot, f, "**/*.elm"))
   }
 
   getReporter() {
