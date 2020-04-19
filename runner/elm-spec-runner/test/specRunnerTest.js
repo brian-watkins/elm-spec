@@ -40,7 +40,7 @@ const expectBehaviorFor = (browserName, runner) => {
         expect(testReporter.accepted).to.equal(8)
       })
 
-      context("when the specs are executed again, like in watch mode", () => {
+      context(`when the specs are executed again in ${browserName}, like in watch mode`, () => {
         beforeEach(async () => {
           testReporter = new TestReporter()
           await runner.run(testReporter, allSpecs, { tags: [], endOnFailure: false })
@@ -154,6 +154,9 @@ const TestReporter = class {
 
   print() {}
   printLine() {}
+  async performAction(startMessage, endMessage, action) {
+    await action()
+  }
 
   startSuite() {
     this.startCount += 1

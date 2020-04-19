@@ -8,9 +8,10 @@ module.exports = class JSDOMSpecRunner {
     const dom = this.getDom()
 
     const context = new ElmContext(dom.window)
-    reporter.print("Compiling Elm ...")
-    this.compile(dom, compilerOptions)
-    reporter.printLine(" Done!")
+
+    await reporter.performAction("Compiling Elm ... ", "Done!", async () => {
+      return this.prepareElm(dom, compilerOptions)
+    })
 
     await this.execute(context, reporter, runnerOptions)
   }
@@ -27,22 +28,17 @@ module.exports = class JSDOMSpecRunner {
     )
   }
 
-  compile(dom, options) {
+  prepareElm(dom, options) {
     const compiler = new Compiler(options)
     const code = compiler.compile()
     dom.window.eval(code)
+    return dom.window.hasOwnProperty("Elm")
   }
 
   async execute(context, reporter, options) {
     await new Promise((resolve) => {
       new SuiteRunner(context, reporter, options)
-        .on('complete', () => {
-          if (reporter.hasError) {
-            process.exit(1)
-          }
-
-          resolve()
-        })
+        .on('complete', resolve)
         .runAll()
     })
   }

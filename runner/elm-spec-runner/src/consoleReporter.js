@@ -1,13 +1,15 @@
 const chalk = require('chalk')
+const readline = require('readline')
 
 const ok = chalk.green
 const error = chalk.red
 const logMessage = chalk.cyan
 
 module.exports = class ConsoleReporter {
-  constructor({ write, writeLine }) {
+  constructor({ write, writeLine, stream }) {
     this.write = write
     this.writeLine = writeLine
+    this.stream = stream
     this.reset()
   }
 
@@ -15,6 +17,17 @@ module.exports = class ConsoleReporter {
     this.accepted = 0
     this.rejected = []
     this.hasError = false
+  }
+
+  async performAction(startMessage, doneMessage, action) {
+    this.printLine(startMessage)
+    this.printLine()
+    const didAction = await action()
+    if (didAction) {
+      readline.cursorTo(this.stream, 0)
+      readline.moveCursor(this.stream, 0, -2)
+      this.printLine(`${startMessage}${doneMessage}`)
+    }
   }
 
   print(message = "") {

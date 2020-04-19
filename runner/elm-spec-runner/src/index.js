@@ -57,7 +57,8 @@ class RunSuite extends Command {
   getReporter() {
     return new ConsoleReporter({
       write: (c) => process.stdout.write(c),
-      writeLine: this.log
+      writeLine: this.log,
+      stream: process.stdout
     })
   }
 }

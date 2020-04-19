@@ -3,7 +3,6 @@ const { Compiler } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 
-
 module.exports = class BrowserSpecRunner {
   constructor(browserName) {
     this.browserName = browserName
@@ -21,9 +20,9 @@ module.exports = class BrowserSpecRunner {
 
     await this.adaptReporterToBrowser(page, reporter)
 
-    reporter.print("Compiling Elm ...")
-    await this.compile(page, compilerOptions)
-    reporter.printLine(" Done!")
+    await reporter.performAction("Compiling Elm ... ", "Done!", async () => {
+      return this.prepareElm(page, compilerOptions)
+    })
 
     await page.evaluate((options) => {
       return window._elm_spec.run(options)
@@ -42,10 +41,13 @@ module.exports = class BrowserSpecRunner {
     await page.exposeFunction('_elm_spec_reporter_finish', () => { reporter.finish() })
   }
 
-  async compile(page, options) {
+  async prepareElm(page, options) {
     const compiler = new Compiler(options)
     const compiledCode = compiler.compile()
     await page.evaluate(compiledCode)
+    return await page.evaluate(() => {
+      return window.hasOwnProperty("Elm")
+    })
   }
 
   async getPage() {
