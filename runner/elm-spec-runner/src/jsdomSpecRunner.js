@@ -1,5 +1,7 @@
 const { JSDOM } = require("jsdom");
-const { Compiler, SuiteRunner, ElmContext } = require('elm-spec-core')
+const { Compiler } = require('elm-spec-core')
+const path = require('path')
+const fs = require('fs')
 
 module.exports = class JSDOMSpecRunner {
   async start() {}
@@ -7,13 +9,15 @@ module.exports = class JSDOMSpecRunner {
   async run(reporter, compilerOptions, runnerOptions) {
     const dom = this.getDom()
 
-    const context = new ElmContext(dom.window)
+    this.adaptForElmSpec(dom.window)
+
+    this.adaptReporter(dom.window, reporter)
 
     await reporter.performAction("Compiling Elm ... ", "Done!", async () => {
       return this.prepareElm(dom, compilerOptions)
     })
 
-    await this.execute(context, reporter, runnerOptions)
+    await dom.window._elm_spec.run(runnerOptions)
   }
 
   async stop() {}
@@ -28,18 +32,24 @@ module.exports = class JSDOMSpecRunner {
     )
   }
 
+  adaptForElmSpec(window) {
+    const browserAdapter = path.join(__dirname, 'browserAdapter.js')
+    const bundle = fs.readFileSync(browserAdapter, "utf8")
+    window.eval(bundle)
+  }
+
+  adaptReporter(window, reporter) {
+    window._elm_spec_reporter_start = () => { reporter.startSuite() }
+    window._elm_spec_reporter_observe = (obs) => { reporter.record(obs) }
+    window._elm_spec_reporter_log = (report) => { reporter.log(report) }
+    window._elm_spec_reporter_error = (err) => { reporter.error(err) }
+    window._elm_spec_reporter_finish = () => { reporter.finish() }
+  }
+
   prepareElm(dom, options) {
     const compiler = new Compiler(options)
     const code = compiler.compile()
     dom.window.eval(code)
     return dom.window.hasOwnProperty("Elm")
-  }
-
-  async execute(context, reporter, options) {
-    await new Promise((resolve) => {
-      new SuiteRunner(context, reporter, options)
-        .on('complete', resolve)
-        .runAll()
-    })
   }
 }

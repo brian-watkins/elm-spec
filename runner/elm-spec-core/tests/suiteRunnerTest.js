@@ -1,12 +1,17 @@
 const chai = require('chai')
 const expect = chai.expect
+const browserify = require('browserify')
 const JSDOMSpecRunner = require('../../elm-spec-runner/src/jsdomSpecRunner')
-const SuiteRunner = require('../src/suiteRunner')
-const ElmContext = require('../src/elmContext')
 const Compiler = require('../src/compiler')
 const path = require('path')
 
+let bundledRunnerCode = ""
+
 describe("Suite Runner", () => {
+  before(async () => {
+    bundledRunnerCode = await bundleRunnerCode()
+  })
+
   it("runs a suite of tests", (done) => {
     expectScenarios("Passing", { tags: [], endOnFailure: false }, done, (observations) => {
       expectAccepted(observations[0])
@@ -228,53 +233,38 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
 }
 
 const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
-  const dom = new JSDOMSpecRunner().getDom()
+  const runner = new JSDOMSpecRunner()
+  const dom = runner.getDom()
 
-  const elmContext = new ElmContext(dom.window)
-
+  dom.window.eval(bundledRunnerCode)
+  
   const compiler = new Compiler(compilerOptions)
-  const code = compiler.compile()
-  dom.window.eval(code)
+  const compiledCode = compiler.compile()
+  dom.window.eval(compiledCode)
 
-  const reporter = new TestReporter()
-  const runner = new SuiteRunner(elmContext, reporter, options, version)
-
-  runner
-    .on('complete', () => {
+  dom.window._elm_spec.run(options, version)
+    .then((reporter) => {
       setTimeout(() => {
         matcher(reporter)
         done()
       }, 0)
     })
-    .runAll()
 }
 
-const TestReporter = class {
-  constructor() {
-    this.observations = []
-    this.specError = null
-    this.logs = []
-    this.errorCount = 0
-  }
-
-  startSuite() {
-    // Nothing
-  }
-
-  record(observation) {
-    this.observations.push(observation)
-  }
-
-  finish() {}
-
-  error(err) {
-    this.errorCount += 1
-    this.specError = err
-  }
-
-  log(report) {
-    this.logs.push(report)
-  }
+const bundleRunnerCode = () => {
+  const b = browserify();
+  b.add(path.join(__dirname, "helpers", "specRunner.js"));
+  
+  return new Promise((resolve, reject) => {  
+    let bundle = ''
+    const stream = b.bundle()
+    stream.on('data', function(data) {
+      bundle += data.toString()
+    })
+    stream.on('end', function() {
+      resolve(bundle)
+    })
+  })
 }
 
 const expectAccepted = (observation) => {

@@ -231,7 +231,7 @@ module.exports = class HtmlPlugin {
 
   getEvent(name, options = {}) {
     const details = Object.assign({ bubbles: true, cancelable: true }, options)
-    return this.window.eval(`new Event('${name}', ${JSON.stringify(details)})`)
+    return new Event(name, details)
   }
 
   verifySelector(name, { props, forElementsOnly }, abort, handler) {

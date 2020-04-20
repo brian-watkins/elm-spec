@@ -1,5 +1,5 @@
 const { chromium } = require('playwright')
-const browserify = require('browserify');
+const { bundleRunnerCode } = require('./bundleHelpers')
 const { Compiler } = require('elm-spec-core')
 const path = require('path')
 
@@ -32,19 +32,3 @@ before(async () => {
 after(async () => {
   await browser.close()
 })
-
-const bundleRunnerCode = () => {
-  const b = browserify();
-  b.add(path.join(__dirname, "browserRunner.js"));
-  
-  return new Promise((resolve, reject) => {  
-    let bundle = ''
-    const stream = b.bundle()
-    stream.on('data', function(data) {
-      bundle += data.toString()
-    })
-    stream.on('end', function() {
-      resolve(bundle)
-    })
-  })
-}

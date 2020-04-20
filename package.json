@@ -4,7 +4,7 @@
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
     "test": "run-s test:elm test:elm:browser test:core build:runner test:runner build:karma test:karma build:docs",
-    "test:elm": "ELM_SPEC_CONTEXT=jsdom mocha './tests/*Test.js'",
+    "test:elm": "ELM_SPEC_CONTEXT=jsdom mocha --file ./tests/helpers/jsdomRunnerSetup.js './tests/*Test.js'",
     "test:elm:browser": "ELM_SPEC_CONTEXT=browser mocha --file ./tests/helpers/browserRunnerSetup.js --timeout 5000 './tests/*Test.js'",
     "test:core": "npm test --prefix runner/elm-spec-core",
     "build:runner": "npm run build --prefix runner/elm-spec-runner",
