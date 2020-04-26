@@ -32,7 +32,7 @@ exports.injectFakes = (code) => {
   const window = theWindow._elm_spec.window;
   const history = theWindow._elm_spec.history;
   const document = theWindow._elm_spec.document;
-  const setTimeout = theWindow._elm_spec.timer.fakeSetTimeout(theWindow);
+  const setTimeout = theWindow._elm_spec.timer.fakeSetTimeout();
   const setInterval = theWindow._elm_spec.timer.fakeSetInterval();
   ${code}
 })(window)
@@ -58,6 +58,14 @@ exports.setWindowVisibility = (isVisible, window) => {
 
 exports.clearTimers = (window) => {
   window._elm_spec.timer.clear()
+}
+
+exports.whenStackIsComplete = (window, fun) => {
+  window._elm_spec.timer.whenStackIsComplete(fun)
+}
+
+exports.stopWaitingForStack = (window) => {
+  window._elm_spec.timer.stopWaitingForStack()
 }
 
 exports.setTimezoneOffset = (window, offset) => {

@@ -4,8 +4,6 @@ const {
   expectPassingSpec,
   expectSpec,
   expectAccepted,
-  expectRejected,
-  reportLine,
   runInContext
 } = require('./helpers/SpecHelpers')
 

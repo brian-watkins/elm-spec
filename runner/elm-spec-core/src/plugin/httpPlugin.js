@@ -51,7 +51,7 @@ module.exports = class HttpPlugin {
 
         for (const stub of specMessage.body) {
           try {
-            this.setupStub(stub, this.uriDescriptor(stub))
+            this.setupStub(stub, this.uriDescriptor(stub), out)
           } catch (err) {
             abort(err.report)
             break
@@ -119,7 +119,7 @@ module.exports = class HttpPlugin {
     }
   }
 
-  setupStub(stub, uriDescriptor) {
+  setupStub(stub, uriDescriptor, out) {
     this.server.addHandler(stubFor(stub.route.method, uriDescriptor, (request, response) => {
       if (stub.shouldRespond) {
         if (stub.error === "network") {
@@ -132,6 +132,7 @@ module.exports = class HttpPlugin {
         }
       } else {
         request.xhr().abort()
+        out({home: "_http", name: "abstained", body: null})
       }
     }))
   }

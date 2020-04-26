@@ -86,23 +86,25 @@ update exerciseModel actions msg =
     ReceivedMessage message ->
       if Message.is "_navigation" "assign" message then
         handleLocationAssigned exerciseModel message
+          |> Tuple.mapSecond (\_ -> sendComplete actions)
       else if Message.is "_step" "response" message then
         handleStepResponse actions exerciseModel message
       else
         ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
-        , Cmd.none
+        , sendComplete actions
         )
 
     ProgramMsg programMsg ->
-      exerciseModel.subject.update programMsg exerciseModel.programModel
-        |> Tuple.mapFirst (\updated -> exercise { exerciseModel | programModel = updated })
-        |> Tuple.mapSecond (\nextCommand ->
-          if nextCommand == Cmd.none then
-            Cmd.none
-          else
-            Cmd.map ProgramMsg nextCommand
-              |> doAndRender actions
-        )
+      let
+        ( updatedExerciseModel, nextCommand ) =
+          exerciseModel.subject.update programMsg exerciseModel.programModel
+            |> Tuple.mapFirst (\updated -> { exerciseModel | programModel = updated })
+      in
+        if nextCommand == Cmd.none then
+          ( exercise updatedExerciseModel, sendComplete actions )
+        else
+          Step.SendRequest Step.programCommand (\_ -> Step.SendCommand nextCommand)
+            |> handleStepCommand actions updatedExerciseModel
 
     Continue ->
       case exerciseModel.steps of
@@ -161,8 +163,13 @@ doAndRender : Actions msg programMsg -> Cmd (Msg programMsg) -> Cmd msg
 doAndRender actions cmd =
   Cmd.batch
     [ Cmd.map actions.sendToSelf cmd
-    , State.send actions <| Message.stepMessage <| Message.runToNextAnimationFrame
+    , State.send actions Message.runToNextAnimationFrame
     ]
+
+
+sendComplete : Actions msg programMsg -> Cmd msg
+sendComplete actions =
+  State.send actions <| Message.for "_step" "complete"
 
 
 stepRequest : Message -> Message
@@ -218,7 +225,7 @@ handleStepCommand actions exerciseModel command =
       )
     Step.SendRequest message responseHandler ->
       ( exercise { exerciseModel | responseHandler = Just responseHandler }
-      , State.send actions <| Message.stepMessage <| stepRequest message
+      , State.send actions <| stepRequest message
       )
     Step.SendCommand cmd ->
       ( exercise exerciseModel

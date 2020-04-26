@@ -49,8 +49,7 @@ update configModel actions msg =
       if Message.is "_configure" "complete" message then
         Exercise.init actions configModel.scenario configModel.subject
       else
-        Report.note "Unknown message received!"
-          |> abortWith actions configModel
+        ( configure configModel, Cmd.none )
     Continue ->
       ( configure configModel
       , configureWith actions configModel.subject.configureEnvironment

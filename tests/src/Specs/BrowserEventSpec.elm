@@ -16,7 +16,7 @@ import Browser.Events exposing (Visibility(..))
 import Runner
 import Json.Decode as Json exposing (Decoder)
 import Json.Encode as Encode
-import Specs.Helpers exposing (equals)
+import Specs.Helpers exposing (equals, itShouldHaveFailedAlready)
 import Time exposing (Posix)
 
 
@@ -298,10 +298,7 @@ nonBrowserEventsSpec =
         [ Markup.target << document
         , Event.mouseMoveIn
         ]
-      |> it "fails" (
-        Observer.observeModel .mouseDown
-          |> expect (equals 0)
-      )
+      |> itShouldHaveFailedAlready
     )
   , scenario "mouseMoveOut" (
       given (
@@ -311,10 +308,7 @@ nonBrowserEventsSpec =
         [ Markup.target << document
         , Event.mouseMoveOut
         ]
-      |> it "fails" (
-        Observer.observeModel .mouseDown
-          |> expect (equals 0)
-      )
+      |> itShouldHaveFailedAlready
     )
   ]
 

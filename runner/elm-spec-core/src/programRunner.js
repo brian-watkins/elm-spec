@@ -8,6 +8,8 @@ const {
   registerApp,
   setBaseLocation,
   clearTimers,
+  whenStackIsComplete,
+  stopWaitingForStack,
   clearEventListeners,
   setTimezoneOffset,
   setBrowserViewport
@@ -147,6 +149,15 @@ module.exports = class ProgramRunner extends EventEmitter {
           })
         })
         break
+      case "program-command":
+        stopWaitingForStack(this.context.window)
+        out({home: "_step", name: "proceed", body: null})
+        break
+      case "complete":
+        whenStackIsComplete(this.context.window, () => {
+          out(this.continue())
+        })
+        break
       case "log":
         this.emit('log', specMessage.body)
         break
@@ -183,13 +194,13 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "configure":
         this.handleMessage(specMessage.body.message, out)
-        this.whenStackIsComplete(() => {
+        whenStackIsComplete(this.context.window, () => {
           this.configureComplete(out)
         })
         break
       case "step":
         this.handleMessage(specMessage.body.message, out)
-        this.whenStackIsComplete(() => {
+        whenStackIsComplete(this.context.window, () => {
           out(this.continue())
         })
         break
@@ -249,20 +260,8 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   detachProgram() {
-    this.stopWaitingForStack()
+    stopWaitingForStack(this.context.window)
     this.portPlugin.unsubscribe()
-  }
-
-  whenStackIsComplete(andThen) {
-    this.stopWaitingForStack()
-    this.stackTimeout = setTimeout(andThen, 0)
-  }
-
-  stopWaitingForStack() {
-    if (this.stackTimeout) {
-      clearTimeout(this.stackTimeout)
-      this.stackTimeout = null
-    }
   }
 
   continue () {

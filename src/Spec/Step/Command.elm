@@ -5,6 +5,7 @@ module Spec.Step.Command exposing
   , sendRequest
   , recordCondition
   , log
+  , programCommand
   )
 
 import Spec.Message exposing (Message)
@@ -48,3 +49,8 @@ log report =
   Message.for "_step" "log"
     |> Message.withBody (Report.encode report)
     |> sendMessage
+
+
+programCommand : Message
+programCommand =
+  Message.for "_step" "program-command"
