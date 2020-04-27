@@ -16,7 +16,7 @@ exports.registerFakes = (window, clock) => {
   window._elm_spec.windowEventListeners = {}
   window._elm_spec.window = fakeWindow(window, fakeLocation)
   window._elm_spec.documentEventListeners = {}
-  window._elm_spec.document = fakeDocument(window, fakeLocation)
+  window._elm_spec.document = fakeDocument(window, fakeLocation, fileSelectorAdapter(window))
   window._elm_spec.history = new FakeHistory(fakeLocation)
   window._elm_spec.console = proxiedConsole()
   window._elm_spec.timer = new FakeTimer(clock)
@@ -74,6 +74,27 @@ exports.setTimezoneOffset = (window, offset) => {
 
 exports.setBrowserViewport = (window, offset) => {
   window._elm_spec.viewportOffset = offset
+}
+
+exports.closeFileSelector = (window) => {
+  window._elm_spec.fileInput = null
+}
+
+exports.fileInputForOpenFileSelector = (window) => {
+  return window._elm_spec.fileInput
+}
+
+exports.openFileSelector = (window, sendToProgram, inputElement) => {
+  window._elm_spec.fileInput = inputElement
+  sendToProgram({home: "_html", name: "file-selector-open", body: null})
+}
+
+const fileSelectorAdapter = (window) => {
+  const sendToProgram = (msg) => { window._elm_spec.app.ports.elmSpecIn.send(msg) }
+  const open = exports.openFileSelector
+  return (inputElement) => {
+    open(window, sendToProgram, inputElement)
+  }
 }
 
 exports.clearEventListeners = (window) => {

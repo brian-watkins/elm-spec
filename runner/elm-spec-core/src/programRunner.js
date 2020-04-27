@@ -3,6 +3,7 @@ const PortPlugin = require('./plugin/portPlugin')
 const TimePlugin = require('./plugin/timePlugin')
 const HtmlPlugin = require('./plugin/htmlPlugin')
 const HttpPlugin = require('./plugin/httpPlugin')
+const FilePlugin = require('./plugin/filePlugin')
 const WitnessPlugin = require('./plugin/witnessPlugin')
 const {
   registerApp,
@@ -12,7 +13,8 @@ const {
   stopWaitingForStack,
   clearEventListeners,
   setTimezoneOffset,
-  setBrowserViewport
+  setBrowserViewport,
+  closeFileSelector
 } = require('./fakes')
 const { report, line } = require('./report')
 
@@ -58,7 +60,8 @@ module.exports = class ProgramRunner extends EventEmitter {
       "_http": this.httpPlugin,
       "_time": new TimePlugin(context),
       "_witness": new WitnessPlugin(),
-      "_port": this.portPlugin
+      "_port": this.portPlugin,
+      "_file": new FilePlugin(context)
     }
   }
 
@@ -244,6 +247,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     setBaseLocation("http://elm-spec", this.context.window)
     setBrowserViewport(this.context.window, { x: 0, y: 0 })
     this.httpPlugin.reset()
+    closeFileSelector(this.context.window)
   }
 
   configureComplete(out) {

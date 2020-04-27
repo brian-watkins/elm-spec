@@ -206,12 +206,18 @@ handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message
 handleStepResponse actions exerciseModel message =
   case Message.decode Message.decoder message of
     Ok responseMessage ->
-      case exerciseModel.responseHandler of
-        Just responseHandler ->
-          responseHandler responseMessage
-            |> handleStepCommand actions { exerciseModel | responseHandler = Nothing }
-        Nothing ->
-          ( exercise exerciseModel, Cmd.none )
+      if Message.is "_scenario" "abort" responseMessage then
+        Message.decode Report.decoder responseMessage
+          |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
+          |> Abort
+          |> update exerciseModel actions
+      else
+        case exerciseModel.responseHandler of
+          Just responseHandler ->
+            responseHandler responseMessage
+              |> handleStepCommand actions { exerciseModel | responseHandler = Nothing }
+          Nothing ->
+            ( exercise exerciseModel, Cmd.none )
     Err _ ->
       ( exercise exerciseModel, Cmd.none )
 

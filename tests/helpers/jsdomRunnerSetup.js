@@ -5,21 +5,23 @@ const path = require('path')
 
 const specSrcDir = path.join(__dirname, "..", "src")
 
-const compiler = new Compiler({
-  cwd: specSrcDir,
-  specPath: "./Specs/*Spec.elm",
-  logLevel: Compiler.LOG_LEVEL.SILENT
-})
+const runner = new JSDOMSpecRunner()
 
 before(async () => {
-  const runner = new JSDOMSpecRunner()
-  const dom = runner.getDom()
+  const dom = runner.getDom(specSrcDir)
 
   global.page = dom
 
   const bundle = await bundleRunnerCode()
   dom.window.eval(bundle)
 
-  const compiledCode = compiler.compile()
-  dom.window.eval(compiledCode)
+  runner.prepareElm(dom, {
+    cwd: specSrcDir,
+    specPath: "./Specs/*Spec.elm",
+    logLevel: Compiler.LOG_LEVEL.QUIET
+  })
+})
+
+after(() => {
+  page.window.close()
 })

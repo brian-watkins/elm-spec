@@ -36,7 +36,10 @@ describe("Suite Runner", () => {
       expectModulePath(observations[6], "Passing/InputSpec.elm")
 
       expectAccepted(observations[7])
-      expectModulePath(observations[7], "Passing/ClickSpec.elm")
+      expectModulePath(observations[7], "Passing/FileSpec.elm")
+
+      expectAccepted(observations[8])
+      expectModulePath(observations[8], "Passing/ClickSpec.elm")
     })
   })
 
@@ -234,7 +237,7 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
 
 const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
   const runner = new JSDOMSpecRunner()
-  const dom = runner.getDom()
+  const dom = runner.getDom(compilerOptions.cwd)
 
   dom.window.eval(bundledRunnerCode)
   

@@ -1,5 +1,5 @@
 const { JSDOM } = require("jsdom");
-const { Compiler } = require('elm-spec-core')
+const { Compiler, BrowserContext } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 
@@ -7,7 +7,7 @@ module.exports = class JSDOMSpecRunner {
   async start() {}
 
   async run(reporter, compilerOptions, runnerOptions) {
-    const dom = this.getDom()
+    const dom = this.getDom(compilerOptions.cwd)
 
     this.adaptForElmSpec(dom.window)
 
@@ -22,14 +22,21 @@ module.exports = class JSDOMSpecRunner {
 
   async stop() {}
 
-  getDom() {
-    return new JSDOM(
+  getDom(rootDir) {
+    const dom = new JSDOM(
       "<html><head><base href='http://elm-spec'></head><body></body></html>",
       { pretendToBeVisual: true,
         runScripts: "dangerously",
         url: "http://elm-spec"
       }
     )
+
+    const browserContext = new BrowserContext({ rootDir })
+    browserContext.decorateWindow((name, fun) => {
+      dom.window[name] = fun
+    })
+
+    return dom
   }
 
   adaptForElmSpec(window) {

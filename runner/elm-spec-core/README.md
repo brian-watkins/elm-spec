@@ -6,19 +6,29 @@ can use this library to run elm-spec suites in a particular environment.
 
 ### Basic Usage
 
-1. Create an ElmContext with a DOM window object.
-2. Use the Compiler to compile the code and evaluate it in the DOM window.
-3. Construct a new SuiteRunner with the ElmContext and a Reporter.
+For an elm-spec suite to run, some things need to happen in Node and some
+things need to happen in a browser.
+
+On the Node side:
+
+1. Create a browser somehow (using JSDOM or Playwright or Puppeteer etc)
+2. Create a BrowserContext and use it to decorate the DOM window object.
+3. Bundle a SuiteRunner, ElmContext, and a Reporter (using Browserify etc) and evaluate it in the DOM window.
+3. Use the Compiler to compile the code and evaluate it in the DOM window.
+
+On the Browser side:
+
 4. Call `runAll()` on the SuiteRunner to run all the spec programs.
 
 
 # Public API
 
-You may import four modules from elm-spec-core:
+You may import these modules from elm-spec-core:
 
 ```
 const {
   Compiler,
+  BrowserContext,
   ElmContext,
   SuiteRunner,
   ProgramRunner
@@ -51,6 +61,26 @@ new Compiler({
 
 Compiles the spec modules into a single string of JavaScript, adds an elm-spec
 specific wrapper around the compiled code to facilitate testing, and returns the string.
+
+## BrowserContext
+
+Create an instance:
+
+```
+new BrowserContext({
+  // Root directory from which files may be selected to upload during a spec
+  rootDir: '/some/path/'
+})
+```
+
+### Instance Methods
+
+**browserContext#decorateWindow(decoratorFunction)**
+
+Uses the provided `decoratorFunction` to decorate the window object with functions elm-spec needs to access
+the browser context. The `decoratorFunction` is a function that takes two arguments: the name of the function and
+the function itself. The implementation of `decoratorFunction` should attach the given function to the window object
+using the given name.
 
 ## ElmContext
 

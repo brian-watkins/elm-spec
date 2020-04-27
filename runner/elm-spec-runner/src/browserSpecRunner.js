@@ -1,7 +1,8 @@
 const Playwright = require('playwright')
-const { Compiler } = require('elm-spec-core')
+const { Compiler, BrowserContext } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
+
 
 module.exports = class BrowserSpecRunner {
   constructor(browserName) {
@@ -16,7 +17,9 @@ module.exports = class BrowserSpecRunner {
   }
 
   async run(reporter, compilerOptions, runnerOptions) {
-    const page = await this.getPage()
+    const page = await this.getPage(compilerOptions.cwd)
+
+    await this.adaptPageForElm(page)
 
     await this.adaptReporterToBrowser(page, reporter)
 
@@ -31,6 +34,12 @@ module.exports = class BrowserSpecRunner {
 
   async stop() {
     await this.browser.close()
+  }
+
+  async adaptPageForElm(page) {
+    const browserAdapter = path.join(__dirname, 'browserAdapter.js')
+    const bundle = fs.readFileSync(browserAdapter, "utf8")
+    await page.evaluate(bundle)
   }
 
   async adaptReporterToBrowser(page, reporter) {
@@ -50,7 +59,7 @@ module.exports = class BrowserSpecRunner {
     })
   }
 
-  async getPage() {
+  async getPage(rootDir) {
     if (this.browser.contexts().length > 0) {
       this.browser.contexts().map(async (context) => await context.close())
     }
@@ -67,9 +76,12 @@ module.exports = class BrowserSpecRunner {
       console.log(err)
     })
 
-    const browserAdapter = path.join(__dirname, 'browserAdapter.js')
-    const bundle = fs.readFileSync(browserAdapter, "utf8")
-    await page.evaluate(bundle)
+    page.on('filechooser', async(handle) => {})
+  
+    const browserContext = new BrowserContext({ rootDir })
+    await browserContext.decorateWindow(async (name, fun) => {
+      await page.exposeFunction(name, fun)
+    })
 
     return page
   }

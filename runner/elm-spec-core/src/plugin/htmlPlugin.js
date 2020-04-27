@@ -3,7 +3,8 @@ const {
   setBaseLocation,
   resizeWindowTo,
   setWindowVisibility,
-  setBrowserViewport
+  setBrowserViewport,
+  openFileSelector
 } = require('../fakes')
 
 module.exports = class HtmlPlugin {
@@ -80,6 +81,9 @@ module.exports = class HtmlPlugin {
       case "click": {
         this.verifySelector("click", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
           const element = this.getElement(props.selector)
+          if (element.tagName === "INPUT" && element.type === "file") {
+            openFileSelector(this.window, out, element)
+          }
           this.dispatchClick(element)
         })
         break

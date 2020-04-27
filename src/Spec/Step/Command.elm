@@ -4,6 +4,7 @@ module Spec.Step.Command exposing
   , sendMessage
   , sendRequest
   , recordCondition
+  , nothing
   , log
   , programCommand
   )
@@ -54,3 +55,8 @@ log report =
 programCommand : Message
 programCommand =
   Message.for "_step" "program-command"
+
+
+nothing : Command msg
+nothing =
+  DoNothing

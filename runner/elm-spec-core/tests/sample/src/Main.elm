@@ -7,6 +7,9 @@ import Browser
 import Browser.Events exposing (Visibility(..))
 import Http
 import Json.Decode as Json
+import File exposing (File)
+import File.Select
+import Task
 
 
 type Msg
@@ -17,6 +20,9 @@ type Msg
   | SendRequest Bool
   | GotResponse (Result Http.Error String)
   | DocumentClick
+  | OpenFileSelector
+  | GotFile File
+  | GotFileContents String
 
 
 type alias Model =
@@ -25,6 +31,7 @@ type alias Model =
   , visibilityChanges: Int
   , sizes: List (Int, Int)
   , clicks: Int
+  , uploadedFileContents: Maybe String
   }
 
 
@@ -35,6 +42,7 @@ defaultModel =
   , visibilityChanges = 0
   , sizes = []
   , clicks = 0
+  , uploadedFileContents = Nothing
   }
 
 
@@ -49,7 +57,13 @@ view model =
   , Html.input [ Attr.id "my-input", Events.onInput InputText ] []
   , Html.div [ Attr.id "input-results" ]
       [ Html.text <| "You typed: " ++ model.text ]
+  , Html.button [ Attr.id "open-file-selector", Events.onClick OpenFileSelector ] [ Html.text "Upload a file!" ]
   ]
+
+
+filesDecoder : Json.Decoder (List File)
+filesDecoder =
+  Json.at [ "target", "files" ] (Json.list File.decoder)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -77,6 +91,12 @@ update msg model =
       ( { model | sizes = (width, height) :: model.sizes }, Cmd.none )
     DocumentClick ->
       ( { model | clicks = model.clicks + 1 }, Cmd.none )
+    OpenFileSelector ->
+      ( model, File.Select.file [] GotFile )
+    GotFile file ->
+      ( model, File.toString file |> Task.perform GotFileContents )
+    GotFileContents contents ->
+      ( { model | uploadedFileContents = Just contents }, Cmd.none )
 
 
 init : () -> ( Model, Cmd Msg )

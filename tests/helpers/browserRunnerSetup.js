@@ -1,34 +1,28 @@
-const { chromium } = require('playwright')
 const { bundleRunnerCode } = require('./bundleHelpers')
 const { Compiler } = require('elm-spec-core')
+const BrowserSpecRunner = require('../../runner/elm-spec-runner/src/browserSpecRunner')
 const path = require('path')
 
 const specSrcDir = path.join(__dirname, "..", "src")
 
-const compiler = new Compiler({
-  cwd: specSrcDir,
-  specPath: "./Specs/*Spec.elm",
-  logLevel: Compiler.LOG_LEVEL.SILENT
-})
+const browserSpecRunner = new BrowserSpecRunner("chromium")
 
 before(async () => {
-  global.browser = await chromium.launch()
-  const context = await browser.newContext()
-  global.page = await context.newPage()
+  await browserSpecRunner.start({
+    visible: false
+  })
+  global.page = await browserSpecRunner.getPage(specSrcDir)
 
   const bundle = await bundleRunnerCode()
-
-  const compiledCode = compiler.compile()
-
-  page.on('console', async (msg) => {
-    const logParts = await Promise.all(msg.args().map((arg) => arg.jsonValue()))
-    console.log(...logParts)
-  });
-
   await page.evaluate(bundle)
-  await page.evaluate(compiledCode)
+
+  await browserSpecRunner.prepareElm(page, {
+    cwd: specSrcDir,
+    specPath: "./Specs/*Spec.elm",
+    logLevel: Compiler.LOG_LEVEL.QUIET
+  })
 })
 
 after(async () => {
-  await browser.close()
+  await browserSpecRunner.stop()
 })

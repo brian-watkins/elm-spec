@@ -1,6 +1,6 @@
 const { fakeElement } = require('./fakeElement')
 
-exports.fakeDocument = (theWindow, location) => {
+exports.fakeDocument = (theWindow, location, openFileSelector) => {
   return new Proxy(theWindow.document, {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
@@ -14,6 +14,9 @@ exports.fakeDocument = (theWindow, location) => {
       }
       if (prop === 'getElementById') {
         return customDocumentElementById(theWindow, target)
+      }
+      if (prop === 'createElement') {
+        return customCreateElement(theWindow, target, openFileSelector)
       }
       const val = target[prop]
       return typeof val === "function"
@@ -35,6 +38,23 @@ const customDocumentElementById = (theWindow, target) => (elementId) => {
   const element = target.getElementById(elementId)
   if (!element) return null
   return fakeElement(theWindow, element)
+}
+
+const customCreateElement = (theWindow, target, openFileSelector) => (tagName, options) => {
+  const element = target.createElement(tagName, options)
+  if (tagName !== "input") {
+    return element
+  }
+
+  const originalDispatch = element.dispatchEvent.bind(element)
+  return Object.defineProperty(element, "dispatchEvent", {
+    value: (event) => {
+      if (element.type === "file" && event.type === "click") {
+        openFileSelector(element)
+      }
+      return originalDispatch(event)
+    }
+  })
 }
 
 const customAddEventListener = (theWindow, target) => (type, handler) => {
