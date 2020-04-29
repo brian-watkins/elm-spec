@@ -8,6 +8,7 @@
         "Spec",
         "Spec.Claim",
         "Spec.Command",
+        "Spec.File",
         "Spec.Http",
         "Spec.Http.Route",
         "Spec.Http.Stub",

@@ -18,10 +18,7 @@ window.document.head.appendChild(css)
 window._elm_spec.runProgram = (specProgram, version) => {
   return new Promise((resolve, reject) => {
     if (!window.Elm) {
-      resolve({
-        observations: [],
-        error: "Elm not compiled!"
-      })
+      return Promise.reject("Elm not compiled!")
     }
 
     const program = Elm.Specs[specProgram]
@@ -44,10 +41,7 @@ window._elm_spec.runProgram = (specProgram, version) => {
 
 window._elm_spec.runSpec = (specProgram, specName, options) => {
   if (!window.Elm) {
-    return Promise.resolve({
-      observations: [],
-      error: "Elm not compiled!"
-    })
+    return Promise.reject("Elm not compiled!")
   }
 
   elmContext.clock.reset()

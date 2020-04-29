@@ -23,18 +23,20 @@ module.exports = class JSDOMSpecRunner {
   async stop() {}
 
   getDom(rootDir) {
+    const browserContext = new BrowserContext({ rootDir })
+
     const dom = new JSDOM(
       "<html><head><base href='http://elm-spec'></head><body></body></html>",
       { pretendToBeVisual: true,
         runScripts: "dangerously",
-        url: "http://elm-spec"
+        url: "http://elm-spec",
+        beforeParse: (window) => {
+          browserContext.decorateWindow((name, fun) => {
+            window[name] = fun
+          })
+        }
       }
     )
-
-    const browserContext = new BrowserContext({ rootDir })
-    browserContext.decorateWindow((name, fun) => {
-      dom.window[name] = fun
-    })
 
     return dom
   }

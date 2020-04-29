@@ -1,6 +1,6 @@
 const { fakeElement } = require('./fakeElement')
 
-exports.fakeDocument = (theWindow, location, openFileSelector) => {
+exports.fakeDocument = (theWindow, location, openFileSelector, recordDownload, blobStore) => {
   return new Proxy(theWindow.document, {
     get: (target, prop) => {
       if (prop === 'addEventListener') {
@@ -16,7 +16,7 @@ exports.fakeDocument = (theWindow, location, openFileSelector) => {
         return customDocumentElementById(theWindow, target)
       }
       if (prop === 'createElement') {
-        return customCreateElement(theWindow, target, openFileSelector)
+        return customCreateElement(target, openFileSelector, recordDownload, blobStore)
       }
       const val = target[prop]
       return typeof val === "function"
@@ -40,17 +40,27 @@ const customDocumentElementById = (theWindow, target) => (elementId) => {
   return fakeElement(theWindow, element)
 }
 
-const customCreateElement = (theWindow, target, openFileSelector) => (tagName, options) => {
+const customCreateElement = (target, openFileSelector, recordDownload, blobStore) => (tagName, options) => {
   const element = target.createElement(tagName, options)
-  if (tagName !== "input") {
+  if (tagName !== "input" && tagName !== "a") {
     return element
   }
 
   const originalDispatch = element.dispatchEvent.bind(element)
   return Object.defineProperty(element, "dispatchEvent", {
     value: (event) => {
-      if (element.type === "file" && event.type === "click") {
+      if (element.tagName === "INPUT" && element.type === "file" && event.type === "click") {
         openFileSelector(element)
+      }
+      if (element.tagName === "A" && element.download) {
+        var reader = new FileReader();
+        reader.addEventListener('loadend', function() {
+          recordDownload(element.download, reader.result)
+        });
+        const blobKey = new URL(element.href).pathname.substr(1)
+        reader.readAsText(blobStore.get(blobKey));
+
+        return () => {}
       }
       return originalDispatch(event)
     }

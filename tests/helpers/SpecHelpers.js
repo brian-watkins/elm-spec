@@ -72,7 +72,6 @@ const runProgramInJsdom = (specProgram, version, done, matcher) => {
       if (err.name === "AssertionError") {
         done(err)
       } else {
-        console.log("Error running program in JSDOM", err)
         process.exit(1)
       }
     })
@@ -88,7 +87,6 @@ const runProgramInBrowser = (specProgram, version, done, matcher) => {
     if (err.name === "AssertionError") {
       done(err)
     } else {
-      console.log("Error running program in browser", err)
       process.exit(1)
     }
   })
@@ -104,7 +102,6 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
     if (err.name === "AssertionError") {
       done(err)
     } else {
-      console.log("Error running spec in browser", err)
       process.exit(1)
     }
   })
@@ -120,7 +117,6 @@ const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
       if (err.name === "AssertionError") {
         done(err)
       } else {
-        console.log("Error running spec in JSDOM", err)
         process.exit(1)
       }
     })
