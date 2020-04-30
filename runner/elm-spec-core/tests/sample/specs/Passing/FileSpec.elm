@@ -7,6 +7,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Claim exposing (..)
 import Spec.Observer as Observer
+import Spec.File
 import Runner
 import Main as App
 import File
@@ -23,7 +24,7 @@ fileSpec =
       |> when "a file is uploaded"
         [ Markup.target << by [ id "open-file-selector" ]
         , Event.click
-        , Event.selectFile "./specs/fixtures/file.txt"
+        , Spec.File.select [ Spec.File.loadFrom "./specs/fixtures/file.txt" ]
         ]
       |> it "finds the file" (
         Observer.observeModel .uploadedFileContents

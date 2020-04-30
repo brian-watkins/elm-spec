@@ -12,7 +12,6 @@ module Spec.Markup.Event exposing
   , showWindow
   , focus
   , blur
-  , selectFile
   , setBrowserViewport
   , setElementViewport
   , trigger
@@ -61,9 +60,6 @@ For example,
 
 # Focus Events
 @docs focus, blur
-
-# File Events
-@docs selectFile
 
 # Custom Events
 @docs trigger
@@ -163,46 +159,6 @@ This will trigger a `blur` DOM event on the targeted element.
 blur : Step.Context model -> Step.Command msg
 blur =
   basicEventMessage "blur"
-
-
-{-| A step that simulates selecting a file as input.
-
-    Spec.when "a File is uploaded"
-      [ Spec.Markup.target << by [ tag "input", attribute ("type", "file") ]
-      , Spec.Markup.Event.click
-      , Spec.Markup.Event.selectFile "./fixtures/myFile.txt"
-      ]
-
-A previous step must open a file selector, either by clicking an input element of type `file` or
-by taking some action that results in a `File.Select.file` command.
-
-The path to the file is relative to the current working directory of the elm-spec runner.
-
--}
-selectFile : String -> Step.Context model -> Step.Command msg
-selectFile path context =
-  Message.for "_file" "fetch"
-    |> Message.withBody (
-      Encode.object
-        [ ( "path", Encode.string path )
-        ]
-      )
-    |> Command.sendRequest andThenSelectFile
-
-
-andThenSelectFile : Message -> Step.Command msg
-andThenSelectFile message =
-  case Message.decode Json.value message of
-    Ok fileValue ->
-      Message.for "_file" "select"
-        |> Message.withBody (
-          Encode.object
-            [ ( "file", fileValue )
-            ]
-        )
-        |> Command.sendMessage
-    Err _ ->
-      Command.nothing
 
 
 {-| A step that simulates the mouse moving into the targeted HTML element.

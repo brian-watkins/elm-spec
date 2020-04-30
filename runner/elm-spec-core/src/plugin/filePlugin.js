@@ -11,13 +11,12 @@ module.exports = class FilePlugin {
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
       case "fetch": {
-        BrowserContext.readFile(this.window, specMessage.body.path)
-          .then(({ path, buffer }) => {
-            const bytes = new Uint8Array(buffer.data)
+        Promise.all(specMessage.body.fileFixtures.map(fixture => this.fetchFile(fixture)))
+          .then(files => {
             out({
               home: "_file",
               name: "file",
-              body: new File([bytes], path)
+              body: files
             })
           })
           .catch(({ path }) => {
@@ -25,10 +24,10 @@ module.exports = class FilePlugin {
               line("Unable to read file at", path)
             ))
           })
+
         break
       }
       case "select": {
-        const file = specMessage.body.file
         const fileInput = fileInputForOpenFileSelector(this.window)
 
         if (!fileInput) {
@@ -37,7 +36,7 @@ module.exports = class FilePlugin {
         }
 
         const fileInputWithFiles = Object.defineProperty(fileInput, "files", {
-          value: [file],
+          value: specMessage.body.files,
           writable: true
         })
 
@@ -48,6 +47,14 @@ module.exports = class FilePlugin {
       default:
         console.log("unknown file message", specMessage)
     }
+  }
+
+  fetchFile(fixture) {
+    return BrowserContext.readFile(this.window, fixture.path)
+      .then(({ path, buffer }) => {
+        const bytes = new Uint8Array(buffer.data)
+        return new File([bytes], path)
+      })
   }
 
   getEvent(name, options = {}) {

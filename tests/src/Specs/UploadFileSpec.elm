@@ -1,4 +1,4 @@
-module Specs.FileSpec exposing (main)
+module Specs.UploadFileSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
@@ -7,6 +7,7 @@ import Spec.Claim exposing (isTrue, isEqual, isListWhere, isListWhereItemAt)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.File
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -21,7 +22,7 @@ import Specs.Helpers exposing (..)
 selectFileSpec : Spec Model Msg
 selectFileSpec =
   describe "file select"
-  [ scenario "selecting a file with input element" (
+  [ scenario "selecting a single file with input element" (
       given (
         Setup.initWithModel testModel
           |> Setup.withView testView
@@ -30,7 +31,7 @@ selectFileSpec =
       |> when "selecting a new file"
         [ Markup.target << by [ tag "input", attribute ("type", "file") ]
         , Event.click
-        , Event.selectFile "./fixtures/funFile.txt"
+        , Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
         ]
       |> observeThat
         [ it "processes a click event" (
@@ -40,7 +41,7 @@ selectFileSpec =
         , it "finds the file in the model" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ Spec.Claim.isStringContaining 1 "tests/src/fixtures/funFile.txt" << String.replace ":" "/"
+                [ Spec.Claim.isStringContaining 1 "tests/src/fixtures/funFile.txt" << normalizedPath
                 ]
               )
           )
@@ -50,7 +51,7 @@ selectFileSpec =
           )
         ]
     )
-  , scenario "selecting a file with File.Select" (
+  , scenario "selecting a single file with File.Select" (
       given (
         Setup.initWithModel testModel
           |> Setup.withView testSelectView
@@ -59,7 +60,7 @@ selectFileSpec =
       |> when "selecting a new file"
         [ Markup.target << by [ id "select-file-button" ]
         , Event.click
-        , Event.selectFile "./fixtures/funFile.txt"
+        , Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
         ]
       |> it "finds the file in the model" (
         Observer.observeModel .files
@@ -69,8 +70,44 @@ selectFileSpec =
           )
       )
     )
+  , scenario "select multiple files with File.Select" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testSelectMultipleView
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "selecting multiple files"
+        [ Markup.target << by [ id "select-files-button" ]
+        , Event.click
+        , Spec.File.select
+          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+          , Spec.File.loadFrom "./fixtures/awesomeFile.txt"
+          ]
+        ]
+      |> observeThat
+        [ it "finds the file name" (
+            Observer.observeModel .files
+              |> expect (isListWhere
+                [ Spec.Claim.isStringContaining 1 "tests/src/fixtures/funFile.txt" << normalizedPath
+                , Spec.Claim.isStringContaining 1 "tests/src/fixtures/awesomeFile.txt" << normalizedPath
+                ]
+              )
+          )
+        , it "finds the file content" (
+            Observer.observeModel .fileContents
+              |> expect (isListWhere
+                [ equals "Here is text from a fun file!"
+                , equals "Here is an awesome file, dude!"
+                ]
+              )
+          ) 
+        ]
+    )
   ]
 
+normalizedPath : String -> String
+normalizedPath =
+  String.replace ":" "/"
 
 noOpenSelectorSpec : Spec Model Msg
 noOpenSelectorSpec =
@@ -82,7 +119,7 @@ noOpenSelectorSpec =
           |> Setup.withUpdate testUpdate
       )
       |> when "selecting a file without selecting a file input"
-        [ Event.selectFile "./fixtures/funFile.txt"
+        [ Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
         ]
       |> itShouldHaveFailedAlready
     )
@@ -114,7 +151,7 @@ noFileSelectedSpec =
           |> Setup.withUpdate testUpdate
       )
       |> when "selecting a file without selecting a file input"
-        [ Event.selectFile "./fixtures/funFile.txt"
+        [ Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
         ]
       |> itShouldHaveFailedAlready
     )
@@ -133,7 +170,7 @@ noFileFetchedSpec =
       |> when "a non-existent file is selected"
         [ Markup.target << by [ tag "input" ]
         , Event.click
-        , Event.selectFile "non-existent-file.txt"
+        , Spec.File.select [ Spec.File.loadFrom "non-existent-file.txt" ]
         , Event.click
         , Event.click
         , Event.click
@@ -145,8 +182,10 @@ noFileFetchedSpec =
 
 type Msg
   = GotFiles (List File)
+  | GotMultipleFiles File (List File)
   | GotFileContents (List String)
   | SelectFile
+  | SelectFiles
   | HandleClick
 
 type alias Model =
@@ -179,15 +218,31 @@ testSelectView model =
   ]
 
 
+testSelectMultipleView : Model -> Html Msg
+testSelectMultipleView model =
+  Html.div []
+  [ Html.button [ Attr.id "select-files-button", Events.onClick SelectFiles ] [ Html.text "Click to select some files!" ]
+  ]
+
+
 filesDecoder : Json.Decoder (List File)
 filesDecoder =
   Json.at [ "target", "files" ] (Json.list File.decoder)
+
 
 testUpdate : Msg -> Model -> (Model, Cmd Msg)
 testUpdate msg model =
   case msg of
     SelectFile ->
       ( model, File.Select.file [] <| \file -> GotFiles [ file ] )
+    SelectFiles ->
+      ( model, File.Select.files [] GotMultipleFiles )
+    GotMultipleFiles file remaining ->
+      ( model
+      , file :: remaining
+        |> Task.succeed
+        |> Task.perform GotFiles
+      )
     GotFiles files ->
       ( { model | files = List.map File.name files }
       , List.map File.toString files
