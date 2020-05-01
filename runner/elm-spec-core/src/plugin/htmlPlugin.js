@@ -4,7 +4,6 @@ const {
   resizeWindowTo,
   setWindowVisibility,
   setBrowserViewport,
-  openFileSelector
 } = require('../fakes')
 
 module.exports = class HtmlPlugin {
@@ -14,7 +13,7 @@ module.exports = class HtmlPlugin {
   }
 
   get document() {
-    return this.window._elm_spec.document
+    return this.window.document
   }
 
   handle(specMessage, out, next, abort) {

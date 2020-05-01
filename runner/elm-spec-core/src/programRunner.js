@@ -14,7 +14,8 @@ const {
   clearEventListeners,
   setTimezoneOffset,
   setBrowserViewport,
-  closeFileSelector
+  closeFileSelector,
+  clearElementMappers
 } = require('./fakes')
 const { report, line } = require('./report')
 
@@ -172,6 +173,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "state": {
         switch (specMessage.body) {
           case "COMPLETE": {
+            clearElementMappers(this.context.window)
             this.emit('complete', true)
             break
           }

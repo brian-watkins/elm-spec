@@ -3,16 +3,16 @@ const FakeHistory = require('./fakes/fakeHistory')
 const FakeTimer = require('./fakes/fakeTimer')
 const FakeURL = require('./fakes/fakeURL')
 const BlobStore = require('./fakes/blobStore')
+const FakeDocument = require('./fakes/fakeDocument')
 const { fakeDate } = require('./fakes/fakeDate')
 const { proxiedConsole } = require('./fakes/proxiedConsole')
 const { fakeWindow } = require('./fakes/fakeWindow')
-const { fakeDocument } = require('./fakes/fakeDocument')
+const { fakeMouseEvent } = require('./fakes/fakeMouseEvent')
 
 exports.registerFakes = (window, clock) => {
   window._elm_spec = {}
-  const sendToProgram = (msg) => window._elm_spec.app.ports.elmSpecIn.send(msg)
-  const blobStore = new BlobStore()
-  const fakeLocation = new FakeLocation(sendToProgram)
+  window._elm_spec.blobStore = new BlobStore()
+  const fakeLocation = new FakeLocation(exports.sendToProgram(window))
   window._elm_spec.requestAnimationFrame = clock.requestAnimationFrame
   window._elm_spec.cancelAnimationFrame = clock.cancelAnimationFrame
   window._elm_spec.date = fakeDate(clock)
@@ -20,17 +20,12 @@ exports.registerFakes = (window, clock) => {
   window._elm_spec.windowEventListeners = {}
   window._elm_spec.window = fakeWindow(window, fakeLocation)
   window._elm_spec.documentEventListeners = {}
-  window._elm_spec.document = fakeDocument(
-    window,
-    fakeLocation,
-    fileSelectorAdapter(window, sendToProgram),
-    recordDownloadAdapter(sendToProgram),
-    blobStore
-  )
+  window._elm_spec.fakeDocument = new FakeDocument(window, fakeLocation)
   window._elm_spec.history = new FakeHistory(fakeLocation)
   window._elm_spec.console = proxiedConsole()
   window._elm_spec.timer = new FakeTimer(clock)
-  window._elm_spec.url = new FakeURL(blobStore)
+  window._elm_spec.url = new FakeURL(window._elm_spec.blobStore)
+  window._elm_spec.mouseEvent = fakeMouseEvent()
 }
 
 exports.injectFakes = (code) => {
@@ -42,10 +37,11 @@ exports.injectFakes = (code) => {
   const console = theWindow._elm_spec.console;
   const window = theWindow._elm_spec.window;
   const history = theWindow._elm_spec.history;
-  const document = theWindow._elm_spec.document;
+  const document = theWindow._elm_spec.fakeDocument.proxy;
   const setTimeout = theWindow._elm_spec.timer.fakeSetTimeout();
   const setInterval = theWindow._elm_spec.timer.fakeSetInterval();
   const URL = theWindow._elm_spec.url;
+  const MouseEvent = theWindow._elm_spec.mouseEvent;
   ${code}
 })(window)
 `
@@ -96,27 +92,25 @@ exports.fileInputForOpenFileSelector = (window) => {
   return window._elm_spec.fileInput
 }
 
-exports.openFileSelector = (window, sendToProgram, inputElement) => {
+exports.openFileSelector = (window, inputElement) => {
   window._elm_spec.fileInput = inputElement
-  sendToProgram({home: "_html", name: "file-selector-open", body: null})
+  exports.sendToProgram(window)({home: "_html", name: "file-selector-open", body: null})
 }
 
-const fileSelectorAdapter = (window, sendToProgram) => {
-  const open = exports.openFileSelector
-  return (inputElement) => {
-    open(window, sendToProgram, inputElement)
-  }
+exports.sendToProgram = (window) => (msg) => {
+  window._elm_spec.app.ports.elmSpecIn.send(msg)
 }
 
-const recordDownloadAdapter = (sendToProgram) => (name, content) => {
-  sendToProgram({
-    home: "_file",
-    name: "download",
-    body: {
-      name,
-      content
-    }
-  })
+exports.mapElement = (mapper) => {
+  window._elm_spec.fakeDocument.addElementMapper(mapper)
+}
+
+exports.clearElementMappers = (window) => {
+  window._elm_spec.fakeDocument.clearElementMappers()
+}
+
+exports.blobStore = () => {
+  return window._elm_spec.blobStore
 }
 
 exports.clearEventListeners = (window) => {

@@ -1,11 +1,83 @@
 const { report, line } = require('../report')
-const { fileInputForOpenFileSelector } = require('../fakes')
+const {
+  fileInputForOpenFileSelector,
+  mapElement,
+  blobStore,
+  openFileSelector,
+  sendToProgram
+} = require('../fakes')
 const BrowserContext = require("../browserContext")
 
 module.exports = class FilePlugin {
   constructor(context) {
     this.window = context.window
     this.context = context
+    this.out = sendToProgram(this.window)
+    this.reset()
+  }
+
+  reset() {
+    mapElement(element => this.decorateElement(element))
+  }
+
+  decorateElement(element) {
+    switch (element.tagName) {
+      case "INPUT":
+        element.addEventListener("click", (evt) => this.inputClickHandler(evt))
+        break
+      case "A":
+        element.addEventListener("click", (evt) => this.anchorClickHandler(evt))
+        break
+    }
+
+    return element
+  }
+
+  inputClickHandler(event) {
+    const inputElement = event.target
+    if (inputElement.type === "file") {
+      openFileSelector(this.window, inputElement)
+    }
+  }
+
+  anchorClickHandler(event) {
+    const downloadElement = event.target
+    if (downloadElement.attributes.getNamedItem("download")) {
+      const downloadUrl = new URL(downloadElement.href)
+
+      if (downloadUrl.protocol === "blob:") {
+        this.recordBlobDownload(downloadUrl, downloadElement.download)
+      } else {
+        this.recordUrlDownload(downloadUrl, downloadElement.download)
+      }
+
+      event.preventDefault()
+    }
+  }
+
+  recordDownload(name, content) {
+    this.out({
+      home: "_file",
+      name: "download",
+      body: {
+        name,
+        content
+      }
+    })
+  }
+
+  recordBlobDownload(blobUrl, filename) {
+    var reader = new FileReader();
+    reader.addEventListener('loadend', () => {
+      this.recordDownload(filename, { type: "text", text: reader.result })
+    });
+    const blobKey = blobUrl.pathname.split("/").pop()
+    reader.readAsText(blobStore().get(blobKey));
+  }
+
+  recordUrlDownload(url, downloadName) {
+    const filename = downloadName === "" ? url.pathname.substr(1) : downloadName
+    this.recordDownload(filename, { type: "fromUrl", url: url.toString() })
   }
 
   handle(specMessage, out, next, abort) {
