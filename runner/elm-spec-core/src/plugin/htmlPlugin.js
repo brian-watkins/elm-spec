@@ -81,9 +81,6 @@ module.exports = class HtmlPlugin {
       case "click": {
         this.verifySelector("click", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
           const element = this.getElement(props.selector)
-          if (element.tagName === "INPUT" && element.type === "file") {
-            openFileSelector(this.window, out, element)
-          }
           this.dispatchClick(element)
         })
         break
@@ -189,13 +186,9 @@ module.exports = class HtmlPlugin {
   }
 
   dispatchClick(element) {
-    element.dispatchEvent(this.getEvent("mousedown"))
-    element.dispatchEvent(this.getEvent("mouseup"))
-    if ('click' in element) {
-      element.click()
-    } else {
-      element.dispatchEvent(this.getEvent("click"))
-    }
+    element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))
+    element.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true }))
+    element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }))
   }
 
   renderAndThen(callback) {

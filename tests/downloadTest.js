@@ -14,7 +14,15 @@ describe("download files", () => {
       })
     })
 
-    it("prints an error when a claim fails", (done) => {
+    it("downloads the file using an anchor tag", (done) => {
+      expectSpec("DownloadSpec", "downloadAnchor", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+      })
+    })
+
+    it("prints an error when a claim fails for a text download", (done) => {
       expectSpec("DownloadSpec", "claimFailure", done, (observations) => {
         expectRejected(observations[0], [
           reportLine("Item at index 0 did not satisfy claim:"),
@@ -24,9 +32,34 @@ describe("download files", () => {
         ])
         expectRejected(observations[1], [
           reportLine("Item at index 0 did not satisfy claim:"),
-          reportLine("Claim rejected for downloaded file text"),
+          reportLine("Claim rejected for downloaded text"),
           reportLine("Expected", "\"Here is some fun text!\""),
           reportLine("to equal", "\"blah\"")
+        ])
+        expectRejected(observations[2], [
+          reportLine("Item at index 0 did not satisfy claim:"),
+          reportLine("Claim rejected for downloaded url", "The file was not downloaded from a url.")
+        ])
+      })
+    })
+
+    it("prints an error when a claim fails for a url download", (done) => {
+      expectSpec("DownloadSpec", "downloadUrlClaimFailure", done, (observations) => {
+        expectRejected(observations[0], [
+          reportLine("Item at index 0 did not satisfy claim:"),
+          reportLine("Claim rejected for downloaded file name"),
+          reportLine("Expected", "\"superFile.txt\""),
+          reportLine("to equal", "\"funnyText.text\"")
+        ])
+        expectRejected(observations[1], [
+          reportLine("Item at index 0 did not satisfy claim:"),
+          reportLine("Claim rejected for downloaded url"),
+          reportLine("Expected", "\"http://fake.com/myFile.txt\""),
+          reportLine("to equal", "\"http://wrong.com\"")
+        ])
+        expectRejected(observations[2], [
+          reportLine("Item at index 0 did not satisfy claim:"),
+          reportLine("Claim rejected for downloaded text", "The file was downloaded from a url, so it has no associated text.")
         ])
       })
     })

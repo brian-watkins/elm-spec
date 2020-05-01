@@ -6,6 +6,7 @@ module Spec.File exposing
   , observeDownloads
   , name
   , text
+  , downloadedUrl
   )
 
 {-| Observe and make claims about files during a spec.
@@ -13,11 +14,11 @@ module Spec.File exposing
 # Select Files
 @docs FileFixture, select, loadFrom
 
-# Observe Downloaded Files
+# Observe Downloads
 @docs Download, observeDownloads
 
-# Make Claims about Downloaded Files
-@docs name, text
+# Make Claims about Downloads
+@docs name, text, downloadedUrl
 
 -}
 
@@ -110,8 +111,13 @@ type Download
 
 type alias DownloadData =
   { name: String
-  , content: String
+  , content: DownloadContent
   }
+
+
+type DownloadContent
+  = Text String
+  | FromUrl String
 
 
 {-| Observe downloads tha occurred during a scenario.
@@ -128,8 +134,22 @@ downloadDecoder : Json.Decoder Download
 downloadDecoder =
   Json.map2 DownloadData
     (Json.field "name" Json.string)
-    (Json.field "content" Json.string)
+    (Json.field "content" downloadContentDecoder)
     |> Json.map Download
+
+
+downloadContentDecoder : Json.Decoder DownloadContent
+downloadContentDecoder =
+  Json.field "type" Json.string
+    |> Json.andThen (\contentType ->
+      case contentType of
+        "fromUrl" ->
+          Json.field "url" Json.string
+            |> Json.map FromUrl
+        _ ->
+          Json.field "text" Json.string
+            |> Json.map Text
+    )
 
 
 {-| Claim that the name of a downloaded file satisfies the given claim.
@@ -148,13 +168,37 @@ name claim =
 
 {-| Claim that the text content of a downloaded file satisfies the given claim.
 
+Note that this claim will fail if the download was created by downloading a URL.
 -}
 text : Claim String -> Claim Download
 text claim =
   \(Download download) ->
-    claim download.content
-      |> Claim.mapRejection (\report -> Report.batch
-        [ Report.note "Claim rejected for downloaded file text"
-        , report
-        ]
-      )
+    case download.content of
+      Text textContent ->
+        claim textContent
+          |> Claim.mapRejection (\report -> Report.batch
+            [ Report.note "Claim rejected for downloaded text"
+            , report
+            ]
+          )
+      FromUrl _ ->
+        Claim.Reject <| Report.fact "Claim rejected for downloaded text" "The file was downloaded from a url, so it has no associated text."
+
+
+{-| Claim that the downloaded URL satisfies the given claim.
+
+Note that this claim will fail if the download was not created by downloading a URL.
+-}
+downloadedUrl : Claim String -> Claim Download
+downloadedUrl claim =
+  \(Download download) ->
+    case download.content of
+      FromUrl url ->
+        claim url
+        |> Claim.mapRejection (\report -> Report.batch
+          [ Report.note "Claim rejected for downloaded url"
+          , report
+          ]
+        )
+      _ ->
+        Claim.Reject <| Report.fact "Claim rejected for downloaded url" "The file was not downloaded from a url."

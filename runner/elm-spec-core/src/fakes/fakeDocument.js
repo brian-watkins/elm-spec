@@ -52,15 +52,23 @@ const customCreateElement = (target, openFileSelector, recordDownload, blobStore
       if (element.tagName === "INPUT" && element.type === "file" && event.type === "click") {
         openFileSelector(element)
       }
-      if (element.tagName === "A" && element.download) {
-        var reader = new FileReader();
-        reader.addEventListener('loadend', function() {
-          recordDownload(element.download, reader.result)
-        });
-        const blobKey = new URL(element.href).pathname.substr(1)
-        reader.readAsText(blobStore.get(blobKey));
+      if (element.tagName === "A" && element.attributes.getNamedItem("download") && event.type === "click") {
+        const downloadUrl = new URL(element.href)
 
-        return () => {}
+        if (downloadUrl.protocol === "blob:") {
+          var reader = new FileReader();
+          reader.addEventListener('loadend', function() {
+            recordDownload(element.download, { type: "text", text: reader.result })
+          });
+          const blobKey = downloadUrl.pathname.split("/").pop()
+          reader.readAsText(blobStore.get(blobKey));
+        } else {
+          const filename = element.download === "" ? downloadUrl.pathname.substr(1) : element.download
+          recordDownload(filename, { type: "fromUrl", url: element.href })
+        }
+
+        event = new Event("click", { bubbles: true, cancelable: true })
+        event.preventDefault()
       }
       return originalDispatch(event)
     }

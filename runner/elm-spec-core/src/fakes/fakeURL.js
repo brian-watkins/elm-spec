@@ -10,10 +10,10 @@ module.exports = class FakeURL {
 
     this.blobStore.put(key, blob)
 
-    return key
+    return `blob://elm-spec/${key}`
   }
 
   revokeObjectURL(url) {
-    this.blobStore.remove(url)
+    this.blobStore.remove(url.split("/").pop())
   }
 }
