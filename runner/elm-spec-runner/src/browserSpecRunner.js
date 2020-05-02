@@ -76,8 +76,6 @@ module.exports = class BrowserSpecRunner {
       console.log(err)
     })
 
-    page.on('filechooser', async(handle) => {})
-  
     const browserContext = new BrowserContext({ rootDir })
     await browserContext.decorateWindow(async (name, fun) => {
       await page.exposeFunction(name, fun)

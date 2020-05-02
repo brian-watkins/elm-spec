@@ -37,6 +37,7 @@ module.exports = class FilePlugin {
     const inputElement = event.target
     if (inputElement.type === "file") {
       openFileSelector(this.window, inputElement)
+      event.preventDefault()
     }
   }
 
