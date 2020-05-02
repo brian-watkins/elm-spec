@@ -70,10 +70,12 @@ module.exports = class FilePlugin {
   recordBlobDownload(blobUrl, filename) {
     var reader = new FileReader();
     reader.addEventListener('loadend', () => {
-      this.recordDownload(filename, { type: "text", text: reader.result })
+      const data = new Uint8Array(reader.result)
+      this.recordDownload(filename, { type: "bytes", data: Array.from(data) })
     });
     const blobKey = blobUrl.pathname.split("/").pop()
-    reader.readAsText(blobStore().get(blobKey));
+    const blob = blobStore().get(blobKey)
+    reader.readAsArrayBuffer(blob)
   }
 
   recordUrlDownload(url, downloadName) {

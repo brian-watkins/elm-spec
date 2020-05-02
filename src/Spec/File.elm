@@ -6,6 +6,7 @@ module Spec.File exposing
   , observeDownloads
   , name
   , text
+  , bytes
   , downloadedUrl
   )
 
@@ -18,7 +19,7 @@ module Spec.File exposing
 @docs Download, observeDownloads
 
 # Make Claims about Downloads
-@docs name, text, downloadedUrl
+@docs name, text, bytes, downloadedUrl
 
 -}
 
@@ -31,6 +32,9 @@ import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report
 import Json.Decode as Json
 import Json.Encode as Encode
+import Bytes exposing (Bytes)
+import Bytes.Encode as Bytes
+import Bytes.Decode as Decode
 
 
 {-| Represents a file.
@@ -116,7 +120,7 @@ type alias DownloadData =
 
 
 type DownloadContent
-  = Text String
+  = Bytes Bytes
   | FromUrl String
 
 
@@ -147,9 +151,15 @@ downloadContentDecoder =
           Json.field "url" Json.string
             |> Json.map FromUrl
         _ ->
-          Json.field "text" Json.string
-            |> Json.map Text
+          Json.field "data" (Json.list Json.int)
+            |> Json.map encodeToBytes
+            |> Json.map Bytes
     )
+
+
+encodeToBytes : List Int -> Bytes
+encodeToBytes ints =
+  Bytes.encode (Bytes.sequence <| List.map Bytes.unsignedInt8 ints)
 
 
 {-| Claim that the name of a downloaded file satisfies the given claim.
@@ -174,15 +184,43 @@ text : Claim String -> Claim Download
 text claim =
   \(Download download) ->
     case download.content of
-      Text textContent ->
-        claim textContent
+      Bytes binaryContent ->
+        Decode.decode (Decode.string <| Bytes.width binaryContent) binaryContent
+          |> Maybe.map (\textContext ->
+            claim textContext
+              |> Claim.mapRejection (\report -> Report.batch
+                [ Report.note "Claim rejected for downloaded text"
+                , report
+                ]
+              )
+          )
+          |> Maybe.withDefault (Claim.Reject <|
+            Report.fact "Claim rejected for downloaded text" "Unable to decode binary data as UTF-8 text."
+          )
+      FromUrl _ ->
+        Claim.Reject <| Report.fact "Claim rejected for downloaded text" "The file was downloaded from a url, so it has no associated text."
+
+
+{-| Claim that the bytes of a downloaded file satisfy the given claim.
+
+Note that this claim will fail if the download was created by downloading a URL.
+-}
+bytes : Claim Bytes -> Claim Download
+bytes claim =
+  \(Download download) ->
+    case download.content of
+      Bytes byteContent ->
+        claim byteContent
           |> Claim.mapRejection (\report -> Report.batch
-            [ Report.note "Claim rejected for downloaded text"
+            [ Report.note "Claim rejected for downloaded bytes"
             , report
             ]
           )
       FromUrl _ ->
-        Claim.Reject <| Report.fact "Claim rejected for downloaded text" "The file was downloaded from a url, so it has no associated text."
+        Claim.Reject <|
+          Report.fact
+            "Claim rejected for downloaded bytes"
+            "The file was downloaded from a url, so it has no associated bytes."
 
 
 {-| Claim that the downloaded URL satisfies the given claim.
