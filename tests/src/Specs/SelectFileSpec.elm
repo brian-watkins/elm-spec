@@ -117,6 +117,8 @@ selectFileSpec =
         , Spec.File.select
           [ Spec.File.withBytes "/fun/path/to/funFile.txt" <| bytesFromString "This is a cool file!"
           , Spec.File.withBytes "awesomeFile.png" <| bytesFromString "Another awesome file!"
+          , Spec.File.withText "/my/path/to/a/superFile.txt" "This is the best file ever!"
+          , Spec.File.withText "nice-file.txt" "This file is also nice!"
           ]
         ]
       |> observeThat
@@ -125,6 +127,8 @@ selectFileSpec =
               |> expect (isListWhere
                 [ normalizedPath >> equals "/fun/path/to/funFile.txt"
                 , equals "awesomeFile.png"
+                , normalizedPath >> equals "/my/path/to/a/superFile.txt"
+                , equals "nice-file.txt"
                 ]
               )
           )
@@ -133,6 +137,8 @@ selectFileSpec =
               |> expect (isListWhere
                 [ equals "This is a cool file!"
                 , equals "Another awesome file!"
+                , equals "This is the best file ever!"
+                , equals "This file is also nice!"
                 ]
               )
           )

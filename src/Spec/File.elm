@@ -3,6 +3,7 @@ module Spec.File exposing
   , select
   , loadFrom
   , withBytes
+  , withText
   , Download
   , observeDownloads
   , name
@@ -14,7 +15,7 @@ module Spec.File exposing
 {-| Observe and make claims about files during a spec.
 
 # Select Files
-@docs FileFixture, select, loadFrom, withBytes
+@docs FileFixture, select, loadFrom, withBytes, withText
 
 # Observe Downloads
 @docs Download, observeDownloads
@@ -119,6 +120,13 @@ loadFrom path =
 withBytes : String -> Bytes -> FileFixture
 withBytes path binaryContent =
   Memory { path = path, content = binaryContent }
+
+
+{-| Create a FileFixture with the given name and text content.
+-}
+withText : String -> String -> FileFixture
+withText path textContent =
+  Memory { path = path, content = Bytes.encode <| Bytes.string textContent }
 
 
 {-| Represents a file downloaded in the course of a scenario.
