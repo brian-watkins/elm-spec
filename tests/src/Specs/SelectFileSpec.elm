@@ -15,6 +15,8 @@ import Json.Decode as Json
 import File exposing (File)
 import File.Select
 import Task
+import Bytes exposing (Bytes)
+import Bytes.Encode as Bytes
 import Runner
 import Specs.Helpers exposing (..)
 
@@ -103,7 +105,46 @@ selectFileSpec =
           ) 
         ]
     )
+  , scenario "select multiple fake files" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testSelectMultipleView
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "selecting multiple files"
+        [ Markup.target << by [ id "select-files-button" ]
+        , Event.click
+        , Spec.File.select
+          [ Spec.File.withBytes "/fun/path/to/funFile.txt" <| bytesFromString "This is a cool file!"
+          , Spec.File.withBytes "awesomeFile.png" <| bytesFromString "Another awesome file!"
+          ]
+        ]
+      |> observeThat
+        [ it "finds the file name" (
+            Observer.observeModel .files
+              |> expect (isListWhere
+                [ normalizedPath >> equals "/fun/path/to/funFile.txt"
+                , equals "awesomeFile.png"
+                ]
+              )
+          )
+        , it "finds the file content" (
+            Observer.observeModel .fileContents
+              |> expect (isListWhere
+                [ equals "This is a cool file!"
+                , equals "Another awesome file!"
+                ]
+              )
+          )
+        ]
+    )
   ]
+
+
+bytesFromString : String -> Bytes
+bytesFromString =
+  Bytes.encode << Bytes.string
+
 
 normalizedPath : String -> String
 normalizedPath =

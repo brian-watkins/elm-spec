@@ -2,6 +2,7 @@ module Spec.File exposing
   ( FileFixture
   , select
   , loadFrom
+  , withBytes
   , Download
   , observeDownloads
   , name
@@ -13,7 +14,7 @@ module Spec.File exposing
 {-| Observe and make claims about files during a spec.
 
 # Select Files
-@docs FileFixture, select, loadFrom
+@docs FileFixture, select, loadFrom, withBytes
 
 # Observe Downloads
 @docs Download, observeDownloads
@@ -29,6 +30,7 @@ import Spec.Message as Message exposing (Message)
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Claim as Claim exposing (Claim)
+import Spec.File.Internal exposing (toList, toBytes)
 import Spec.Report as Report
 import Json.Decode as Json
 import Json.Encode as Encode
@@ -40,12 +42,8 @@ import Bytes.Decode as Decode
 {-| Represents a file.
 -}
 type FileFixture
-  = FileFixture FixtureData
-
-
-type alias FixtureData =
-  { path: String
-  }
+  = Disk { path: String }
+  | Memory { path: String, content: Bytes }
 
 
 {-| A step that selects a file as input.
@@ -76,10 +74,19 @@ select fixtures context =
 
 
 fileFixtureEncoder : FileFixture -> Encode.Value
-fileFixtureEncoder (FileFixture fixture) =
-  Encode.object
-    [ ("path", Encode.string fixture.path)
-    ]
+fileFixtureEncoder fixture =
+  case fixture of
+    Disk { path } ->
+      Encode.object
+        [ ("type", Encode.string "disk")
+        , ("path", Encode.string path)
+        ]
+    Memory { path, content } ->
+      Encode.object
+        [ ("type", Encode.string "memory")
+        , ("path", Encode.string path)
+        , ("bytes", Encode.list Encode.int <| toList Decode.unsignedInt8 content )
+        ]
 
 
 andThenSelectFile : Message -> Step.Command msg
@@ -104,7 +111,14 @@ check the docs for the runner you are using).
 -}
 loadFrom : String -> FileFixture
 loadFrom path =
-  FileFixture { path = path }
+  Disk { path = path }
+
+
+{-| Create a FileFixture with the given name and bytes.
+-}
+withBytes : String -> Bytes -> FileFixture
+withBytes path binaryContent =
+  Memory { path = path, content = binaryContent }
 
 
 {-| Represents a file downloaded in the course of a scenario.
@@ -152,14 +166,9 @@ downloadContentDecoder =
             |> Json.map FromUrl
         _ ->
           Json.field "data" (Json.list Json.int)
-            |> Json.map encodeToBytes
+            |> Json.map (toBytes Bytes.unsignedInt8)
             |> Json.map Bytes
     )
-
-
-encodeToBytes : List Int -> Bytes
-encodeToBytes ints =
-  Bytes.encode (Bytes.sequence <| List.map Bytes.unsignedInt8 ints)
 
 
 {-| Claim that the name of a downloaded file satisfies the given claim.

@@ -17,6 +17,8 @@ describe("file selection", () => {
         expectAccepted(observations[3])
         expectAccepted(observations[4])
         expectAccepted(observations[5])
+        expectAccepted(observations[6])
+        expectAccepted(observations[7])
       })
     })
   })
