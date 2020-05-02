@@ -3,7 +3,7 @@ module Specs.UploadFileSpec exposing (main)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Observer as Observer
-import Spec.Claim exposing (isTrue, isEqual, isListWhere, isListWhereItemAt)
+import Spec.Claim exposing (isTrue, isStringContaining, isEqual, isListWhere, isListWhereItemAt)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -41,7 +41,7 @@ selectFileSpec =
         , it "finds the file in the model" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ Spec.Claim.isStringContaining 1 "tests/src/fixtures/funFile.txt" << normalizedPath
+                [ normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
                 ]
               )
           )
@@ -88,8 +88,8 @@ selectFileSpec =
         [ it "finds the file name" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ Spec.Claim.isStringContaining 1 "tests/src/fixtures/funFile.txt" << normalizedPath
-                , Spec.Claim.isStringContaining 1 "tests/src/fixtures/awesomeFile.txt" << normalizedPath
+                [ normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
+                , normalizedPath >> isStringContaining 1 "tests/src/fixtures/awesomeFile.txt"
                 ]
               )
           )

@@ -113,23 +113,32 @@ describe('HTTP', () => {
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Expected to decode request body as JSON"),
-          reportLine("but it has no body at all")
+          reportLine("Claim rejected for JSON body", "It has no body at all.")
         ])
-        expectAccepted(observations[2])
-        expectRejected(observations[3], [
+        expectRejected(observations[2], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for file body", "It has no body at all.")
+        ])
+        expectAccepted(observations[3])
+        expectRejected(observations[4], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
           reportLine("Claim rejected for string body"),
           reportLine("Expected", "\"{\\\"name\\\":\\\"fun person\\\",\\\"age\\\":88}\""),
           reportLine("to equal", "\"{\\\"blah\\\":3}\"")
         ])
-        expectAccepted(observations[4])
-        expectRejected(observations[5], [
+        expectAccepted(observations[5])
+        expectRejected(observations[6], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
           reportLine("Expected to decode request body as JSON", "{\"name\":\"fun person\",\"age\":88}"),
           reportLine("but the decoder failed", "Problem with the value at json.name:\n\n    \"fun person\"\n\nExpecting an INT")
+        ])
+        expectRejected(observations[7], [
+          reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for file body", "The request body is a string.")
         ])
       })
     })

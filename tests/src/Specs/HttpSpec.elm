@@ -17,6 +17,7 @@ import Html.Events as Events
 import Runner
 import Json.Decode as Json
 import Json.Encode as Encode
+import File
 import Http
 import Url.Builder
 import Dict
@@ -492,6 +493,14 @@ hasBodySpec =
                   ]
               )
           )
+        , it "fails to find a file body" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+              |> expect (
+                isListWhere
+                  [ Spec.Http.fileBody <| require File.name <| equals "some file that was not uploaded"
+                  ]
+              )
+          )
         ]
     )
   , scenario "string body with json" (
@@ -529,6 +538,14 @@ hasBodySpec =
               |> expect (
                 isListWhere
                   [ Spec.Http.jsonBody (Json.field "name" Json.int) <| equals 31
+                  ]
+              )
+          )
+        , it "fails when making a claim about a file" (
+            Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+              |> expect (
+                isListWhere
+                  [ Spec.Http.fileBody <| require File.name <| equals "Some file"
                   ]
               )
           )

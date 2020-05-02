@@ -152,6 +152,24 @@ const buildRequest = (request) => {
     methpd: request.method(),
     url: request.url().toString(),
     headers: request.headers(),
-    body: request.body() || null
+    body: buildRequestBody(request.body())
+  }
+}
+
+const buildRequestBody = (requestBody) => {
+  if (!requestBody) {
+    return null
+  }
+
+  if (requestBody instanceof File) {
+    return {
+      type: "file",
+      content: requestBody
+    }
+  }
+
+  return {
+    type: "string",
+    content: requestBody
   }
 }

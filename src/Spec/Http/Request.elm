@@ -8,6 +8,7 @@ module Spec.Http.Request exposing
 
 import Spec.Report as Report exposing (Report)
 import Json.Decode as Json
+import File exposing (File)
 import Dict exposing (Dict)
 
 
@@ -22,6 +23,7 @@ type alias RequestData =
 type RequestBody
   = EmptyBody
   | StringBody String
+  | FileBody File
 
 
 toReport : List RequestData -> Report
@@ -67,6 +69,8 @@ body data =
       "Empty Body"
     StringBody stringBody ->
       "Body: " ++ stringBody
+    FileBody fileBody ->
+      "File not done yet"
 
 
 decoder : Json.Decoder RequestData
@@ -75,13 +79,18 @@ decoder =
     ( Json.field "methpd" Json.string )
     ( Json.field "url" Json.string )
     ( Json.field "headers" <| Json.dict Json.string )
-    ( Json.field "body" requestBodyDecoder )
+    ( Json.field "body" ( Json.nullable requestBodyDecoder |> Json.map (Maybe.withDefault EmptyBody) ) )
 
 
 requestBodyDecoder : Json.Decoder RequestBody
 requestBodyDecoder =
-  Json.nullable Json.string
-    |> Json.map (\maybeBody ->
-      Maybe.map StringBody maybeBody
-        |> Maybe.withDefault EmptyBody
+  Json.field "type" Json.string
+    |> Json.andThen (\bodyType ->
+      case bodyType of
+        "file" ->
+          Json.field "content" File.decoder
+            |> Json.map FileBody
+        _ ->
+          Json.field "content" Json.string
+            |> Json.map StringBody
     )

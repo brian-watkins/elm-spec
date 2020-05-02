@@ -6,6 +6,7 @@ module Spec.Http exposing
   , header
   , stringBody
   , jsonBody
+  , fileBody
   , url
   )
 
@@ -51,7 +52,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, observeRequests, clearRequestHistory
 
 # Make Claims About HTTP Requests
-@docs url, header, stringBody, jsonBody
+@docs url, header, stringBody, jsonBody, fileBody
 
 # Debug
 @docs logRequests
@@ -72,6 +73,7 @@ import Dict exposing (Dict)
 import Url exposing (Url)
 import Url.Parser
 import Url.Parser.Query
+import File exposing (File)
 
 
 
@@ -121,6 +123,8 @@ stringBody claim =
         evaluateStringBodyClaim claim ""
       Request.StringBody actual ->
         evaluateStringBodyClaim claim actual
+      Request.FileBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for string body" "The request body is a file."
 
 
 evaluateStringBodyClaim : Claim String -> String -> Claim.Verdict
@@ -149,10 +153,7 @@ jsonBody decoder claim =
   \(HttpRequest request) ->
     case request.body of
       Request.EmptyBody ->
-        Claim.Reject <| Report.batch
-          [ Report.note "Expected to decode request body as JSON"
-          , Report.note "but it has no body at all"
-          ]
+        Claim.Reject <| Report.fact "Claim rejected for JSON body" "It has no body at all."
       Request.StringBody actual ->
         case Json.decodeString decoder actual of
           Ok value ->
@@ -162,6 +163,35 @@ jsonBody decoder claim =
               [ Report.fact "Expected to decode request body as JSON" actual
               , Report.fact "but the decoder failed" <| Json.errorToString error
               ]
+      Request.FileBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for json body" "The request body is a file."
+
+
+{-| Claim that the body of an HTTP request is a File that satisfies the given claim.
+
+For example, if the body of an observed request is a File with the name 'funFile.txt', then the
+following claim would be accepted:
+
+    Spec.Http.fileBody
+      <| Spec.Claim.require File.name
+      <| Claim.isStringContaining 1 "funFile.txt"
+
+-}
+fileBody : Claim File -> Claim HttpRequest
+fileBody claim =
+  \(HttpRequest request) ->
+    case request.body of
+      Request.EmptyBody ->
+        Claim.Reject <| Report.fact "Claim rejected for file body" "It has no body at all."
+      Request.FileBody file ->
+        claim file
+          |> Claim.mapRejection (\report -> Report.batch
+            [ Report.note "Claim rejected for file body"
+            , report
+            ]
+          )
+      _ ->
+        Claim.Reject <| Report.fact "Claim rejected for file body" "The request body is a string."
 
 
 {-| Observe HTTP requests that match the given route.
