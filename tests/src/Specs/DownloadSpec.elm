@@ -16,17 +16,17 @@ import Runner
 import Specs.Helpers exposing (..)
 
 
-downloadFileSpec : Spec Model Msg
-downloadFileSpec =
-  describe "downloading a file"
-  [ scenario "the file is downloaded" (
+downloadTextSpec : Spec Model Msg
+downloadTextSpec =
+  describe "downloading text"
+  [ scenario "using File.Download.string" (
       given (
         Setup.initWithModel testModel
           |> Setup.withView testView
           |> Setup.withUpdate testUpdate
       )
       |> when "the file is downloaded"
-        [ Markup.target << by [ id "start-download" ]
+        [ Markup.target << by [ id "download-text" ]
         , Event.click
         ]
       |> it "downloads the file" (
@@ -41,9 +41,34 @@ downloadFileSpec =
   ]
 
 
+downloadUrlSpec : Spec Model Msg
+downloadUrlSpec =
+  describe "download url"
+  [ scenario "using File.Download.url" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "the url is downloaded"
+        [ Markup.target << by [ id "download-url" ]
+        , Event.click
+        ]
+      |> it "downloads the url" (
+        Spec.File.observeDownloads
+          |> expect (isListWhereItemAt 0 <| satisfying
+            [ Spec.File.name <| equals "myUrl.txt"
+            , Spec.File.downloadedUrl <| equals "http://my-fun-url.com/some/path/to/myUrl.txt"
+            ]
+          )
+      )
+    )
+  ]
+
+
 downloadAnchorSpec : Spec Model Msg
 downloadAnchorSpec =
-  describe "download a file via an explicit anchor tag"
+  describe "download url via an explicit anchor tag"
   [ scenario "a file name is specified" (
       given (
         Setup.initWithModel testModel
@@ -101,7 +126,7 @@ claimFailureSpec =
           |> Setup.withUpdate testUpdate
       )
       |> when "the file is downloaded"
-        [ Markup.target << by [ id "start-download" ]
+        [ Markup.target << by [ id "download-text" ]
         , Event.click
         ]
       |> observeThat
@@ -154,7 +179,8 @@ downloadUrlClaimFailureSpec =
 
 
 type Msg
-  = StartDownload
+  = DownloadText
+  | DownloadURL
   | HandleClick
 
 
@@ -171,7 +197,8 @@ testModel =
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.button [ Attr.id "start-download", Events.onClick StartDownload ] [ Html.text "Download File!" ]
+  [ Html.button [ Attr.id "download-text", Events.onClick DownloadText ] [ Html.text "Download File!" ]
+  , Html.button [ Attr.id "download-url", Events.onClick DownloadURL ] [ Html.text "Download URL!" ]
   ]
 
 
@@ -191,8 +218,10 @@ testAnchorView filename model =
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
 testUpdate msg model =
   case msg of
-    StartDownload ->
+    DownloadText ->
       ( model, Download.string "funFile.txt" "text/plain" "Here is some fun text!" )
+    DownloadURL ->
+      ( model, Download.url "http://my-fun-url.com/some/path/to/myUrl.txt" )
     HandleClick ->
       ( { model | clicks = model.clicks + 1 }, Cmd.none )
 
@@ -200,8 +229,9 @@ testUpdate msg model =
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "downloadFile" -> Just downloadFileSpec
+    "downloadText" -> Just downloadTextSpec
     "downloadAnchor" -> Just downloadAnchorSpec
+    "downloadUrl" -> Just downloadUrlSpec
     "claimFailure" -> Just claimFailureSpec
     "downloadUrlClaimFailure" -> Just downloadUrlClaimFailureSpec
     _ -> Nothing

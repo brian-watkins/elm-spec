@@ -77,7 +77,7 @@ module.exports = class FilePlugin {
   }
 
   recordUrlDownload(url, downloadName) {
-    const filename = downloadName === "" ? url.pathname.substr(1) : downloadName
+    const filename = downloadName === "" ? url.pathname.split("/").pop() : downloadName
     this.recordDownload(filename, { type: "fromUrl", url: url.toString() })
   }
 

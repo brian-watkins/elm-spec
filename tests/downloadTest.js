@@ -6,15 +6,21 @@ const {
 } = require("./helpers/SpecHelpers")
 
 
-describe("download files", () => {
+describe("download", () => {
   context("downloading a file", () => {
-    it("downloads the file", (done) => {
-      expectSpec("DownloadSpec", "downloadFile", done, (observations) => {
+    it("downloads text content", (done) => {
+      expectSpec("DownloadSpec", "downloadText", done, (observations) => {
         expectAccepted(observations[0])
       })
     })
 
-    it("downloads the file using an anchor tag", (done) => {
+    it("downloads a url using File.Download.url", (done) => {
+      expectSpec("DownloadSpec", "downloadUrl", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+
+    it("downloads a url using an anchor tag", (done) => {
       expectSpec("DownloadSpec", "downloadAnchor", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
