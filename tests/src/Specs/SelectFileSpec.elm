@@ -1,4 +1,4 @@
-module Specs.UploadFileSpec exposing (main)
+module Specs.SelectFileSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
