@@ -31,13 +31,11 @@ import Spec.Message as Message exposing (Message)
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Claim as Claim exposing (Claim)
-import Spec.File.Internal exposing (toList, toBytes)
+import Spec.Binary as Binary
 import Spec.Report as Report
 import Json.Decode as Json
 import Json.Encode as Encode
 import Bytes exposing (Bytes)
-import Bytes.Encode as Bytes
-import Bytes.Decode as Decode
 
 
 {-| Represents a file.
@@ -86,7 +84,7 @@ fileFixtureEncoder fixture =
       Encode.object
         [ ("type", Encode.string "memory")
         , ("path", Encode.string path)
-        , ("bytes", Encode.list Encode.int <| toList Decode.unsignedInt8 content )
+        , ("bytes", Binary.jsonEncode content)
         ]
 
 
@@ -126,7 +124,7 @@ withBytes path binaryContent =
 -}
 withText : String -> String -> FileFixture
 withText path textContent =
-  Memory { path = path, content = Bytes.encode <| Bytes.string textContent }
+  Memory { path = path, content = Binary.encodeString textContent }
 
 
 {-| Represents a file downloaded in the course of a scenario.
@@ -173,8 +171,7 @@ downloadContentDecoder =
           Json.field "url" Json.string
             |> Json.map FromUrl
         _ ->
-          Json.field "data" (Json.list Json.int)
-            |> Json.map (toBytes Bytes.unsignedInt8)
+          Json.field "data" Binary.jsonDecoder
             |> Json.map Bytes
     )
 
@@ -202,7 +199,7 @@ text claim =
   \(Download download) ->
     case download.content of
       Bytes binaryContent ->
-        Decode.decode (Decode.string <| Bytes.width binaryContent) binaryContent
+        Binary.decodeToString binaryContent
           |> Maybe.map (\textContext ->
             claim textContext
               |> Claim.mapRejection (\report -> Report.batch

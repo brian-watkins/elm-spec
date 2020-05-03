@@ -27,7 +27,26 @@ describe("log http requests", () => {
       expectAccepted(observations[0])
       expectAccepted(observations[1])
     })
-  }) 
+  })
+
+  it("logs the request with bytes", (done) => {
+    expectSpec("HttpLogSpec", "logBytesRequest", done, (observations, error, logs) => {
+      expectLogReport(logs[0], [
+        reportLine("Received 1 HTTP request"),
+        reportLine("POST http://fun.com/bytes", "Headers: [ content-type = application/octet-stream ]\nBytes Body with 21 bytes")
+      ])
+    })
+  })
+
+  it("logs the request with a file", (done) => {
+    expectSpec("HttpLogSpec", "logFileRequest", done, (observations, error, logs) => {
+      expect(logs[0][0].statement).to.equal("Received 1 HTTP request")
+      expect(logs[0][1].statement).to.equal("POST http://fun.com/files")
+      const details = logs[0][1].detail.split("\n")
+      expect(details[0]).to.equal("Headers: [ content-type =  ]")
+      expect(details[1].replace(/:/g, "/")).to.contain("/some/path/to/my-test-file.txt")
+    })
+  })
 })
 
 const expectLogReport = (actual, expected) => {

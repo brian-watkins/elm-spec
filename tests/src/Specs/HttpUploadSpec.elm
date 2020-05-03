@@ -19,6 +19,9 @@ import Http
 import Json.Decode as Json
 import File exposing (File)
 import File.Select
+import Bytes exposing (Bytes)
+import Bytes.Encode as Bytes
+import Bytes.Decode as Decode
 import Runner
 import Specs.Helpers exposing (..)
 
@@ -77,6 +80,73 @@ uploadFileSpec =
                 ]
               )
           )
+        , it "fails when you try to expect bytes" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.bytesBody <| require Bytes.width <| equals 299
+                ]
+              )
+          )
+        ]
+    )
+  ]
+
+
+uploadBytesSpec : Spec Model Msg
+uploadBytesSpec =
+  describe "upload bytes"
+  [ scenario "POST bytes" (
+      given (
+        Setup.initWithModel { testModel | binaryText = "Some funny binary text!" }
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Stub.serve [ uploadStub ]
+      )
+      |> when "the bytes are posted"
+        [ Markup.target << by [ id "send-bytes" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "makes a request" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWithLength 1)
+          )
+        , it "sends the expected bytes" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.bytesBody <|
+                    (Decode.decode <| Decode.string 23) >> (isSomethingWhere <| equals "Some funny binary text!")
+                ]
+              )
+          )
+        , it "fails when you make a false claim about the bytes" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.bytesBody <| require Bytes.width <| equals 17
+                ]
+              )
+          )
+        , it "fails when you try to expect a file" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.fileBody <| require File.name <| equals "blah"
+                ]
+              )
+          )
+        , it "fails when you try to expect a string body" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.stringBody <| equals "blah"
+                ]
+              )
+          )
+        , it "fails when you try to expect a json body" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.jsonBody Json.string <| equals "blah"
+                ]
+              )
+          )
         ]
     )
   ]
@@ -97,15 +167,18 @@ type Msg
   | GotFile File
   | GotResponse (Result Http.Error String)
   | UploadFile
+  | SendBytes
 
 
 type alias Model =
   { selectedFile: Maybe File
+  , binaryText: String
   }
 
 
 testModel =
   { selectedFile = Nothing
+  , binaryText = ""
   }
 
 
@@ -114,6 +187,7 @@ testView model =
   Html.div []
   [ Html.button [ Attr.id "select-file", Events.onClick SelectFile ] [ Html.text "Select a file!" ]
   , Html.button [ Attr.id "upload-to-server", Events.onClick UploadFile ] [ Html.text "Upload file!" ]
+  , Html.button [ Attr.id "send-bytes", Events.onClick SendBytes ] [ Html.text "Send Bytes!" ]
   ]
 
 
@@ -129,6 +203,8 @@ testUpdate msg model =
       , Maybe.map postFile model.selectedFile
           |> Maybe.withDefault Cmd.none
       )
+    SendBytes ->
+      ( model, postBytes model.binaryText )
     GotResponse _ ->
       ( model, Cmd.none )
 
@@ -142,10 +218,25 @@ postFile file =
     }
 
 
+postBytes : String -> Cmd Msg
+postBytes text =
+  Http.post
+    { url = "http://fake-api.com/files"
+    , body = Http.bytesBody "application/octet-stream" <| bytesFromString text
+    , expect = Http.expectString GotResponse
+    }
+
+
+bytesFromString : String -> Bytes
+bytesFromString =
+  Bytes.encode << Bytes.string
+
+
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "uploadFile" -> Just uploadFileSpec
+    "uploadBytes" -> Just uploadBytesSpec
     _ -> Nothing
 
 

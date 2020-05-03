@@ -1,16 +1,37 @@
 const MockXHR = require('xhr-mock/lib/MockXMLHttpRequest').default
 const stubFor = require('xhr-mock/lib/createMockFunction').default
+const BlobReader = require('../blobReader')
 const { report, line } = require('../report')
 
 const fakeServerForGlobalContext = function(window) {
   window.XMLHttpRequest = new Proxy(MockXHR, {
     construct: (target, args) => {
-      const request = new target(...args)
+      const request = requestProxy(new target(...args))
       request.req.xhr = () => { return request }
       return request
     }
   })
   return window.XMLHttpRequest
+}
+
+const requestProxy = function(request) {
+  return new Proxy(request, {
+    get: (target, prop) => {
+      if (prop === "send") {
+        return (body) => {
+          let safeBody = body
+          if (body instanceof DataView) {
+            safeBody = new Blob([body])
+          }
+          target.send(safeBody)
+        }
+      }
+      const val = target[prop]
+      return typeof val === "function"
+        ? (...args) => val.apply(target, args)
+        : val;
+    }
+  })
 }
 
 module.exports = class HttpPlugin {
@@ -62,11 +83,11 @@ module.exports = class HttpPlugin {
       }
       case "fetch-requests": {
         const route = specMessage.body
-        let requests = []
+        let requestPromises = []
 
         switch (route.uri.type) {
           case "EXACT": {
-            requests = this.findRequests(route, (url) => {
+            requestPromises = this.findRequests(route, (url) => {
               return url === route.uri.value
             })
 
@@ -75,7 +96,7 @@ module.exports = class HttpPlugin {
           case "REGEXP": {
             try {
               const regex = new RegExp(route.uri.value)
-              requests = this.findRequests(route, (url) => {
+              requestPromises = this.findRequests(route, (url) => {
                 return regex.test(url)
               })
             } catch (err) {
@@ -87,11 +108,14 @@ module.exports = class HttpPlugin {
           }
         }
 
-        out({
-          home: "_http",
-          name: "requests",
-          body: requests
-        })
+        Promise.all(requestPromises)
+          .then((requests) => {
+            out({
+              home: "_http",
+              name: "requests",
+              body: requests
+            })    
+          })
 
         break
       }
@@ -148,28 +172,38 @@ module.exports = class HttpPlugin {
 }
 
 const buildRequest = (request) => {
-  return {
-    methpd: request.method(),
-    url: request.url().toString(),
-    headers: request.headers(),
-    body: buildRequestBody(request.body())
-  }
+  return buildRequestBody(request.body())
+    .then((requestBody) => {
+      return {
+        methpd: request.method(),
+        url: request.url().toString(),
+        headers: request.headers(),
+        body: requestBody
+      }
+    })
 }
 
 const buildRequestBody = (requestBody) => {
   if (!requestBody) {
-    return null
+    return Promise.resolve(null)
   }
 
   if (requestBody instanceof File) {
-    return {
+    return Promise.resolve({
       type: "file",
       content: requestBody
-    }
+    })
   }
 
-  return {
+  if (requestBody instanceof Blob) {
+    return new BlobReader(requestBody).readIntoArray()
+      .then((data) => {
+        return { type: "bytes", data }
+      })
+  }
+
+  return Promise.resolve({
     type: "string",
     content: requestBody
-  }
+  })
 }

@@ -7,6 +7,7 @@ module Spec.Http exposing
   , stringBody
   , jsonBody
   , fileBody
+  , bytesBody
   , url
   )
 
@@ -52,7 +53,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, observeRequests, clearRequestHistory
 
 # Make Claims About HTTP Requests
-@docs url, header, stringBody, jsonBody, fileBody
+@docs url, header, stringBody, jsonBody, fileBody, bytesBody
 
 # Debug
 @docs logRequests
@@ -74,6 +75,7 @@ import Url exposing (Url)
 import Url.Parser
 import Url.Parser.Query
 import File exposing (File)
+import Bytes exposing (Bytes)
 
 
 
@@ -125,6 +127,8 @@ stringBody claim =
         evaluateStringBodyClaim claim actual
       Request.FileBody _ ->
         Claim.Reject <| Report.fact "Claim rejected for string body" "The request body is a file."
+      Request.BytesBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for string body" "The request body is binary data. Use Spec.Http.bytesBody instead."
 
 
 evaluateStringBodyClaim : Claim String -> String -> Claim.Verdict
@@ -152,8 +156,6 @@ jsonBody : Json.Decoder a -> Claim a -> Claim HttpRequest
 jsonBody decoder claim =
   \(HttpRequest request) ->
     case request.body of
-      Request.EmptyBody ->
-        Claim.Reject <| Report.fact "Claim rejected for JSON body" "It has no body at all."
       Request.StringBody actual ->
         case Json.decodeString decoder actual of
           Ok value ->
@@ -163,8 +165,12 @@ jsonBody decoder claim =
               [ Report.fact "Expected to decode request body as JSON" actual
               , Report.fact "but the decoder failed" <| Json.errorToString error
               ]
+      Request.EmptyBody ->
+        Claim.Reject <| Report.fact "Claim rejected for JSON body" "It has no body at all."
       Request.FileBody _ ->
         Claim.Reject <| Report.fact "Claim rejected for json body" "The request body is a file."
+      Request.BytesBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for json body" "The request body is binary data. Use Spec.Http.bytesBody instead."
 
 
 {-| Claim that the body of an HTTP request is a File that satisfies the given claim.
@@ -181,8 +187,6 @@ fileBody : Claim File -> Claim HttpRequest
 fileBody claim =
   \(HttpRequest request) ->
     case request.body of
-      Request.EmptyBody ->
-        Claim.Reject <| Report.fact "Claim rejected for file body" "It has no body at all."
       Request.FileBody file ->
         claim file
           |> Claim.mapRejection (\report -> Report.batch
@@ -190,8 +194,41 @@ fileBody claim =
             , report
             ]
           )
-      _ ->
+      Request.EmptyBody ->
+        Claim.Reject <| Report.fact "Claim rejected for file body" "It has no body at all."
+      Request.BytesBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for file body" "The request body is binary data. Use Spec.Http.bytesBody instead."
+      Request.StringBody _ ->
         Claim.Reject <| Report.fact "Claim rejected for file body" "The request body is a string."
+
+
+{-| Claim that the body of an HTTP request is binary data that satisfies the given claim.
+
+For example, if the body of an observed request is binary data with a width of 12, then the
+following claim would be accepted:
+
+    Spec.Http.bytesBody
+      <| Spec.Claim.require Bytes.width
+      <| Claim.isEqual Debug.toString 12
+
+-}
+bytesBody : Claim Bytes -> Claim HttpRequest
+bytesBody claim =
+  \(HttpRequest request) ->
+    case request.body of
+      Request.BytesBody binaryContent ->
+        claim binaryContent
+          |> Claim.mapRejection (\report -> Report.batch
+            [ Report.note "Claim rejected for bytes body"
+            , report
+            ]
+          )
+      Request.EmptyBody ->
+        Claim.Reject <| Report.fact "Claim rejected for bytes body" "It has no body at all."
+      Request.StringBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for bytes body" "The request body is a string."
+      Request.FileBody _ ->
+        Claim.Reject <| Report.fact "Claim rejected for bytes body" "The request body is a file."
 
 
 {-| Observe HTTP requests that match the given route.

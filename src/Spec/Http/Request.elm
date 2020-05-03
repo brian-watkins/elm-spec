@@ -7,9 +7,11 @@ module Spec.Http.Request exposing
   )
 
 import Spec.Report as Report exposing (Report)
+import Spec.Binary as Binary
 import Json.Decode as Json
 import File exposing (File)
 import Dict exposing (Dict)
+import Bytes exposing (Bytes)
 
 
 type alias RequestData =
@@ -24,6 +26,7 @@ type RequestBody
   = EmptyBody
   | StringBody String
   | FileBody File
+  | BytesBody Bytes
 
 
 toReport : List RequestData -> Report
@@ -70,7 +73,9 @@ body data =
     StringBody stringBody ->
       "Body: " ++ stringBody
     FileBody fileBody ->
-      "File not done yet"
+      "File Body with name: " ++ File.name fileBody
+    BytesBody binaryContent ->
+      "Bytes Body with " ++ (String.fromInt <| Bytes.width binaryContent) ++ " bytes"
 
 
 decoder : Json.Decoder RequestData
@@ -90,6 +95,9 @@ requestBodyDecoder =
         "file" ->
           Json.field "content" File.decoder
             |> Json.map FileBody
+        "bytes" ->
+          Json.field "data" Binary.jsonDecoder
+            |> Json.map BytesBody
         _ ->
           Json.field "content" Json.string
             |> Json.map StringBody

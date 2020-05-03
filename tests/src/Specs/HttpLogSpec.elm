@@ -8,10 +8,14 @@ import Spec.Markup.Event as Event
 import Spec.Claim exposing (..)
 import Spec.Http
 import Spec.Http.Route exposing (..)
+import Spec.File
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Http
+import Bytes.Encode as Bytes
+import File exposing (File)
+import File.Select
 import Json.Encode as Encode
 import Runner
 
@@ -50,8 +54,56 @@ httpRequestLogSpec =
     )
   ]
 
+logBytesRequestSpec : Spec Model Msg
+logBytesRequestSpec =
+  describe "log an HTTP request with bytes body"
+  [ scenario "the request is logged" (
+      given (
+        testSubject
+          [ bytesRequest "http://fun.com/bytes" <| Bytes.encode <| Bytes.string "This is binary stuff!"
+          ]
+      )
+      |> when "requests are sent"
+        [ Markup.target << by [ id "request-button" ]
+        , Event.click
+        , Spec.Http.logRequests
+        ]
+      |> it "makes the POST requests" (
+        Spec.Http.observeRequests (route "POST" <| Matching ".+")
+          |> expect (isListWithLength 1)
+      )
+    )
+  ]
 
-getRequest url headers =
+
+logFileRequestSpec : Spec Model Msg
+logFileRequestSpec =
+  describe "log an HTTP request with file body"
+  [ scenario "the request is logged" (
+      given (
+        testSubject
+          [ fileRequest "http://fun.com/files"
+          ]
+      )
+      |> when "a file is selected"
+        [ Markup.target << by [ id "select-file" ]
+        , Event.click
+        , Spec.File.select [ Spec.File.withText "/some/path/to/my-test-file.txt" "some super cool content" ]
+        ]
+      |> when "requests are sent"
+        [ Markup.target << by [ id "request-button" ]
+        , Event.click
+        , Spec.Http.logRequests
+        ]
+      |> it "makes the POST requests" (
+        Spec.Http.observeRequests (route "POST" <| Matching ".+")
+          |> expect (isListWithLength 1)
+      )
+    )
+  ]
+
+
+getRequest url headers _ =
   Http.request
     { method = "GET"
     , headers = headers
@@ -63,7 +115,7 @@ getRequest url headers =
     }
 
 
-postRequest url =
+postRequest url _ =
   Http.request
     { method = "POST"
     , headers =
@@ -79,46 +131,77 @@ postRequest url =
     }
 
 
+bytesRequest url bytes _ =
+  Http.post
+    { url = url
+    , body = Http.bytesBody "application/octet-stream" bytes
+    , expect = Http.expectString ReceivedRequest
+    }
+
+
+fileRequest url (Model model) =
+  model.selectedFile
+    |> Maybe.map (\file ->
+      Http.post
+        { url = url
+        , body = Http.fileBody file
+        , expect = Http.expectString ReceivedRequest
+        }
+    )
+    |> Maybe.withDefault Cmd.none
+
+
 testSubject requests =
   Setup.initWithModel (defaultModel requests)
     |> Setup.withView testView
     |> Setup.withUpdate testUpdate
 
 
-type alias Model =
-  { requests : List (Cmd Msg)
-  }
+type Model =
+  Model
+    { requests: List (Model -> Cmd Msg)
+    , selectedFile: Maybe File
+    }
 
 
 defaultModel requests =
-  { requests = requests
-  }
+  Model
+    { requests = requests
+    , selectedFile = Nothing
+    }
 
 
 type Msg
   = SendRequest
+  | SelectFile
+  | GotFile File
   | ReceivedRequest (Result Http.Error String)
 
 
 testUpdate : Msg -> Model -> (Model, Cmd Msg)
-testUpdate msg model =
+testUpdate msg (Model model) =
   case msg of
+    SelectFile ->
+      ( Model model, File.Select.file [] GotFile )
+    GotFile file ->
+      ( Model { model | selectedFile = Just file }, Cmd.none )
     SendRequest ->
       case model.requests of
         [] ->
-          ( model, Cmd.none )
+          ( Model model, Cmd.none )
         next :: requests ->
-          ( { model | requests = requests }
-          , next
+          ( Model { model | requests = requests }
+          , next <| Model model
           )
     ReceivedRequest _ ->
-      ( model, Cmd.none )
+      ( Model model, Cmd.none )
 
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.button [ Attr.id "request-button", Events.onClick SendRequest ] [ Html.text "Send Next Request!" ]
+  , Html.button [ Attr.id "select-file", Events.onClick SelectFile ] [ Html.text "Select file!" ]
   ]
 
 
@@ -126,6 +209,8 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "logRequests" -> Just httpRequestLogSpec
+    "logBytesRequest" -> Just logBytesRequestSpec
+    "logFileRequest" -> Just logFileRequestSpec
     _ -> Nothing
 
 

@@ -7,6 +7,7 @@ const {
   sendToProgram
 } = require('../fakes')
 const BrowserContext = require("../browserContext")
+const BlobReader = require('../blobReader')
 
 module.exports = class FilePlugin {
   constructor(context) {
@@ -68,14 +69,12 @@ module.exports = class FilePlugin {
   }
 
   recordBlobDownload(blobUrl, filename) {
-    var reader = new FileReader();
-    reader.addEventListener('loadend', () => {
-      const data = new Uint8Array(reader.result)
-      this.recordDownload(filename, { type: "bytes", data: Array.from(data) })
-    });
     const blobKey = blobUrl.pathname.split("/").pop()
     const blob = blobStore().get(blobKey)
-    reader.readAsArrayBuffer(blob)
+    new BlobReader(blob).readIntoArray()
+      .then((data) => {
+        this.recordDownload(filename, { type: "bytes", data })
+      })
   }
 
   recordUrlDownload(url, downloadName) {

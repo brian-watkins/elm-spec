@@ -17,6 +17,7 @@ import Html.Events as Events
 import Runner
 import Json.Decode as Json
 import Json.Encode as Encode
+import Bytes
 import File
 import Http
 import Url.Builder
@@ -501,6 +502,14 @@ hasBodySpec =
                   ]
               )
           )
+        , it "fails to find a bytes body" (
+            Spec.Http.observeRequests (get "http://fake-api.com/stuff")
+              |> expect (
+                isListWhere
+                  [ Spec.Http.bytesBody <| require Bytes.width <| equals 11
+                  ]
+              )
+          )
         ]
     )
   , scenario "string body with json" (
@@ -546,6 +555,14 @@ hasBodySpec =
               |> expect (
                 isListWhere
                   [ Spec.Http.fileBody <| require File.name <| equals "Some file"
+                  ]
+              )
+          )
+        , it "fails when making a claim about bytes" (
+            Spec.Http.observeRequests (post "http://fake-api.com/stuff")
+              |> expect (
+                isListWhere
+                  [ Spec.Http.bytesBody <| require Bytes.width <| equals 11
                   ]
               )
           )
