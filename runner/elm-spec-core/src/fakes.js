@@ -8,6 +8,7 @@ const { fakeDate } = require('./fakes/fakeDate')
 const { proxiedConsole } = require('./fakes/proxiedConsole')
 const { fakeWindow } = require('./fakes/fakeWindow')
 const { fakeMouseEvent } = require('./fakes/fakeMouseEvent')
+const { fileReaderProxy } = require('./fakes/fileReaderProxy')
 
 exports.registerFakes = (window, clock) => {
   window._elm_spec = {}
@@ -26,6 +27,7 @@ exports.registerFakes = (window, clock) => {
   window._elm_spec.timer = new FakeTimer(clock)
   window._elm_spec.url = new FakeURL(window._elm_spec.blobStore)
   window._elm_spec.mouseEvent = fakeMouseEvent()
+  window._elm_spec.fileReader = fileReaderProxy(() => { exports.stopWaitingForStack(window) })
 }
 
 exports.injectFakes = (code) => {
@@ -42,6 +44,7 @@ exports.injectFakes = (code) => {
   const setInterval = theWindow._elm_spec.timer.fakeSetInterval();
   const URL = theWindow._elm_spec.url;
   const MouseEvent = theWindow._elm_spec.mouseEvent;
+  const FileReader = theWindow._elm_spec.fileReader;
   ${code}
 })(window)
 `
@@ -64,8 +67,8 @@ exports.setWindowVisibility = (isVisible, window) => {
   window._elm_spec.isVisible = isVisible
 }
 
-exports.clearTimers = (window) => {
-  window._elm_spec.timer.clear()
+exports.getTimer = (window) => {
+  return window._elm_spec.timer
 }
 
 exports.whenStackIsComplete = (window, fun) => {

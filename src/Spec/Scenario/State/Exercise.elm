@@ -100,11 +100,8 @@ update exerciseModel actions msg =
           exerciseModel.subject.update programMsg exerciseModel.programModel
             |> Tuple.mapFirst (\updated -> { exerciseModel | programModel = updated })
       in
-        if nextCommand == Cmd.none then
-          ( exercise updatedExerciseModel, sendComplete actions )
-        else
-          Step.SendRequest Step.programCommand (\_ -> Step.SendCommand nextCommand)
-            |> handleStepCommand actions updatedExerciseModel
+        Step.SendCommand nextCommand
+          |> handleStepCommand actions updatedExerciseModel
 
     Continue ->
       case exerciseModel.steps of
@@ -157,14 +154,6 @@ update exerciseModel actions msg =
             )
           else
             handleUrlRequest (exercise exerciseModel) request
-
-
-doAndRender : Actions msg programMsg -> Cmd (Msg programMsg) -> Cmd msg
-doAndRender actions cmd =
-  Cmd.batch
-    [ Cmd.map actions.sendToSelf cmd
-    , State.send actions Message.runToNextAnimationFrame
-    ]
 
 
 sendComplete : Actions msg programMsg -> Cmd msg
@@ -235,8 +224,11 @@ handleStepCommand actions exerciseModel command =
       )
     Step.SendCommand cmd ->
       ( exercise exerciseModel
-      , Cmd.map ProgramMsg cmd
-          |> doAndRender actions
+      , Cmd.batch
+        [ Cmd.map ProgramMsg cmd
+            |> Cmd.map actions.sendToSelf
+        , State.send actions Step.programCommand
+        ]
       )
     Step.RecordCondition condition ->
       update { exerciseModel | conditionsApplied = exerciseModel.conditionsApplied ++ [ condition ] } actions Continue

@@ -39,7 +39,7 @@ stubTimeSpec =
         ]
       |> it "increments the time beginning with the stubbed time" (
         Observer.observeModel .current
-          |> expect (equals <| Time.millisToPosix 1111111113120)
+          |> expect (equals <| Time.millisToPosix 1111111113111)
       )
     )
   ]

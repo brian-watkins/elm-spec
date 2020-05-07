@@ -25,7 +25,24 @@ module.exports = class FakeTimer {
     }
   }
 
+  runAllAnimationFrameTasks() {
+    this.clock.runToFrame()
+  }
+
+  currentAnimationFrameTasks() {
+    return Object.values(this.clock.timers)
+      .filter(t => t.animation)
+  }
+
+  triggerAnimationFrameTask(id) {
+    const timer = this.clock.timers[id]
+    timer.func.apply(null, timer.args);
+    this.clock.cancelAnimationFrame(id)
+  }
+
   clear() {
+    // Note: Can't use clock.reset() here because that will remove the animation frame task
+    // that keeps the program running
     for (let i = 0; i < this.timeouts.length; i++) {
       this.clock.clearTimeout(this.timeouts[i])
     }
@@ -42,8 +59,6 @@ module.exports = class FakeTimer {
       // Note: This seems weird but Elm never actually calls clearTimeout so
       // as long as ordering doesn't matter then this should be ok. Speeds up the test run.
       // Otherwise, need to reset the stackTimeout function each time this is called.
-      // This probably works because these are functions queued only between the start of a
-      // step and the first pass through the program's update function.
       fun()
       return -1
     } else {
