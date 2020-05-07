@@ -4,8 +4,7 @@ const {
   mapElement,
   blobStore,
   openFileSelector,
-  sendToProgram,
-  stopWaitingForStack
+  sendToProgram
 } = require('../fakes')
 const BrowserContext = require("../browserContext")
 const BlobReader = require('../blobReader')
@@ -76,7 +75,7 @@ module.exports = class FilePlugin {
       .then((data) => {
         this.recordDownload(filename, { type: "bytes", data })
       })
-    stopWaitingForStack(window)
+    this.context.timer.stopWaitingForStack()
   }
 
   recordUrlDownload(url, downloadName) {

@@ -1,8 +1,6 @@
 module.exports = class FakeTimer {
   constructor (clock) {
     this.clock = clock
-    this.timeouts = []
-    this.intervals = []
   }
 
   fakeSetTimeout() {
@@ -11,17 +9,13 @@ module.exports = class FakeTimer {
         return this.addToStack(fun)
       }
       
-      const id = this.clock.setTimeout(fun, delay)
-      this.timeouts.push(id)
-      return id  
+      return this.clock.setTimeout(fun, delay)
     }
   }
 
   fakeSetInterval() {
     return (fun, period) => {
-      const id = this.clock.setInterval(fun, period)
-      this.intervals.push(id)
-      return id  
+      return this.clock.setInterval(fun, period)
     }
   }
 
@@ -40,18 +34,22 @@ module.exports = class FakeTimer {
     this.clock.cancelAnimationFrame(id)
   }
 
-  clear() {
-    // Note: Can't use clock.reset() here because that will remove the animation frame task
-    // that keeps the program running
-    for (let i = 0; i < this.timeouts.length; i++) {
-      this.clock.clearTimeout(this.timeouts[i])
-    }
-    this.timeouts = []
+  clearTimers() {
+    Object.values(this.clock.timers)
+      .filter(t => t.type === "Timeout")
+      .forEach(t => {
+        this.clock.clearTimeout(t.id)
+      })
 
-    for (let i = 0; i < this.intervals.length; i++) {
-      this.clock.clearInterval(this.intervals[i])
-    }
-    this.intervals = []
+    Object.values(this.clock.timers)
+      .filter(t => t.type === "Interval")
+      .forEach(t => {
+        this.clock.clearInterval(t.id)
+      })
+  }
+
+  reset() {
+    this.clock.reset()
   }
 
   addToStack(fun) {

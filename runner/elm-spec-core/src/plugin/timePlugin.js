@@ -5,7 +5,7 @@ const {
 module.exports = class TimePlugin {
   constructor(context) {
     this.window = context.window
-    this.clock = context.clock
+    this.clock = context.timer.clock
   }
 
   handle(specMessage) {

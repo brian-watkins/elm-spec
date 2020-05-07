@@ -8,14 +8,11 @@ const WitnessPlugin = require('./plugin/witnessPlugin')
 const {
   registerApp,
   setBaseLocation,
-  whenStackIsComplete,
-  stopWaitingForStack,
   clearEventListeners,
   setTimezoneOffset,
   setBrowserViewport,
   closeFileSelector,
   clearElementMappers,
-  getTimer
 } = require('./fakes')
 const { report, line } = require('./report')
 
@@ -46,7 +43,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     super()
     this.app = app
     this.context = context
-    this.timer = getTimer(this.context.window)
+    this.timer = this.context.timer
     this.portPlugin = new PortPlugin(app)
     this.httpPlugin = new HttpPlugin(this.context)
     this.plugins = this.generatePlugins(this.context)
@@ -154,14 +151,14 @@ module.exports = class ProgramRunner extends EventEmitter {
         })
         break
       case "program-command":
-        whenStackIsComplete(this.context.window, () => {
+        this.timer.whenStackIsComplete(() => {
           if (!this.runAnyExtraAnimationFrameTasks()) {
             out(this.continue())
           }
         })
         break
       case "complete":
-        whenStackIsComplete(this.context.window, () => {
+        this.timer.whenStackIsComplete(() => {
           out(this.continue())
         })
         break
@@ -219,14 +216,14 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "configure":
         this.handleMessage(specMessage.body.message, out)
-        whenStackIsComplete(this.context.window, () => {
+        this.timer.whenStackIsComplete(() => {
           this.configureComplete(out)
         })
         break
       case "step":
         this.stepAnimationFrameTaskCount = this.timer.currentAnimationFrameTasks().length
         this.handleMessage(specMessage.body.message, out)
-        whenStackIsComplete(this.context.window, () => {
+        this.timer.whenStackIsComplete(() => {
           out(this.continue())
         })
         break
@@ -264,7 +261,7 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   prepareForScenario() {
     this.timer.runAllAnimationFrameTasks()
-    this.timer.clear()
+    this.timer.clearTimers()
     clearEventListeners(this.context.window)
     setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
     setBaseLocation("http://elm-spec", this.context.window)
@@ -287,7 +284,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   detachProgram() {
-    stopWaitingForStack(this.context.window)
+    this.timer.stopWaitingForStack()
     this.portPlugin.unsubscribe()
   }
 

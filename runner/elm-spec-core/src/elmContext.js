@@ -1,4 +1,5 @@
 const lolex = require('lolex')
+const FakeTimer = require('./fakes/fakeTimer')
 const { registerFakes, injectFakes } = require('./fakes')
 const path = require('path')
 
@@ -19,9 +20,9 @@ window._elm_spec.compiler = {
 
   constructor(window) {
     this.window = window
-    this.clock = lolex.createClock()
+    this.timer = new FakeTimer(lolex.createClock())
 
-    registerFakes(this.window, this.clock)
+    registerFakes(this.window, this.timer)
   }
 
   evaluate(evaluator) {

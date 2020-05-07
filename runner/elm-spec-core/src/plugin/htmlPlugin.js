@@ -191,7 +191,7 @@ module.exports = class HtmlPlugin {
   }
 
   renderAndThen(callback) {
-    this.context.clock.runToFrame()
+    this.context.timer.runAllAnimationFrameTasks()
     callback()
   }
 

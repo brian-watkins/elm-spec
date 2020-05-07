@@ -1,6 +1,5 @@
 const FakeLocation = require('./fakes/fakeLocation')
 const FakeHistory = require('./fakes/fakeHistory')
-const FakeTimer = require('./fakes/fakeTimer')
 const FakeURL = require('./fakes/fakeURL')
 const BlobStore = require('./fakes/blobStore')
 const FakeDocument = require('./fakes/fakeDocument')
@@ -10,13 +9,13 @@ const { fakeWindow } = require('./fakes/fakeWindow')
 const { fakeMouseEvent } = require('./fakes/fakeMouseEvent')
 const { fileReaderProxy } = require('./fakes/fileReaderProxy')
 
-exports.registerFakes = (window, clock) => {
+exports.registerFakes = (window, timer) => {
   window._elm_spec = {}
   window._elm_spec.blobStore = new BlobStore()
   const fakeLocation = new FakeLocation(exports.sendToProgram(window))
-  window._elm_spec.requestAnimationFrame = clock.requestAnimationFrame
-  window._elm_spec.cancelAnimationFrame = clock.cancelAnimationFrame
-  window._elm_spec.date = fakeDate(clock)
+  window._elm_spec.requestAnimationFrame = timer.clock.requestAnimationFrame
+  window._elm_spec.cancelAnimationFrame = timer.clock.cancelAnimationFrame
+  window._elm_spec.date = fakeDate(timer.clock)
   window._elm_spec.viewportOffset = { x: 0, y: 0 }
   window._elm_spec.windowEventListeners = {}
   window._elm_spec.window = fakeWindow(window, fakeLocation)
@@ -24,10 +23,10 @@ exports.registerFakes = (window, clock) => {
   window._elm_spec.fakeDocument = new FakeDocument(window, fakeLocation)
   window._elm_spec.history = new FakeHistory(fakeLocation)
   window._elm_spec.console = proxiedConsole()
-  window._elm_spec.timer = new FakeTimer(clock)
+  window._elm_spec.timer = timer
   window._elm_spec.url = new FakeURL(window._elm_spec.blobStore)
   window._elm_spec.mouseEvent = fakeMouseEvent()
-  window._elm_spec.fileReader = fileReaderProxy(() => { exports.stopWaitingForStack(window) })
+  window._elm_spec.fileReader = fileReaderProxy(() => { timer.stopWaitingForStack() })
 }
 
 exports.injectFakes = (code) => {
@@ -65,18 +64,6 @@ exports.resizeWindowTo = (width, height, window) => {
 
 exports.setWindowVisibility = (isVisible, window) => {
   window._elm_spec.isVisible = isVisible
-}
-
-exports.getTimer = (window) => {
-  return window._elm_spec.timer
-}
-
-exports.whenStackIsComplete = (window, fun) => {
-  window._elm_spec.timer.whenStackIsComplete(fun)
-}
-
-exports.stopWaitingForStack = (window) => {
-  window._elm_spec.timer.stopWaitingForStack()
 }
 
 exports.setTimezoneOffset = (window, offset) => {

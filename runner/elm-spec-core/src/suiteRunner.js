@@ -61,7 +61,7 @@ module.exports = class SuiteRunner extends EventEmitter {
   }
 
   prepareForApp() {
-    this.context.clock.reset()
+    this.context.timer.reset()
   }
 
   initializeApp(program) {
