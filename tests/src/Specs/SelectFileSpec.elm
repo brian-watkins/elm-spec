@@ -99,7 +99,7 @@ selectFileSpec =
             Observer.observeModel .fileContents
               |> expect (isListWhere
                 [ equals "Here is text from a fun file!"
-                , equals "Here is an awesome file, dude!"
+                , isStringContaining 1 "And that was some awesome stuff!"
                 ]
               )
           ) 
