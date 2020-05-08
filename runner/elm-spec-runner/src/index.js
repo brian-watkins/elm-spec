@@ -19,10 +19,10 @@ class RunSuite extends Command {
       this.error(`No elm executable found at: ${flags.elm}`)
     }
 
-    const elmJsonPath = path.join(flags.cwd, "elm.json")
+    const elmJsonPath = path.join(flags.specRoot, "elm.json")
 
     if (!fs.existsSync(elmJsonPath)) {
-      this.error(`Expected an elm.json at: ${elmJsonPath}\nCheck the --cwd flag to set the directory containing the elm.json for your specs.`)
+      this.error(`Expected an elm.json at: ${elmJsonPath}\nCheck the --specRoot flag to set the directory containing the elm.json for your specs.`)
     }
 
     const command = new RunSpecsCommand(this.runnerFor(flags.browser), this.getReporter(), FileWatcher)
@@ -32,7 +32,7 @@ class RunSuite extends Command {
         visible: flags.visible
       },
       compilerOptions: {
-        cwd: flags.cwd,
+        cwd: flags.specRoot,
         specPath: flags.specs,
         elmPath: flags.elm,
         logLevel: Compiler.LOG_LEVEL.QUIET
@@ -68,12 +68,12 @@ RunSuite.description = `Run Elm-Spec specs from the command line`
 RunSuite.flags = {
   version: flags.version({char: 'v'}),
   help: flags.help({char: 'h'}),
-  cwd: flags.string({
+  specRoot: flags.string({
     description: 'root dir for specs containing elm.json',
     default: path.join(process.cwd(), "specs")
   }),
   specs: flags.string({
-    description: 'glob for spec modules',
+    description: 'glob for spec modules (relative to specRoot)',
     default: path.join(".", "**", "*Spec.elm")
   }),
   elm: flags.string({description: 'path to elm', default: 'elm'}),

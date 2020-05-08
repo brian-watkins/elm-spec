@@ -21,9 +21,9 @@ $ elm-spec [options]
 
 `--elm` -- Specify path to elm executable. Defaults to `elm`
 
-`--cwd` -- Specify a different working directory; should contain the elm.json file for the specs. Defaults to `./specs`
+`--specRoot` -- Specify the root directory for specs; should contain the elm.json file for the specs. Defaults to `./specs`
 
-`--specs` -- Specify a glob for spec modules. Defaults to `./**/*Spec.elm`
+`--specs` -- Specify a glob for spec modules, relative to `specRoot`. Defaults to `./**/*Spec.elm`
 
 `--browser` -- Specify the browser environment for the specs: `jsdom`, `chromium`, `webkit`, `firefox`. Defaults to `jsdom`
 

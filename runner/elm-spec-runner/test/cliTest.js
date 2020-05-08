@@ -8,7 +8,7 @@ describe('elm-spec-runner', () => {
     it("executes the spec and prints the number accepted", () => {
       const command = "./bin/run" +
         " --elm ../../node_modules/.bin/elm" +
-        " --cwd ../elm-spec-core/tests/sample/" +
+        " --specRoot ../elm-spec-core/tests/sample/" +
         " --specs ./specs/Passing/**/*Spec.elm"
       const runnerOutput = shell.exec(command, { silent: true })
       expect(runnerOutput.stdout).to.contain("Accepted: 9")
@@ -19,7 +19,7 @@ describe('elm-spec-runner', () => {
     it("executes the spec once and on each change, and it ignores changes while running", async () => {
       const command = "./bin/run" +
         " --elm ../../node_modules/.bin/elm" +
-        " --cwd ../elm-spec-core/tests/sample/" +
+        " --specRoot ../elm-spec-core/tests/sample/" +
         " --specs ./specs/Passing/**/*Spec.elm" +
         " --watch"
       
@@ -57,7 +57,7 @@ describe('elm-spec-runner', () => {
     it("prints an error", () => {
       const command = "./bin/run" +
         " --elm ../../node_modules/.bin/elm" +
-        " --cwd ../elm-spec-core/tests/"
+        " --specRoot ../elm-spec-core/tests/"
       const runnerOutput = shell.exec(command, { silent: true })
       expect(runnerOutput.stderr).to.contain("Expected an elm.json at: ../elm-spec-core/tests/elm.json")
     })
