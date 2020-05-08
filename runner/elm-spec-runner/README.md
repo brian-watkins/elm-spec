@@ -35,4 +35,6 @@ $ elm-spec [options]
 
 `--endOnFailure` -- Stop the spec suite run on the first failure.
 
+`--css` -- Path to a CSS file to load in the browser, relative to the current directory. You may specify multiple css files.
+
 `--help` -- Print options

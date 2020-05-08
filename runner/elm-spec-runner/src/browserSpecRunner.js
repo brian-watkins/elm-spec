@@ -19,6 +19,8 @@ module.exports = class BrowserSpecRunner {
   async run(reporter, compilerOptions, runnerOptions) {
     const page = await this.getPage(compilerOptions.cwd)
 
+    await this.loadCSS(page)
+
     await this.adaptPageForElm(page)
 
     await this.adaptReporterToBrowser(page, reporter)
@@ -34,6 +36,10 @@ module.exports = class BrowserSpecRunner {
 
   async stop() {
     await this.browser.close()
+  }
+
+  async loadCSS(page) {
+    await Promise.all(this.browserOptions.cssFiles.map(path => page.addStyleTag({path})))
   }
 
   async adaptPageForElm(page) {

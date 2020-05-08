@@ -29,7 +29,8 @@ class RunSuite extends Command {
 
     await command.execute({
       browserOptions: {
-        visible: flags.visible
+        visible: flags.visible,
+        cssFiles: flags.css || []
       },
       compilerOptions: {
         cwd: flags.specRoot,
@@ -90,6 +91,10 @@ RunSuite.flags = {
   visible: flags.boolean({description: 'show browser while running specs (does nothing for jsdom)'}),
   watch: flags.boolean({
     description: "watch all elm files in the source-directories of the specRoot elm.json"
+  }),
+  css: flags.string({
+    description: "path to .css file to load in the browser (may specify multiple)",
+    multiple: true
   })
 }
 

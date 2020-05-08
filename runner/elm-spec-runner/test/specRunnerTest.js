@@ -111,7 +111,8 @@ describe("Spec Runners", () => {
 })
 
 const testBrowserOptions = {
-  visible: false
+  visible: false,
+  cssFiles: []
 }
 
 const failingSpec = {
