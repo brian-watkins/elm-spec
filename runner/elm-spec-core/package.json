@@ -22,8 +22,8 @@
   "dependencies": {
     "glob": "^7.1.6",
     "lolex": "^4.2.0",
-    "node-elm-compiler": "^5.0.4",
-    "xhr-mock": "^2.5.1"
+    "mock-xmlhttprequest": "^6.0.0",
+    "node-elm-compiler": "^5.0.4"
   },
   "devDependencies": {
     "browserify": "^16.5.1",

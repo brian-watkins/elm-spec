@@ -1,20 +1,17 @@
-const MockXHR = require('xhr-mock/lib/MockXMLHttpRequest').default
-const stubFor = require('xhr-mock/lib/createMockFunction').default
+const MockXHR = require('mock-xmlhttprequest')
 const BlobReader = require('../blobReader')
 const { report, line } = require('../report')
 
-const fakeServerForGlobalContext = function(window) {
-  window.XMLHttpRequest = new Proxy(MockXHR, {
+const createMockXhrRequestClass = function(context) {
+  const MockXHRClass = MockXHR.newMockXhr()
+  return new Proxy(MockXHRClass, {
     construct: (target, args) => {
-      const request = requestProxy(new target(...args))
-      request.req.xhr = () => { return request }
-      return request
+      return requestProxy(context, new target(...args))
     }
   })
-  return window.XMLHttpRequest
 }
 
-const requestProxy = function(request) {
+const requestProxy = function(context, request) {
   return new Proxy(request, {
     get: (target, prop) => {
       if (prop === "send") {
@@ -23,7 +20,17 @@ const requestProxy = function(request) {
           if (body instanceof DataView) {
             safeBody = new Blob([body])
           }
+          context.timer.stopWaitingForStack()
           target.send(safeBody)
+        }
+      }
+      if (prop === "getAllResponseHeaders") {
+        return () => {
+          const headers = target._response.headers.getHash()
+          return Object.keys(headers).sort().reduce((result, name) => {
+            const headerValue = headers[name];
+            return `${result}${name.toLowerCase()}: ${headerValue}\r\n`;
+          }, '')
         }
       }
       const val = target[prop]
@@ -36,8 +43,10 @@ const requestProxy = function(request) {
 
 module.exports = class HttpPlugin {
   constructor(context) {
-    this.server = fakeServerForGlobalContext(context.window)
-    this.server.errorCallback = function() {}
+    const MockXHRClass = createMockXhrRequestClass(context)
+    this.server = new MockXHR.MockXhrServer(MockXHRClass, {})
+    this.server.install(context.window)
+    this.server.setDefault404()
     this.reset()
   }
 
@@ -47,18 +56,11 @@ module.exports = class HttpPlugin {
   }
 
   resetHistory() {
-    this.requests = []
+    this.server._requests = []
   }
 
   resetStubs() {
-    this.server.removeAllHandlers()
-    this.server.addHandler(this.recordRequests())
-  }
-
-  recordRequests() {
-    return (request) => {
-      this.requests.push(request)
-    }
+    this.server._routes = {}
   }
 
   handle(specMessage, out, next, abort) {
@@ -144,40 +146,39 @@ module.exports = class HttpPlugin {
   }
 
   setupStub(stub, uriDescriptor, out) {
-    this.server.addHandler(stubFor(stub.route.method, uriDescriptor, (request, response) => {
+    this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
       if (stub.shouldRespond) {
         if (stub.error === "network") {
-          return Promise.reject(new Error())
+          xhr.setNetworkError()
         } else if (stub.error === "timeout") {
-          request.xhr().listeners.timeout[0]()
-          request.xhr().abort()
+          xhr.setRequestTimeout()
         } else {
-          return response.status(stub.status).headers(stub.headers).body(stub.body)
+          xhr.respond(stub.status, stub.headers, stub.body)
         }
       } else {
-        request.xhr().abort()
+        xhr.abort()
         out({home: "_http", name: "abstained", body: null})
       }
-    }))
+    })
   }
 
   findRequests(route, matchUrl) {
-    return this.requests
+    return this.server.getRequestLog()
       .filter(request => {
-        if (route.method !== "ANY" && request.method() !== route.method) return false
-        return matchUrl(request.url().toString())
+        if (route.method !== "ANY" && request.method !== route.method) return false
+        return matchUrl(request.url)
       })
       .map(buildRequest)
   }
 }
 
 const buildRequest = (request) => {
-  return buildRequestBody(request.body())
+  return buildRequestBody(request.body)
     .then((requestBody) => {
       return {
-        methpd: request.method(),
-        url: request.url().toString(),
-        headers: request.headers(),
+        methpd: request.method,
+        url: request.url,
+        headers: request.headers,
         body: requestBody
       }
     })

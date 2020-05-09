@@ -464,13 +464,6 @@ hasHeaderSpec =
 
 hasBodySpec : Spec Model Msg
 hasBodySpec =
-  let
-    postBody =
-      Encode.object
-      [ ( "name", Encode.string "fun person" )
-      , ( "age", Encode.int 88 )
-      ]
-  in
   Spec.describe "hasBody"
   [ scenario "empty body" (
       given (
@@ -514,6 +507,13 @@ hasBodySpec =
     )
   , scenario "string body with json" (
       given (
+        let
+          postBody =
+            Encode.object
+            [ ( "name", Encode.string "fun person" )
+            , ( "age", Encode.int 88 )
+            ]
+        in
         testSubject (postRequestWithJson postBody) []
       )
       |> whenTheRequestIsTriggered

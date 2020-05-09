@@ -21,7 +21,7 @@ describe("log http requests", () => {
         reportLine("Received 3 HTTP requests"),
         reportLine("GET http://fun.com/fun/1", "Headers: [ content-type = text/plain;charset=utf-8, x-fun-header = my-header ]\nEmpty Body"),
         reportLine("GET http://awesome.com/awesome?name=cool", "Headers: [ content-type = text/plain;charset=utf-8 ]\nEmpty Body"),
-        reportLine("POST http://super.com/super", "Headers: [ content-type = application/json, x-fun-header = my-header, x-super-header = super ]\nBody: {\"name\":\"Cool Dude\",\"count\":27}")
+        reportLine("POST http://super.com/super", "Headers: [ content-type = text/plain;charset=utf-8, application/json, x-fun-header = my-header, x-super-header = super ]\nBody: {\"name\":\"Cool Dude\",\"count\":27}")
       ])
 
       expectAccepted(observations[0])
@@ -43,7 +43,7 @@ describe("log http requests", () => {
       expect(logs[0][0].statement).to.equal("Received 1 HTTP request")
       expect(logs[0][1].statement).to.equal("POST http://fun.com/files")
       const details = logs[0][1].detail.split("\n")
-      expect(details[0]).to.equal("Headers: [ content-type =  ]")
+      expect(details[0]).to.equal("Headers: [  ]")
       expect(details[1].replace(/:/g, "/")).to.contain("/some/path/to/my-test-file.txt")
     })
   })
