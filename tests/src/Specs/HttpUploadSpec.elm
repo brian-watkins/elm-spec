@@ -152,6 +152,118 @@ uploadBytesSpec =
   ]
 
 
+progressSpec : Spec Model Msg
+progressSpec =
+  describe "upload progress"
+  [ scenario "partial upload" (
+      given (
+        setupForProgress
+          |> Stub.serve
+            [ Stub.for (post "http://fake-api.com/files")
+                |> Stub.withProgress (Stub.sent 8)
+            ]
+      )
+      |> whenFileIsUploaded [ Spec.File.withText "my-super-file.txt" "Some super text!" ]
+      |> it "shows the progress" (
+        Markup.observeElement
+          |> Markup.query << by [ id "progress" ]
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "Upload 50% Complete!")
+      )
+    )
+  , scenario "partial upload with no progress subscription" (
+      given (
+        Setup.initWithModel { testModel | binaryText = "Some funny binary text!" }
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Stub.serve
+            [ Stub.for (post "http://fake-api.com/files")
+                |> Stub.withProgress (Stub.sent 8)
+            ]
+      )
+      |> whenFileIsUploaded [ Spec.File.withText "my-super-file.txt" "Some super text!" ]
+      |> it "shows no progress" (
+        Markup.observeElement
+          |> Markup.query << by [ id "progress" ]
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "Upload 0% Complete!")
+      )
+    )
+  , scenario "partial download" (
+      given (
+        setupForProgress
+          |> Stub.serve
+            [ Stub.for (post "http://fake-api.com/files")
+                |> Stub.withBody "Here is some text body that I will return for you."
+                |> Stub.withProgress (Stub.received 20)
+            ]
+      )
+      |> whenFileIsUploaded [ Spec.File.withText "my-super-file.txt" "Some super text!" ]
+      |> it "shows the progress" (
+        Markup.observeElement
+          |> Markup.query << by [ id "progress" ]
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "Download 40% Complete!")
+      )
+    )
+  , scenario "partial streaming download" (
+      given (
+        setupForProgress
+          |> Stub.serve
+            [ Stub.for (post "http://fake-api.com/files")
+                |> Stub.withBody "Some content ..."
+                |> Stub.withProgress (Stub.streamed 381)
+            ]
+      )
+      |> whenFileIsUploaded [ Spec.File.withText "my-super-file.txt" "Some super text!" ]
+      |> it "shows the progress" (
+        Markup.observeElement
+          |> Markup.query << by [ id "progress" ]
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "Streaming Download 381 Received!")
+      )
+    )
+  , scenario "partial streaming download with no progress subscription" (
+      given (
+        Setup.initWithModel { testModel | binaryText = "Some funny binary text!" }
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Stub.serve
+            [ Stub.for (post "http://fake-api.com/files")
+                |> Stub.withProgress (Stub.streamed 968)
+            ]
+      )
+      |> whenFileIsUploaded [ Spec.File.withText "my-super-file.txt" "Some super text!" ]
+      |> it "shows no progress" (
+        Markup.observeElement
+          |> Markup.query << by [ id "progress" ]
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "Upload 0% Complete!")
+      )
+    )
+  ]
+
+
+whenFileIsUploaded files setup =
+  setup
+    |> when "the file is selected"
+      [ Markup.target << by [ id "select-file" ]
+      , Event.click
+      , Spec.File.select files
+      ]
+    |> when "the upload starts"
+      [ Markup.target << by [ id "upload-to-server" ]
+      , Event.click
+      ]
+
+
+setupForProgress =
+  Setup.initWithModel testModel
+    |> Setup.withView testView
+    |> Setup.withUpdate testUpdate
+    |> Setup.withSubscriptions progressSubscriptions
+
+
+progressSubscriptions : Model -> Sub Msg
+progressSubscriptions model =
+  Http.track "my-super-file.txt" GotProgress
+
+
 normalizedPath : String -> String
 normalizedPath =
   String.replace ":" "/"
@@ -168,17 +280,20 @@ type Msg
   | GotResponse (Result Http.Error String)
   | UploadFile
   | SendBytes
+  | GotProgress Http.Progress
 
 
 type alias Model =
   { selectedFile: Maybe File
   , binaryText: String
+  , progress: Http.Progress
   }
 
 
 testModel =
   { selectedFile = Nothing
   , binaryText = ""
+  , progress = Http.Sending { sent = 0, size = 1 }
   }
 
 
@@ -188,7 +303,23 @@ testView model =
   [ Html.button [ Attr.id "select-file", Events.onClick SelectFile ] [ Html.text "Select a file!" ]
   , Html.button [ Attr.id "upload-to-server", Events.onClick UploadFile ] [ Html.text "Upload file!" ]
   , Html.button [ Attr.id "send-bytes", Events.onClick SendBytes ] [ Html.text "Send Bytes!" ]
+  , Html.div [ Attr.id "progress" ]
+    [ Html.text <| progressText model.progress
+    ]
   ]
+
+
+progressText : Http.Progress -> String
+progressText progress =
+  case progress of
+    Http.Sending details ->
+      "Upload " ++ (String.fromFloat <| (toFloat details.sent / toFloat details.size) * 100.0) ++ "% Complete!"
+    Http.Receiving details ->
+      case details.size of
+        Just size ->
+          "Download " ++ (String.fromFloat <| (toFloat details.received / toFloat size) * 100.0) ++ "% Complete!"
+        Nothing ->
+          "Streaming Download " ++ (String.fromFloat <| toFloat details.received) ++ " Received!"
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
@@ -207,14 +338,20 @@ testUpdate msg model =
       ( model, postBytes model.binaryText )
     GotResponse _ ->
       ( model, Cmd.none )
+    GotProgress progress ->
+      ( { model | progress = progress }, Cmd.none )
 
 
 postFile : File -> Cmd Msg
 postFile file =
-  Http.post
-    { url = "http://fake-api.com/files"
+  Http.request
+    { method = "POST"
+    , headers = []
+    , url = "http://fake-api.com/files"
     , body = Http.fileBody file
     , expect = Http.expectString GotResponse
+    , timeout = Nothing
+    , tracker = Just <| File.name file
     }
 
 
@@ -237,6 +374,7 @@ selectSpec name =
   case name of
     "uploadFile" -> Just uploadFileSpec
     "uploadBytes" -> Just uploadBytesSpec
+    "progress" -> Just progressSpec
     _ -> Nothing
 
 

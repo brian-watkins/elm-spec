@@ -58,4 +58,14 @@ describe("http upload", () => {
       ])
     })
   })
+
+  it("reports on progress", (done) => {
+    expectSpec("HttpUploadSpec", "progress", done, (observations) => {
+      expectAccepted(observations[0])
+      expectAccepted(observations[1])
+      expectAccepted(observations[2])
+      expectAccepted(observations[3])
+      expectAccepted(observations[4])
+    })
+  })
 })

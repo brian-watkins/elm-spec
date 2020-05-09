@@ -9,6 +9,11 @@ module Spec.Http.Stub exposing
   , withNetworkError
   , withTimeout
   , abstain
+  , HttpResponseProgress
+  , sent
+  , received
+  , streamed
+  , withProgress
   )
 
 {-| Define and set up stubs for HTTP requests made during a spec.
@@ -16,8 +21,14 @@ module Spec.Http.Stub exposing
 # Register Stubs
 @docs HttpResponseStub, serve, nowServe
 
-# Define Stubs
-@docs for, withBody, withStatus, withHeader, withNetworkError, withTimeout, abstain
+# Basic Stubs
+@docs for, withBody, withStatus, withHeader
+
+# Stubs for Requests in Progress
+@docs HttpResponseProgress, sent, received, streamed, withProgress, abstain
+
+# Stubs for Errors
+@docs withNetworkError, withTimeout
 
 -}
 
@@ -37,9 +48,40 @@ type HttpResponseStub =
   HttpResponseStub
     { route: HttpRoute
     , response: HttpResponse
-    , shouldRespond: Bool
     , error: Maybe String
+    , progress: HttpResponseProgress
     }
+
+
+{-| Represents progress on an in-flight HTTP request.
+-}
+type HttpResponseProgress
+  = Complete
+  | Sent Int
+  | Received Int
+  | Streamed Int
+
+
+{-| Specify the number of bytes that have been uploaded to the server so far.
+-}
+sent : Int -> HttpResponseProgress
+sent =
+  Sent
+
+
+{-| Specify the number of bytes received from the server so far.
+-}
+received : Int -> HttpResponseProgress
+received =
+  Received
+
+
+{-| Specify the number of bytes received from the server so far, when the
+total content length is not known.
+-}
+streamed : Int -> HttpResponseProgress
+streamed =
+  Streamed
 
 
 type alias HttpResponse =
@@ -71,8 +113,8 @@ for route =
         , headers = Dict.empty
         , body = Nothing
         }
-    , shouldRespond = True
     , error = Nothing
+    , progress = Complete
     }
 
 
@@ -122,15 +164,32 @@ withTimeout (HttpResponseStub stub) =
     { stub | error = Just "timeout" }
 
 
+{-| Set the progress on an in-flight HTTP request.
+
+When the request is processed, an appropriate progress event will be triggered.
+
+No further processing of this request will take place after the progress event is
+triggered. So, use this function to describe a program's behavior when an HTTP request
+is not yet complete.
+
+-}
+withProgress : HttpResponseProgress -> HttpResponseStub -> HttpResponseStub
+withProgress responseProgress (HttpResponseStub stub) =
+  HttpResponseStub
+    { stub | progress = responseProgress }
+
+
 {-| Abstain from responding to requests to the route defined for the given `HttpResponseStub`.
 
 It can be useful to abstain from responding if you want to describe the behavior of your
 program while waiting for a response.
+
+Note: This function is equivalent to `withProgress <| received 0`
+
 -}
 abstain : HttpResponseStub -> HttpResponseStub
-abstain (HttpResponseStub stub) =
-  HttpResponseStub
-    { stub | shouldRespond = False }
+abstain =
+  withProgress <| received 0
 
 
 {-| Set up a fake HTTP server with the given `HttpResponseStubs`.
@@ -193,7 +252,28 @@ encodeStub (HttpResponseStub stub) =
     , ( "headers", Encode.dict identity Encode.string stub.response.headers )
     , ( "body", maybeEncodeString stub.response.body )
     , ( "error", maybeEncodeString stub.error )
-    , ( "shouldRespond", Encode.bool stub.shouldRespond )
+    , ( "progress", encodeProgress stub.progress )
+    ]
+
+
+encodeProgress : HttpResponseProgress -> Encode.Value
+encodeProgress progress =
+  case progress of
+    Complete ->
+      Encode.object [ ("type", Encode.string "complete" ) ]
+    Sent transmitted ->
+      encodeProgressType "sent" transmitted      
+    Received transmitted ->
+      encodeProgressType "received" transmitted
+    Streamed transmitted ->
+      encodeProgressType "streamed" transmitted
+
+
+encodeProgressType : String -> Int -> Encode.Value
+encodeProgressType progressType transmitted =
+  Encode.object
+    [ ("type", Encode.string progressType)
+    , ("transmitted", Encode.int transmitted)
     ]
 
 

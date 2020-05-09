@@ -147,17 +147,30 @@ module.exports = class HttpPlugin {
 
   setupStub(stub, uriDescriptor, out) {
     this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
-      if (stub.shouldRespond) {
-        if (stub.error === "network") {
-          xhr.setNetworkError()
-        } else if (stub.error === "timeout") {
-          xhr.setRequestTimeout()
-        } else {
-          xhr.respond(stub.status, stub.headers, stub.body)
-        }
+      if (stub.error === "network") {
+        xhr.setNetworkError()
+      } else if (stub.error === "timeout") {
+        xhr.setRequestTimeout()
       } else {
-        xhr.abort()
-        out({home: "_http", name: "abstained", body: null})
+        switch (stub.progress.type) {
+          case "sent":
+            xhr.uploadProgress(stub.progress.transmitted)
+            out({home: "_http", name: "handled", body: null})
+            break
+          case "received":
+            xhr.setResponseHeaders(stub.headers)
+            xhr.downloadProgress(stub.progress.transmitted, stub.body.length)
+            out({home: "_http", name: "handled", body: null})
+            break
+          case "streamed":
+            xhr.setResponseHeaders(stub.headers)
+            xhr.downloadProgress(stub.progress.transmitted)
+            out({home: "_http", name: "handled", body: null})
+            break
+          case "complete":
+            xhr.respond(stub.status, stub.headers, stub.body)
+            break
+        }
       }
     })
   }
