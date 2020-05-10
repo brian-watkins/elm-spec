@@ -233,7 +233,7 @@ serve stubs =
   Setup.configure <| httpStubMessage stubs
 
 
-{-| Reconfigure the fake HTTP server to serve the given `HttpResponseStubs`.
+{-| A step that reconfigures the fake HTTP server to serve the given `HttpResponseStubs`.
 
 Use this function if you want to change the stubs during a scenario.
 
@@ -265,9 +265,10 @@ Note that `Spec.Http.Stub.nowServe` will clear any existing stubs and
 register only the ones provided.
 
 -}
-nowServe : List HttpResponseStub -> Step.Context model -> Step.Command msg
-nowServe stubs _ =
-  Command.sendMessage <| httpStubMessage stubs
+nowServe : List HttpResponseStub -> Step.Step model msg
+nowServe stubs =
+  \_ ->
+    Command.sendMessage <| httpStubMessage stubs
 
 
 httpStubMessage : List HttpResponseStub -> Message

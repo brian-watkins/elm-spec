@@ -61,15 +61,16 @@ You may select multiple files.
 The path to the file is relative to the current working directory of the elm-spec runner.
 
 -}
-select : List FileFixture -> Step.Context model -> Step.Command msg
-select fixtures context =
-  Message.for "_file" "fetch"
-    |> Message.withBody (
-      Encode.object
-        [ ( "fileFixtures", Encode.list fileFixtureEncoder fixtures )
-        ]
-      )
-    |> Command.sendRequest andThenSelectFile
+select : List FileFixture -> Step.Step model msg
+select fixtures =
+  \context ->
+    Message.for "_file" "fetch"
+      |> Message.withBody (
+        Encode.object
+          [ ( "fileFixtures", Encode.list fileFixtureEncoder fixtures )
+          ]
+        )
+      |> Command.sendRequest andThenSelectFile
 
 
 fileFixtureEncoder : FileFixture -> Encode.Value

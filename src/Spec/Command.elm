@@ -16,9 +16,10 @@ import Json.Encode as Encode
 
 {-| A step that sends a command.
 -}
-send : Cmd msg -> Step.Context model -> Step.Command msg
-send cmd _ =
-  Command.sendCommand cmd
+send : Cmd msg -> Step.Step model msg
+send cmd =
+  \_ ->
+    Command.sendCommand cmd
 
 
 {-| Generate a `Cmd` value that will send a `Msg` to the `update`

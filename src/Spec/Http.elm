@@ -142,7 +142,7 @@ evaluateStringBodyClaim claim body =
 
 
 {-| Claim that the body of an HTTP request is a string that can be decoded with the
-given decoder into a value that satisfies the given claim.
+given JSON decoder into a value that satisfies the given claim.
 
 For example, if the body of the observed request was `{"sport":"bowling"}`,
 then the following claim would be accepted:
@@ -274,19 +274,21 @@ It can be useful to clear the HTTP request history when a scenario results in
 many HTTP requests, but you care about observing only those that occur
 after a certain point.
 -}
-clearRequestHistory : Step.Context model -> Step.Command msg
-clearRequestHistory _ =
-  Command.sendMessage <| Message.for "_http" "clear-history"
+clearRequestHistory : Step.Step model msg
+clearRequestHistory =
+  \_ ->
+    Command.sendMessage <| Message.for "_http" "clear-history"
 
 
 {-| A step that logs to the console any HTTP requests received prior to executing this step.
 
 You might use this step to help debug a rejected observation.
 -}
-logRequests : Step.Context model -> Step.Command msg
-logRequests _ =
-  fetchRequestsFor (Route.route "ANY" <| Route.Matching ".+")
-    |> Command.sendRequest andThenLogRequests
+logRequests : Step.Step model msg
+logRequests =
+  \_ ->
+    fetchRequestsFor (Route.route "ANY" <| Route.Matching ".+")
+      |> Command.sendRequest andThenLogRequests
 
 
 andThenLogRequests : Message -> Step.Command msg

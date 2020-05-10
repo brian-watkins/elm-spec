@@ -1,5 +1,6 @@
 module Spec.Step exposing
-  ( Context
+  ( Step
+  , Context
   , Command
   , model
   , log
@@ -12,7 +13,7 @@ executed before moving to the next step.
 See `Spec.Command`, `Spec.Http`, `Spec.Markup`, `Spec.Markup.Event`, `Spec.Port`, and `Spec.Time` for
 steps you can use to build a scenario script.
 
-@docs Context, Command
+@docs Step, Context, Command
 
 # Using the Context
 @docs model
@@ -25,6 +26,12 @@ steps you can use to build a scenario script.
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
 import Spec.Report as Report exposing (Report)
+
+
+{-| Represents a step in a scenario script.
+-}
+type alias Step model msg =
+  Context.Context model -> Command.Command msg
 
 
 {-| Represents the current state of the program.

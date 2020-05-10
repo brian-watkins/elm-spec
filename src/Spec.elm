@@ -157,7 +157,7 @@ you will use steps that are provided by other modules, like `Spec.Markup.Event`.
 
 You may provide multiple `when` blocks as part of a scenario.
 -}
-when : String -> List (Step.Context model -> Step.Command msg) -> Script model msg -> Script model msg
+when : String -> List (Step.Step model msg) -> Script model msg -> Script model msg
 when condition steps (Script script) =
   Script
     { script

@@ -89,14 +89,15 @@ For example, if you have a port defined in Elm like so:
 Then you could send a message through this port during a scenario like so:
 
     Spec.when "a message is sent to the subscription"
-    [ Encode.string "Some words"
+    [ Json.Encode.string "Some words"
         |> Spec.Port.send "listenForStuff"
     ]
 
 -}
-send : String -> Encode.Value -> Step.Context model -> Step.Command msg
-send name value _ =
-  Command.sendMessage <| sendSubscription name value
+send : String -> Encode.Value -> Step.Step model msg
+send name value =
+  \_ ->
+    Command.sendMessage <| sendSubscription name value
 
 
 type alias PortRecord =
@@ -107,7 +108,7 @@ type alias PortRecord =
 
 {-| Observe messages sent out via a command port.
 
-Provide the name of the port (the function name) and a decoder that can decode
+Provide the name of the port (the function name) and a JSON decoder that can decode
 messages sent out over the port.
 
 -}

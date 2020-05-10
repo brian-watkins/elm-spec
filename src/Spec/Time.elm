@@ -70,18 +70,19 @@ withTimezoneOffset zoneOffset =
 
 Any subscriptions that depend on the passage of time will be triggered as expected.
 -}
-tick : Int -> Step.Context model -> Step.Command msg
-tick duration _ =
-  Message.for "_time" "tick"
-    |> Message.withBody (Encode.int duration)
-    |> Command.sendMessage
+tick : Int -> Step.Step model msg
+tick duration =
+  \_ ->
+    Message.for "_time" "tick"
+      |> Message.withBody (Encode.int duration)
+      |> Command.sendMessage
 
 
 {-| A step that simulates waiting for the next animation frame.
 
 Any subscriptions that depend on animation frame updates will be triggered as expected.
 -}
-nextAnimationFrame : Step.Context model -> Step.Command msg
-nextAnimationFrame _ =
-  Command.sendMessage
-    Message.runToNextAnimationFrame
+nextAnimationFrame : Step.Step model msg
+nextAnimationFrame =
+  \_ ->
+    Command.sendMessage Message.runToNextAnimationFrame
