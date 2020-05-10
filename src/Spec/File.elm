@@ -16,7 +16,7 @@ module Spec.File exposing
 {-| Observe and make claims about files during a spec.
 
 # Select Files
-@docs FileFixture, select, loadFrom, withBytes, withText
+@docs FileFixture, select, loadFrom, withBytes, withText, withMimeType
 
 # Observe Downloads
 @docs Download, observeDownloads
@@ -131,6 +131,8 @@ withText path textContent =
   Memory { path = path, mimeType = "", content = Binary.encodeString textContent }
 
 
+{-| Update a FileFixture to have the given MIME type.
+-}
 withMimeType : String -> FileFixture -> FileFixture
 withMimeType mime file =
   case file of
