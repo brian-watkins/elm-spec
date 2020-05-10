@@ -20,8 +20,8 @@
   "author": "Brian Watkins",
   "license": "MIT",
   "dependencies": {
+    "@sinonjs/fake-timers": "^6.0.1",
     "glob": "^7.1.6",
-    "lolex": "^4.2.0",
     "mock-xmlhttprequest": "^6.0.0",
     "node-elm-compiler": "^5.0.4"
   },

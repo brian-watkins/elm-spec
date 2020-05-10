@@ -1,4 +1,4 @@
-const lolex = require('lolex')
+const SinonFakeTimers = require("@sinonjs/fake-timers");
 const FakeTimer = require('./fakes/fakeTimer')
 const { registerFakes, injectFakes } = require('./fakes')
 const path = require('path')
@@ -20,7 +20,7 @@ window._elm_spec.compiler = {
 
   constructor(window) {
     this.window = window
-    this.timer = new FakeTimer(lolex.createClock())
+    this.timer = new FakeTimer(SinonFakeTimers.createClock())
 
     registerFakes(this.window, this.timer)
   }
