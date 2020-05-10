@@ -3,7 +3,10 @@ module Spec.Http.Stub exposing
   , serve
   , nowServe
   , for
+  , HttpResponseBody
   , withBody
+  , fromBytes
+  , fromString
   , withStatus
   , withHeader
   , withNetworkError
@@ -18,16 +21,22 @@ module Spec.Http.Stub exposing
 
 {-| Define and set up stubs for HTTP requests made during a spec.
 
-# Register Stubs
-@docs HttpResponseStub, serve, nowServe
+If an HTTP request matches none of the stubs currently served, then
+elm-spec will respond with a `404` status code.
 
-# Basic Stubs
-@docs for, withBody, withStatus, withHeader
+# Create and Register Stubs
+@docs HttpResponseStub, for, serve, nowServe
 
-# Stubs for Requests in Progress
+# Stub the Response Body
+@docs HttpResponseBody, withBody, fromString, fromBytes
+
+# Stub Progress of an In-Flight Request
 @docs HttpResponseProgress, sent, received, streamed, withProgress, abstain
 
-# Stubs for Errors
+# Stub Response Metadata
+@docs withStatus, withHeader
+
+# Stub Errors
 @docs withNetworkError, withTimeout
 
 -}
@@ -40,6 +49,8 @@ import Spec.Message as Message exposing (Message)
 import Spec.Http.Route as Route exposing (HttpRoute)
 import Dict exposing (Dict)
 import Json.Encode as Encode
+import Bytes exposing (Bytes)
+import Spec.Binary as Binary
 
 
 {-| Represents the stubbed response for a particular HTTP request.
@@ -87,8 +98,15 @@ streamed =
 type alias HttpResponse =
   { status: HttpStatus
   , headers: Dict String String
-  , body: Maybe String
+  , body: HttpResponseBody
   }
+
+{-| Represents the body of an HTTP response.
+-}
+type HttpResponseBody
+  = Empty
+  | Text String
+  | Binary Bytes
 
 
 type alias HttpStatus =
@@ -111,19 +129,33 @@ for route =
     , response =
         { status = 200
         , headers = Dict.empty
-        , body = Nothing
+        , body = Empty
         }
     , error = Nothing
     , progress = Complete
     }
 
 
-{-| Supply a body for the stubbed response.
+{-| Supply an `HttpResponseBody` for the stubbed response.
 -}
-withBody : String -> HttpResponseStub -> HttpResponseStub
+withBody : HttpResponseBody -> HttpResponseStub -> HttpResponseStub
 withBody body =
   mapResponse <| \response ->
-    { response | body = Just body }
+    { response | body = body }
+
+
+{-| Create an `HttpResponseBody` composed of the given string.
+-}
+fromString : String -> HttpResponseBody
+fromString =
+  Text
+
+
+{-| Create an `HttpResponseBody` composed of the given bytes.
+-}
+fromBytes : Bytes -> HttpResponseBody
+fromBytes =
+  Binary
 
 
 {-| Supply a status code for the stubbed response.
@@ -250,10 +282,27 @@ encodeStub (HttpResponseStub stub) =
     [ ( "route", Route.encode stub.route )
     , ( "status", Encode.int stub.response.status )
     , ( "headers", Encode.dict identity Encode.string stub.response.headers )
-    , ( "body", maybeEncodeString stub.response.body )
+    , ( "body", encodeBody stub.response.body )
     , ( "error", maybeEncodeString stub.error )
     , ( "progress", encodeProgress stub.progress )
     ]
+
+
+encodeBody : HttpResponseBody -> Encode.Value
+encodeBody body =
+  case body of
+    Empty ->
+      Encode.object [ ("type", Encode.string "empty") ]
+    Text text ->
+      Encode.object
+        [ ("type", Encode.string "text")
+        , ("content", Encode.string text)
+        ]
+    Binary bytes ->
+      Encode.object
+        [ ("type", Encode.string "binary")
+        , ("content", Binary.jsonEncode bytes)
+        ]
 
 
 encodeProgress : HttpResponseProgress -> Encode.Value

@@ -124,7 +124,7 @@ testSubject doRequest stubs =
 
 successStubRoute route =
   Stub.for route
-    |> Stub.withBody "{\"name\":\"Awesome Person\",\"score\":1944}"
+    |> Stub.withBody (Stub.fromString "{\"name\":\"Awesome Person\",\"score\":1944}")
 
 
 whenTheRequestIsTriggered =

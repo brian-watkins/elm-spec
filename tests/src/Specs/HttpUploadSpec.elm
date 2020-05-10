@@ -192,7 +192,7 @@ progressSpec =
         setupForProgress
           |> Stub.serve
             [ Stub.for (post "http://fake-api.com/files")
-                |> Stub.withBody "Here is some text body that I will return for you."
+                |> Stub.withBody (Stub.fromString "Here is some text body that I will return for you.")
                 |> Stub.withProgress (Stub.received 20)
             ]
       )
@@ -208,7 +208,7 @@ progressSpec =
         setupForProgress
           |> Stub.serve
             [ Stub.for (post "http://fake-api.com/files")
-                |> Stub.withBody "Some content ..."
+                |> Stub.withBody (Stub.fromString "Some content ...")
                 |> Stub.withProgress (Stub.streamed 381)
             ]
       )

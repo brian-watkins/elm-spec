@@ -159,7 +159,7 @@ module.exports = class HttpPlugin {
             break
           case "received":
             xhr.setResponseHeaders(stub.headers)
-            xhr.downloadProgress(stub.progress.transmitted, stub.body.length)
+            xhr.downloadProgress(stub.progress.transmitted, this.responseBodyLength(stub.body))
             out({home: "_http", name: "handled", body: null})
             break
           case "streamed":
@@ -168,11 +168,33 @@ module.exports = class HttpPlugin {
             out({home: "_http", name: "handled", body: null})
             break
           case "complete":
-            xhr.respond(stub.status, stub.headers, stub.body)
+            xhr.respond(stub.status, stub.headers, this.responseBody(stub.body))
             break
         }
       }
     })
+  }
+
+  responseBody(body) {
+    switch (body.type) {
+      case "empty":
+        return ""
+      case "text":
+        return body.content
+      case "binary":
+        return Uint8Array.from(body.content).buffer
+    }
+  }
+
+  responseBodyLength(body) {
+    switch (body.type) {
+      case "empty":
+        return 0
+      case "text":
+        return body.content.length
+      case "binary":
+        return body.content.length
+    }
   }
 
   findRequests(route, matchUrl) {

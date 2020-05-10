@@ -43,7 +43,7 @@ sendSpec =
 
 someRequestStub =
   Stub.for (get "http://fun.com/fun?id=27")
-    |> Stub.withBody "You Win"
+    |> Stub.withBody (Stub.fromString "You Win")
 
 
 type Msg
