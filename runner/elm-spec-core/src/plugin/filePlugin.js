@@ -125,18 +125,20 @@ module.exports = class FilePlugin {
   }
 
   fetchFile(fixture) {
-    switch (fixture.type) {
+    switch (fixture.content.type) {
       case "disk":
         return BrowserContext.readFile(this.window, fixture.path)
           .then(({ path, buffer }) => {
             const bytes = new Uint8Array(buffer.data)
             return new File([bytes], path, {
-              type: fixture.mimeType
+              type: fixture.mimeType,
+              lastModified: fixture.lastModified || Date.now()
             })
           })
       case "memory":
-        const file = new File([Uint8Array.from(fixture.bytes)], fixture.path, {
-          type: fixture.mimeType
+        const file = new File([Uint8Array.from(fixture.content.bytes)], fixture.path, {
+          type: fixture.mimeType,
+          lastModified: fixture.lastModified || Date.now()
         })
         return Promise.resolve(file)
     }

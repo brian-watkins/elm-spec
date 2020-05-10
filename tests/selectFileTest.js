@@ -21,6 +21,18 @@ describe("file selection", () => {
         expectAccepted(observations[7])
       })
     })
+
+    it("sets the last modified time as expected", (done) => {
+      expectSpec("SelectFileSpec", "lastModified", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
+
+    it("sets the mime type as expected", (done) => {
+      expectSpec("SelectFileSpec", "mimeType", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
   })
 
   context("no file selector open", () => {

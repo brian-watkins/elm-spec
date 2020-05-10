@@ -3,7 +3,7 @@ module Specs.SelectFileSpec exposing (main)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Observer as Observer
-import Spec.Claim exposing (isTrue, isStringContaining, isEqual, isListWhere, isListWhereItemAt)
+import Spec.Claim exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -15,6 +15,7 @@ import Json.Decode as Json
 import File exposing (File)
 import File.Select
 import Task
+import Time
 import Bytes exposing (Bytes)
 import Bytes.Encode as Bytes
 import Runner
@@ -43,7 +44,7 @@ selectFileSpec =
         , it "finds the file in the model" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
+                [ File.name >> normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
                 ]
               )
           )
@@ -67,7 +68,7 @@ selectFileSpec =
       |> it "finds the file in the model" (
         Observer.observeModel .files
           |> expect (isListWhere
-            [ isTrue << String.endsWith "funFile.txt"
+            [ File.name >> String.endsWith "funFile.txt" >> isTrue
             ]
           )
       )
@@ -90,8 +91,8 @@ selectFileSpec =
         [ it "finds the file name" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
-                , normalizedPath >> isStringContaining 1 "tests/src/fixtures/awesomeFile.txt"
+                [ File.name >> normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
+                , File.name >> normalizedPath >> isStringContaining 1 "tests/src/fixtures/awesomeFile.txt"
                 ]
               )
           )
@@ -125,10 +126,10 @@ selectFileSpec =
         [ it "finds the file name" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ normalizedPath >> equals "/fun/path/to/funFile.txt"
-                , equals "awesomeFile.png"
-                , normalizedPath >> equals "/my/path/to/a/superFile.txt"
-                , equals "nice-file.txt"
+                [ File.name >> normalizedPath >> equals "/fun/path/to/funFile.txt"
+                , File.name >> equals "awesomeFile.png"
+                , File.name >> normalizedPath >> equals "/my/path/to/a/superFile.txt"
+                , File.name >> equals "nice-file.txt"
                 ]
               )
           )
@@ -143,6 +144,90 @@ selectFileSpec =
               )
           )
         ]
+    )
+  ]
+
+
+mimeTypeSpec : Spec Model Msg
+mimeTypeSpec =
+  describe "setting the mime type of a file"
+  [ scenario "fake files" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testSelectMultipleView
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "selecting a new file"
+        [ Markup.target << by [ id "select-files-button" ]
+        , Event.click
+        , Spec.File.select
+          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+              |> Spec.File.withMimeType "text/plain"
+          , Spec.File.loadFrom "./fixtures/funFile.txt"
+          , Spec.File.withText "super-file.txt" "Some funny text for a file!"
+              |> Spec.File.withMimeType "text/fun"
+          , Spec.File.withText "another-file.txt" "Another funny file!"
+          , bytesFromString "This is a cool file!"
+              |> Spec.File.withBytes "/fun/path/to/funFile.txt"
+              |> Spec.File.withMimeType "application/bytes"
+          , bytesFromString "This is a super cool file!"
+              |> Spec.File.withBytes "/fun/path/to/coolFile.txt"
+          ]
+        ]
+      |> it "finds the files have the expected mime type" (
+        Observer.observeModel .files
+          |> expect (isListWhere
+            [ require File.mime <| equals "text/plain"
+            , require File.mime <| equals ""
+            , require File.mime <| equals "text/fun"
+            , require File.mime <| equals ""
+            , require File.mime <| equals "application/bytes"
+            , require File.mime <| equals ""
+            ]
+          )
+      )
+    )
+  ]
+
+
+lastModifiedSpec : Spec Model Msg
+lastModifiedSpec =
+  describe "setting the last modified date of a file"
+  [ scenario "fake files" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testSelectMultipleView
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "selecting a new file"
+        [ Markup.target << by [ id "select-files-button" ]
+        , Event.click
+        , Spec.File.select
+          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+              |> Spec.File.withLastModified 1589132162579
+          , Spec.File.loadFrom "./fixtures/funFile.txt"
+          , Spec.File.withText "super-file.txt" "Some funny text for a file!"
+              |> Spec.File.withLastModified 1589132162577
+          , Spec.File.withText "another-file.txt" "Another funny file!"
+          , bytesFromString "This is a cool file!"
+              |> Spec.File.withBytes "/fun/path/to/funFile.txt"
+              |> Spec.File.withLastModified 1589132162575
+          , bytesFromString "This is a super cool file!"
+              |> Spec.File.withBytes "/fun/path/to/coolFile.txt"
+          ]
+        ]
+      |> it "finds the files have the expected last modified date" (
+        Observer.observeModel .files
+          |> expect (isListWhere
+            [ File.lastModified >> Time.posixToMillis >> equals 1589132162579
+            , File.lastModified >> Time.posixToMillis >> (<) 1589132162579 >> isTrue
+            , File.lastModified >> Time.posixToMillis >> equals 1589132162577
+            , File.lastModified >> Time.posixToMillis >> (<) 1589132162579 >> isTrue
+            , File.lastModified >> Time.posixToMillis >> equals 1589132162575
+            , File.lastModified >> Time.posixToMillis >> (<) 1589132162579 >> isTrue
+            ]
+          )
+      )
     )
   ]
 
@@ -236,7 +321,7 @@ type Msg
   | HandleClick
 
 type alias Model =
-  { files: List String
+  { files: List File
   , fileContents: List String
   , clicks: Int
   }
@@ -291,7 +376,7 @@ testUpdate msg model =
         |> Task.perform GotFiles
       )
     GotFiles files ->
-      ( { model | files = List.map File.name files }
+      ( { model | files = files }
       , List.map File.toString files
         |> Task.sequence
         |> Task.perform GotFileContents
@@ -309,6 +394,8 @@ selectSpec name =
     "noOpenSelector" -> Just noOpenSelectorSpec
     "noFileSelected" -> Just noFileSelectedSpec
     "badFile" -> Just noFileFetchedSpec
+    "lastModified" -> Just lastModifiedSpec
+    "mimeType" -> Just mimeTypeSpec
     _ -> Nothing
 
 

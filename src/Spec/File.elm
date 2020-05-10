@@ -5,6 +5,7 @@ module Spec.File exposing
   , withBytes
   , withText
   , withMimeType
+  , withLastModified
   , Download
   , observeDownloads
   , name
@@ -16,7 +17,7 @@ module Spec.File exposing
 {-| Observe and make claims about files during a spec.
 
 # Select Files
-@docs FileFixture, select, loadFrom, withBytes, withText, withMimeType
+@docs FileFixture, select, loadFrom, withBytes, withText, withMimeType, withLastModified
 
 # Observe Downloads
 @docs Download, observeDownloads
@@ -42,8 +43,17 @@ import Bytes exposing (Bytes)
 {-| Represents a file.
 -}
 type FileFixture
-  = Disk { path: String, mimeType: String }
-  | Memory { path: String, mimeType: String, content: Bytes }
+  = FileFixture
+    { path: String
+    , mimeType: String
+    , lastModified: Int
+    , content: FileContent
+    }
+
+
+type FileContent
+  = Disk
+  | Memory Bytes
 
 
 {-| A step that selects a file as input.
@@ -75,20 +85,26 @@ select fixtures =
 
 
 fileFixtureEncoder : FileFixture -> Encode.Value
-fileFixtureEncoder fixture =
-  case fixture of
-    Disk { path, mimeType } ->
+fileFixtureEncoder (FileFixture fixture) =
+  Encode.object
+    [ ("path", Encode.string fixture.path)
+    , ("mimeType", Encode.string fixture.mimeType)
+    , ("lastModified", Encode.int fixture.lastModified)
+    , ("content", encodeFileContent fixture.content)
+    ]
+
+
+encodeFileContent : FileContent -> Encode.Value
+encodeFileContent content =
+  case content of
+    Disk ->
       Encode.object
         [ ("type", Encode.string "disk")
-        , ("path", Encode.string path)
-        , ("mimeType", Encode.string mimeType)
         ]
-    Memory { path, mimeType, content } ->
+    Memory binaryContent ->
       Encode.object
         [ ("type", Encode.string "memory")
-        , ("path", Encode.string path)
-        , ("mimeType", Encode.string mimeType)
-        , ("bytes", Binary.jsonEncode content)
+        , ("bytes", Binary.jsonEncode binaryContent)
         ]
 
 
@@ -114,32 +130,53 @@ check the docs for the runner you are using).
 -}
 loadFrom : String -> FileFixture
 loadFrom path =
-  Disk { path = path, mimeType = "" }
+  FileFixture
+    { path = path
+    , mimeType = ""
+    , lastModified = 0
+    , content = Disk
+    }
 
 
 {-| Create a FileFixture with the given name and bytes.
 -}
 withBytes : String -> Bytes -> FileFixture
 withBytes path binaryContent =
-  Memory { path = path, mimeType = "", content = binaryContent }
+  FileFixture
+    { path = path
+    , mimeType = ""
+    , lastModified = 0
+    , content = Memory binaryContent
+    }
 
 
 {-| Create a FileFixture with the given name and text content.
 -}
 withText : String -> String -> FileFixture
 withText path textContent =
-  Memory { path = path, mimeType = "", content = Binary.encodeString textContent }
+  FileFixture
+    { path = path
+    , mimeType = ""
+    , lastModified = 0
+    , content = Memory <| Binary.encodeString textContent
+    }
 
 
 {-| Update a FileFixture to have the given MIME type.
 -}
 withMimeType : String -> FileFixture -> FileFixture
-withMimeType mime file =
-  case file of
-    Disk details ->
-      Disk { details | mimeType = mime }
-    Memory details ->
-      Memory { details | mimeType = mime }
+withMimeType mime (FileFixture file) =
+  FileFixture
+    { file | mimeType = mime }
+
+
+{-| Update a FileFixture to have the given last modified
+date, specified in milliseconds since the UNIX epoch.
+-}
+withLastModified : Int -> FileFixture -> FileFixture
+withLastModified lastModified (FileFixture file) =
+  FileFixture
+    { file | lastModified = lastModified }
 
 
 {-| Represents a file downloaded in the course of a scenario.
