@@ -130,10 +130,14 @@ module.exports = class FilePlugin {
         return BrowserContext.readFile(this.window, fixture.path)
           .then(({ path, buffer }) => {
             const bytes = new Uint8Array(buffer.data)
-            return new File([bytes], path)
+            return new File([bytes], path, {
+              type: fixture.mimeType
+            })
           })
       case "memory":
-        const file = new File([Uint8Array.from(fixture.bytes)], fixture.path)
+        const file = new File([Uint8Array.from(fixture.bytes)], fixture.path, {
+          type: fixture.mimeType
+        })
         return Promise.resolve(file)
     }
   }

@@ -43,7 +43,7 @@ describe("log http requests", () => {
       expect(logs[0][0].statement).to.equal("Received 1 HTTP request")
       expect(logs[0][1].statement).to.equal("POST http://fun.com/files")
       const details = logs[0][1].detail.split("\n")
-      expect(details[0]).to.equal("Headers: [  ]")
+      expect(details[0]).to.equal("Headers: [ content-type = text/plain ]")
       expect(details[1].replace(/:/g, "/")).to.contain("/some/path/to/my-test-file.txt")
     })
   })

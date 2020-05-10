@@ -4,6 +4,7 @@ module Spec.File exposing
   , loadFrom
   , withBytes
   , withText
+  , withMimeType
   , Download
   , observeDownloads
   , name
@@ -41,8 +42,8 @@ import Bytes exposing (Bytes)
 {-| Represents a file.
 -}
 type FileFixture
-  = Disk { path: String }
-  | Memory { path: String, content: Bytes }
+  = Disk { path: String, mimeType: String }
+  | Memory { path: String, mimeType: String, content: Bytes }
 
 
 {-| A step that selects a file as input.
@@ -76,15 +77,17 @@ select fixtures =
 fileFixtureEncoder : FileFixture -> Encode.Value
 fileFixtureEncoder fixture =
   case fixture of
-    Disk { path } ->
+    Disk { path, mimeType } ->
       Encode.object
         [ ("type", Encode.string "disk")
         , ("path", Encode.string path)
+        , ("mimeType", Encode.string mimeType)
         ]
-    Memory { path, content } ->
+    Memory { path, mimeType, content } ->
       Encode.object
         [ ("type", Encode.string "memory")
         , ("path", Encode.string path)
+        , ("mimeType", Encode.string mimeType)
         , ("bytes", Binary.jsonEncode content)
         ]
 
@@ -111,21 +114,30 @@ check the docs for the runner you are using).
 -}
 loadFrom : String -> FileFixture
 loadFrom path =
-  Disk { path = path }
+  Disk { path = path, mimeType = "" }
 
 
 {-| Create a FileFixture with the given name and bytes.
 -}
 withBytes : String -> Bytes -> FileFixture
 withBytes path binaryContent =
-  Memory { path = path, content = binaryContent }
+  Memory { path = path, mimeType = "", content = binaryContent }
 
 
 {-| Create a FileFixture with the given name and text content.
 -}
 withText : String -> String -> FileFixture
 withText path textContent =
-  Memory { path = path, content = Binary.encodeString textContent }
+  Memory { path = path, mimeType = "", content = Binary.encodeString textContent }
+
+
+withMimeType : String -> FileFixture -> FileFixture
+withMimeType mime file =
+  case file of
+    Disk details ->
+      Disk { details | mimeType = mime }
+    Memory details ->
+      Memory { details | mimeType = mime }
 
 
 {-| Represents a file downloaded in the course of a scenario.

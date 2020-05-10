@@ -88,7 +88,10 @@ logFileRequestSpec =
       |> when "a file is selected"
         [ Markup.target << by [ id "select-file" ]
         , Event.click
-        , Spec.File.select [ Spec.File.withText "/some/path/to/my-test-file.txt" "some super cool content" ]
+        , Spec.File.select
+            [ Spec.File.withText "/some/path/to/my-test-file.txt" "some super cool content"
+                |> Spec.File.withMimeType "text/plain"
+            ]
         ]
       |> when "requests are sent"
         [ Markup.target << by [ id "request-button" ]

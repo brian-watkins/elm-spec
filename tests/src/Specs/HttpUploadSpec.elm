@@ -39,7 +39,10 @@ uploadFileSpec =
       |> when "the file is selected"
         [ Markup.target << by [ id "select-file" ]
         , Event.click
-        , Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
+        , Spec.File.select
+          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+              |> Spec.File.withMimeType "text/plain"
+          ]
         ]
       |> when "the selected file is uploaded"
         [ Markup.target << by [ id "upload-to-server" ]
@@ -55,6 +58,13 @@ uploadFileSpec =
               |> expect (isListWhere
                 [ Spec.Http.fileBody <| require File.name <| 
                     normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
+                ]
+              )
+          )
+        , it "uses the mime type as expected" (
+            Spec.Http.observeRequests (post "http://fake-api.com/files")
+              |> expect (isListWhere
+                [ Spec.Http.header "Content-Type" <| isSomethingWhere <| equals "text/plain"
                 ]
               )
           )
@@ -88,6 +98,33 @@ uploadFileSpec =
               )
           )
         ]
+    )
+  , scenario "POST fake file to server" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Stub.serve [ uploadStub ]
+      )
+      |> when "the file is selected"
+        [ Markup.target << by [ id "select-file" ]
+        , Event.click
+        , Spec.File.select
+          [ Spec.File.withText "my-super-fun-file.txt" "Here is some super fun text"
+              |> Spec.File.withMimeType "text/fun"
+          ]
+        ]
+      |> when "the selected file is uploaded"
+        [ Markup.target << by [ id "upload-to-server" ]
+        , Event.click
+        ]
+      |> it "uses the mime type as expected" (
+        Spec.Http.observeRequests (post "http://fake-api.com/files")
+          |> expect (isListWhere
+            [ Spec.Http.header "Content-Type" <| isSomethingWhere <| equals "text/fun"
+            ]
+          )
+      )
     )
   ]
 
