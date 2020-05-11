@@ -37,6 +37,18 @@ describe("Suite Runner", () => {
     expectPassingScenarios('Passing', 3, [ "tagged" ], done)
   })
 
+  context("when the runner does not support loading files", () => {
+    it("presents an error when a scenario attempts to load a file", (done) => {
+      expectSpecWithNoBrowserCapabilities('./specs/Passing/FileSpec.elm', { tags: [], endOnFailure: false }, done, (observations) => {
+        expect(observations[0].summary).to.equal("REJECT")
+        expect(observations[0].report).to.deep.equal([
+          reportLine("Scenario attempted to load a file from disk, but this runner does not support that capability."),
+          reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
+        ])
+      })
+    })
+  })
+
   context("when the suite should end on the first failure", () => {
     it("stops at the first failure", (done) => {
       expectScenarios('WithFailure', { tags: [], endOnFailure: true }, done, (observations) => {
@@ -209,6 +221,17 @@ const expectPassingScenarios = (specDir, number, tags, done) => {
   })
 }
 
+const expectSpecWithNoBrowserCapabilities = (specPath, options, done, matcher) => {
+  expectScenariosAt({
+    cwd: './tests/sample',
+    specPath: specPath,
+    logLevel: Compiler.LOG_LEVEL.SILENT
+  }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) }, undefined,
+  (window) => {
+    delete window["_elm_spec_read_file"]
+  })
+}
+
 const expectScenarios = (specDir, options, done, matcher) => {
   expectScenariosAt({
     cwd: './tests/sample',
@@ -225,9 +248,13 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
   }, options, done, matcher, version)
 }
 
-const expectScenariosAt = (compilerOptions, options, done, matcher, version) => {
+const expectScenariosAt = (compilerOptions, options, done, matcher, version, transformer) => {
   const runner = new JSDOMSpecRunner()
   const dom = runner.getDom(compilerOptions.cwd)
+
+  if (transformer) {
+    transformer(dom.window)
+  }
 
   dom.window.eval(bundledRunnerCode)
   

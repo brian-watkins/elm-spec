@@ -12,7 +12,7 @@ module.exports = class FileReader {
       const absPath = path.resolve(this.rootDir, file)
       fs.readFile(absPath, (err, data) => {
         if (err) {
-          reject({ path: absPath })
+          reject({ type: "file", path: absPath })
         } else {
           resolve({ path: absPath, buffer: data.toJSON() });
         }

@@ -94,10 +94,15 @@ module.exports = class FilePlugin {
               body: files
             })
           })
-          .catch(({ path }) => {
-            abort(report(
-              line("Unable to read file at", path)
-            ))
+          .catch((error) => {
+            switch (error.type) {
+              case "file":
+                abort(this.fileReadError(error.path))
+                break
+              case "capability":
+                abort(this.missingLoadFileCapabilityError())
+                break
+            }
           })
 
         break
@@ -127,6 +132,12 @@ module.exports = class FilePlugin {
   fetchFile(fixture) {
     switch (fixture.content.type) {
       case "disk":
+        if (!BrowserContext.canReadFiles(this.window)) {
+          return Promise.reject({
+            type: "capability"
+          })
+        }
+
         return BrowserContext.readFile(this.window, fixture.path)
           .then(({ path, buffer }) => {
             const bytes = new Uint8Array(buffer.data)
@@ -152,6 +163,19 @@ module.exports = class FilePlugin {
   noOpenFileSelectorError() {
     return report(
       line("No open file selector!", "Either click an input element of type file or otherwise take action so that a File.Select.file(s) command is sent by the program under test.")
+    )
+  }
+
+  missingLoadFileCapabilityError() {
+    return report(
+      line("Scenario attempted to load a file from disk, but this runner does not support that capability."),
+      line("If you need to load a file from disk, consider using the standard elm-spec runner.")
+    )
+  }
+
+  fileReadError(path) {
+    return report(
+      line("Unable to read file at", path)
     )
   }
 }
