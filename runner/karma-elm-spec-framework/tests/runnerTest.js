@@ -9,7 +9,7 @@ describe("karma runner", () => {
       const karmaOutput = shell.exec("karma start --single-run", { silent: true })
       expect(karmaOutput.stdout).to.contain("Hey this is a fun log message!")
       expect(karmaOutput.stdout).to.contain("2778")
-      expect(karmaOutput.stdout).to.contain("Accepted: 3")
+      expect(karmaOutput.stdout).to.contain("Accepted: 4")
       expect(karmaOutput.stdout).to.contain("Rejected: 2")
 
       expect(karmaOutput.stdout).to.contain(path.join(__dirname, "../sample/specs/ClickSpec.elm"))

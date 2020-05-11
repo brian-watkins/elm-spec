@@ -5,7 +5,10 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Browser
 import Http
+import File exposing (File)
+import File.Select
 import Json.Decode as Json
+import Task
 
 
 type Msg
@@ -13,11 +16,15 @@ type Msg
   | SendRequest
   | InputText String
   | ReceivedResponse (Result Http.Error String)
+  | OpenFileSelector
+  | GotFile File
+  | GotFileContents String
 
 
 type alias Model =
   { count: Int
   , text: String
+  , uploadedFileContents: Maybe String
   }
 
 
@@ -25,6 +32,7 @@ defaultModel : Model
 defaultModel =
   { count = 0
   , text = ""
+  , uploadedFileContents = Nothing
   }
 
 
@@ -40,6 +48,7 @@ view model =
   , Html.input [ Attr.id "my-input", Events.onInput InputText ] []
   , Html.div [ Attr.id "input-results" ]
       [ Html.text <| "You typed: " ++ model.text ]
+  , Html.button [ Attr.id "open-file-selector", Events.onClick OpenFileSelector ] [ Html.text "Upload a file!" ]
   ]
 
 
@@ -56,6 +65,17 @@ update msg model =
       )
     ReceivedResponse _ ->
       ( model, Cmd.none )
+    OpenFileSelector ->
+      ( model, File.Select.file [] GotFile )
+    GotFile file ->
+      ( model, File.toString file |> Task.perform GotFileContents )
+    GotFileContents contents ->
+      ( { model | uploadedFileContents = Just contents }, Cmd.none )
+
+
+filesDecoder : Json.Decoder (List File)
+filesDecoder =
+  Json.at [ "target", "files" ] (Json.list File.decoder)
 
 
 getRequest : Cmd Msg
