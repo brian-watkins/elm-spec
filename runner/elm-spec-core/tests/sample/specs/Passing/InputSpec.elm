@@ -12,7 +12,7 @@ import Main as App
 inputSpec : Spec App.Model App.Msg
 inputSpec =
   Spec.describe "an html program"
-  [ scenario "an input event" (
+  [ tagged [ "fun" ] <| scenario "an input event" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update

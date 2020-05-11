@@ -12,38 +12,28 @@ describe("Suite Runner", () => {
     bundledRunnerCode = await bundleRunnerCode()
   })
 
-  it("runs a suite of tests", (done) => {
+  it("runs only the untagged scenarios", (done) => {
     expectScenarios("Passing", { tags: [], endOnFailure: false }, done, (observations) => {
+      expect(observations).to.have.length(5)
+
       expectAccepted(observations[0])
       expectModulePath(observations[0], "Passing/Behaviors/AnotherSpec.elm")
 
       expectAccepted(observations[1])
-      expectModulePath(observations[1], "Passing/Behaviors/NavigationSpec.elm")
+      expectModulePath(observations[1], "Passing/WorkerSpec.elm")
 
       expectAccepted(observations[2])
-      expectModulePath(observations[2], "Passing/WorkerSpec.elm")
+      expectModulePath(observations[2], "Passing/InputSpec.elm")
 
       expectAccepted(observations[3])
-      expectModulePath(observations[3], "Passing/WorkerSpec.elm")
+      expectModulePath(observations[3], "Passing/InputSpec.elm")
 
       expectAccepted(observations[4])
-      expectModulePath(observations[4], "Passing/InputSpec.elm")
-
-      expectAccepted(observations[5])
-      expectModulePath(observations[5], "Passing/InputSpec.elm")
-
-      expectAccepted(observations[6])
-      expectModulePath(observations[6], "Passing/InputSpec.elm")
-
-      expectAccepted(observations[7])
-      expectModulePath(observations[7], "Passing/FileSpec.elm")
-
-      expectAccepted(observations[8])
-      expectModulePath(observations[8], "Passing/ClickSpec.elm")
+      expectModulePath(observations[4], "Passing/FileSpec.elm")
     })
   })
 
-  it("runs only the tagged scenarios", (done) => {
+  it("runs only scenarios tagged with the tag", (done) => {
     expectPassingScenarios('Passing', 3, [ "tagged" ], done)
   })
 
@@ -72,7 +62,7 @@ describe("Suite Runner", () => {
       })
     })
     context("when some tags are supplied", (done) => {
-      it("runs the picked scenarios", (done) => {
+      it("runs only the picked scenarios", (done) => {
         expectScenarios("WithPicked", { tags: [ "tagged" ], endOnFailure: false }, done, (observations) => {
           expect(observations).to.have.length(2)
 

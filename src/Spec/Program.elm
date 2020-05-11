@@ -103,12 +103,12 @@ haltSuite config model =
 startSuite : Message -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 startSuite message model =
   Message.decode tagsDecoder message
-    |> Result.map (\tags -> runScenarios tags model)
-    |> Result.withDefault (runScenarios [] model)
+    |> Result.map (runScenarios model)
+    |> Result.withDefault (runScenarios model [])
 
 
-runScenarios : List String -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-runScenarios tags model =
+runScenarios : Model model msg -> List String -> ( Model model msg, Cmd (Msg msg) )
+runScenarios model tags =
   ( { model | scenarios = filterScenarios tags model.scenarios }
   , sendUpdateMsg RunNextScenario
   )
@@ -179,9 +179,14 @@ gatherScenarios specs =
 filterScenarios : List String -> List (Internal.Scenario model msg) -> List (Internal.Scenario model msg)
 filterScenarios tags scenarios =
   if List.isEmpty tags then
-    scenarios
+    List.filter withNoTags scenarios
   else
     List.filter (withTags tags) scenarios
+
+
+withNoTags : Internal.Scenario model msg -> Bool
+withNoTags scenarioData =
+  List.isEmpty scenarioData.tags
 
 
 withTags : List String -> Internal.Scenario model msg -> Bool

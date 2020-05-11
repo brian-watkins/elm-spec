@@ -37,7 +37,7 @@ const expectBehaviorFor = (browserName, runner) => {
       })
 
       it("reports all accepted", () => {
-        expect(testReporter.accepted).to.equal(9)
+        expect(testReporter.accepted).to.equal(5)
       })
 
       context(`when the specs are executed again in ${browserName}, like in watch mode`, () => {
@@ -47,7 +47,7 @@ const expectBehaviorFor = (browserName, runner) => {
         })
 
         it("reports all are still accepted", () => {
-          expect(testReporter.accepted).to.equal(9)
+          expect(testReporter.accepted).to.equal(5)
         })
       })
     })

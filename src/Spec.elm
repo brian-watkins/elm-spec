@@ -126,10 +126,16 @@ scenario description (Plan plan) =
 {-| Associate one or more tags with a scenario.
 
 When you run the spec suite with tags specified, only the scenarios
-tagged with those tags will be executed.
+tagged with one of those tags will be executed. If you do not specify any tags, then only
+those scenarios *not* associated with tags will be executed.
+
+You can use tags to ignore scenarios, if you like, or group scenarios for
+selective execution.
+
+See the docs for your elm-spec runner for instructions on how to specify tags.
 
 If you just want to run one or more specific scenarios for debugging or development
-purposes, see `Spec.Runner.pick`, which is more convenient to use for those
+purposes, see [Spec.Runner.pick](Spec.Runner#pick), which is more convenient to use for those
 cases.
 -}
 tagged : List String -> Scenario model msg -> Scenario model msg
@@ -140,7 +146,7 @@ tagged tags (Scenario scenarioData) =
 
 {-| Provide the `Setup` that represents the state of the world at the start of the scenario.
 
-See `Spec.Setup` for functions to construct this representation.
+See [Spec.Setup](Spec.Setup) for functions to construct this representation.
 -}
 given : Setup model msg -> Script model msg
 given provider =
@@ -152,8 +158,8 @@ given provider =
 
 {-| Specify a description and the steps involved in a scenario.
 
-Each step is a function from `Step.Context` to `Step.Command`, but usually
-you will use steps that are provided by other modules, like `Spec.Markup.Event`.
+Each step is a function from [Spec.Step.Context](Spec.Step#Context) to [Spec.Step.Command](Spec.Step#Command), but usually
+you will use steps that are provided by other modules, like [Spec.Markup.Event](Spec.Markup.Event).
 
 You may provide multiple `when` blocks as part of a scenario.
 -}

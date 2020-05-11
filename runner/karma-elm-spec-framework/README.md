@@ -39,7 +39,8 @@ Here's an example of the config properties relevant to elm-spec:
     client: {
       // Optional elm-spec configuration
       elmSpec: {
-        // Only scenarios tagged with one of these tags will be executed
+        // Only scenarios tagged with one of these tags will be executed.
+        // If no tags are supplied, then only scenarios with no tags will be executed.
         // By default, this is []
         tags: [ 'fun' ],
 
