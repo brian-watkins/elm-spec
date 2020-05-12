@@ -70,7 +70,7 @@ describe("application", () => {
     it("fails with a message", (done) => {
       expectProgram("NoKeySpec", done, (observations) => {
         expectRejected(observations[0], [
-          reportLine("Spec.Setup.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.Runner.browserProgram to run specs for Browser applications!")
+          reportLine("Spec.Setup.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!")
         ])
       })
     })

@@ -19,7 +19,6 @@
         "Spec.Observer",
         "Spec.Port",
         "Spec.Report",
-        "Spec.Runner",
         "Spec.Setup",
         "Spec.Step",
         "Spec.Time",

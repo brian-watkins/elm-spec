@@ -36,39 +36,44 @@ directory to the `source-directories` field of `elm.json`.
 ```
 port module Runner exposing (program, browserProgram)
 
-import Spec.Runner exposing (Message)
+import Spec exposing (Message)
 
 port elmSpecOut : Message -> Cmd msg
 port elmSpecIn : (Message -> msg) -> Sub msg
 port elmSpecPick : () -> Cmd msg
 
-config : Spec.Runner.Config msg
+config : Spec.Config msg
 config =
   { send = elmSpecOut
   , listen = elmSpecIn
   }
 
 pick =
-  Spec.Runner.pick elmSpecPick
+  Spec.pick elmSpecPick
+
+skip =
+  Spec.skip
 
 program =
-  Spec.Runner.program config
+  Spec.program config
 
 browserProgram =
-  Spec.Runner.browserProgram config
+  Spec.browserProgram config
 ```
 
-You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec.Runner.program` or `Spec.Runner.browserProgram` via a `Spec.Runner.Config` value.
+You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec.program` or `Spec.browserProgram` via a `Spec.Config` value.
 
-You must also create the `elmSpecPick` port and provide it to `Spec.Runner.pick`.
+You must also create the `elmSpecPick` port and provide it to `Spec.pick`.
 
 Now you can write spec modules. Each spec module is an elm program and so must have a `main` function. To construct
 the `main` function, just reference `program` or `browserProgram` from your `Runner.elm` and
 provide a `List Spec` to run.
 
 During the course of development, it's often useful to run only certain scenarios.
-In that case, use `pick` from your `Runner.elm` to designate those scenarios. See the docs for `Spec.Runner`
+In that case, use `pick` from your `Runner.elm` to designate those scenarios. See the docs for `Spec.pick`
 for more information.
+
+You can also skip scenarios, if you like, by using `Spec.skip`.
 
 Here's an example spec module:
 

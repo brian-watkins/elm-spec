@@ -17,8 +17,7 @@ import Main as App
 clickSpec : Spec App.Model App.Msg
 clickSpec =
   Spec.describe "an html program"
-  [ tagged [ "fun" ] <|
-    scenario "a click event" (
+  [ scenario "a click event" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update
@@ -37,8 +36,7 @@ clickSpec =
           |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
       )
     )
-  , tagged [ "fun" ] <|
-    scenario "click to make a request" (
+  , scenario "click to make a request" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update

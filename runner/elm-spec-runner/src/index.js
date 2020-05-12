@@ -39,7 +39,6 @@ class RunSuite extends Command {
         logLevel: Compiler.LOG_LEVEL.QUIET
       },
       runOptions: {
-        tags: flags.tag || [],
         endOnFailure: flags.endOnFailure
       },
       watchOptions: flags.watch ? ElmFiles.find(elmJsonPath) : { globs: [] }
@@ -78,10 +77,6 @@ RunSuite.flags = {
     default: path.join(".", "**", "*Spec.elm")
   }),
   elm: flags.string({description: 'path to elm', default: 'elm'}),
-  tag: flags.string({
-    description: 'execute scenarios with this tag only (may specify multiple)',
-    multiple: true
-  }),
   endOnFailure: flags.boolean({description: 'end spec suite run on first failure'}),
   browser: flags.string({
     description: 'browser environment for specs',

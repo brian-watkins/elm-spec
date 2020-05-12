@@ -14,8 +14,7 @@ import Runner
 navigationSpec : Spec Model Msg
 navigationSpec =
   Spec.describe "on url change"
-  [ tagged [ "tagged" ] <|
-    scenario "use pushUrl to navigate" (
+  [ scenario "use pushUrl to navigate" (
       given (
         Setup.initForApplication (Application.init ())
           |> Setup.withDocument Application.document

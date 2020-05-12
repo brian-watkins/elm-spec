@@ -109,7 +109,7 @@ initForApplication generator =
             generator url key
               |> Ok << initializeSubject True
           Nothing ->
-            Err "Spec.Setup.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.Runner.browserProgram to run specs for Browser applications!"
+            Err "Spec.Setup.initForApplication requires a Browser.Navigation.Key! Make sure to use Spec.browserProgram to run specs for Browser applications!"
     }
 
 

@@ -1,6 +1,6 @@
 port module Runner exposing (..)
 
-import Spec.Runner exposing (Message)
+import Spec exposing (Message)
 
 
 port elmSpecOut : Message -> Cmd msg
@@ -8,7 +8,7 @@ port elmSpecIn : (Message -> msg) -> Sub msg
 port elmSpecPick : () -> Cmd msg
 
 
-config : Spec.Runner.Config msg
+config : Spec.Config msg
 config =
   { send = elmSpecOut
   , listen = elmSpecIn
@@ -16,12 +16,16 @@ config =
 
 
 pick =
-  Spec.Runner.pick elmSpecPick
+  Spec.pick elmSpecPick
+
+
+skip =
+  Spec.skip
 
 
 program =
-  Spec.Runner.browserProgram config
+  Spec.browserProgram config
 
 
 workerProgram =
-  Spec.Runner.program config
+  Spec.program config

@@ -1,7 +1,6 @@
 module Specs.NoKeySpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Runner
 import Spec.Message exposing (Message)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
@@ -144,6 +143,6 @@ testView model =
 
 
 main =
-  Spec.Runner.program TestRunner.config
+  Spec.program TestRunner.config
     [ applicationSpec
     ]

@@ -39,11 +39,6 @@ Here's an example of the config properties relevant to elm-spec:
     client: {
       // Optional elm-spec configuration
       elmSpec: {
-        // Only scenarios tagged with one of these tags will be executed.
-        // If no tags are supplied, then only scenarios with no tags will be executed.
-        // By default, this is []
-        tags: [ 'fun' ],
-
         // End the spec suite run on the first failure.
         // This is helpful to turn on when debugging failures, as you'll be able
         // to see and interact with the program under test (on the Karma debug

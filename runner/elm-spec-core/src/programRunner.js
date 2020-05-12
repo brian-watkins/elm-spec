@@ -79,7 +79,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   startSuite() {
-    const tags = this.app.ports[ELM_SPEC_PICK] ? [ "_elm_spec_pick" ] : this.options.tags
+    const tags = this.app.ports[ELM_SPEC_PICK] ? [ "_elm_spec_pick" ] : []
     this.app.ports[ELM_SPEC_IN].send(this.specStateMessage("start", { tags }))
   }
 

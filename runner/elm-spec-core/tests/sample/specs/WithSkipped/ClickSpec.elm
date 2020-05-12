@@ -1,4 +1,4 @@
-module WithPicked.ClickSpec exposing (..)
+module WithSkipped.ClickSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
@@ -13,7 +13,7 @@ import Main as App
 clickSpec : Spec App.Model App.Msg
 clickSpec =
   Spec.describe "an html program"
-  [ scenario "a click event" (
+  [ Runner.skip <| scenario "a click event" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update
@@ -31,7 +31,7 @@ clickSpec =
           |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
       )
     )
-  , Runner.pick <| scenario "another click" (
+  , scenario "another click" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update
@@ -42,7 +42,7 @@ clickSpec =
         , Event.click
         , Event.click
         ]
-      |> it "renders the count [PICKED]" (
+      |> it "renders the count [NOT SKIPPED]" (
         Markup.observeElement
           |> Markup.query << by [ id "count-results" ]
           |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 2 time(s)")

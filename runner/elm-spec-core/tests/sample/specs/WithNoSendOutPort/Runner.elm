@@ -1,7 +1,6 @@
 port module WithNoSendOutPort.Runner exposing (..)
 
 import Spec exposing (Spec)
-import Spec.Runner
 import Spec.Message exposing (Message)
 
 
@@ -9,7 +8,7 @@ port somerthingOtherThanSendOut : Message -> Cmd msg
 port elmSpecIn : (Message -> msg) -> Sub msg
 
 
-config : Spec.Runner.Config msg
+config : Spec.Config msg
 config =
   { send = somerthingOtherThanSendOut
   , listen = elmSpecIn
@@ -17,8 +16,8 @@ config =
 
 
 program =
-  Spec.Runner.browserProgram config
+  Spec.browserProgram config
 
 
 workerProgram =
-  Spec.Runner.program config
+  Spec.program config

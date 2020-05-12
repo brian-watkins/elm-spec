@@ -23,7 +23,6 @@ module.exports = function(config) {
 
     client: {
       elmSpec: {
-        tags: [ 'fun' ],
         endOnFailure: false
       }
     },

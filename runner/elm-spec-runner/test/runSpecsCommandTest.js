@@ -46,7 +46,7 @@ describe("Run Specs Command", () => {
     context("when browser is not visible and not ending on failure", () => {
       beforeEach(async () => {
         const browserOptions = { visible: false }
-        const runOptions = { tags: [], endOnFailure: false }
+        const runOptions = { endOnFailure: false }
         await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
       })
   
@@ -60,7 +60,7 @@ describe("Run Specs Command", () => {
     context("when browser is not visible and ending on failure", () => {
       beforeEach(async () => {
         const browserOptions = { visible: false }
-        const runOptions = { tags: [], endOnFailure: true }
+        const runOptions = { endOnFailure: true }
         await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
       })
   
@@ -74,7 +74,7 @@ describe("Run Specs Command", () => {
     context("when the browser is visible and not ending on failure", () => {
       beforeEach(async () => {
         const browserOptions = { visible: true }
-        const runOptions = { tags: [], endOnFailure: false }
+        const runOptions = { endOnFailure: false }
         await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
       })
   
@@ -88,7 +88,7 @@ describe("Run Specs Command", () => {
     context("when the browser is visible and ending on failure", () => {
       beforeEach(async () => {
         const browserOptions = { visible: true }
-        const runOptions = { tags: [], endOnFailure: true }
+        const runOptions = { endOnFailure: true }
         await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
       })
   
@@ -105,7 +105,7 @@ describe("Run Specs Command", () => {
     context("when directories are found to watch", () => {
       const browserOptions = { visible: false }
       
-      const runOptions = { tags: [], endOnFailure: false }
+      const runOptions = { endOnFailure: false }
       
       const watchOptions = {
         globs: [ '/some/path/src/**/*.elm', '/some/other/path/specs/**/*.elm' ]

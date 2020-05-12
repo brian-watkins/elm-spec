@@ -16,7 +16,7 @@ const expectBehaviorFor = (browserName, runner) => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
-        await runner.run(testReporter, errorSpecs, { tags: [], endOnFailure: false })
+        await runner.run(testReporter, errorSpecs, { endOnFailure: false })
       })
       
       it("reports the error", () => {
@@ -28,7 +28,7 @@ const expectBehaviorFor = (browserName, runner) => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
-        await runner.run(testReporter, allSpecs, { tags: [], endOnFailure: false })
+        await runner.run(testReporter, allSpecs, { endOnFailure: false })
       })
  
       it("calls start and finish", () => {
@@ -37,33 +37,18 @@ const expectBehaviorFor = (browserName, runner) => {
       })
 
       it("reports all accepted", () => {
-        expect(testReporter.accepted).to.equal(5)
+        expect(testReporter.accepted).to.equal(9)
       })
 
       context(`when the specs are executed again in ${browserName}, like in watch mode`, () => {
         beforeEach(async () => {
           testReporter = new TestReporter()
-          await runner.run(testReporter, allSpecs, { tags: [], endOnFailure: false })
+          await runner.run(testReporter, allSpecs, { endOnFailure: false })
         })
 
         it("reports all are still accepted", () => {
-          expect(testReporter.accepted).to.equal(5)
+          expect(testReporter.accepted).to.equal(9)
         })
-      })
-    })
-
-    context(`when tags are used and specs are accepted in ${browserName}`, () => {
-      beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, allSpecs, {
-          tags: [ 'fun', 'tagged' ],
-          endOnFailure: false
-        })
-      })
-
-      it("reports tagged specs as accepted", () => {
-        expect(testReporter.accepted).to.equal(4)
       })
     })
 
@@ -71,7 +56,7 @@ const expectBehaviorFor = (browserName, runner) => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
-        await runner.run(testReporter, specsWithLogs, { tags: [], endOnFailure: false })
+        await runner.run(testReporter, specsWithLogs, { endOnFailure: false })
       })
 
       it("reports the log message", () => {
@@ -83,7 +68,7 @@ const expectBehaviorFor = (browserName, runner) => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
-        await runner.run(testReporter, failingSpec, { tags: [], endOnFailure: false })
+        await runner.run(testReporter, failingSpec, { endOnFailure: false })
       })
 
       it(`reports the correct number of rejections in ${browserName}`, () => {
@@ -95,7 +80,7 @@ const expectBehaviorFor = (browserName, runner) => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
-        await runner.run(testReporter, failingSpec, { tags: [], endOnFailure: true })
+        await runner.run(testReporter, failingSpec, { endOnFailure: true })
       })
 
       it(`reports only the first failure in ${browserName}`, () => {

@@ -28,7 +28,7 @@ Here's the update function:
         ...
 
 To use a Witness, you must reference the `elmSpecOut` port defined when configuring
-`Spec.Runner.program` or `Spec.Runner.browserProgram`. I suggest creating a file called
+`Spec.program` or `Spec.browserProgram`. I suggest creating a file called
 `Spec.Witness.Extra` like so:
 
     module Spec.Witness.Extra exposing (record)
@@ -100,7 +100,7 @@ type alias Statement =
 
 {-| Create a Witness by connecting it with the `elmSpecOut` port.
 
-When you configure `Spec.Runner.program` or `Spec.Runner.browserProgram` you must
+When you configure `Spec.program` or `Spec.browserProgram` you must
 provide a reference to a port called `elmSpecOut`. Pass that same port to this
 function to create a Witness.
 
@@ -118,7 +118,7 @@ a `record` function for you to use in your specs:
         |> Spec.Witness.record
 
 
-See the docs for `Spec.Runner.Config` and the README for more information on the `elmSpecOut` port.
+See [Spec.Config](Spec#Config) and the README for more information on the `elmSpecOut` port.
 -}
 connect : (Message -> Cmd msg) -> Witness msg
 connect =

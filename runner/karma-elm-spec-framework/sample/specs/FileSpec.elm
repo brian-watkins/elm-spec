@@ -15,7 +15,7 @@ import File
 
 fileSpec =
   describe "uploading a file"
-  [ tagged [ "fun" ] <| scenario "the file exists" (
+  [ scenario "the file exists" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update

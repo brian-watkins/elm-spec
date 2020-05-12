@@ -7,7 +7,6 @@ port module Runner exposing
   )
 
 import Spec exposing (Spec)
-import Spec.Runner
 import Spec.Program
 import Spec.Message exposing (Message)
 import Task
@@ -21,7 +20,7 @@ port elmSpecOut : Message -> Cmd msg
 port elmSpecIn : (Message -> msg) -> Sub msg
 
 
-config : Spec.Runner.Config msg
+config : Spec.Config msg
 config =
   { send = elmSpecOut
   , listen = elmSpecIn
@@ -33,7 +32,7 @@ type alias Flags =
   }
 
 
-initForTests : Spec.Runner.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Maybe Key -> (Spec.Runner.Model model msg, Cmd (Spec.Runner.Msg msg))
+initForTests : Spec.Config msg -> (String -> Maybe (Spec model msg)) -> Flags -> Maybe Key -> (Spec.Model model msg, Cmd (Spec.Msg msg))
 initForTests specConfig specLocator flags maybeKey =
   Spec.Program.init (\_ ->
     case specLocator flags.specName of
@@ -44,7 +43,7 @@ initForTests specConfig specLocator flags maybeKey =
   ) 1 specConfig { version = 1 } maybeKey
 
 
-program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Runner.Model model msg) (Spec.Runner.Msg msg)
+program : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 program specLocator =
   Platform.worker
     { init = \flags -> initForTests config specLocator flags Nothing
@@ -53,7 +52,7 @@ program specLocator =
     }
 
 
-browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Runner.Model model msg) (Spec.Runner.Msg msg)
+browserProgram : (String -> Maybe (Spec model msg)) -> Program Flags (Spec.Model model msg) (Spec.Msg msg)
 browserProgram specLocator =
   Browser.application
     { init = \flags _ key -> initForTests config specLocator flags (Just key)
@@ -65,7 +64,7 @@ browserProgram specLocator =
     }
 
 
-runSuiteWithVersion : Int -> List (Spec model msg) -> Program Spec.Runner.Flags (Spec.Runner.Model model msg) (Spec.Runner.Msg msg)
+runSuiteWithVersion : Int -> List (Spec model msg) -> Program Spec.Flags (Spec.Model model msg) (Spec.Msg msg)
 runSuiteWithVersion elmSpecVersion specs =
   Browser.application
     { init = \flags _ key ->

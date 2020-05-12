@@ -24,7 +24,6 @@ window._elm_spec.runProgram = (specProgram, version) => {
     const program = Elm.Specs[specProgram]
     const reporter = new TestReporter()
     const options = {
-      tags: [],
       endOnFailure: false
     }
     
@@ -59,7 +58,7 @@ const runProgram = (app, context, options, resolve, reject) => {
   let error = null
   let logs = []
 
-  new ProgramRunner(app, context, options || { tags: [], endOnFailure: false })
+  new ProgramRunner(app, context, options || { endOnFailure: false })
       .on('observation', (observation) => {
         observations.push(observation)
       })

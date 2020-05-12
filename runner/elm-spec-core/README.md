@@ -115,9 +115,6 @@ where `options` is:
 
 ```
 {
-  // run only scenarios tagged with one of these tags
-  tags: [ 'my-tag', 'another-tag' ],
-
   // stop the test suite run after the first failure
   endOnFailure: true,
 }

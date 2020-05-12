@@ -1,4 +1,4 @@
-module Behaviors.NavigationSpec exposing (main)
+module WithSkipped.NavigationSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
@@ -26,7 +26,7 @@ navigationSpec =
         [ Markup.target << by [ id "push-url-button" ]
         , Event.click
         ]
-      |> it "shows a different page" (
+      |> it "shows a different page [NOT SKIPPED]" (
         Markup.observeElement
           |> Markup.query << by [ id "fun-page" ]
           |> expect ( isSomethingWhere <| Markup.text <| isStringContaining 1 "bowling" )

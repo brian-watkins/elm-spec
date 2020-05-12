@@ -34,8 +34,7 @@ inputSpec =
 differentInputSpec : Spec App.Model App.Msg
 differentInputSpec =
   Spec.describe "an html program"
-  [ tagged [ "fun" ] <|
-    scenario "another input event" (
+  [ scenario "another input event" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update

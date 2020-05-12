@@ -1,7 +1,6 @@
 module Specs.MultipleSpecSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Runner
 import Spec.Message exposing (Message)
 import Spec.Setup as Setup
 import Spec.Claim as Claim
@@ -85,7 +84,7 @@ type alias Model =
 
 
 main =
-  Spec.Runner.program TestRunner.config
+  Spec.program TestRunner.config
     [ passingSpec
     , failingSpec
     , specWithAScenario

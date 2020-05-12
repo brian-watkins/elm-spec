@@ -6,7 +6,6 @@
   const ElmContext = require('elm-spec-core/src/elmContext')
 
   const defaultConfig = {
-    tags: [],
     endOnFailure: false
   }
 

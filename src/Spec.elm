@@ -1,10 +1,11 @@
 module Spec exposing
   ( Spec
   , Scenario, Script, Plan, Expectation
-  , describe
-  , scenario
-  , tagged
+  , describe, scenario
   , given, when, it, observeThat, expect
+  , Message, Msg, Model, Config, Flags
+  , program, browserProgram
+  , pick, skip
   )
 
 {-| Functions for writing specs.
@@ -52,7 +53,15 @@ Here's a sample spec for a browser program called `App`:
 @docs Plan, Expectation, it, observeThat, expect
 
 # Run Only Certain Scenarios
-@docs tagged
+@docs pick, skip
+
+----
+
+# Create a Spec Suite Program
+@docs Config, browserProgram, program
+
+# Spec Suite Program Types
+@docs Message, Flags, Msg, Model
 
 -}
 
@@ -62,7 +71,13 @@ import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
+import Spec.Program as Program
+import Spec.Message as Message
 import Spec.Claim exposing (Claim)
+import Browser
+
+
+requiredElmSpecCoreVersion = 5
 
 
 {-| Represents the spec.
@@ -121,27 +136,6 @@ scenario description (Plan plan) =
     , observations = plan.observations
     , tags = []
     }
-
-
-{-| Associate one or more tags with a scenario.
-
-When you run the spec suite with tags specified, only the scenarios
-tagged with one of those tags will be executed. If you do not specify any tags, then only
-those scenarios *not* associated with tags will be executed.
-
-You can use tags to ignore scenarios, if you like, or group scenarios for
-selective execution.
-
-See the docs for your elm-spec runner for instructions on how to specify tags.
-
-If you just want to run one or more specific scenarios for debugging or development
-purposes, see [Spec.Runner.pick](Spec.Runner#pick), which is more convenient to use for those
-cases.
--}
-tagged : List String -> Scenario model msg -> Scenario model msg
-tagged tags (Scenario scenarioData) =
-  Scenario
-    { scenarioData | tags = tags }
 
 
 {-| Provide the `Setup` that represents the state of the world at the start of the scenario.
@@ -216,3 +210,169 @@ it description (Expectation expectation) (Script script) =
 expect : Claim a -> Observer model a -> Expectation model
 expect claim observer =
   Expectation <| Observer.expect claim observer
+
+
+
+-- Spec Runner
+
+
+
+{-| The spec suite runner must provide a Config, which must be implemented as follows:
+
+Create two ports:
+
+    port elmSpecOut : Message -> Cmd msg
+    port elmSpecIn : (Message -> msg) -> Sub msg
+
+And then create a `Config` like so:
+
+    config : Spec.Config msg
+    config =
+      { send = elmSpecOut
+      , listen = elmSpecIn
+      }
+
+-}
+type alias Config msg =
+  { send: Message -> Cmd (Msg msg)
+  , listen: (Message -> Msg msg) -> Sub (Msg msg)
+  }
+
+
+{-| Represents a message to pass between elm-spec and the JavaScript elm-spec runner.
+-}
+type alias Message =
+  Message.Message
+
+
+{-| Flags that the JavaScript runner will pass to the spec suite program.
+-}
+type alias Flags =
+  Program.Flags
+
+
+{-| Used by the spec suite program.
+-}
+type alias Model model msg =
+  Program.Model model msg
+
+
+{-| Used by the spec suite program.
+-}
+type alias Msg msg =
+  Program.Msg msg
+
+
+{-| Create a spec suite program for describing the behavior of headless programs.
+
+Once you've created the `Config` value, I suggest adding a function like so:
+
+    program : List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
+    program =
+      Spec.program config
+
+Then, each of your spec modules can implement their own `main` function:
+
+    main =
+      Runner.program
+        [ ... some specs ...
+        ]
+
+The elm-spec runner will find each spec module and run it as its own program.
+
+-}
+program : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
+program config specs =
+  Platform.worker
+    { init = \flags -> Program.init (\_ -> specs) requiredElmSpecCoreVersion config flags Nothing
+    , update = Program.update config
+    , subscriptions = Program.subscriptions config
+    }
+
+
+{-| Create a spec suite program for describing the behavior of browser-based programs.
+
+Once you've created the `Config` value, I suggest adding a function like so:
+
+    program : List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
+    program =
+      Spec.browserProgram config
+
+Then, each of your spec modules can implement their own `main` function:
+
+    main =
+      Runner.program
+        [ ... some specs ...
+        ]
+
+The elm-spec runner will find each spec module and run it as its own program.
+
+-}
+browserProgram : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
+browserProgram config specs =
+  Browser.application
+    { init = \flags _ key -> Program.init (\_ -> specs) requiredElmSpecCoreVersion config flags (Just key)
+    , view = Program.view
+    , update = Program.update config
+    , subscriptions = Program.subscriptions config
+    , onUrlRequest = Program.onUrlRequest
+    , onUrlChange = Program.onUrlChange
+    }
+
+
+{-| Pick this scenario to be executed when the spec suite runs.
+
+When one or more scenarios are picked, only picked scenarios will be executed.
+
+Note that the first argument to this function must be a port defined like so:
+
+    port elmSpecPick : () -> Cmd msg
+
+I suggest adding a function to the main Runner file in your spec suite, where
+you've defined your `Config` and so on:
+
+    pick =
+      Spec.pick elmSpecPick
+
+Then, to pick a scenario to run, do something like this:
+
+    myFunSpec =
+      Spec.describe "Some fun stuff"
+      [ Runner.pick <| Spec.scenario "fun things happen" (
+          ...
+        )
+      ]
+
+-}
+pick : (() -> Cmd msg) -> Scenario model msg -> Scenario model msg
+pick _ =
+  tagged [ "_elm_spec_pick" ]
+
+
+{-| Skip this scenario when the spec suite runs.
+
+I suggest adding a function to the main Runner file in your spec suite, where
+you've defined your `Config` and so on:
+
+    skip =
+      Spec.skip
+
+Then, to skip a scenario, do something like this:
+
+    myFunSpec =
+      Spec.describe "Some fun stuff"
+      [ Runner.skip <| Spec.scenario "fun things happen" (
+          ...
+        )
+      ]
+
+-}
+skip : Scenario model msg -> Scenario model msg
+skip =
+  tagged [ "_elm_spec_skip" ]
+
+
+tagged : List String -> Scenario model msg -> Scenario model msg
+tagged tags (Scenario scenarioData) =
+  Scenario
+    { scenarioData | tags = tags }

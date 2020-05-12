@@ -11,7 +11,7 @@ describe('elm-spec-runner', () => {
         " --specRoot ../elm-spec-core/tests/sample/" +
         " --specs ./specs/Passing/**/*Spec.elm"
       const runnerOutput = shell.exec(command, { silent: true })
-      expect(runnerOutput.stdout).to.contain("Accepted: 5")
+      expect(runnerOutput.stdout).to.contain("Accepted: 9")
     })
   })
 
@@ -41,7 +41,7 @@ describe('elm-spec-runner', () => {
       expect(runnerOutput).to.contain("../elm-spec-core/tests/sample/src/**/*.elm")
       expect(runnerOutput).to.contain("../elm-spec-core/tests/sample/specs/**/*.elm")
       expect(runnerOutput).to.contain("File changed: ../elm-spec-core/tests/sample/specs/Passing/ClickSpec.elm")
-      expect(runnerOutput).to.have.entriesCount("Accepted: 5", 2)
+      expect(runnerOutput).to.have.entriesCount("Accepted: 9", 2)
     })
   })
 

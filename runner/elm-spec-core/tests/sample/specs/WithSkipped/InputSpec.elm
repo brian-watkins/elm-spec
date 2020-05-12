@@ -1,4 +1,4 @@
-module Passing.InputSpec exposing (..)
+module WithSkipped.InputSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
@@ -22,7 +22,7 @@ inputSpec =
         [ Markup.target << by [ id "my-input" ]
         , Event.input "Here is some fun text!"
         ]
-      |> it "renders the text on the view" (
+      |> it "renders the text on the view [NOT SKIPPED]" (
         Markup.observeElement
           |> Markup.query << by [ id "input-results" ]
           |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You typed: Here is some fun text!")
@@ -34,7 +34,7 @@ inputSpec =
 differentInputSpec : Spec App.Model App.Msg
 differentInputSpec =
   Spec.describe "an html program"
-  [ scenario "another input event" (
+  [ Runner.skip <| scenario "another input event" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update

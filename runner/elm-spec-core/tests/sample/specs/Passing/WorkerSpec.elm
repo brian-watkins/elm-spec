@@ -10,7 +10,7 @@ import Runner
 funSpec : Spec Model Msg
 funSpec =
   Spec.describe "something fun"
-  [ tagged [ "tagged" ] <| scenario "something passes" (
+  [ scenario "something passes" (
       given (
         Setup.initWithModel { value = 87 }
       )
