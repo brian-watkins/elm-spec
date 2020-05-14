@@ -40,6 +40,7 @@ type alias Model model msg =
   { scenarios: List (Internal.Scenario model msg)
   , scenarioModel: ScenarioProgram.Model (Msg msg) msg
   , key: Maybe Key
+  , tags: List String
   }
 
 
@@ -49,6 +50,7 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
     ( { scenarios = specProvider () |> gatherScenarios
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
+      , tags = []
       }
     , Cmd.none
     )
@@ -56,6 +58,7 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
     ( { scenarios = []
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
+      , tags = []
       }
     , versionMismatchErrorMessage requiredElmSpecCoreVersion flags.version
         |> config.send
@@ -76,8 +79,12 @@ update config msg model =
         [] ->
           ( model, config.send specComplete )
         next :: remaining ->
-          ScenarioProgram.start (scenarioActions config) model.key next
-            |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
+          if shouldRunScenario model.tags next then
+            ScenarioProgram.run (scenarioActions config) model.key next
+              |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
+          else
+            ScenarioProgram.skip (scenarioActions config) next
+              |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
     ScenarioMsg scenarioMsg ->
       ScenarioProgram.update (scenarioActions config) scenarioMsg model.scenarioModel
         |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated })
@@ -102,16 +109,19 @@ haltSuite config model =
 
 startSuite : Message -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 startSuite message model =
-  Message.decode tagsDecoder message
-    |> Result.map (runScenarios model)
-    |> Result.withDefault (runScenarios model [])
+  case Message.decode tagsDecoder message of
+    Ok tags ->
+      ( { model | tags = tags }, sendUpdateMsg RunNextScenario )
+    Err _ ->
+      ( model, sendUpdateMsg RunNextScenario )
 
 
-runScenarios : Model model msg -> List String -> ( Model model msg, Cmd (Msg msg) )
-runScenarios model tags =
-  ( { model | scenarios = filterScenarios tags model.scenarios }
-  , sendUpdateMsg RunNextScenario
-  )
+shouldRunScenario : List String -> Internal.Scenario model msg -> Bool
+shouldRunScenario tags scenario =
+  if List.isEmpty tags then
+    List.isEmpty scenario.tags
+  else
+    not <| List.isEmpty scenario.tags
 
 
 tagsDecoder : Json.Decoder (List String)
@@ -174,31 +184,6 @@ gatherScenarios : List (Internal.Spec model msg) -> List (Internal.Scenario mode
 gatherScenarios specs =
   List.map (\(Internal.Spec scenarios) -> scenarios) specs
     |> List.concat
-
-
-filterScenarios : List String -> List (Internal.Scenario model msg) -> List (Internal.Scenario model msg)
-filterScenarios tags scenarios =
-  if List.isEmpty tags then
-    List.filter withNoTags scenarios
-  else
-    List.filter (withTags tags) scenarios
-
-
-withNoTags : Internal.Scenario model msg -> Bool
-withNoTags scenarioData =
-  List.isEmpty scenarioData.tags
-
-
-withTags : List String -> Internal.Scenario model msg -> Bool
-withTags tags scenarioData =
-  case tags of
-    [] ->
-      False
-    tag :: remaining ->
-      if List.member tag scenarioData.tags then
-        True
-      else
-        withTags remaining scenarioData
 
 
 versionMismatchErrorMessage : Int -> Int -> Message

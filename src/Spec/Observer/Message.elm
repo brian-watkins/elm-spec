@@ -3,6 +3,7 @@ module Spec.Observer.Message exposing
   , inquiry
   , inquiryDecoder
   , observation
+  , skipObservation
   , isObservationMessage
   )
 
@@ -40,6 +41,19 @@ observation conditions description verdict =
   Message.for "_observer" "observation"
     |> Message.withBody (
       encodeObservation conditions description verdict
+    )
+
+
+skipObservation : Message
+skipObservation =
+  Message.for "_observer" "observation"
+    |> Message.withBody (
+      Encode.object
+        [ ("summary", Encode.string "SKIPPED")
+        , ("report", Encode.null)
+        , ("conditions", Encode.list Encode.string [])
+        , ("description", Encode.string "")
+        ]
     )
 
 

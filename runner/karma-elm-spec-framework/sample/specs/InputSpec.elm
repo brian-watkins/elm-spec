@@ -34,7 +34,7 @@ inputSpec =
 differentInputSpec : Spec App.Model App.Msg
 differentInputSpec =
   Spec.describe "an html program"
-  [ scenario "another input event" (
+  [ Runner.skip <| scenario "another input event" (
       given (
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update

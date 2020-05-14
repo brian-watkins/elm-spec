@@ -4,12 +4,13 @@ const path = require('path')
 
 
 describe("karma runner", () => {
-  context("some pass, some fail", () => {
+  context("some pass, some skipped, some fail", () => {
     it("shows the expected output", () => {
       const karmaOutput = shell.exec("karma start --single-run", { silent: true })
       expect(karmaOutput.stdout).to.contain("Hey this is a fun log message!")
       expect(karmaOutput.stdout).to.contain("2778")
-      expect(karmaOutput.stdout).to.contain("Accepted: 6")
+      expect(karmaOutput.stdout).to.contain("Accepted: 4")
+      expect(karmaOutput.stdout).to.contain("Skipped: 3")
       expect(karmaOutput.stdout).to.contain("Rejected: 2")
 
       expect(karmaOutput.stdout).to.contain(path.join(__dirname, "../sample/specs/ClickSpec.elm"))

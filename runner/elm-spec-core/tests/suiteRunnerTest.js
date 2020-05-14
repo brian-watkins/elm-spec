@@ -68,15 +68,20 @@ describe("Suite Runner", () => {
   })
 
   context("when some scenarios are picked", () => {
-    it("runs only the picked scenarios", (done) => {
+    it("runs only the picked scenarios and skips the others", (done) => {
       expectScenarios("WithPicked", { endOnFailure: false }, done, (observations) => {
-        expect(observations).to.have.length(2)
-
-        expectAccepted(observations[0])
-        expect(observations[0].description).to.equal("It renders the count [PICKED]")
+        expectSkipped(observations[0])
 
         expectAccepted(observations[1])
-        expect(observations[1].description).to.equal("It renders the text on the view [PICKED]")
+        expect(observations[1].description).to.equal("It renders the count [PICKED]")
+
+        expectSkipped(observations[2])
+
+        expectAccepted(observations[3])
+        expect(observations[3].description).to.equal("It renders the text on the view [PICKED]")
+
+        expectSkipped(observations[4])
+        expectSkipped(observations[5])
       })
     })
   })
@@ -84,16 +89,21 @@ describe("Suite Runner", () => {
   context("when some scenarios are skipped", () => {
     it("does not executed the skipped scenarios", (done) => {
       expectScenarios("WithSkipped", { endOnFailure: false }, done, (observations) => {
-        expect(observations).to.have.length(3)
+        expect(observations).to.have.length(6)
 
-        expectAccepted(observations[0])
-        expect(observations[0].description).to.equal("It renders the count [NOT SKIPPED]")
+        expectSkipped(observations[0])
 
         expectAccepted(observations[1])
-        expect(observations[1].description).to.equal("It shows a different page [NOT SKIPPED]")
+        expect(observations[1].description).to.equal("It renders the count [NOT SKIPPED]")
 
         expectAccepted(observations[2])
-        expect(observations[2].description).to.equal("It renders the text on the view [NOT SKIPPED]")
+        expect(observations[2].description).to.equal("It shows a different page [NOT SKIPPED]")
+
+        expectAccepted(observations[3])
+        expect(observations[3].description).to.equal("It renders the text on the view [NOT SKIPPED]")
+
+        expectSkipped(observations[4])
+        expectSkipped(observations[5])
       })
     })
   })
@@ -294,6 +304,10 @@ const expectAccepted = (observation) => {
 
 const expectRejected = (observation) => {
   expect(observation.summary).to.equal("REJECT")
+}
+
+const expectSkipped = (observation) => {
+  expect(observation.summary).to.equal("SKIPPED")
 }
 
 const expectModulePath = (observation, modulePathPart) => {

@@ -24,7 +24,21 @@ describe("reporter", () => {
     expect(reporter.rejected.length).to.equal(2)
   })
 
-  describe("when there are no rejected observations", () => {
+  it("counts the number of skipped observations", () => {
+    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {} })
+    reporter.record(acceptedMessage())
+    reporter.record(rejectedMessage())
+    reporter.record(acceptedMessage())
+    reporter.record(skippedMessage())
+    reporter.record(acceptedMessage())
+    reporter.record(skippedMessage())
+    reporter.record(skippedMessage())
+    reporter.record(rejectedMessage())
+
+    expect(reporter.skipped).to.equal(3)
+  })
+
+  describe("when there are no rejected or skipped observations", () => {
     let lines
 
     beforeEach(() => {
@@ -43,7 +57,30 @@ describe("reporter", () => {
     })
   })
 
-  describe("when there are rejected observations", () => {
+  describe("when there are skipped observations", () => {
+    let lines
+
+    beforeEach(() => {
+      lines = []
+      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line) })
+
+      subject.record(acceptedMessage())
+      subject.record(skippedMessage())
+      subject.record(acceptedMessage())
+      subject.record(skippedMessage())
+      subject.record(skippedMessage())
+      subject.finish()
+    })
+
+    it("writes the number skipped", () => {
+      expectToContain(lines, [
+        "Accepted: 2",
+        "Skipped: 3"
+      ])
+    })
+  })
+
+  describe("when there are rejected observations but none skipped", () => {
     let lines
     let subject
 
@@ -151,6 +188,59 @@ describe("reporter", () => {
       ])
     })
   })
+
+  context("when the reporter is reset, like when in watch mode", () => {
+    let lines
+
+    beforeEach(() => {
+      lines = []
+      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line) })
+
+      subject.record(acceptedMessage())
+      subject.record(skippedMessage())
+      subject.record(acceptedMessage())
+      subject.record(rejectedMessage({
+        conditions: [ "Given a subject", "When something happens" ],
+        description: "It does something else",
+        report: [
+          { statement: "Expected the following", detail: "something" },
+          { statement: "to be", detail: "something else\nwith\nmultiple lines" },
+          { statement: "and a final statement\nthat has multiple\nlines", detail: null }
+        ],
+        modulePath: "/base/path/elm/specs/Some/Funny/RejectedSpec.elm"
+      }))
+      subject.finish()
+      subject.reset()
+      subject.record(acceptedMessage())
+      subject.record(acceptedMessage())
+      subject.record(acceptedMessage())
+      subject.record(acceptedMessage())
+      subject.finish()
+    })
+
+    it("clears the number of accepted, skipped, rejected", () => {
+      expectToContain(lines, [
+        "Accepted: 2",
+        "Skipped: 1",
+        "Rejected: 1",
+        "Failed to satisfy spec:",
+        "/base/path/elm/specs/Some/Funny/RejectedSpec.elm",
+        "Given a subject",
+        "When something happens",
+        "It does something else",
+        "Expected the following",
+        "something",
+        "to be",
+        "something else",
+        "with",
+        "multiple lines",
+        "and a final statement",
+        "that has multiple",
+        "lines",
+        "Accepted: 4"
+      ])
+    })
+  })
 })
 
 const expectToContain = (actualLines, expectedLines) => {
@@ -178,5 +268,14 @@ const rejectedMessage = (data = { conditions: [], description: '', message: '', 
     description: data.description,
     report: data.report,
     modulePath: data.modulePath
+  }
+}
+
+const skippedMessage = () => {
+  return {
+    summary: 'SKIPPED',
+    conditions: [],
+    description: "",
+    modulePath: [ "Some", "Behavior", "SkippedSpec" ]
   }
 }

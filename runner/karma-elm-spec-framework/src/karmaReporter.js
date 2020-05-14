@@ -20,7 +20,7 @@ module.exports = class KarmaReporter {
         modulePath: observation.modulePath
       },
       success: observation.summary === "ACCEPT",
-      skipped: false
+      skipped: observation.summary === "SKIPPED"
     })
   }
 

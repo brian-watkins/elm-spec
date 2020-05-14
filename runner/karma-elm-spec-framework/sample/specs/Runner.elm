@@ -13,5 +13,9 @@ config =
   }
 
 
+skip =
+  Spec.skip
+
+
 program =
   Spec.browserProgram config

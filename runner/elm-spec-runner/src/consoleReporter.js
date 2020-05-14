@@ -3,6 +3,7 @@ const readline = require('readline')
 
 const ok = chalk.green
 const error = chalk.red
+const skip = chalk.yellow
 const logMessage = chalk.cyan
 
 module.exports = class ConsoleReporter {
@@ -15,6 +16,7 @@ module.exports = class ConsoleReporter {
 
   reset() {
     this.accepted = 0
+    this.skipped = 0
     this.rejected = []
     this.hasError = false
   }
@@ -43,13 +45,19 @@ module.exports = class ConsoleReporter {
   }
 
   record(observation) {
-    if (observation.summary === "ACCEPT") {
-      this.accepted += 1
-      this.write(ok('.'))
-    }
-    else if (observation.summary === "REJECT") {
-      this.rejected.push(observation)
-      this.write(error('x'))
+    switch (observation.summary) {
+      case "ACCEPT":
+        this.accepted += 1
+        this.write(ok('.'))
+        break
+      case "SKIPPED":
+        this.skipped += 1
+        this.write(skip('_'))
+        break
+      case "REJECT":
+        this.rejected.push(observation)
+        this.write(error('x'))
+        break
     }
   }
 
@@ -71,6 +79,9 @@ module.exports = class ConsoleReporter {
 
     this.writeLine("\n")
     this.writeLine(ok(`Accepted: ${this.accepted}`))
+    if (this.skipped > 0) {
+      this.writeLine(skip(`Skipped: ${this.skipped}`))
+    }
     if (this.rejected.length > 0) {
       this.writeLine(error(`Rejected: ${this.rejected.length}`))
       this.rejected.forEach(o => this.printRejection(o))

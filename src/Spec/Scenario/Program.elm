@@ -1,6 +1,7 @@
 module Spec.Scenario.Program exposing
   ( init, update, view, subscriptions
-  , start
+  , run
+  , skip
   , receivedMessage
   , halt
   )
@@ -13,6 +14,7 @@ import Spec.Message as Message exposing (Message)
 import Spec.Report as Report exposing (Report)
 import Spec.Scenario.State.Start as Start
 import Spec.Scenario.State.Error as Error
+import Spec.Scenario.State.Observe as Observe
 import Spec.Helpers exposing (mapDocument)
 import Html exposing (Html)
 import Json.Decode as Json
@@ -20,14 +22,19 @@ import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
 
 
-start : Actions msg programMsg -> Maybe Key -> Scenario model programMsg -> ( State.Model msg programMsg, Cmd msg )
-start actions maybeKey scenario =
+run : Actions msg programMsg -> Maybe Key -> Scenario model programMsg -> ( State.Model msg programMsg, Cmd msg )
+run actions maybeKey scenario =
   case Internal.initializeSubject scenario.setup maybeKey of
     Ok subject ->
       Start.init actions scenario subject
     Err error ->
       Report.note error
         |> Error.init actions [] "Scenario Failed"
+
+
+skip : Actions msg programMsg -> Scenario model programMsg -> ( State.Model msg programMsg, Cmd msg )
+skip =
+  Observe.initForSkip
 
 
 init : State.Model msg programMsg

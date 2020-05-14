@@ -2,6 +2,7 @@ const chalk = require('chalk')
 
 const ok = chalk.green
 const error = chalk.red
+const skip = chalk.yellow
 const logMessage = chalk.cyan
 
 var ElmSpecReporter = function (baseReporterDecorator) {
@@ -11,6 +12,10 @@ var ElmSpecReporter = function (baseReporterDecorator) {
 
   self.specSuccess = function() {
     self.write(ok("."))
+  }
+
+  self.specSkipped = function() {
+    self.write(skip("_"))
   }
 
   self.onRunStart = function() {
@@ -88,6 +93,9 @@ var ElmSpecReporter = function (baseReporterDecorator) {
 
     self.write("\n\n")
     self.write(ok(`Accepted: ${results.success}\n`))
+    if (results.skipped > 0) {
+      self.write(skip(`Skipped: ${results.skipped}\n`))
+    }
     if (results.failed > 0) {
       self.write(error(`Rejected: ${results.failed}\n`))
       self.failures.forEach(r => self.printRejection(r))

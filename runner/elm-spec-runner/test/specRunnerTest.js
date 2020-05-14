@@ -24,7 +24,7 @@ const expectBehaviorFor = (browserName, runner) => {
       })
     })
 
-    context(`when all the specs are accepted in ${browserName}`, () => {
+    context(`when all the observations are accepted in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
@@ -64,7 +64,19 @@ const expectBehaviorFor = (browserName, runner) => {
       })
     })
 
-    context(`when specs are rejected in ${browserName}`, () => {
+    context(`when scenarios are skipped in ${browserName}`, () => {
+      beforeEach(async () => {
+        testReporter = new TestReporter()
+        await runner.start(testBrowserOptions)
+        await runner.run(testReporter, skippedSpecs, { endOnFailure: false })
+      })
+
+      it(`reports the correct number of skipped observations in ${browserName}`, () => {
+        expect(testReporter.skipped).to.equal(3)
+      })
+    })
+
+    context(`when observations are rejected in ${browserName}`, () => {
       beforeEach(async () => {
         testReporter = new TestReporter()
         await runner.start(testBrowserOptions)
@@ -103,6 +115,13 @@ const testBrowserOptions = {
 const failingSpec = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithFailure/MoreSpec.elm",
+  elmPath: "../../node_modules/.bin/elm",
+  logLevel: Compiler.LOG_LEVEL.SILENT
+}
+
+const skippedSpecs = {
+  cwd: "../elm-spec-core/tests/sample/",
+  specPath: "./specs/WithSkipped/**/*Spec.elm",
   elmPath: "../../node_modules/.bin/elm",
   logLevel: Compiler.LOG_LEVEL.SILENT
 }
@@ -158,6 +177,10 @@ const TestReporter = class {
 
   get rejected() {
     return this.observations.filter(o => o.summary === "REJECT").length
+  }
+
+  get skipped() {
+    return this.observations.filter(o => o.summary === "SKIPPED").length
   }
 
   finish() {

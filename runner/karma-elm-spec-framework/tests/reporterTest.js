@@ -19,6 +19,7 @@ describe("elm-spec reporter", () => {
       subject.onRunStart()
       subject.onRunComplete(null, {
         success: 3,
+        skipped: 0,
         failed: 0
       })
     })
@@ -56,6 +57,7 @@ describe("elm-spec reporter", () => {
       subject.specFailure(null, failureResultTwo())
       subject.onRunComplete(null, {
         success: 3,
+        skipped: 0,
         failed: 2
       })
     })
@@ -90,6 +92,24 @@ describe("elm-spec reporter", () => {
         "statement",
         "with multiple",
         "lines"
+      ])
+    })
+  })
+
+  describe("when there are skipped observations", () => {
+    beforeEach(() => {
+      subject.onRunStart()
+      subject.onRunComplete(null, {
+        success: 3,
+        skipped: 2,
+        failed: 0
+      })
+    })
+
+    it("prints the number skipped", () => {
+      expectToContain(lines, [
+        "Accepted: 3",
+        "Skipped: 2"
       ])
     })
   })

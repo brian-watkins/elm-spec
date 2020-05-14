@@ -1,5 +1,6 @@
 module Spec.Scenario.State.Observe exposing
   ( init
+  , initForSkip
   )
 
 import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Expectation, Judgment(..))
@@ -170,3 +171,45 @@ inquiryResult message handler =
       verdict
     Inquire _ _ ->
       Claim.Reject <| Report.note "Recursive Inquiry not supported!"
+
+
+
+----- Skip
+
+
+type alias SkipModel model =
+  { observations: List (Observation model)
+  }
+
+initForSkip : Actions msg programMsg -> Scenario model programMsg -> (State.Model msg programMsg, Cmd msg)
+initForSkip actions scenario =
+  ( skipModel { observations = scenario.observations }
+  , State.send actions Message.startObservation
+  )
+
+
+skipModel : SkipModel model -> State.Model msg programMsg
+skipModel model =
+  State.Running
+    { update = skip model
+    , view = Nothing
+    , subscriptions = Nothing
+    }
+
+
+skip : SkipModel model -> Actions msg programMsg -> State.Msg programMsg -> ( State.Model msg programMsg, Cmd msg )
+skip model actions msg =
+  case msg of
+    Continue ->
+      case model.observations of
+        [] ->
+          ( State.Waiting
+          , actions.complete
+          )
+        observation :: remaining ->
+          ( skipModel { observations = remaining }
+          , actions.send Message.skipObservation
+          )
+    _ ->
+      ( skipModel model, Cmd.none )
+
