@@ -1,6 +1,7 @@
 const ElmContext = require('./elmContext')
 const compiler = require("node-elm-compiler/dist/index")
 const glob = require('glob')
+const path = require('path')
 
 const LOG_LEVEL = Object.freeze({ ALL: 0, QUIET: 1, SILENT: 2 })
 
@@ -19,7 +20,7 @@ const Compiler = class {
 
     if (files.length > 0) {
       const compiledElm = compiler.compileToStringSync(files, {
-        cwd: this.cwd,
+        cwd: path.resolve(this.cwd),
         processOpts: {
           stdio: [
             'ignore',
@@ -27,7 +28,7 @@ const Compiler = class {
             this.logLevel >= LOG_LEVEL.SILENT ? 'ignore' : 'inherit'
           ] 
         },
-        pathToElm: this.elmPath
+        pathToElm: this.elmPath ? path.resolve(this.elmPath) : undefined
       })
 
       if (compiledElm.length > 0) {

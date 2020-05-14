@@ -47,7 +47,7 @@
   "repository": "https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-runner",
   "scripts": {
     "prepublish": "npm run build",
-    "start": "./bin/run --cwd ../karma-elm-spec-framework/sample --tag fun",
+    "start": "./bin/run --specRoot ../karma-elm-spec-framework/sample --elm ../../node_modules/.bin/elm",
     "test": "mocha --timeout 5000 \"test/**/*Test.js\"",
     "build": "browserify -p tinyify ./adapterSrc/browserAdapter.js -o ./src/browserAdapter.js"
   }
