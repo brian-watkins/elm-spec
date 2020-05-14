@@ -48,7 +48,7 @@ describe("Suite Runner", () => {
   context("when the runner does not support loading files", () => {
     it("presents an error when a scenario attempts to load a file", (done) => {
       expectSpecWithNoBrowserCapabilities('./specs/Passing/FileSpec.elm', { endOnFailure: false }, done, (observations) => {
-        expect(observations[0].summary).to.equal("REJECT")
+        expect(observations[0].summary).to.equal("REJECTED")
         expect(observations[0].report).to.deep.equal([
           reportLine("Scenario attempted to load a file from disk, but this runner does not support that capability."),
           reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
@@ -299,11 +299,11 @@ const bundleRunnerCode = () => {
 }
 
 const expectAccepted = (observation) => {
-  expect(observation.summary).to.equal("ACCEPT")
+  expect(observation.summary).to.equal("ACCEPTED")
 }
 
 const expectRejected = (observation) => {
-  expect(observation.summary).to.equal("REJECT")
+  expect(observation.summary).to.equal("REJECTED")
 }
 
 const expectSkipped = (observation) => {

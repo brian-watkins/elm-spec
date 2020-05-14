@@ -70,11 +70,11 @@ encodeObservation conditions description verdict =
 verdictAttributes verdict =
   case verdict of
     Accept ->
-      [ ("summary", Encode.string "ACCEPT")
+      [ ("summary", Encode.string "ACCEPTED")
       , ("report", Encode.null)
       ]
     Reject report ->
-      [ ("summary", Encode.string "REJECT")
+      [ ("summary", Encode.string "REJECTED")
       , ("report", Report.encode report)
       ]
 

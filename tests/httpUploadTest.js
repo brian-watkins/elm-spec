@@ -9,7 +9,7 @@ describe("http upload", () => {
       expectAccepted(observations[1])
       expectAccepted(observations[2])
       
-      expect(observations[3].summary).to.equal("REJECT")
+      expect(observations[3].summary).to.equal("REJECTED")
       expect(observations[3].report[2].statement).to.equal("Claim rejected for file body")
       expect(observations[3].report[3].statement).to.equal("Expected")
       expect(observations[3].report[4].statement).to.equal("to contain 1 instance of")
@@ -39,7 +39,7 @@ describe("http upload", () => {
       expectAccepted(observations[0])
       expectAccepted(observations[1])
       
-      expect(observations[2].summary).to.equal("REJECT")
+      expect(observations[2].summary).to.equal("REJECTED")
       expect(observations[2].report[2].statement).to.equal("Claim rejected for bytes body")
       expect(observations[2].report[3].statement).to.equal("Expected")
       expect(observations[2].report[4].statement).to.equal("to equal")

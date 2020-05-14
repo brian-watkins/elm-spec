@@ -59,7 +59,7 @@ describe("file selection", () => {
   context("bad file selected to upload", () => {
     it("reports an error", (done) => {
       expectSpec("SelectFileSpec", "badFile", done, (observations) => {
-        expect(observations[0].summary).to.equal("REJECT")
+        expect(observations[0].summary).to.equal("REJECTED")
         expect(observations[0].report[0].statement).to.equal("Unable to read file at")
         expect(observations[0].report[0].detail).to.contain("tests/src/non-existent-file.txt")
       })

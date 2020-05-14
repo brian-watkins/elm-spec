@@ -254,7 +254,7 @@ const expectToContain = (actualLines, expectedLines) => {
 
 const acceptedMessage = (data = { conditions: [], description: '' }) => {
   return {
-    summary: 'ACCEPT',
+    summary: 'ACCEPTED',
     conditions: data.conditions,
     description: data.description,
     modulePath: [ "Some", "Behavior", "PassingSpec" ]
@@ -263,7 +263,7 @@ const acceptedMessage = (data = { conditions: [], description: '' }) => {
 
 const rejectedMessage = (data = { conditions: [], description: '', message: '', report: [], modulePath: [ "Some", "FailingSpec" ] }) => {
   return {
-    summary: 'REJECT',
+    summary: 'REJECTED',
     conditions: data.conditions,
     description: data.description,
     report: data.report,

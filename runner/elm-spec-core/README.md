@@ -163,8 +163,8 @@ An object like this:
   // steps in the scenario script
   conditions: [ 'Scenario: Some scenario', 'When something happens', 'it does something' ],
   
-  // The outcome of evaluating the expectation: ACCEPT or REJECT
-  summary: 'ACCEPT',
+  // The outcome of the observation: ACCEPTED, SKIPPED, or REJECTED
+  summary: 'ACCEPTED',
 
   // If the expectation is rejected, a report that explains why
   report: null,

@@ -19,7 +19,7 @@ module.exports = class KarmaReporter {
       elmSpec: {
         modulePath: observation.modulePath
       },
-      success: observation.summary === "ACCEPT",
+      success: observation.summary === "ACCEPTED",
       skipped: observation.summary === "SKIPPED"
     })
   }

@@ -46,21 +46,21 @@ describe("spec", () => {
       expectSpec("SpecSpec", "scenarios", done, (observations) => {
         expect(observations).to.have.length(3)
         
-        expectObservation(observations[0], "ACCEPT", "It records the number",
+        expectObservation(observations[0], "ACCEPTED", "It records the number",
           [ "Multiple scenarios",
             "Scenario: the happy path",
             "When a single message is sent"
           ]
         )
 
-        expectObservation(observations[1], "ACCEPT", "It records the numbers",
+        expectObservation(observations[1], "ACCEPTED", "It records the numbers",
           [ "Multiple scenarios",
             "Scenario: multiple sub messages are sent",
             "When multiple messages are sent"
           ]
         )
 
-        expectObservation(observations[2], "ACCEPT", "It records the number",
+        expectObservation(observations[2], "ACCEPTED", "It records the number",
           [ "Multiple scenarios",
             "Scenario: a different message is sent",
             "When a single message is sent"
@@ -75,7 +75,7 @@ describe("spec", () => {
       it("fails the scenario but contines to execute other scenarios", (done) => {
         expectSpec("HtmlSpec", "failing", done, (observations) => {
           expect(observations).to.have.length(2)
-          expect(observations[0].summary).to.equal("REJECT")
+          expect(observations[0].summary).to.equal("REJECTED")
           expectAccepted(observations[1])
         })
       })
@@ -102,7 +102,7 @@ describe("spec", () => {
       it("finishes the spec suite run after the failure", (done) => {
         expectSpec("HtmlSpec", "failing", done, (observations) => {
           expect(observations).to.have.length(1)
-          expect(observations[0].summary).to.equal("REJECT")
+          expect(observations[0].summary).to.equal("REJECTED")
         }, { endOnFailure: true })
       })
       it("leaves the html program in a mostly usable state", (done) => {

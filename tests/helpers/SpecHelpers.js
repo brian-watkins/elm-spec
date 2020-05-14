@@ -47,14 +47,14 @@ exports.expectProgramAtVersion = (specProgram, version, done, matcher) => {
 
 exports.expectAccepted = (observation) => {
   if (observation) {
-    expect(observation.summary).to.equal("ACCEPT", `Rejected: ${JSON.stringify(observation.report)}`)
+    expect(observation.summary).to.equal("ACCEPTED", `Rejected: ${JSON.stringify(observation.report)}`)
   } else {
     expect.fail("observation is null!")
   }
 }
 
 exports.expectRejected = (observation, report) => {
-  expect(observation.summary).to.equal("REJECT")
+  expect(observation.summary).to.equal("REJECTED")
   expect(observation.report).to.deep.equal(report)
 }
 

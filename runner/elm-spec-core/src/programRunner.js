@@ -128,7 +128,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "observation": {
         const observation = specMessage.body
         this.emit('observation', observation)
-        if (this.options.endOnFailure && observation.summary === "REJECT") {
+        if (this.options.endOnFailure && observation.summary === "REJECTED") {
           out(this.specStateMessage("finish"))
         } else {
           out(this.continue())

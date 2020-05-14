@@ -172,11 +172,11 @@ const TestReporter = class {
   }
 
   get accepted() {
-    return this.observations.filter(o => o.summary === "ACCEPT").length
+    return this.observations.filter(o => o.summary === "ACCEPTED").length
   }
 
   get rejected() {
-    return this.observations.filter(o => o.summary === "REJECT").length
+    return this.observations.filter(o => o.summary === "REJECTED").length
   }
 
   get skipped() {

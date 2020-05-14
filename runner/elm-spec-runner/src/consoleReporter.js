@@ -46,7 +46,7 @@ module.exports = class ConsoleReporter {
 
   record(observation) {
     switch (observation.summary) {
-      case "ACCEPT":
+      case "ACCEPTED":
         this.accepted += 1
         this.write(ok('.'))
         break
@@ -54,7 +54,7 @@ module.exports = class ConsoleReporter {
         this.skipped += 1
         this.write(skip('_'))
         break
-      case "REJECT":
+      case "REJECTED":
         this.rejected.push(observation)
         this.write(error('x'))
         break
