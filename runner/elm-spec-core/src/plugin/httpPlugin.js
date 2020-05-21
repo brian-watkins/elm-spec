@@ -20,7 +20,7 @@ const requestProxy = function(context, request) {
           if (body instanceof DataView) {
             safeBody = new Blob([body])
           }
-          context.timer.stopWaitingForStack()
+          context.timer.requestHold()
           target.send(safeBody)
         }
       }
@@ -43,10 +43,15 @@ const requestProxy = function(context, request) {
 
 module.exports = class HttpPlugin {
   constructor(context) {
+    this.context = context
+    this.window = context.window
     const MockXHRClass = createMockXhrRequestClass(context)
     this.server = new MockXHR.MockXhrServer(MockXHRClass, {})
     this.server.install(context.window)
-    this.server.setDefault404()
+    this.server.setDefaultHandler((request) => {
+      this.context.timer.releaseHold()
+      request.respond(404)
+    })
     this.reset()
   }
 
@@ -74,7 +79,7 @@ module.exports = class HttpPlugin {
 
         for (const stub of specMessage.body) {
           try {
-            this.setupStub(stub, this.uriDescriptor(stub), out)
+            this.setupStub(stub, this.uriDescriptor(stub), out, abort)
           } catch (err) {
             abort(err.report)
             break
@@ -145,55 +150,90 @@ module.exports = class HttpPlugin {
     }
   }
 
-  setupStub(stub, uriDescriptor, out) {
+  setupStub(stub, uriDescriptor, out, abort) {
     this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
       if (stub.error === "network") {
         xhr.setNetworkError()
+        this.context.timer.releaseHold()
       } else if (stub.error === "timeout") {
         xhr.setRequestTimeout()
+        this.context.timer.releaseHold()
       } else {
         switch (stub.progress.type) {
           case "sent":
             xhr.uploadProgress(stub.progress.transmitted)
-            out({home: "_http", name: "handled", body: null})
+            this.context.timer.releaseHold()
             break
           case "received":
-            xhr.setResponseHeaders(stub.headers)
-            xhr.downloadProgress(stub.progress.transmitted, this.responseBodyLength(stub.body))
-            out({home: "_http", name: "handled", body: null})
+            this.responseBodySize(stub.body)
+              .then(size => {
+                xhr.setResponseHeaders(stub.headers)
+                xhr.downloadProgress(stub.progress.transmitted, size)
+                this.context.timer.releaseHold()
+              })
+              .catch(error => this.handleFileLoadError(abort, error))
             break
           case "streamed":
             xhr.setResponseHeaders(stub.headers)
             xhr.downloadProgress(stub.progress.transmitted)
-            out({home: "_http", name: "handled", body: null})
+            this.context.timer.releaseHold()
             break
           case "complete":
-            xhr.respond(stub.status, stub.headers, this.responseBody(stub.body))
+            this.responseBody(stub.body)
+              .then(body => {
+                xhr.respond(stub.status, stub.headers, body)
+                this.context.timer.releaseHold()
+              })
+              .catch(error => this.handleFileLoadError(abort, error))
             break
         }
       }
     })
   }
 
-  responseBody(body) {
-    switch (body.type) {
-      case "empty":
-        return ""
-      case "text":
-        return body.content
-      case "binary":
-        return Uint8Array.from(body.content).buffer
+  handleFileLoadError(abort, error) {
+    switch (error.type) {
+      case "file":
+        abort(fileError(error.path))
+        this.context.timer.releaseHold()
+        break
+      default:
+        abort(missingLoadFileCapabilityError())
+        this.context.timer.releaseHold()
     }
   }
 
-  responseBodyLength(body) {
+  responseBody(body) {
     switch (body.type) {
       case "empty":
-        return 0
+        return Promise.resolve("")
       case "text":
-        return body.content.length
+        return Promise.resolve(body.content)
       case "binary":
-        return body.content.length
+        return Promise.resolve(Uint8Array.from(body.content).buffer)
+      case "bytesFromFile":
+        return this.context.readBytesFromFile(body.path)
+          .then(({ buffer }) => Uint8Array.from(buffer.data).buffer)
+      case "textFromFile":
+        return this.context.readTextFromFile(body.path)
+          .then(({ text }) => text)
+    }
+  }
+
+  responseBodySize(body) {
+    switch (body.type) {
+      case "empty":
+        return Promise.resolve(0)
+      case "text":
+        return Promise.resolve(body.content.length)
+      case "binary":
+        return Promise.resolve(body.content.length)
+      case "bytesFromFile":
+        return this.context.readBytesFromFile(body.path)
+          .then(({ buffer }) => buffer.data.length)
+      case "textFromFile":
+        return this.context.readBytesFromFile(body.path)
+          .then(({ buffer }) => buffer.data.length)
     }
   }
 
@@ -205,6 +245,19 @@ module.exports = class HttpPlugin {
       })
       .map(buildRequest)
   }
+}
+
+const fileError = (path) => {
+  return report(
+    line("Unable to read file at", path)
+  )
+}
+
+const missingLoadFileCapabilityError = () => {
+  return report(
+    line("An attempt was made to load a file from disk, but this runner does not support that capability."),
+    line("If you need to load a file from disk, consider using the standard elm-spec runner.")
+  )
 }
 
 const buildRequest = (request) => {

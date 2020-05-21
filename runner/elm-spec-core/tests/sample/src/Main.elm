@@ -10,6 +10,8 @@ import Json.Decode as Json
 import File exposing (File)
 import File.Select
 import Task
+import Bytes exposing (Bytes)
+import Bytes.Decode as Bytes
 
 
 type Msg
@@ -18,11 +20,15 @@ type Msg
   | VisibilityChange Visibility
   | WindowResize Int Int
   | SendRequest Bool
-  | GotResponse (Result Http.Error String)
+  | GotTextResponse (Result Http.Error String)
   | DocumentClick
   | OpenFileSelector
   | GotFile File
   | GotFileContents String
+  | DownloadText
+  | DownloadBytes
+  | GotBytesResponse (Result String Bytes)
+  | GotProgress Http.Progress
 
 
 type alias Model =
@@ -32,6 +38,8 @@ type alias Model =
   , sizes: List (Int, Int)
   , clicks: Int
   , uploadedFileContents: Maybe String
+  , downloadContents: Maybe String
+  , progress: Maybe Http.Progress
   }
 
 
@@ -43,6 +51,8 @@ defaultModel =
   , sizes = []
   , clicks = 0
   , uploadedFileContents = Nothing
+  , downloadContents = Nothing
+  , progress = Nothing
   }
 
 
@@ -58,7 +68,29 @@ view model =
   , Html.div [ Attr.id "input-results" ]
       [ Html.text <| "You typed: " ++ model.text ]
   , Html.button [ Attr.id "open-file-selector", Events.onClick OpenFileSelector ] [ Html.text "Upload a file!" ]
+  , Html.button [ Attr.id "download-text", Events.onClick DownloadText ] [ Html.text "Download text" ]
+  , Html.button [ Attr.id "download-bytes", Events.onClick DownloadBytes ] [ Html.text "Download bytes" ]
+  , Html.div [ Attr.id "download-progress" ]
+    [ Maybe.map getProgress model.progress
+        |> Maybe.withDefault "No request"
+        |> Html.text
+    ]
   ]
+
+
+getProgress : Http.Progress -> String
+getProgress progress =
+  case progress of
+    Http.Sending _ ->
+      "Sending ..."
+    Http.Receiving details ->
+      let
+        fraction =
+          Http.fractionReceived details * 100
+            |> round
+            |> String.fromInt
+      in
+        "Downloaded " ++ fraction ++ "%"
 
 
 filesDecoder : Json.Decoder (List File)
@@ -80,13 +112,17 @@ update msg model =
       , if shouldSendRequest then
           Http.get
             { url = "http://fun.com/fun"
-            , expect = Http.expectString GotResponse
+            , expect = Http.expectString GotTextResponse
             }
         else
           Cmd.none
       )
-    GotResponse _ ->
-      ( model, Cmd.none )
+    GotTextResponse result ->
+      case result of
+        Ok content ->
+          ( { model | downloadContents = Just content }, Cmd.none )
+        Err _ ->
+          ( model, Cmd.none )
     WindowResize width height ->
       ( { model | sizes = (width, height) :: model.sizes }, Cmd.none )
     DocumentClick ->
@@ -97,6 +133,51 @@ update msg model =
       ( model, File.toString file |> Task.perform GotFileContents )
     GotFileContents contents ->
       ( { model | uploadedFileContents = Just contents }, Cmd.none )
+    DownloadText ->
+      ( model
+      , Http.request
+        { method = "GET"
+        , headers = []
+        , url = "http://fake-fun.com/api/files/21"
+        , body = Http.emptyBody
+        , expect = Http.expectString GotTextResponse
+        , timeout = Nothing
+        , tracker = Just "download"
+        }
+      )
+    DownloadBytes ->
+      ( model
+      , Http.request
+        { method = "GET"
+        , headers = []
+        , url = "http://fake-fun.com/api/files/21"
+        , body = Http.emptyBody
+        , expect = Http.expectBytesResponse GotBytesResponse handleBytesResponse
+        , timeout = Nothing
+        , tracker = Just "download"
+        }
+      )
+    GotBytesResponse response ->
+      case response of
+        Ok bytes ->
+          case Bytes.decode (Bytes.string <| Bytes.width bytes) bytes of
+            Just text ->
+              ( { model | downloadContents = Just text }, Cmd.none )
+            Nothing ->
+              ( { model | downloadContents = Nothing }, Cmd.none )
+        Err _ ->
+          ( model, Cmd.none )
+    GotProgress progress ->
+      ( { model | progress = Just progress }, Cmd.none )
+
+
+handleBytesResponse : Http.Response Bytes -> Result String Bytes
+handleBytesResponse response =
+  case response of
+    Http.GoodStatus_ metadata bytes ->
+      Ok bytes
+    _ ->
+      Err "Something not good happened!"
 
 
 init : () -> ( Model, Cmd Msg )
@@ -113,6 +194,7 @@ subscriptions model =
   , Browser.Events.onResize <| \_ _ -> SendRequest True
   , Browser.Events.onClick <| Json.succeed DocumentClick
   , Browser.Events.onClick <| Json.succeed <| SendRequest True
+  , Http.track "download" GotProgress
   ]
 
 

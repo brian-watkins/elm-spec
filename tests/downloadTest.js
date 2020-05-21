@@ -11,6 +11,7 @@ describe("download", () => {
     it("downloads text content", (done) => {
       expectSpec("DownloadSpec", "downloadText", done, (observations) => {
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
 

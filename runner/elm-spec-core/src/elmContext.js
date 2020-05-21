@@ -29,6 +29,32 @@ window._elm_spec.compiler = {
     evaluator(this.window.Elm)
   }
 
+  static registerFileLoadingCapability(winwdowDecorator, capability) {
+    winwdowDecorator("_elm_spec_load_file", capability)
+  }
+
+  canLoadFile() {
+    return this.window.hasOwnProperty("_elm_spec_load_file")
+  }
+
+  readBytesFromFile(filePath) {
+    return this.loadFile({ path: filePath, convertToText: false })
+  }
+
+  readTextFromFile(filePath) {
+    return this.loadFile({ path: filePath, convertToText: true })
+  }
+
+  loadFile(options) {
+    if (!this.canLoadFile()) {
+      return Promise.reject({
+        type: "no-load-file-capability"
+      })
+    }
+
+    return this.window._elm_spec_load_file(options)
+  }
+
   specFiles() {
     return this.window._elm_spec.compiler.files
   }

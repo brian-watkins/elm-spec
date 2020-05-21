@@ -40,7 +40,7 @@ uploadFileSpec =
         [ Markup.target << by [ id "select-file" ]
         , Event.click
         , Spec.File.select
-          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+          [ Spec.File.atPath "./fixtures/funFile.txt"
               |> Spec.File.withMimeType "text/plain"
           ]
         ]
@@ -229,7 +229,7 @@ progressSpec =
         setupForProgress
           |> Stub.serve
             [ Stub.for (post "http://fake-api.com/files")
-                |> Stub.withBody (Stub.fromString "Here is some text body that I will return for you.")
+                |> Stub.withBody (Stub.withText "Here is some text body that I will return for you.")
                 |> Stub.withProgress (Stub.received 20)
             ]
       )
@@ -245,7 +245,7 @@ progressSpec =
         setupForProgress
           |> Stub.serve
             [ Stub.for (post "http://fake-api.com/files")
-                |> Stub.withBody (Stub.fromString "Some content ...")
+                |> Stub.withBody (Stub.withText "Some content ...")
                 |> Stub.withProgress (Stub.streamed 381)
             ]
       )

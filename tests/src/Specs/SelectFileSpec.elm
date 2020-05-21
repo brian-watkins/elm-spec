@@ -34,7 +34,7 @@ selectFileSpec =
       |> when "selecting a new file"
         [ Markup.target << by [ tag "input", attribute ("type", "file") ]
         , Event.click
-        , Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
+        , Spec.File.select [ Spec.File.atPath "./fixtures/funFile.txt" ]
         ]
       |> observeThat
         [ it "processes a click event" (
@@ -63,7 +63,7 @@ selectFileSpec =
       |> when "selecting a new file"
         [ Markup.target << by [ id "select-file-button" ]
         , Event.click
-        , Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
+        , Spec.File.select [ Spec.File.atPath "./fixtures/funFile.txt" ]
         ]
       |> it "finds the file in the model" (
         Observer.observeModel .files
@@ -83,8 +83,8 @@ selectFileSpec =
         [ Markup.target << by [ id "select-files-button" ]
         , Event.click
         , Spec.File.select
-          [ Spec.File.loadFrom "./fixtures/funFile.txt"
-          , Spec.File.loadFrom "./fixtures/awesomeFile.txt"
+          [ Spec.File.atPath "./fixtures/funFile.txt"
+          , Spec.File.atPath "./fixtures/awesomeFile.txt"
           ]
         ]
       |> observeThat
@@ -148,6 +148,36 @@ selectFileSpec =
   ]
 
 
+multipleActionsSpec : Spec Model Msg
+multipleActionsSpec =
+  describe "other updates happening alongside file read"
+  [ scenario "reading text of a file" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testSelectView
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "selecting a new file"
+        [ Markup.target << by [ id "select-file-button" ]
+        , Event.click
+        , Spec.File.select [ Spec.File.atPath "./fixtures/funFile.txt" ]
+        , Markup.target << by [ id "read-text-and" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "records another click" (
+            Observer.observeModel .clicks
+              |> expect (equals 1)
+          )
+        , it "reads the text" (
+            Observer.observeModel .fileContents
+              |> expect (isListWhereItemAt 0 <| equals "Extra: Here is text from a fun file!")
+          )
+        ]
+    )
+  ]
+
+
 mimeTypeSpec : Spec Model Msg
 mimeTypeSpec =
   describe "setting the mime type of a file"
@@ -161,9 +191,9 @@ mimeTypeSpec =
         [ Markup.target << by [ id "select-files-button" ]
         , Event.click
         , Spec.File.select
-          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+          [ Spec.File.atPath "./fixtures/funFile.txt"
               |> Spec.File.withMimeType "text/plain"
-          , Spec.File.loadFrom "./fixtures/funFile.txt"
+          , Spec.File.atPath "./fixtures/funFile.txt"
           , Spec.File.withText "super-file.txt" "Some funny text for a file!"
               |> Spec.File.withMimeType "text/fun"
           , Spec.File.withText "another-file.txt" "Another funny file!"
@@ -203,9 +233,9 @@ lastModifiedSpec =
         [ Markup.target << by [ id "select-files-button" ]
         , Event.click
         , Spec.File.select
-          [ Spec.File.loadFrom "./fixtures/funFile.txt"
+          [ Spec.File.atPath "./fixtures/funFile.txt"
               |> Spec.File.withLastModified 1589132162579
-          , Spec.File.loadFrom "./fixtures/funFile.txt"
+          , Spec.File.atPath "./fixtures/funFile.txt"
           , Spec.File.withText "super-file.txt" "Some funny text for a file!"
               |> Spec.File.withLastModified 1589132162577
           , Spec.File.withText "another-file.txt" "Another funny file!"
@@ -251,7 +281,7 @@ noOpenSelectorSpec =
           |> Setup.withUpdate testUpdate
       )
       |> when "selecting a file without selecting a file input"
-        [ Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
+        [ Spec.File.select [ Spec.File.atPath "./fixtures/funFile.txt" ]
         ]
       |> itShouldHaveFailedAlready
     )
@@ -283,7 +313,7 @@ noFileSelectedSpec =
           |> Setup.withUpdate testUpdate
       )
       |> when "selecting a file without selecting a file input"
-        [ Spec.File.select [ Spec.File.loadFrom "./fixtures/funFile.txt" ]
+        [ Spec.File.select [ Spec.File.atPath "./fixtures/funFile.txt" ]
         ]
       |> itShouldHaveFailedAlready
     )
@@ -302,7 +332,7 @@ noFileFetchedSpec =
       |> when "a non-existent file is selected"
         [ Markup.target << by [ tag "input" ]
         , Event.click
-        , Spec.File.select [ Spec.File.loadFrom "non-existent-file.txt" ]
+        , Spec.File.select [ Spec.File.atPath "non-existent-file.txt" ]
         , Event.click
         , Event.click
         , Event.click
@@ -319,6 +349,7 @@ type Msg
   | SelectFile
   | SelectFiles
   | HandleClick
+  | HandleRead
 
 type alias Model =
   { files: List File
@@ -347,6 +378,8 @@ testSelectView : Model -> Html Msg
 testSelectView model =
   Html.div []
   [ Html.button [ Attr.id "select-file-button", Events.onClick SelectFile ] [ Html.text "Click to select a file!" ]
+  , Html.button [ Attr.id "read-text-and", Events.onMouseDown HandleRead, Events.onClick HandleClick ]
+    [ Html.text "Read Text and Do Other Things" ]
   ]
 
 
@@ -385,6 +418,13 @@ testUpdate msg model =
       ( { model | fileContents = fileContents }, Cmd.none )
     HandleClick ->
       ( { model | clicks = model.clicks + 1 }, Cmd.none )
+    HandleRead ->
+      ( model
+      , List.map File.toString model.files
+          |> Task.sequence
+          |> Task.map (List.map (\text -> "Extra: " ++ text))
+          |> Task.perform GotFileContents
+      )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
@@ -396,6 +436,7 @@ selectSpec name =
     "badFile" -> Just noFileFetchedSpec
     "lastModified" -> Just lastModifiedSpec
     "mimeType" -> Just mimeTypeSpec
+    "multipleActions" -> Just multipleActionsSpec
     _ -> Nothing
 
 

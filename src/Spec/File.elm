@@ -1,7 +1,7 @@
 module Spec.File exposing
   ( FileFixture
   , select
-  , loadFrom
+  , atPath
   , withBytes
   , withText
   , withMimeType
@@ -17,7 +17,7 @@ module Spec.File exposing
 {-| Observe and make claims about files during a spec.
 
 # Select Files
-@docs FileFixture, select, loadFrom, withBytes, withText, withMimeType, withLastModified
+@docs FileFixture, select, atPath, withBytes, withText, withMimeType, withLastModified
 
 # Observe Downloads
 @docs Download, observeDownloads
@@ -61,7 +61,7 @@ type FileContent
     Spec.when "a File is uploaded"
       [ Spec.Markup.target << by [ tag "input", attribute ("type", "file") ]
       , Spec.Markup.Event.click
-      , Spec.File.select [ Spec.File.loadFrom "./fixtures/myFile.txt" ]
+      , Spec.File.select [ Spec.File.atPath "./fixtures/myFile.txt" ]
       ]
 
 A previous step must open a file selector, either by clicking an input element of type `file` or
@@ -128,8 +128,8 @@ andThenSelectFile message =
 The path is typically relative to the current working directory of the elm-spec runner (but
 check the docs for the runner you are using).
 -}
-loadFrom : String -> FileFixture
-loadFrom path =
+atPath : String -> FileFixture
+atPath path =
   FileFixture
     { path = path
     , mimeType = ""

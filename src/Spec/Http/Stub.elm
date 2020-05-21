@@ -5,8 +5,10 @@ module Spec.Http.Stub exposing
   , for
   , HttpResponseBody
   , withBody
-  , fromBytes
-  , fromString
+  , withBytes
+  , withText
+  , withBytesAtPath
+  , withTextAtPath
   , withStatus
   , withHeader
   , withNetworkError
@@ -28,7 +30,7 @@ elm-spec will respond with a `404` status code.
 @docs HttpResponseStub, for, serve, nowServe
 
 # Stub the Response Body
-@docs HttpResponseBody, withBody, fromString, fromBytes
+@docs HttpResponseBody, withBody, withText, withBytes, withTextAtPath, withBytesAtPath
 
 # Stub Progress of an In-Flight Request
 @docs HttpResponseProgress, sent, received, streamed, withProgress, abstain
@@ -107,6 +109,8 @@ type HttpResponseBody
   = Empty
   | Text String
   | Binary Bytes
+  | BytesFromFile String
+  | TextFromFile String
 
 
 type alias HttpStatus =
@@ -144,18 +148,38 @@ withBody body =
     { response | body = body }
 
 
-{-| Create an `HttpResponseBody` composed of the given string.
+{-| Create an `HttpResponseBody` composed of the given text.
 -}
-fromString : String -> HttpResponseBody
-fromString =
+withText : String -> HttpResponseBody
+withText =
   Text
 
 
 {-| Create an `HttpResponseBody` composed of the given bytes.
 -}
-fromBytes : Bytes -> HttpResponseBody
-fromBytes =
+withBytes : Bytes -> HttpResponseBody
+withBytes =
   Binary
+
+
+{-| Create an `HttpResponseBody` composed of the bytes from the file at the given path.
+
+The path is typically relative to the current working directory of the elm-spec runner (but
+check the docs for the runner you are using).
+-}
+withBytesAtPath : String -> HttpResponseBody
+withBytesAtPath =
+  BytesFromFile
+
+
+{-| Create an `HttpResponseBody` composed of the text from the file at the given path.
+
+The path is typically relative to the current working directory of the elm-spec runner (but
+check the docs for the runner you are using).
+-}
+withTextAtPath : String -> HttpResponseBody
+withTextAtPath =
+  TextFromFile
 
 
 {-| Supply a status code for the stubbed response.
@@ -303,6 +327,16 @@ encodeBody body =
       Encode.object
         [ ("type", Encode.string "binary")
         , ("content", Binary.jsonEncode bytes)
+        ]
+    BytesFromFile path ->
+      Encode.object
+        [ ("type", Encode.string "bytesFromFile")
+        , ("path", Encode.string path)
+        ]
+    TextFromFile path ->
+      Encode.object
+        [ ("type", Encode.string "textFromFile")
+        , ("path", Encode.string path)
         ]
 
 

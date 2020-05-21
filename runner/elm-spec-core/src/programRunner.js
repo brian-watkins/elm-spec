@@ -152,9 +152,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "program-command":
         this.timer.whenStackIsComplete(() => {
-          if (!this.runAnyExtraAnimationFrameTasks()) {
-            out(this.continue())
-          }
+          this.continueToNext(out)
         })
         break
       case "complete":
@@ -165,6 +163,18 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "log":
         this.emit('log', specMessage.body)
         break
+    }
+  }
+
+  continueToNext(out) {
+    if (this.timer.holds > 0) {
+      this.timer.whenStackIsComplete(() => {
+        this.continueToNext(out)
+      })
+    } else if (!this.runAnyExtraAnimationFrameTasks()) {
+      out(this.continue())
+    } else {
+      this.continueToNext(out)
     }
   }
 

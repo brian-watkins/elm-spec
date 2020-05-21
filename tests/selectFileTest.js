@@ -22,6 +22,13 @@ describe("file selection", () => {
       })
     })
 
+    it("reads a file along with other updates", (done) => {
+      expectSpec("SelectFileSpec", "multipleActions", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
+
     it("sets the last modified time as expected", (done) => {
       expectSpec("SelectFileSpec", "lastModified", done, (observations) => {
         expectAccepted(observations[0])

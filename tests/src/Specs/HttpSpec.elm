@@ -281,12 +281,12 @@ nowServeSpec =
 
 someStub (name, number) =
   Stub.for (get "http://fake-api.com/stuff")
-    |> Stub.withBody (Stub.fromString <| "{\"name\":\"" ++ name ++ "\",\"score\":" ++ String.fromInt number ++ "}")
+    |> Stub.withBody (Stub.withText <| "{\"name\":\"" ++ name ++ "\",\"score\":" ++ String.fromInt number ++ "}")
 
 
 successStubWithParam key =
   Stub.for (route "GET" <| Matching <| "http:\\/\\/fake\\-api\\.com\\/stuff\\?" ++ key ++ "=.+")
-    |> Stub.withBody (Stub.fromString "{\"name\":\"Cool Dude\",\"score\":1034}")
+    |> Stub.withBody (Stub.withText "{\"name\":\"Cool Dude\",\"score\":1034}")
 
 
 getRequestWithParam : String -> Model -> Cmd Msg
@@ -603,11 +603,11 @@ testSubject doRequest stubs =
 
 successStub =
   Stub.for (get "http://fake-api.com/stuff")
-    |> Stub.withBody (Stub.fromString "{\"name\":\"Cool Dude\",\"score\":1034}")
+    |> Stub.withBody (Stub.withText "{\"name\":\"Cool Dude\",\"score\":1034}")
 
 otherSuccessStub =
   Stub.for (get "http://fake-api.com/fun")
-    |> Stub.withBody (Stub.fromString "{\"name\":\"Fun Person\",\"score\":971}")
+    |> Stub.withBody (Stub.withText "{\"name\":\"Fun Person\",\"score\":971}")
 
 unauthorizedStub =
   Stub.for (get "http://fake-api.com/stuff")

@@ -12,7 +12,6 @@ things need to happen in a browser.
 On the Node side:
 
 1. Create a browser somehow (using JSDOM or Playwright or Puppeteer etc)
-2. Create a BrowserContext and use it to decorate the DOM window object.
 3. Bundle a SuiteRunner, ElmContext, and a Reporter (using Browserify etc) and evaluate it in the DOM window.
 3. Use the Compiler to compile the code and evaluate it in the DOM window.
 
@@ -28,7 +27,6 @@ You may import these modules from elm-spec-core:
 ```
 const {
   Compiler,
-  BrowserContext,
   ElmContext,
   SuiteRunner,
   ProgramRunner
@@ -62,25 +60,6 @@ new Compiler({
 Compiles the spec modules into a single string of JavaScript, adds an elm-spec
 specific wrapper around the compiled code to facilitate testing, and returns the string.
 
-## BrowserContext
-
-Create an instance:
-
-```
-new BrowserContext({
-  // Root directory from which files may be selected to upload during a spec
-  rootDir: '/some/path/'
-})
-```
-
-### Instance Methods
-
-**browserContext#decorateWindow(decoratorFunction)**
-
-Uses the provided `decoratorFunction` to decorate the window object with functions elm-spec needs to access
-the browser context. The `decoratorFunction` is a function that takes two arguments: the name of the function and
-the function itself. The implementation of `decoratorFunction` should attach the given function to the window object
-using the given name.
 
 ## ElmContext
 
@@ -92,6 +71,41 @@ new ElmContext(window)
 
 where `window` is a reference to the DOM window object belonging to the environment where the
 compiled Elm code will be evaluated.
+
+### Static Methods
+
+**ElmContext#registerFileLoadingCapability(decorator, capability)**
+
+Provide a decorator function that ElmContext can use to add a function to the window object. The `dectorator`
+is a function that takes two arguments: the name of the function and the function itself. The implementation
+of `decorator` should attach the given function to the window object using the given name.
+
+`capability` in this case is a function that loads a file from the local filesystem. It takes a single argument
+like so:
+
+```
+{ path: "some path to file", convertToText: true }
+```
+
+How the path is interpreted (what it is relative to, etc) is up to the implementation of the capability.
+
+The capability implementation should return a promise. When `convertToText` is false it should resolve to:
+
+```
+{ path: "the absolute path to the file", buffer: { data: [1, 2, 3] } }
+```
+
+When `convertToText` is true, it should resolve to:
+
+```
+{ path: "the absolute path to the file", text: "the text of the file" }
+```
+
+If there is any problem loading the file, the promise should reject with this object:
+
+```
+{ type: "file", path: "the absolute path to the file" }
+```
 
 ### Instance Methods
 

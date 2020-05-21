@@ -2,6 +2,7 @@ const chai = require('chai')
 const expect = chai.expect
 const browserify = require('browserify')
 const JSDOMSpecRunner = require('../../elm-spec-runner/src/jsdomSpecRunner')
+const FileLoader = require('../../elm-spec-runner/src/fileLoader')
 const Compiler = require('../src/compiler')
 const path = require('path')
 
@@ -14,7 +15,7 @@ describe("Suite Runner", () => {
 
   it("runs the scenarios", (done) => {
     expectScenarios("Passing", { endOnFailure: false }, done, (observations) => {
-      expect(observations).to.have.length(9)
+      expect(observations).to.have.length(10)
 
       expectAccepted(observations[0])
       expectModulePath(observations[0], "Passing/Behaviors/AnotherSpec.elm")
@@ -41,16 +42,46 @@ describe("Suite Runner", () => {
       expectModulePath(observations[7], "Passing/FileSpec.elm")
 
       expectAccepted(observations[8])
-      expectModulePath(observations[8], "Passing/ClickSpec.elm")
+      expectModulePath(observations[8], "Passing/FileSpec.elm")
+
+      expectAccepted(observations[9])
+      expectModulePath(observations[9], "Passing/ClickSpec.elm")
+    })
+  })
+
+  context("when the runner supports loading files", () => {
+    it("handles all the file loading specs as expected", (done) => {
+      expectScenarios("WithFileSpecs",  { endOnFailure: false }, done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+        expectAccepted(observations[2])
+        expectAccepted(observations[3])        
+        expectAccepted(observations[4])
+      })
     })
   })
 
   context("when the runner does not support loading files", () => {
     it("presents an error when a scenario attempts to load a file", (done) => {
-      expectSpecWithNoBrowserCapabilities('./specs/Passing/FileSpec.elm', { endOnFailure: false }, done, (observations) => {
-        expect(observations[0].summary).to.equal("REJECTED")
-        expect(observations[0].report).to.deep.equal([
-          reportLine("Scenario attempted to load a file from disk, but this runner does not support that capability."),
+      expectSpecWithNoBrowserCapabilities('./specs/WithFileSpecs/FileSpec.elm', { endOnFailure: false }, done, (observations) => {
+        expectRejected(observations[0], [
+          reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
+          reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
+        ])
+        expectRejected(observations[1], [
+          reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
+          reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
+        ])
+        expectRejected(observations[2], [
+          reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
+          reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
+        ])
+        expectRejected(observations[3], [
+          reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
+          reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
+        ])
+        expectRejected(observations[4], [
+          reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
           reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
         ])
       })
@@ -237,10 +268,7 @@ const expectSpecWithNoBrowserCapabilities = (specPath, options, done, matcher) =
     cwd: './tests/sample',
     specPath: specPath,
     logLevel: Compiler.LOG_LEVEL.SILENT
-  }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) }, undefined,
-  (window) => {
-    delete window["_elm_spec_read_file"]
-  })
+  }, options, false, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) })
 }
 
 const expectScenarios = (specDir, options, done, matcher) => {
@@ -248,7 +276,7 @@ const expectScenarios = (specDir, options, done, matcher) => {
     cwd: './tests/sample',
     specPath: `./specs/${specDir}/**/*Spec.elm`,
     logLevel: Compiler.LOG_LEVEL.SILENT
-  }, options, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) })
+  }, options, true, done, (reporter) => { matcher(reporter.observations, reporter.specError, reporter.logs) })
 }
 
 const expectScenariosForVersion = (version, specDir, options, done, matcher) => {
@@ -256,12 +284,14 @@ const expectScenariosForVersion = (version, specDir, options, done, matcher) => 
     cwd: './tests/sample',
     specPath: `./specs/${specDir}/**/*Spec.elm`,
     logLevel: Compiler.LOG_LEVEL.SILENT
-  }, options, done, matcher, version)
+  }, options, true, done, matcher, version)
 }
 
-const expectScenariosAt = (compilerOptions, options, done, matcher, version, transformer) => {
-  const runner = new JSDOMSpecRunner()
-  const dom = runner.getDom(compilerOptions.cwd)
+const expectScenariosAt = (compilerOptions, options, shouldReadFiles, done, matcher, version, transformer) => {
+  const fileLoader = shouldReadFiles ? new FileLoader(compilerOptions.cwd) : { decorateWindow : () => {} }
+  const runner = new JSDOMSpecRunner(fileLoader)
+
+  const dom = runner.getDom()
 
   if (transformer) {
     transformer(dom.window)
@@ -302,8 +332,11 @@ const expectAccepted = (observation) => {
   expect(observation.summary).to.equal("ACCEPTED")
 }
 
-const expectRejected = (observation) => {
+const expectRejected = (observation, report) => {
   expect(observation.summary).to.equal("REJECTED")
+  if (report) {
+    expect(observation.report).to.deep.equal(report)
+  }
 }
 
 const expectSkipped = (observation) => {

@@ -1,6 +1,7 @@
 module.exports = class FakeTimer {
   constructor (clock) {
     this.clock = clock
+    this.holds = 0
   }
 
   fakeSetTimeout() {
@@ -54,11 +55,10 @@ module.exports = class FakeTimer {
 
   addToStack(fun) {
     if (this.stackTimeout) {
-      // Note: This seems weird but Elm never actually calls clearTimeout so
-      // as long as ordering doesn't matter then this should be ok. Speeds up the test run.
-      // Otherwise, need to reset the stackTimeout function each time this is called.
-      fun()
-      return -1
+      clearTimeout(this.stackTimeout)
+      const id = setTimeout(fun, 0)
+      this.stackTimeout = setTimeout(this.nextFun, 0)
+      return id
     } else {
       return setTimeout(fun, 0)
     }
@@ -66,10 +66,11 @@ module.exports = class FakeTimer {
 
   whenStackIsComplete(andThen) {
       this.stopWaitingForStack()
-      this.stackTimeout = setTimeout(() => {
+      this.nextFun = () => {
         this.stackTimeout = null
         andThen()
-      }, 0)
+      }
+      this.stackTimeout = setTimeout(this.nextFun, 0)
   }
 
   stopWaitingForStack() {
@@ -77,5 +78,13 @@ module.exports = class FakeTimer {
       clearTimeout(this.stackTimeout)
       this.stackTimeout = null
     }
+  }
+
+  requestHold() {
+    this.holds += 1
+  }
+
+  releaseHold() {
+    this.holds -= 1
   }
 }

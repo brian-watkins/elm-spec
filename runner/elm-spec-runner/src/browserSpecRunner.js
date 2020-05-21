@@ -1,12 +1,13 @@
 const Playwright = require('playwright')
-const { Compiler, BrowserContext } = require('elm-spec-core')
+const { Compiler } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 
 
 module.exports = class BrowserSpecRunner {
-  constructor(browserName) {
+  constructor(browserName, fileLoader) {
     this.browserName = browserName
+    this.fileLoader = fileLoader
   }
 
   async start(options) {
@@ -65,7 +66,7 @@ module.exports = class BrowserSpecRunner {
     })
   }
 
-  async getPage(rootDir) {
+  async getPage() {
     if (this.browser.contexts().length > 0) {
       this.browser.contexts().map(async (context) => await context.close())
     }
@@ -82,8 +83,7 @@ module.exports = class BrowserSpecRunner {
       console.log(err)
     })
 
-    const browserContext = new BrowserContext({ rootDir })
-    await browserContext.decorateWindow(async (name, fun) => {
+    await this.fileLoader.decorateWindow(async (name, fun) => {
       await page.exposeFunction(name, fun)
     })
 

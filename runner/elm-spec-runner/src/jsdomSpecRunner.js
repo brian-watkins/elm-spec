@@ -1,9 +1,13 @@
 const { JSDOM } = require("jsdom");
-const { Compiler, BrowserContext } = require('elm-spec-core')
+const { Compiler } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 
 module.exports = class JSDOMSpecRunner {
+  constructor(fileLoader) {
+    this.fileLoader = fileLoader
+  }
+
   async start() {}
 
   async run(reporter, compilerOptions, runnerOptions) {
@@ -22,16 +26,14 @@ module.exports = class JSDOMSpecRunner {
 
   async stop() {}
 
-  getDom(rootDir) {
-    const browserContext = new BrowserContext({ rootDir })
-
+  getDom() {
     const dom = new JSDOM(
       "<html><head><base href='http://elm-spec'></head><body></body></html>",
       { pretendToBeVisual: true,
         runScripts: "dangerously",
         url: "http://elm-spec",
         beforeParse: (window) => {
-          browserContext.decorateWindow((name, fun) => {
+          this.fileLoader.decorateWindow((name, fun) => {
             window[name] = fun
           })
         }

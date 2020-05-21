@@ -41,5 +41,5 @@ update startModel actions msg =
     Continue ->
       Configure.init actions startModel.scenario startModel.subject
     _ ->
-      Report.note "Unknown scenario state!"
+      Report.note "Unknown message for start state!"
         |> Error.init actions [] "Scenario Failed"

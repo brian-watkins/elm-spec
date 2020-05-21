@@ -32,14 +32,20 @@ downloadTextSpec =
         [ Markup.target << by [ id "download-text" ]
         , Event.click
         ]
-      |> it "downloads the file" (
-        Spec.File.observeDownloads
-          |> expect (isListWhereItemAt 0 <| satisfying
-            [ Spec.File.name <| equals "funFile.txt"
-            , Spec.File.text <| equals <| "Here is some fun text " ++ (String.fromChar <| Char.fromCode 0x1F603)
-            ]
-          )
-      )
+      |> observeThat
+      [ it "downloads the file" (
+          Spec.File.observeDownloads
+            |> expect (isListWhereItemAt 0 <| satisfying
+              [ Spec.File.name <| equals "funFile.txt"
+              , Spec.File.text <| equals <| "Here is some fun text " ++ (String.fromChar <| Char.fromCode 0x1F603)
+              ]
+            )
+        )
+      , it "handles other events" (
+          Observer.observeModel .word
+            |> expect (equals "blah")
+        )
+      ]
     )
   ]
 
@@ -265,22 +271,26 @@ type Msg
   | DownloadBytes
   | DownloadURL
   | HandleClick
+  | DoAnotherThing
 
 
 type alias Model =
   { clicks: Int
+  , word: String
   }
 
 
 testModel =
   { clicks = 0
+  , word = ""
   }
 
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.button [ Attr.id "download-text", Events.onClick DownloadText ] [ Html.text "Download File!" ]
+  [ Html.button [ Attr.id "download-text", Events.onClick DoAnotherThing, Events.onMouseDown DownloadText ]
+    [ Html.text "Download File!" ]
   , Html.button [ Attr.id "download-bytes", Events.onClick DownloadBytes ] [ Html.text "Download bytes!" ]
   , Html.button [ Attr.id "download-url", Events.onClick DownloadURL ] [ Html.text "Download URL!" ]
   ]
@@ -327,6 +337,8 @@ testUpdate testData msg model =
       ( model, Download.url testData.url )
     HandleClick ->
       ( { model | clicks = model.clicks + 1 }, Cmd.none )
+    DoAnotherThing ->
+      ( { model | word = "blah" }, Cmd.none )
 
 
 selectSpec : String -> Maybe (Spec Model Msg)

@@ -1,8 +1,12 @@
-exports.fileReaderProxy = function(cancelTimer) {
+exports.fileReaderProxy = function(timer) {
   return new Proxy(FileReader, {
     construct: (target, args) => {
-      cancelTimer()
-      return new target(...args)
+      timer.requestHold()
+      const reader = new target(...args)
+      reader.addEventListener('loadend', () => {
+        timer.releaseHold()
+      })
+      return reader
     }
   })
 }

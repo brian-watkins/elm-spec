@@ -26,7 +26,7 @@ exports.registerFakes = (window, timer) => {
   window._elm_spec.timer = timer
   window._elm_spec.url = new FakeURL(window._elm_spec.blobStore)
   window._elm_spec.mouseEvent = fakeMouseEvent()
-  window._elm_spec.fileReader = fileReaderProxy(() => { timer.stopWaitingForStack() })
+  window._elm_spec.fileReader = fileReaderProxy(timer)
 }
 
 exports.injectFakes = (code) => {

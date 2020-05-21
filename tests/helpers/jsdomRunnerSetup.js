@@ -1,14 +1,16 @@
 const { bundleRunnerCode } = require('./bundleHelpers')
 const { Compiler } = require('elm-spec-core')
 const JSDOMSpecRunner = require('../../runner/elm-spec-runner/src/jsdomSpecRunner')
+const FileLoader = require('../../runner/elm-spec-runner/src/fileLoader')
 const path = require('path')
 
 const specSrcDir = path.join(__dirname, "..", "src")
 
-const runner = new JSDOMSpecRunner()
+const fileLoader = new FileLoader(specSrcDir)
+const runner = new JSDOMSpecRunner(fileLoader)
 
 before(async () => {
-  const dom = runner.getDom(specSrcDir)
+  const dom = runner.getDom()
 
   global.page = dom
 

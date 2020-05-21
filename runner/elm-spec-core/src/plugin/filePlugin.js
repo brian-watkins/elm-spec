@@ -6,7 +6,6 @@ const {
   openFileSelector,
   sendToProgram
 } = require('../fakes')
-const BrowserContext = require("../browserContext")
 const BlobReader = require('../blobReader')
 
 module.exports = class FilePlugin {
@@ -73,9 +72,10 @@ module.exports = class FilePlugin {
     const blob = blobStore().get(blobKey)
     new BlobReader(blob).readIntoArray()
       .then((data) => {
+        this.context.timer.releaseHold()
         this.recordDownload(filename, { type: "bytes", data })
       })
-    this.context.timer.stopWaitingForStack()
+    this.context.timer.requestHold()
   }
 
   recordUrlDownload(url, downloadName) {
@@ -99,9 +99,8 @@ module.exports = class FilePlugin {
               case "file":
                 abort(this.fileReadError(error.path))
                 break
-              case "capability":
+              default:
                 abort(this.missingLoadFileCapabilityError())
-                break
             }
           })
 
@@ -132,13 +131,7 @@ module.exports = class FilePlugin {
   fetchFile(fixture) {
     switch (fixture.content.type) {
       case "disk":
-        if (!BrowserContext.canReadFiles(this.window)) {
-          return Promise.reject({
-            type: "capability"
-          })
-        }
-
-        return BrowserContext.readFile(this.window, fixture.path)
+        return this.context.readBytesFromFile(fixture.path)
           .then(({ path, buffer }) => {
             const bytes = new Uint8Array(buffer.data)
             return new File([bytes], path, {
@@ -168,7 +161,7 @@ module.exports = class FilePlugin {
 
   missingLoadFileCapabilityError() {
     return report(
-      line("Scenario attempted to load a file from disk, but this runner does not support that capability."),
+      line("An attempt was made to load a file from disk, but this runner does not support that capability."),
       line("If you need to load a file from disk, consider using the standard elm-spec runner.")
     )
   }

@@ -10,6 +10,7 @@ const BrowserSpecRunner = require('./browserSpecRunner')
 const RunSpecsCommand = require('./runSpecsCommand')
 const FileWatcher = require('./fileWatcher')
 const ElmFiles = require('./elmFiles')
+const FileLoader = require('./fileLoader')
 
 class RunSuite extends Command {
   async run() {
@@ -25,7 +26,8 @@ class RunSuite extends Command {
       this.error(`Expected an elm.json at: ${elmJsonPath}\nCheck the --specRoot flag to set the directory containing the elm.json for your specs.`)
     }
 
-    const command = new RunSpecsCommand(this.runnerFor(flags.browser), this.getReporter(), FileWatcher)
+    const fileLoader = new FileLoader(flags.specRoot)
+    const command = new RunSpecsCommand(this.runnerFor(flags.browser, fileLoader), this.getReporter(), FileWatcher)
 
     await command.execute({
       browserOptions: {
@@ -45,12 +47,12 @@ class RunSuite extends Command {
     })
   }
 
-  runnerFor(browser) {
+  runnerFor(browser, fileLoader) {
     switch (browser) {
       case "jsdom":
-        return new JSDOMSpecRunner()
+        return new JSDOMSpecRunner(fileLoader)
       default:
-        return new BrowserSpecRunner(browser)
+        return new BrowserSpecRunner(browser, fileLoader)
     }
   }
 

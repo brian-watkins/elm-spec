@@ -2,6 +2,7 @@ const chai = require('chai')
 const expect = chai.expect
 const JSDOMSpecRunner = require('../src/jsdomSpecRunner')
 const BrowserSpecSunner = require('../src/browserSpecRunner')
+const FileLoader = require('../src/fileLoader')
 const { Compiler } = require('elm-spec-core')
 
 const expectBehaviorFor = (browserName, runner) => {
@@ -37,7 +38,7 @@ const expectBehaviorFor = (browserName, runner) => {
       })
 
       it("reports all accepted", () => {
-        expect(testReporter.accepted).to.equal(9)
+        expect(testReporter.accepted).to.equal(10)
       })
 
       context(`when the specs are executed again in ${browserName}, like in watch mode`, () => {
@@ -47,7 +48,7 @@ const expectBehaviorFor = (browserName, runner) => {
         })
 
         it("reports all are still accepted", () => {
-          expect(testReporter.accepted).to.equal(9)
+          expect(testReporter.accepted).to.equal(10)
         })
       })
     })
@@ -103,8 +104,9 @@ const expectBehaviorFor = (browserName, runner) => {
 }
 
 describe("Spec Runners", () => {
-  expectBehaviorFor('JSDOM', new JSDOMSpecRunner())
-  expectBehaviorFor('Chromium', new BrowserSpecSunner('chromium'))
+  const fileLoader = new FileLoader("../elm-spec-core/tests/sample/")
+  expectBehaviorFor('JSDOM', new JSDOMSpecRunner(fileLoader))
+  expectBehaviorFor('Chromium', new BrowserSpecSunner('chromium', fileLoader))
 })
 
 const testBrowserOptions = {
