@@ -12,7 +12,7 @@ import Spec.Markup.Message as Message
 import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Observer.Message as Message
-import Spec.Report as Report
+import Spec.Report as Report exposing (Report)
 import Spec.Claim as Claim
 import Spec.Scenario.State.NavigationHelpers exposing (..)
 import Spec.Scenario.State.Interactive as Interactive
@@ -29,6 +29,7 @@ type alias Model model msg =
   , programModel: model
   , effects: List Message
   , steps: List (Step model msg)
+  , abortWith: Maybe Report
   , responseHandler : Maybe (Message -> Step.Command msg)
   }
 
@@ -49,6 +50,7 @@ initModel scenario subject =
   , effects = []
   , steps = initialCommandSteps scenario subject ++ scenario.steps
   , responseHandler = Nothing
+  , abortWith = Nothing
   }
 
 
@@ -104,23 +106,29 @@ update exerciseModel actions msg =
           |> handleStepCommand actions updatedExerciseModel
 
     Continue ->
-      case exerciseModel.steps of
-        [] ->
-          Observe.init actions
-            exerciseModel.scenario
-            exerciseModel.subject
-            exerciseModel.conditionsApplied
-            exerciseModel.programModel
-            exerciseModel.effects
-        step :: remaining ->
-          Context.for exerciseModel.programModel
-            |> Context.withEffects exerciseModel.effects
-            |> step.run
-            |> handleStepCommand actions { exerciseModel | steps = remaining }
+      case exerciseModel.abortWith of
+        Just report ->
+          ( Interactive.initModel exerciseModel.subject exerciseModel.programModel
+          , State.abortWith actions exerciseModel.conditionsApplied "A spec step failed" report
+          )
+        Nothing ->
+          case exerciseModel.steps of
+            [] ->
+              Observe.init actions
+                exerciseModel.scenario
+                exerciseModel.subject
+                exerciseModel.conditionsApplied
+                exerciseModel.programModel
+                exerciseModel.effects
+            step :: remaining ->
+              Context.for exerciseModel.programModel
+                |> Context.withEffects exerciseModel.effects
+                |> step.run
+                |> handleStepCommand actions { exerciseModel | steps = remaining }
 
     Abort report ->
-      ( Interactive.initModel exerciseModel.subject exerciseModel.programModel
-      , State.abortWith actions exerciseModel.conditionsApplied "A spec step failed" report
+      ( exercise { exerciseModel | abortWith = Just report }
+      , sendComplete actions
       )
 
     OnUrlChange url ->
