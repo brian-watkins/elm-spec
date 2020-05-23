@@ -508,7 +508,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.bytesData <| require Bytes.width <| equals 11
+                  [ Spec.Http.body <| Spec.Http.binaryData <| require .data <| require Bytes.width <| equals 11
                   ]
               )
           )
@@ -579,7 +579,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.bytesData <| require Bytes.width <| equals 11
+                  [ Spec.Http.body <| Spec.Http.binaryData <| require .data <| require Bytes.width <| equals 11
                   ]
               )
           )

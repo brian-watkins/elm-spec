@@ -10,7 +10,8 @@ module Spec.Http exposing
   , textData
   , jsonData
   , fileData
-  , bytesData
+  , Blob
+  , binaryData
   , url
   )
 
@@ -56,7 +57,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, observeRequests, clearRequestHistory
 
 # Make Claims About HTTP Requests
-@docs url, header, body, bodyPart, HttpRequestData, textData, jsonData, fileData, bytesData
+@docs url, header, body, bodyPart, HttpRequestData, textData, jsonData, fileData, Blob, binaryData
 
 # Debug
 @docs logRequests
@@ -187,8 +188,8 @@ textData claim =
         evaluateTextData claim actual
       Request.FileData _ ->
         Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is a file."
-      Request.BytesData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is binary. Use Spec.Http.bytesData instead."
+      Request.BinaryData _ ->
+        Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is binary. Use Spec.Http.binaryData instead."
       Request.Multipart _ ->
         Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is multipart."
 
@@ -232,8 +233,8 @@ jsonData decoder claim =
         Claim.Reject <| Report.fact "Claim rejected for JSON data" "It has no data at all."
       Request.FileData _ ->
         Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is a file."
-      Request.BytesData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is binary. Use Spec.Http.bytesData instead."
+      Request.BinaryData _ ->
+        Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is binary. Use Spec.Http.binaryData instead."
       Request.Multipart _ ->
         Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is multipart."
 
@@ -262,44 +263,54 @@ fileData claim =
           )
       Request.NoData ->
         Claim.Reject <| Report.fact "Claim rejected for file data" "It has no data at all."
-      Request.BytesData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is binary. Use Spec.Http.bytesData instead."
+      Request.BinaryData _ ->
+        Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is binary. Use Spec.Http.binaryData instead."
       Request.TextData _ ->
         Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is text."
       Request.Multipart _ ->
         Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is multipart."
 
 
-{-| Claim that some HTTP request data is binary data that satisfies the given claim.
+{-| When `Bytes` are sent as the HTTP request body or as part of the HTTP request body, a MIME type
+must be specified. This value groups `Bytes` together with their associated MIME type.
+-}
+type alias Blob =
+  { mimeType: String
+  , data: Bytes
+  }
+
+
+{-| Claim that some HTTP request data is a `Blob` that satisfies the given claim.
 
 For example, if the body of an observed request is binary data with a width of 12, then the
 following claim would be accepted:
 
     Spec.Http.body
-      <| Spec.Http.bytesData
+      <| Spec.Http.binaryData
+      <| Spec.Claim.require .data
       <| Spec.Claim.require Bytes.width
       <| Claim.isEqual Debug.toString 12
 
 -}
-bytesData : Claim Bytes -> Claim HttpRequestData
-bytesData claim =
+binaryData : Claim Blob -> Claim HttpRequestData
+binaryData claim =
   \(HttpRequestData requestData) ->
     case requestData of
-      Request.BytesData binaryContent ->
-        claim binaryContent
+      Request.BinaryData blob ->
+        claim blob
           |> Claim.mapRejection (\report -> Report.batch
-            [ Report.note "Claim rejected for bytes data"
+            [ Report.note "Claim rejected for binary data"
             , report
             ]
           )
       Request.NoData ->
-        Claim.Reject <| Report.fact "Claim rejected for bytes data" "It has no data at all."
+        Claim.Reject <| Report.fact "Claim rejected for binary data" "It has no data at all."
       Request.TextData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for bytes data" "The request data is text."
+        Claim.Reject <| Report.fact "Claim rejected for binary data" "The request data is text."
       Request.FileData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for bytes data" "The request data is a file."
+        Claim.Reject <| Report.fact "Claim rejected for binary data" "The request data is a file."
       Request.Multipart _ ->
-        Claim.Reject <| Report.fact "Claim rejected for bytes data" "The request data is multipart."
+        Claim.Reject <| Report.fact "Claim rejected for binary data" "The request data is multipart."
 
 
 {-| Observe HTTP requests that match the given route.

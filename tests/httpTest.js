@@ -123,7 +123,7 @@ describe('HTTP', () => {
         expectRejected(observations[3], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for bytes data", "It has no data at all.")
+          reportLine("Claim rejected for binary data", "It has no data at all.")
         ])
         expectRejected(observations[4], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
@@ -153,7 +153,7 @@ describe('HTTP', () => {
         expectRejected(observations[10], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for bytes data", "The request data is text.")
+          reportLine("Claim rejected for binary data", "The request data is text.")
         ])
       })
     })

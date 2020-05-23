@@ -1,6 +1,7 @@
 module Spec.Http.Request exposing
   ( HttpRequest
   , HttpRequestData(..)
+  , Blob
   , toReport
   , headersToString
   , decoder
@@ -26,8 +27,14 @@ type HttpRequestData
   = NoData
   | TextData String
   | FileData File
-  | BytesData Bytes
+  | BinaryData Blob
   | Multipart (List RequestDataPart)
+
+
+type alias Blob =
+  { mimeType: String
+  , data: Bytes
+  }
 
 
 type alias RequestDataPart =
@@ -81,8 +88,8 @@ body data =
       "Text data: " ++ stringBody
     FileData fileBody ->
       "File data with name: " ++ File.name fileBody
-    BytesData binaryContent ->
-      "Bytes data with " ++ (String.fromInt <| Bytes.width binaryContent) ++ " bytes"
+    BinaryData blob ->
+      "Binary data of type " ++ blob.mimeType ++ " with " ++ (String.fromInt <| Bytes.width blob.data) ++ " bytes"
     Multipart parts ->
       "Multipart request with parts:\n" ++ (String.join "\n" <| List.map (\part -> part.name ++ " ==> " ++ body part.data) parts)
 
@@ -102,17 +109,19 @@ requestBodyDecoder =
     |> Json.andThen (\bodyType ->
       case bodyType of
         "file" ->
-          Json.field "content" File.decoder
-            |> Json.map FileData
+          Json.map FileData <|
+            Json.field "content" File.decoder
         "bytes" ->
-          Json.field "data" Binary.jsonDecoder
-            |> Json.map BytesData
+          Json.map BinaryData <|
+            Json.map2 Blob
+              (Json.field "mimeType" Json.string)
+              (Json.field "data" Binary.jsonDecoder)
         "multipart" ->
-          Json.field "parts" (Json.list bodyPartDecoder)
-            |> Json.map Multipart
+          Json.map Multipart <|
+            Json.field "parts" (Json.list bodyPartDecoder)
         _ ->
-          Json.field "content" Json.string
-            |> Json.map TextData
+          Json.map TextData <|
+            Json.field "content" Json.string
     )
 
 

@@ -27,7 +27,7 @@ describe("http upload", () => {
       expectRejected(observations[6], [
         reportLine("Claim rejected for route", "POST http://fake-api.com/files"),
         reportLine("List failed to match at position 1"),
-        reportLine("Claim rejected for bytes data", "The request data is a file.")
+        reportLine("Claim rejected for binary data", "The request data is a file.")
       ])
 
       expectAccepted(observations[7])
@@ -38,26 +38,27 @@ describe("http upload", () => {
     expectSpec("HttpUploadSpec", "uploadBytes", done, (observations) => {
       expectAccepted(observations[0])
       expectAccepted(observations[1])
+      expectAccepted(observations[2])
       
-      expect(observations[2].summary).to.equal("REJECTED")
-      expect(observations[2].report[2].statement).to.equal("Claim rejected for bytes data")
-      expect(observations[2].report[3].statement).to.equal("Expected")
-      expect(observations[2].report[4].statement).to.equal("to equal")
+      expect(observations[3].summary).to.equal("REJECTED")
+      expect(observations[3].report[2].statement).to.equal("Claim rejected for binary data")
+      expect(observations[3].report[3].statement).to.equal("Expected")
+      expect(observations[3].report[4].statement).to.equal("to equal")
 
-      expectRejected(observations[3], [
-        reportLine("Claim rejected for route", "POST http://fake-api.com/files"),
-        reportLine("List failed to match at position 1"),
-        reportLine("Claim rejected for file data", "The request data is binary. Use Spec.Http.bytesData instead.")
-      ])
       expectRejected(observations[4], [
         reportLine("Claim rejected for route", "POST http://fake-api.com/files"),
         reportLine("List failed to match at position 1"),
-        reportLine("Claim rejected for text data", "The request data is binary. Use Spec.Http.bytesData instead.")
+        reportLine("Claim rejected for file data", "The request data is binary. Use Spec.Http.binaryData instead.")
       ])
       expectRejected(observations[5], [
         reportLine("Claim rejected for route", "POST http://fake-api.com/files"),
         reportLine("List failed to match at position 1"),
-        reportLine("Claim rejected for JSON data", "The request data is binary. Use Spec.Http.bytesData instead.")
+        reportLine("Claim rejected for text data", "The request data is binary. Use Spec.Http.binaryData instead.")
+      ])
+      expectRejected(observations[6], [
+        reportLine("Claim rejected for route", "POST http://fake-api.com/files"),
+        reportLine("List failed to match at position 1"),
+        reportLine("Claim rejected for JSON data", "The request data is binary. Use Spec.Http.binaryData instead.")
       ])
     })
   })

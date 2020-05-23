@@ -261,7 +261,7 @@ const missingLoadFileCapabilityError = () => {
 }
 
 const buildRequest = (request) => {
-  return buildRequestData(request.body)
+  return buildRequestData(request.headers, request.body)
     .then((requestData) => {
       return {
         methpd: request.method,
@@ -272,7 +272,7 @@ const buildRequest = (request) => {
     })
 }
 
-const buildRequestData = (rawData) => {
+const buildRequestData = (headers, rawData) => {
   if (!rawData) {
     return Promise.resolve(null)
   }
@@ -287,14 +287,14 @@ const buildRequestData = (rawData) => {
   if (rawData instanceof Blob) {
     return new BlobReader(rawData).readIntoArray()
       .then((data) => {
-        return { type: "bytes", data }
+        return { type: "bytes", mimeType: getMimeType(headers, rawData), data }
       })
   }
 
   if (rawData instanceof FormData) {
     const promises = []
     for (let key of rawData.keys()) {
-      promises.push(buildRequestData(rawData.get(key)).then(body => {
+      promises.push(buildRequestData(headers, rawData.get(key)).then(body => {
         return { name: key, data: body }
       }))
     }
@@ -308,4 +308,12 @@ const buildRequestData = (rawData) => {
     type: "string",
     content: rawData
   })
+}
+
+const getMimeType = (headers, blob) => {
+  if (blob.type) {
+    return blob.type
+  }
+
+  return headers['content-type'] || ""
 }

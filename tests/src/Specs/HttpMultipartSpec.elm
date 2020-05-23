@@ -68,8 +68,16 @@ multipartRequestSpec =
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
                 Spec.Http.bodyPart "my-bytes" <| isListWhere
-                  [ Spec.Http.bytesData <|
+                  [ Spec.Http.binaryData <| require .data <|
                       (Decode.decode <| Decode.string 16) >> (isSomethingWhere <| equals "Some funny text!")
+                  ]
+              )
+          )
+        , it "gets the bytes mime type" (
+            Spec.Http.observeRequests (post "http://fake.com/api/files")
+              |> expect (isListWhereItemAt 0 <|
+                Spec.Http.bodyPart "my-bytes" <| isListWhere
+                  [ Spec.Http.binaryData <| require .mimeType <| equals "text/plain"
                   ]
               )
           )

@@ -33,7 +33,7 @@ describe("log http requests", () => {
     expectSpec("HttpLogSpec", "logBytesRequest", done, (observations, error, logs) => {
       expectLogReport(logs[0], [
         reportLine("Received 1 HTTP request"),
-        reportLine("POST http://fun.com/bytes", "Headers: [ content-type = application/octet-stream ]\nBytes data with 21 bytes")
+        reportLine("POST http://fun.com/bytes", "Headers: [ content-type = application/octet-stream ]\nBinary data of type application/octet-stream with 21 bytes")
       ])
     })
   })
@@ -57,7 +57,7 @@ describe("log http requests", () => {
       expect(details[1]).to.equal("Multipart request with parts:")
       expect(details[2]).to.equal("username ==> Text data: someone-cool")
       expect(details[3].replace(/:/g, "/")).to.equal("fun-image ==> File data with name/ /some/path/to/my-awesome-image.png")
-      expect(details[4]).to.equal("fun-bytes ==> Bytes data with 21 bytes")
+      expect(details[4]).to.equal("fun-bytes ==> Binary data of type image/png with 21 bytes")
     })
   })
 })
