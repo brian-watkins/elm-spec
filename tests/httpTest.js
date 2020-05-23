@@ -106,49 +106,54 @@ describe('HTTP', () => {
         expectRejected(observations[0], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for string body"),
+          reportLine("Claim rejected for text data"),
           reportLine("Expected", "\"\""),
           reportLine("to equal", "\"some string body that it does not have\"")
         ])
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for JSON body", "It has no body at all.")
+          reportLine("Claim rejected for JSON data", "It has no data at all.")
         ])
         expectRejected(observations[2], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for file body", "It has no body at all.")
+          reportLine("Claim rejected for file data", "It has no data at all.")
         ])
         expectRejected(observations[3], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for bytes body", "It has no body at all.")
+          reportLine("Claim rejected for bytes data", "It has no data at all.")
         ])
-        expectAccepted(observations[4])
-        expectRejected(observations[5], [
+        expectRejected(observations[4], [
+          reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for body part: fun", "The request does not have a multipart body.\nUse Spec.Http.body to make a claim about the request body.")
+        ])
+        expectAccepted(observations[5])
+        expectRejected(observations[6], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for string body"),
+          reportLine("Claim rejected for text data"),
           reportLine("Expected", "\"{\\\"name\\\":\\\"fun person\\\",\\\"age\\\":88}\""),
           reportLine("to equal", "\"{\\\"blah\\\":3}\"")
         ])
-        expectAccepted(observations[6])
-        expectRejected(observations[7], [
-          reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
-          reportLine("List failed to match at position 1"),
-          reportLine("Expected to decode request body as JSON", "{\"name\":\"fun person\",\"age\":88}"),
-          reportLine("but the decoder failed", "Problem with the value at json.name:\n\n    \"fun person\"\n\nExpecting an INT")
-        ])
+        expectAccepted(observations[7])
         expectRejected(observations[8], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for file body", "The request body is a string.")
+          reportLine("Expected to decode request data as JSON", "{\"name\":\"fun person\",\"age\":88}"),
+          reportLine("but the decoder failed", "Problem with the value at json.name:\n\n    \"fun person\"\n\nExpecting an INT")
         ])
         expectRejected(observations[9], [
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for bytes body", "The request body is a string.")
+          reportLine("Claim rejected for file data", "The request data is text.")
+        ])
+        expectRejected(observations[10], [
+          reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
+          reportLine("List failed to match at position 1"),
+          reportLine("Claim rejected for bytes data", "The request data is text.")
         ])
       })
     })

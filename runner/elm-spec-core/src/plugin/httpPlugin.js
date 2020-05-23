@@ -261,38 +261,51 @@ const missingLoadFileCapabilityError = () => {
 }
 
 const buildRequest = (request) => {
-  return buildRequestBody(request.body)
-    .then((requestBody) => {
+  return buildRequestData(request.body)
+    .then((requestData) => {
       return {
         methpd: request.method,
         url: request.url,
         headers: request.headers,
-        body: requestBody
+        body: requestData
       }
     })
 }
 
-const buildRequestBody = (requestBody) => {
-  if (!requestBody) {
+const buildRequestData = (rawData) => {
+  if (!rawData) {
     return Promise.resolve(null)
   }
 
-  if (requestBody instanceof File) {
+  if (rawData instanceof File && rawData.name !== "blob") {
     return Promise.resolve({
       type: "file",
-      content: requestBody
+      content: rawData
     })
   }
 
-  if (requestBody instanceof Blob) {
-    return new BlobReader(requestBody).readIntoArray()
+  if (rawData instanceof Blob) {
+    return new BlobReader(rawData).readIntoArray()
       .then((data) => {
         return { type: "bytes", data }
       })
   }
 
+  if (rawData instanceof FormData) {
+    const promises = []
+    for (let key of rawData.keys()) {
+      promises.push(buildRequestData(rawData.get(key)).then(body => {
+        return { name: key, data: body }
+      }))
+    }
+
+    return Promise.all(promises).then(parts => {
+      return { type: "multipart", parts }
+    })
+  }
+
   return Promise.resolve({
     type: "string",
-    content: requestBody
+    content: rawData
   })
 }

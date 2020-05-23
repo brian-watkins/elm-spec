@@ -106,6 +106,34 @@ logFileRequestSpec =
   ]
 
 
+logMultipartRequestSpec : Spec Model Msg
+logMultipartRequestSpec =
+  describe "log a multipart HTTP request"
+  [ scenario "a multipart request" (
+      given (
+        testSubject [ multipartRequest "http://place.com/api/request" ]
+      )
+      |> when "a file is selected"
+        [ Markup.target << by [ id "select-file" ]
+        , Event.click
+        , Spec.File.select
+            [ Spec.File.withText "/some/path/to/my-awesome-image.png" "some image data"
+                |> Spec.File.withMimeType "image/png"
+            ]
+        ]
+      |> when "requests are sent"
+        [ Markup.target << by [ id "request-button" ]
+        , Event.click
+        , Spec.Http.logRequests
+        ]
+      |> it "makes the POST request" (
+        Spec.Http.observeRequests (post "http://place.com/api/request")
+          |> expect (isListWithLength 1)
+      )
+    )
+  ]
+
+
 getRequest url headers _ =
   Http.request
     { method = "GET"
@@ -148,6 +176,22 @@ fileRequest url (Model model) =
       Http.post
         { url = url
         , body = Http.fileBody file
+        , expect = Http.expectString ReceivedRequest
+        }
+    )
+    |> Maybe.withDefault Cmd.none
+
+
+multipartRequest url (Model model) =
+  model.selectedFile
+    |> Maybe.map (\file ->
+      Http.post
+        { url = url
+        , body = Http.multipartBody
+            [ Http.stringPart "username" "someone-cool"
+            , Http.filePart "fun-image" file
+            , Http.bytesPart "fun-bytes" "image/png" <| Bytes.encode <| Bytes.string "This is binary stuff!"
+            ]
         , expect = Http.expectString ReceivedRequest
         }
     )
@@ -214,6 +258,7 @@ selectSpec name =
     "logRequests" -> Just httpRequestLogSpec
     "logBytesRequest" -> Just logBytesRequestSpec
     "logFileRequest" -> Just logFileRequestSpec
+    "logMultipartRequest" -> Just logMultipartRequestSpec
     _ -> Nothing
 
 

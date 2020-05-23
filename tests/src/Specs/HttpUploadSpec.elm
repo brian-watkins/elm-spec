@@ -56,7 +56,7 @@ uploadFileSpec =
         , it "posts the correct file" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.fileBody <| require File.name <| 
+                [ Spec.Http.body <| Spec.Http.fileData <| require File.name <|
                     normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
                 ]
               )
@@ -71,7 +71,7 @@ uploadFileSpec =
         , it "fails when you make a false claim about the file" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.fileBody <| require File.name <| 
+                [ Spec.Http.body <| Spec.Http.fileData <| require File.name <|
                     normalizedPath >> isStringContaining 1 "someOtherFile.png"
                 ]
               )
@@ -79,21 +79,21 @@ uploadFileSpec =
         , it "fails when you try to expect a string body" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.stringBody <| equals "blah"
+                [ Spec.Http.body <| Spec.Http.textData <| equals "blah"
                 ]
               )
           )
         , it "fails when you try to expect a json body" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.jsonBody Json.string <| equals "blah"
+                [ Spec.Http.body <| Spec.Http.jsonData Json.string <| equals "blah"
                 ]
               )
           )
         , it "fails when you try to expect bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.bytesBody <| require Bytes.width <| equals 299
+                [ Spec.Http.body <| Spec.Http.bytesData <| require Bytes.width <| equals 299
                 ]
               )
           )
@@ -151,7 +151,7 @@ uploadBytesSpec =
         , it "sends the expected bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.bytesBody <|
+                [ Spec.Http.body <| Spec.Http.bytesData <|
                     (Decode.decode <| Decode.string 23) >> (isSomethingWhere <| equals "Some funny binary text!")
                 ]
               )
@@ -159,28 +159,28 @@ uploadBytesSpec =
         , it "fails when you make a false claim about the bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.bytesBody <| require Bytes.width <| equals 17
+                [ Spec.Http.body <| Spec.Http.bytesData <| require Bytes.width <| equals 17
                 ]
               )
           )
         , it "fails when you try to expect a file" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.fileBody <| require File.name <| equals "blah"
+                [ Spec.Http.body <| Spec.Http.fileData <| require File.name <| equals "blah"
                 ]
               )
           )
         , it "fails when you try to expect a string body" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.stringBody <| equals "blah"
+                [ Spec.Http.body <| Spec.Http.textData <| equals "blah"
                 ]
               )
           )
         , it "fails when you try to expect a json body" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.jsonBody Json.string <| equals "blah"
+                [ Spec.Http.body <| Spec.Http.jsonData Json.string <| equals "blah"
                 ]
               )
           )
