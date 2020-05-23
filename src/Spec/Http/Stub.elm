@@ -7,6 +7,7 @@ module Spec.Http.Stub exposing
   , withBody
   , withBytes
   , withText
+  , withJson
   , withBytesAtPath
   , withTextAtPath
   , withStatus
@@ -30,7 +31,7 @@ elm-spec will respond with a `404` status code.
 @docs HttpResponseStub, for, serve, nowServe
 
 # Stub the Response Body
-@docs HttpResponseBody, withBody, withText, withBytes, withTextAtPath, withBytesAtPath
+@docs HttpResponseBody, withBody, withText, withJson, withBytes, withTextAtPath, withBytesAtPath
 
 # Stub Progress of an In-Flight Request
 @docs HttpResponseProgress, sent, received, streamed, withProgress, abstain
@@ -153,6 +154,14 @@ withBody body =
 withText : String -> HttpResponseBody
 withText =
   Text
+
+
+{-| Create an `HttpResponseBody` composed of the given JSON value, stringified.
+-}
+withJson : Encode.Value -> HttpResponseBody
+withJson value =
+  Encode.encode 0 value
+    |> Text
 
 
 {-| Create an `HttpResponseBody` composed of the given bytes.

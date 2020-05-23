@@ -46,7 +46,7 @@ getSpec =
     )
   , scenario "multiple stubbed requests" (
       given (
-        testSubject (\model -> Cmd.batch [ getRequest model, getOtherRequest model ]) [ successStub, otherSuccessStub ]
+        testSubject (\model -> Cmd.batch [ getRequest model, getOtherRequest model, getAwesomeRequest model ]) [ successStub, otherSuccessStub, jsonSuccessStub ]
       )
       |> whenTheRequestIsTriggered
       |> it "receives the stubbed responses" (
@@ -54,6 +54,7 @@ getSpec =
           |> expect ( isListWhere
             [ equals { name = "Cool Dude", score = 1034 }
             , equals { name = "Fun Person", score = 971 }
+            , equals { name = "Mr. Awesome", score = 771 }
             ]
           )
       )
@@ -107,6 +108,14 @@ getOtherRequest _ =
     , expect = Http.expectJson ReceivedResponse responseDecoder
     , timeout = Nothing
     , tracker = Nothing
+    }
+
+
+getAwesomeRequest : Model -> Cmd Msg
+getAwesomeRequest _ =
+  Http.get
+    { url = "http://fake-api.com/awesome"
+    , expect = Http.expectJson ReceivedResponse responseDecoder
     }
 
 
@@ -616,6 +625,15 @@ successStub =
 otherSuccessStub =
   Stub.for (get "http://fake-api.com/fun")
     |> Stub.withBody (Stub.withText "{\"name\":\"Fun Person\",\"score\":971}")
+
+jsonSuccessStub =
+  Stub.for (get "http://fake-api.com/awesome")
+    |> Stub.withBody (Stub.withJson <|
+      Encode.object
+        [ ("name", Encode.string "Mr. Awesome")
+        , ("score", Encode.int 771)
+        ]
+    )
 
 unauthorizedStub =
   Stub.for (get "http://fake-api.com/stuff")
