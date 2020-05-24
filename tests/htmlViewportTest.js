@@ -24,6 +24,7 @@ describe("dom functions", () => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
+        expectAccepted(observations[3])
       })
     })
   })

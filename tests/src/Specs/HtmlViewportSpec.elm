@@ -8,6 +8,7 @@ import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
 import Spec.Navigator as Navigator
 import Spec.Observer as Observer
+import Spec.Witness as Witness
 import Specs.Helpers exposing (..)
 import Specs.EventHelpers
 import Spec.Command as Command
@@ -18,6 +19,7 @@ import Html.Events as Events
 import Task
 import Browser.Dom
 import Json.Decode as Json
+import Json.Encode as Encode
 
 
 viewportSpec : Spec Model Msg
@@ -78,6 +80,28 @@ observeBrowserViewportSpec =
         Navigator.observe
           |> expect (Navigator.viewportOffset <| equals { x = 0, y = 0})
       )
+    )
+  , scenario "the viewport is set in a batch with a command the stores an effect message and nothing triggers an extra animation frame update" (
+      given (
+        testSubject
+      )
+      |> when "the viewport is updated"
+        [ Markup.target << by [ id "x-position" ]
+        , Event.input "58"
+        , Markup.target << by [ id "y-position" ]
+        , Event.input "21"
+        , Markup.target << by [ id "set-viewport-with-witness" ]
+        , Event.click
+        ]
+      |> observeThat
+        [ it "records the witness message" (
+            Witness.observe "fun-message" Json.string
+              |> expect (isListWhere
+                [ equals "a fun recorded message"
+                ]
+              )
+          )
+        ]
     )
   , scenario "the viewport has been set" (
       given (
@@ -235,6 +259,7 @@ type Msg
   | GotX String
   | GotY String
   | SetViewport
+  | SetViewportWithWitness
   | DidSetViewport ()
   | RequestElement String
   | GotElement (Result Browser.Dom.Error Browser.Dom.Element)
@@ -252,6 +277,7 @@ testView model =
   [ Html.input [ Attr.id "x-position", Events.onInput GotX ] []
   , Html.input [ Attr.id "y-position", Events.onInput GotY ] []
   , Html.button [ Attr.id "set-viewport-button", Events.onClick SetViewport ] [ Html.text "Set!" ]
+  , Html.button [ Attr.id "set-viewport-with-witness", Events.onClick SetViewportWithWitness ] [ Html.text "Set with witness!" ]
   , Html.button [ Attr.id "request-viewport-button", Events.onClick RequestViewport ] [ Html.text "Get!"]
   , Html.button [ Attr.id "get-footer-button", Events.onClick <| RequestElement "footer" ] [ Html.text "Get Footer!" ]
   , Html.hr [] []
@@ -296,6 +322,13 @@ testUpdate msg model =
       ( model
       , Browser.Dom.setViewport model.scrollTo.x model.scrollTo.y |> Task.perform DidSetViewport
       )
+    SetViewportWithWitness ->
+      ( model
+      , Cmd.batch
+        [ Browser.Dom.setViewport model.scrollTo.x model.scrollTo.y |> Task.perform DidSetViewport
+        , recordWitness "fun-message" <| Encode.string "a fun recorded message"
+        ]
+      )
     DidSetViewport _ ->
       ( model, Cmd.none )
     RequestViewport ->
@@ -310,6 +343,11 @@ testUpdate msg model =
           ( { model | element = Just element }, Cmd.none )
         Err _ ->
           ( { model | element = Nothing }, Cmd.none )
+
+
+recordWitness =
+  Witness.connect Runner.elmSpecOut
+    |> Witness.record
 
 
 getViewport tagger =

@@ -151,7 +151,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "complete":
         this.timer.whenStackIsComplete(() => {
-          out(this.continue())
+          this.continueToNext(out)
         })
         break
       case "log":
