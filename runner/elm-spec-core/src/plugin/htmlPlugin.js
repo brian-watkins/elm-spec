@@ -1,10 +1,4 @@
 const { report, line } = require('../report')
-const {
-  setBaseLocation,
-  resizeWindowTo,
-  setWindowVisibility,
-  setBrowserViewport,
-} = require('../fakes')
 
 module.exports = class HtmlPlugin {
   constructor(context) {
@@ -150,22 +144,22 @@ module.exports = class HtmlPlugin {
       }
       case "resize": {
         const size = specMessage.body
-        resizeWindowTo(size.width, size.height, this.window)
+        this.context.resizeWindowTo(size.width, size.height)
         this.window.dispatchEvent(this.getEvent("resize"))
         break
       }
       case "visibilityChange": {
-        setWindowVisibility(specMessage.body.isVisible, this.window)
+        this.context.setWindowVisibility(specMessage.body.isVisible)
         this.document.dispatchEvent(this.getEvent("visibilitychange"))
         break
       }
       case "set-location": {
         const location = specMessage.body
-        setBaseLocation(location, this.window)
+        this.context.setBaseLocation(location)
         break
       }
       case "set-browser-viewport": {
-        setBrowserViewport(this.window, specMessage.body)
+        this.context.setBrowserViewport(specMessage.body)
         break
       }
       case "set-element-viewport": {

@@ -1,10 +1,6 @@
-const {
-  setTimezoneOffset
-} = require('../fakes')
-
 module.exports = class TimePlugin {
   constructor(context) {
-    this.window = context.window
+    this.context = context
     this.clock = context.timer.clock
   }
 
@@ -15,7 +11,7 @@ module.exports = class TimePlugin {
         break
       }
       case "set-timezone": {
-        setTimezoneOffset(this.window, specMessage.body)
+        this.context.setTimezoneOffset(specMessage.body)
         break
       }
       case "tick": {

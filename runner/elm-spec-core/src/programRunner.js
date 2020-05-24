@@ -5,15 +5,6 @@ const HtmlPlugin = require('./plugin/htmlPlugin')
 const HttpPlugin = require('./plugin/httpPlugin')
 const FilePlugin = require('./plugin/filePlugin')
 const WitnessPlugin = require('./plugin/witnessPlugin')
-const {
-  registerApp,
-  setBaseLocation,
-  clearEventListeners,
-  setTimezoneOffset,
-  setBrowserViewport,
-  closeFileSelector,
-  clearElementMappers,
-} = require('./fakes')
 const { report, line } = require('./report')
 
 const ELM_SPEC_OUT = "elmSpecOut"
@@ -44,21 +35,24 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.app = app
     this.context = context
     this.timer = this.context.timer
-    this.portPlugin = new PortPlugin(app)
-    this.httpPlugin = new HttpPlugin(this.context)
     this.plugins = this.generatePlugins(this.context)
+
+    this.portPlugin = new PortPlugin(app)
+    this.plugins["_port"] = this.portPlugin
+
+    this.httpPlugin = new HttpPlugin(this.context)
+    this.plugins["_http"] = this.httpPlugin
+
     this.options = options
 
-    registerApp(this.app, this.context.window)
+    this.context.registerApp(this.app)
   }
 
   generatePlugins(context) {
     return {
       "_html": new HtmlPlugin(context),
-      "_http": this.httpPlugin,
       "_time": new TimePlugin(context),
       "_witness": new WitnessPlugin(),
-      "_port": this.portPlugin,
       "_file": new FilePlugin(context)
     }
   }
@@ -200,7 +194,7 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "state": {
         switch (specMessage.body) {
           case "COMPLETE": {
-            clearElementMappers(this.context.window)
+            this.context.clearElementMappers()
             this.emit('complete', true)
             break
           }
@@ -272,12 +266,12 @@ module.exports = class ProgramRunner extends EventEmitter {
   prepareForScenario() {
     this.timer.runAllAnimationFrameTasks()
     this.timer.clearTimers()
-    clearEventListeners(this.context.window)
-    setTimezoneOffset(this.context.window, new Date().getTimezoneOffset())
-    setBaseLocation("http://elm-spec", this.context.window)
-    setBrowserViewport(this.context.window, { x: 0, y: 0 })
+    this.context.clearEventListeners()
+    this.context.setTimezoneOffset(new Date().getTimezoneOffset())
+    this.context.setBaseLocation("http://elm-spec")
+    this.context.setBrowserViewport({ x: 0, y: 0 })
     this.httpPlugin.reset()
-    closeFileSelector(this.context.window)
+    this.context.closeFileSelector()
   }
 
   configureComplete(out) {

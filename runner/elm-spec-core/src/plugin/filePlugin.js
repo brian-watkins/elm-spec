@@ -1,23 +1,16 @@
 const { report, line } = require('../report')
-const {
-  fileInputForOpenFileSelector,
-  mapElement,
-  blobStore,
-  openFileSelector,
-  sendToProgram
-} = require('../fakes')
 const BlobReader = require('../blobReader')
 
 module.exports = class FilePlugin {
   constructor(context) {
     this.window = context.window
     this.context = context
-    this.out = sendToProgram(this.window)
+    this.out = this.context.sendToProgram()
     this.reset()
   }
 
   reset() {
-    mapElement(element => this.decorateElement(element))
+    this.context.mapElement(element => this.decorateElement(element))
   }
 
   decorateElement(element) {
@@ -36,7 +29,7 @@ module.exports = class FilePlugin {
   inputClickHandler(event) {
     const inputElement = event.target
     if (inputElement.type === "file") {
-      openFileSelector(this.window, inputElement)
+      this.context.openFileSelector(inputElement)
       event.preventDefault()
     }
   }
@@ -69,7 +62,7 @@ module.exports = class FilePlugin {
 
   recordBlobDownload(blobUrl, filename) {
     const blobKey = blobUrl.pathname.split("/").pop()
-    const blob = blobStore().get(blobKey)
+    const blob = this.context.blobStore().get(blobKey)
     new BlobReader(blob).readIntoArray()
       .then((data) => {
         this.context.timer.releaseHold()
@@ -107,7 +100,7 @@ module.exports = class FilePlugin {
         break
       }
       case "select": {
-        const fileInput = fileInputForOpenFileSelector(this.window)
+        const fileInput = this.context.fileInputForOpenFileSelector()
 
         if (!fileInput) {
           abort(this.noOpenFileSelectorError())
