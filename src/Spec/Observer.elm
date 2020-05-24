@@ -58,7 +58,7 @@ observeModel mapper =
   Internal.for <| \claim ->
     \context ->
       Context.model context
-        |> Claim.require mapper claim
+        |> Claim.specifyThat mapper claim
         |> Complete
 
 

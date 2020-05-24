@@ -56,7 +56,7 @@ uploadFileSpec =
         , it "posts the correct file" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.fileData <| require File.name <|
+                [ Spec.Http.body <| Spec.Http.fileData <| specifyThat File.name <|
                     normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
                 ]
               )
@@ -71,7 +71,7 @@ uploadFileSpec =
         , it "fails when you make a false claim about the file" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.fileData <| require File.name <|
+                [ Spec.Http.body <| Spec.Http.fileData <| specifyThat File.name <|
                     normalizedPath >> isStringContaining 1 "someOtherFile.png"
                 ]
               )
@@ -93,7 +93,7 @@ uploadFileSpec =
         , it "fails when you try to expect bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.binaryData <| require .data <| require Bytes.width <| equals 299
+                [ Spec.Http.body <| Spec.Http.binaryData <| specifyThat .data <| specifyThat Bytes.width <| equals 299
                 ]
               )
           )
@@ -151,7 +151,7 @@ uploadBytesSpec =
         , it "sends the expected bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.binaryData <| require .data <|
+                [ Spec.Http.body <| Spec.Http.binaryData <| specifyThat .data <|
                     (Decode.decode <| Decode.string 23) >> (isSomethingWhere <| equals "Some funny binary text!")
                 ]
               )
@@ -159,21 +159,21 @@ uploadBytesSpec =
         , it "send the expected mime type with the bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.binaryData <| require .mimeType <| equals "application/octet-stream"
+                [ Spec.Http.body <| Spec.Http.binaryData <| specifyThat .mimeType <| equals "application/octet-stream"
                 ]
               )
           )
         , it "fails when you make a false claim about the bytes" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.binaryData <| require .data <| require Bytes.width <| equals 17
+                [ Spec.Http.body <| Spec.Http.binaryData <| specifyThat .data <| specifyThat Bytes.width <| equals 17
                 ]
               )
           )
         , it "fails when you try to expect a file" (
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
-                [ Spec.Http.body <| Spec.Http.fileData <| require File.name <| equals "blah"
+                [ Spec.Http.body <| Spec.Http.fileData <| specifyThat File.name <| equals "blah"
                 ]
               )
           )

@@ -39,7 +39,7 @@ onAnimationFrameSpec =
       |> observeThat
         [ it "updates the viewport three times" (
             Navigator.observe
-              |> expect (Navigator.viewportOffset <| require .y <| equals 30)
+              |> expect (Navigator.viewportOffset <| specifyThat .y <| equals 30)
           )
         , it "focuses the element three times" (
             Observer.observeModel .focus

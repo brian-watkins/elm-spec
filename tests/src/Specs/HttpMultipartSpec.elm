@@ -60,7 +60,7 @@ multipartRequestSpec =
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
                 Spec.Http.bodyPart "my-file" <| isListWhere
-                  [ Spec.Http.fileData <| require File.name <| equals "my-file.txt"
+                  [ Spec.Http.fileData <| specifyThat File.name <| equals "my-file.txt"
                   ]
               )
           )
@@ -68,7 +68,7 @@ multipartRequestSpec =
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
                 Spec.Http.bodyPart "my-bytes" <| isListWhere
-                  [ Spec.Http.binaryData <| require .data <|
+                  [ Spec.Http.binaryData <| specifyThat .data <|
                       (Decode.decode <| Decode.string 16) >> (isSomethingWhere <| equals "Some funny text!")
                   ]
               )
@@ -77,7 +77,7 @@ multipartRequestSpec =
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
                 Spec.Http.bodyPart "my-bytes" <| isListWhere
-                  [ Spec.Http.binaryData <| require .mimeType <| equals "text/plain"
+                  [ Spec.Http.binaryData <| specifyThat .mimeType <| equals "text/plain"
                   ]
               )
           )

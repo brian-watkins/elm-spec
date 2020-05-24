@@ -204,14 +204,14 @@ whenTheElementIsRequested =
 itObservesXPositionToBe expected =
   it "finds the x position of the element" (
     Observer.observeModel .element
-      |> expect (isSomethingWhere <| require .element <| require .x <| equals expected)
+      |> expect (isSomethingWhere <| specifyThat .element <| specifyThat .x <| equals expected)
   )
 
 
 itObservesYPositionToBe expected =
   it "finds the y position of the element" (
     Observer.observeModel .element
-      |> expect (isSomethingWhere <| require .element <| require .y <| equals expected)
+      |> expect (isSomethingWhere <| specifyThat .element <| specifyThat .y <| equals expected)
   )
 
 

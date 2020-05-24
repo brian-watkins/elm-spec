@@ -53,9 +53,9 @@ describe("observer", () => {
     })
   })
 
-  describe("require", () => {
-    it("applies require as expected", (done) => {
-      expectSpec("ClaimSpec", "require", done, (observations) => {
+  describe("specifyThat", () => {
+    it("applies specifyThat as expected", (done) => {
+      expectSpec("ClaimSpec", "specifyThat", done, (observations) => {
         expectAccepted(observations[0])
       })
     })

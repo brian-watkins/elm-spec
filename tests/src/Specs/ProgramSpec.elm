@@ -31,7 +31,7 @@ wrappedProgramSpec =
         ]
       |> it "updates the count" (
         Observer.observeModel .programModel
-          |> expect (require .count <| equals 3)
+          |> expect (specifyThat .count <| equals 3)
       )
     )
   ]

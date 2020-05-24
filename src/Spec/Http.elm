@@ -151,7 +151,7 @@ named `fun-image.png`, then the following claim would be accepted:
     Spec.Http.bodyPart "image" <|
       Spec.Claim.isListWhere
         [ Spec.Http.fileData <|
-            Spec.Claim.require File.name <|
+            Spec.Claim.specifyThat File.name <|
             Spec.Claim.isEqualTo Debug.toString "fun-image.png"
         ]
 
@@ -246,7 +246,7 @@ following claim would be accepted:
 
     Spec.Http.body
       <| Spec.Http.fileData
-      <| Spec.Claim.require File.name
+      <| Spec.Claim.specifyThat File.name
       <| Claim.isStringContaining 1 "funFile.txt"
 
 -}
@@ -287,8 +287,8 @@ following claim would be accepted:
 
     Spec.Http.body
       <| Spec.Http.binaryData
-      <| Spec.Claim.require .data
-      <| Spec.Claim.require Bytes.width
+      <| Spec.Claim.specifyThat .data
+      <| Spec.Claim.specifyThat Bytes.width
       <| Claim.isEqual Debug.toString 12
 
 -}

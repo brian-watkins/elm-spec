@@ -2,7 +2,7 @@ module Spec.Claim exposing
   ( Claim
   , Verdict(..)
   , satisfying
-  , require
+  , specifyThat
   , isTrue
   , isFalse
   , isEqual
@@ -33,7 +33,7 @@ module Spec.Claim exposing
 @docs isSomething, isSomethingWhere, isNothing
 
 # Working with Claims
-@docs satisfying, require, mapRejection
+@docs satisfying, specifyThat, mapRejection
 
 -}
 
@@ -169,7 +169,7 @@ pluralize times word =
 -}
 isListWithLength : Int -> Claim (List a)
 isListWithLength expected =
-  require List.length <| \actualLength ->
+  specifyThat List.length <| \actualLength ->
     if actualLength == expected then
       Accept
     else
@@ -324,12 +324,12 @@ isNothing =
 For example, the following claim:
 
     { x = 27, y = 31 }
-      |> require .y (isEqual Debug.toString 31)
+      |> specifyThat .y (isEqual Debug.toString 31)
 
 would be accepted.
 
 -}
-require : (a -> b) -> Claim b -> Claim a
-require mapper claim =
+specifyThat : (a -> b) -> Claim b -> Claim a
+specifyThat mapper claim =
   \actual ->
     claim <| mapper actual

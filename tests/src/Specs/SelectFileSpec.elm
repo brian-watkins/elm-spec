@@ -207,12 +207,12 @@ mimeTypeSpec =
       |> it "finds the files have the expected mime type" (
         Observer.observeModel .files
           |> expect (isListWhere
-            [ require File.mime <| equals "text/plain"
-            , require File.mime <| equals ""
-            , require File.mime <| equals "text/fun"
-            , require File.mime <| equals ""
-            , require File.mime <| equals "application/bytes"
-            , require File.mime <| equals ""
+            [ specifyThat File.mime <| equals "text/plain"
+            , specifyThat File.mime <| equals ""
+            , specifyThat File.mime <| equals "text/fun"
+            , specifyThat File.mime <| equals ""
+            , specifyThat File.mime <| equals "application/bytes"
+            , specifyThat File.mime <| equals ""
             ]
           )
       )

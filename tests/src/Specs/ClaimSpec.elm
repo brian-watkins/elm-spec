@@ -125,16 +125,16 @@ isSomethingWhereSpec =
   ]
 
 
-requireSpec : Spec Model Msg
-requireSpec =
-  Spec.describe "require"
+specifyThatSpec : Spec Model Msg
+specifyThatSpec =
+  Spec.describe "specifyThat"
   [ scenario "make a claim about part of a record" (
       given (
         specSetup
       )
       |> it "checks the value" (
         Observer.observeModel identity
-          |> expect (Claim.require .name <| equals "Cool Dude")
+          |> expect (Claim.specifyThat .name <| equals "Cool Dude")
       )
     )
   ]
@@ -173,7 +173,7 @@ selectSpec specName =
     "satisfying" -> Just satisfyingSpec
     "boolean" -> Just booleanSpec
     "isSomethingWhere" -> Just isSomethingWhereSpec
-    "require" -> Just requireSpec
+    "specifyThat" -> Just specifyThatSpec
     _ -> Nothing
 
 
