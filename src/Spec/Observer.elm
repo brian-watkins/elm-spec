@@ -47,6 +47,8 @@ score like so:
           (Spec.Claim.isEqual Debug.toString 27)
     )
 
+To observe the entire model, just use `identity` as the argument.
+
 Check out `Spec.Markup`, `Spec.Http`, `Spec.Port`, and `Spec.Witness` for
 observers that evaluate claims with respect to the world outside the program.
 
