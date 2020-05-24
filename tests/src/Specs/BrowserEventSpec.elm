@@ -5,6 +5,7 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Navigator as Navigator
 import Spec.Observer as Observer
 import Spec.Step as Step
 import Spec.Claim exposing (isSomethingWhere)
@@ -156,7 +157,7 @@ windowResizeSpec =
         testSubject
       )
       |> when "a window resize occurs"
-        [ Event.resizeWindow (100, 300)
+        [ Navigator.resize (100, 300)
         ]
       |> it "triggers the resize event" (
         Observer.observeModel .resize
@@ -168,7 +169,7 @@ windowResizeSpec =
         testSubject
       )
       |> when "a window resize occurs"
-        [ Event.resizeWindow (200, 450)
+        [ Navigator.resize (200, 450)
         ]
       |> it "triggers the resize event" (
         Observer.observeModel .resize
@@ -180,14 +181,14 @@ windowResizeSpec =
         testSubject
       )
       |> when "a window resize occurs"
-        [ Event.resizeWindow (200, 450)
+        [ Navigator.resize (200, 450)
         ]
       |> when "the app unsubscribes from resize events"
         [ Markup.target << by [ id "toggle-subs" ]
         , Event.click
         ]
       |> when "another window resize occurs"
-        [ Event.resizeWindow (300, 550)
+        [ Navigator.resize (300, 550)
         ]
       |> it "triggers the resize event" (
         Observer.observeModel .resize
@@ -205,9 +206,9 @@ windowVisibilitySpec =
         testSubject
       )
       |> when "a window visibility change occurs"
-        [ Event.hideWindow
-        , Event.showWindow
-        , Event.hideWindow
+        [ Navigator.hide
+        , Navigator.show
+        , Navigator.hide
         ]
       |> it "triggers the visibility change event" (
         Observer.observeModel .visibility
@@ -219,10 +220,10 @@ windowVisibilitySpec =
         testSubject
       )
       |> when "a window visibility change occurs"
-        [ Event.hideWindow
-        , Event.showWindow
-        , Event.hideWindow
-        , Event.showWindow
+        [ Navigator.hide
+        , Navigator.show
+        , Navigator.hide
+        , Navigator.show
         ]
       |> it "triggers the visibility change event" (
         Observer.observeModel .visibility
@@ -234,18 +235,18 @@ windowVisibilitySpec =
         testSubject
       )
       |> when "a window visibility change occurs"
-        [ Event.hideWindow
-        , Event.showWindow
+        [ Navigator.hide
+        , Navigator.show
         ]
       |> when "the app unsubscribes from visibility change events"
         [ Markup.target << by [ id "toggle-subs" ]
         , Event.click
         ]
       |> when "another window visibility change occurs"
-        [ Event.hideWindow
-        , Event.showWindow
-        , Event.hideWindow
-        , Event.showWindow
+        [ Navigator.hide
+        , Navigator.show
+        , Navigator.hide
+        , Navigator.show
         ]
       |> it "only records the changes when the app was subscribed" (
         Observer.observeModel .visibility

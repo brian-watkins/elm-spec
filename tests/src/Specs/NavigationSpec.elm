@@ -3,10 +3,10 @@ module Specs.NavigationSpec exposing (..)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
-import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Navigator as Navigator
 import Spec.Claim exposing (isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -34,8 +34,8 @@ loadUrlSpec =
         ]
       |> observeThat
         [ it "updates the document location" (
-            Navigation.observeLocation
-              |> expect (equals "http://navigation-test-app.com/some-fun-place")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://navigation-test-app.com/some-fun-place")
           )
         , it "shows a view that says we navigated outside the scope of the Elm program" (
             Markup.observeElement
@@ -59,8 +59,8 @@ loadUrlSpec =
         ]
       |> observeThat
         [ it "updates the document location" (
-            Navigation.observeLocation
-              |> expect (equals "http://some-other-spot.com/")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://some-other-spot.com/")
           )
         , it "shows a view that says we navigated outside the scope of the Elm program" (
             Markup.observeElement
@@ -79,8 +79,8 @@ loadUrlSpec =
           |> Setup.withLocation testUrl
       )
       |> it "shows the default location" (
-        Navigation.observeLocation
-          |> expect (equals "http://navigation-test-app.com/")
+        Navigator.observe
+          |> expect (Navigator.location <| equals "http://navigation-test-app.com/")
       )
     )
   ]
@@ -110,7 +110,7 @@ reloadSpec =
         , Event.click
         ]
       |> it "records the reload" (
-        Navigation.expectReload
+        Navigator.expectReload
       )
     )
   , scenario "Browser.Navigation.reloadAndSkipCache is used" (
@@ -124,7 +124,7 @@ reloadSpec =
         , Event.click
         ]
       |> it "records the reload" (
-        Navigation.expectReload
+        Navigator.expectReload
       )
     )
   , scenario "the page has not been reloaded" (
@@ -134,7 +134,7 @@ reloadSpec =
           |> Setup.withUpdate testUpdate
       )
       |> it "records the reload" (
-        Navigation.expectReload
+        Navigator.expectReload
       )
     )
   ]
@@ -155,8 +155,8 @@ batchLoadSpec =
         , Event.click
         ]
       |> it "changes the location" (
-        Navigation.observeLocation
-          |> expect (equals "http://navigation-test-app.com/some-awesome-place")
+        Navigator.observe
+          |> expect (Navigator.location <| equals "http://navigation-test-app.com/some-awesome-place")
       )
     )
   ]

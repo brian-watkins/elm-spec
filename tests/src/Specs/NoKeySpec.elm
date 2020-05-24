@@ -6,7 +6,6 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Markup.Navigation as Navigation
 import Spec.Observer as Observer
 import Spec.Claim exposing (isEqual, isSomethingWhere)
 import Html exposing (Html)

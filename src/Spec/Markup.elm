@@ -1,9 +1,6 @@
 module Spec.Markup exposing
   ( MarkupObservation
   , HtmlElement
-  , ViewportOffset
-  , observeTitle
-  , observeBrowserViewport
   , observeElement
   , observeElements
   , query
@@ -19,14 +16,11 @@ module Spec.Markup exposing
 # Target an HTML Element
 @docs target
 
-# Observe an HTML Document
-@docs MarkupObservation, observeElements, observeElement, query, observeTitle
+# Observe HTML Elements
+@docs MarkupObservation, observeElements, observeElement, query
 
 # Make Claims about an HTML Element
 @docs HtmlElement, text, attribute, property
-
-# Observe the Browser
-@docs ViewportOffset, observeBrowserViewport
 
 # Debug
 @docs log
@@ -46,54 +40,6 @@ import Spec.Markup.Message as Message
 import Json.Encode as Encode
 import Json.Decode as Json
 import Dict exposing (Dict)
-
-
-{-| Observe the title of an HTML document.
-
-Note: It only makes sense to observe the title if your program is constructed with
-`Browser.document` or `Browser.application`.
--}
-observeTitle : Observer model String
-observeTitle =
-  Observer.inquire Message.fetchWindow <| \message ->
-    Message.decode documentTitleDecoder message
-      |> Result.withDefault ""
-
-
-documentTitleDecoder : Json.Decoder String
-documentTitleDecoder =
-  Json.at [ "document", "title" ] Json.string
-
-
-{-| Represents the offset of a viewport.
--}
-type alias ViewportOffset =
-  { x: Float
-  , y: Float
-  }
-
-
-{-| Observe the browser's viewport offset.
-
-Use this function to observe that the viewport of the browser window
-has been set to a certain position via `Browser.Dom.setViewport`.
-
-Note: If you'd like to observe the viewport offset of an *element* set via `Browser.Dom.setViewportOf`,
-use `observeElement` and `property` to make a claim about its `scrollLeft` and `scrollTop` properties.
-
--}
-observeBrowserViewport : Observer model ViewportOffset
-observeBrowserViewport =
-  Observer.inquire Message.fetchWindow <| \message ->
-    Message.decode viewportOffsetDecoder message
-      |> Result.withDefault { x = -1, y = -1 }
-
-
-viewportOffsetDecoder : Json.Decoder ViewportOffset
-viewportOffsetDecoder =
-  Json.map2 ViewportOffset
-    (Json.field "pageXOffset" Json.float)
-    (Json.field "pageYOffset" Json.float)
 
 
 {-| Represents an observation of HTML.

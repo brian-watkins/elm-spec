@@ -6,7 +6,7 @@ import Spec.Claim as Claim exposing (isStringContaining, isSomethingWhere)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Markup.Navigation as Navigation
+import Spec.Navigator as Navigator
 import Spec.Observer as Observer
 import Spec.Report as Report
 import Spec.Command as Command
@@ -35,8 +35,8 @@ applyGivenUrlSpec =
       )
       |> observeThat
         [ it "sets the location to the given url" (
-            Navigation.observeLocation
-              |> expect (equals "http://my-test-app.com/fun/reading")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://my-test-app.com/fun/reading")
           )
         , it "renders the view based on the url" (
             Markup.observeElement
@@ -71,8 +71,8 @@ changeUrlSpec =
         ]
       |> observeThat
         [ it "updates the location" (
-            Navigation.observeLocation
-              |> expect (equals "http://my-test-app.com/fun/bowling")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://my-test-app.com/fun/bowling")
           )
         , it "shows a different page" (
             Markup.observeElement
@@ -107,8 +107,8 @@ titleSpec =
       )
       |> observeThat
         [ it "displays the title" (
-            Markup.observeTitle
-              |> expect (equals "Some Boring Title")
+            Navigator.observe
+              |> expect (Navigator.title <| equals "Some Boring Title")
           )
         ]
     )
@@ -122,8 +122,8 @@ titleSpec =
         ]
       |> observeThat
         [ it "updates the title" (
-            Markup.observeTitle
-              |> expect (equals "My Fun Title")
+            Navigator.observe
+              |> expect (Navigator.title <| equals "My Fun Title")
           )
         ]
     ) 
@@ -141,8 +141,8 @@ clickLinkSpec =
         ]
       |> observeThat
         [ it "updates the location" (
-            Navigation.observeLocation
-              |> expect (equals "http://my-test-app.com/fun/running")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://my-test-app.com/fun/running")
           )
         , it "navigates as expected" (
             Markup.observeElement
@@ -161,8 +161,8 @@ clickLinkSpec =
         ]
       |> observeThat
         [ it "navigates as expected" (
-            Navigation.observeLocation
-              |> expect (equals "http://fun-town.org/fun")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://fun-town.org/fun")
           )
         ]
     )
@@ -209,8 +209,8 @@ noNavigationConfigSpec =
         ]
       |> observeThat
         [ it "updates the location" (
-            Navigation.observeLocation
-              |> expect (equals "http://my-test-app.com/fun/running")
+            Navigator.observe
+              |> expect (Navigator.location <| equals "http://my-test-app.com/fun/running")
           )
         , it "updates the view to show we are on some other page" (
             Markup.observeElement
@@ -232,8 +232,8 @@ noNavigationConfigSpec =
         ]
       |> observeThat
         [ it "navigates as expected" (
-            Navigation.observeLocation
-              |> expect (equals "http://fun-town.org/fun")
+          Navigator.observe
+              |> expect (Navigator.location <| equals "http://fun-town.org/fun")
           )
         , it "updates the view to show we are on some other page" (
             Markup.observeElement

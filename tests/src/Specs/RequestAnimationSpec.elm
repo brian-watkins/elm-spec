@@ -7,6 +7,7 @@ import Spec.Claim exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
+import Spec.Navigator as Navigator
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -37,8 +38,8 @@ onAnimationFrameSpec =
         ]
       |> observeThat
         [ it "updates the viewport three times" (
-            Markup.observeBrowserViewport
-              |> expect (require .y <| equals 30)
+            Navigator.observe
+              |> expect (Navigator.viewportOffset <| require .y <| equals 30)
           )
         , it "focuses the element three times" (
             Observer.observeModel .focus

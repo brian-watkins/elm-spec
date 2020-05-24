@@ -4,7 +4,7 @@ import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
-import Spec.Markup.Event as Event
+import Spec.Navigator as Navigator
 import Spec.Http
 import Spec.Http.Route exposing (..)
 import Spec.Claim as Claim exposing (..)
@@ -25,11 +25,11 @@ visibilityChangeSpec =
           |> Setup.withSubscriptions App.subscriptions
       )
       |> when "the visibility changes"
-        [ Event.hideWindow
-        , Event.showWindow
-        , Event.hideWindow
-        , Event.showWindow
-        , Event.hideWindow
+        [ Navigator.hide
+        , Navigator.show
+        , Navigator.hide
+        , Navigator.show
+        , Navigator.hide
         ]
       |> observeThat
         [ it "records the changes" (

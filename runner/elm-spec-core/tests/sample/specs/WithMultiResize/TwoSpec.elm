@@ -4,7 +4,7 @@ import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
-import Spec.Markup.Event as Event
+import Spec.Navigator as Navigator
 import Spec.Http
 import Spec.Http.Route exposing (..)
 import Spec.Claim as Claim exposing (..)
@@ -25,7 +25,7 @@ resizeSpec =
           |> Setup.withSubscriptions App.subscriptions
       )
       |> when "the window size changes"
-        [ Event.resizeWindow (200, 450)
+        [ Navigator.resize (200, 450)
         ]
       |> observeThat
         [ it "records the changes" (

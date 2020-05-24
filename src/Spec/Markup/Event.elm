@@ -7,13 +7,10 @@ module Spec.Markup.Event exposing
   , mouseMoveOut
   , input
   , selectOption
-  , resizeWindow
-  , hideWindow
-  , showWindow
   , focus
   , blur
-  , setBrowserViewport
-  , setElementViewport
+  , ViewportOffset
+  , setViewportOffset
   , trigger
   )
 
@@ -55,21 +52,17 @@ For example,
 # Form Events
 @docs input, selectOption
 
-# Window Events
-@docs resizeWindow, hideWindow, showWindow
-
 # Focus Events
 @docs focus, blur
+
+# Control the Viewport
+@docs ViewportOffset, setViewportOffset
 
 # Custom Events
 @docs trigger
 
-# Control the Viewport
-@docs setBrowserViewport, setElementViewport
-
 -}
 
-import Spec.Markup exposing (ViewportOffset)
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
@@ -231,69 +224,12 @@ selectOption text =
       |> Command.sendMessage
 
 
-{-| A step that simulates resizing the browser window to the given (width, height).
-
-This will trigger a `resize` DOM event on the window object.
+{-| Represents the offset of a viewport.
 -}
-resizeWindow : (Int, Int) -> Step.Step model msg
-resizeWindow (width, height) =
-  \_ ->
-    Message.for "_html" "resize"
-      |> Message.withBody (
-        Encode.object
-          [ ( "width", Encode.int width )
-          , ( "height", Encode.int height )
-          ]
-      )
-      |> Command.sendMessage
-
-
-{-| A step that simulates hiding the window from view.
-
-This will trigger a `visibilitychange` DOM event on the document object.
--}
-hideWindow : Step.Step model msg
-hideWindow =
-  setWindowVisible False
-
-
-{-| A step that simulates the window returning into view.
-
-This will trigger a `visibilitychange` DOM event on the document object.
--}
-showWindow : Step.Step model msg
-showWindow =
-  setWindowVisible True
-
-
-setWindowVisible : Bool -> Step.Step model msg
-setWindowVisible isVisible _ =
-  Message.for "_html" "visibilityChange"
-    |> Message.withBody (
-      Encode.object
-        [ ( "isVisible", Encode.bool isVisible )
-        ]
-    )
-    |> Command.sendMessage
-
-
-{-| A step that changes the offset of the browser viewport.
-
-Use this step to simulate a user scrolling the web page.
-
-Note that elm-spec fakes the browser viewport offset. So if you are viewing elm-spec
-specs in a real browser (via Karma), then you won't actually see the viewport offset
-change, but the Elm program will think it has. This allows you to get consistent
-results without making your specs dependent on properties of the browser that your
-specs are running in.
-
--}
-setBrowserViewport : ViewportOffset -> Step.Step model msg
-setBrowserViewport offset =
-  \_ ->
-    Message.for "_html" "set-browser-viewport"
-      |> Message.withBody (encodeViewportOffset offset)
-      |> Command.sendMessage
+type alias ViewportOffset =
+  { x: Float
+  , y: Float
+  }
 
 
 {-| A step that changes the offset of the targeted element's viewport.
@@ -306,8 +242,8 @@ to do anything (i.e., it probably needs a fixed height or width, and it's `overf
 CSS property must be set appropriately).
 
 -}
-setElementViewport : ViewportOffset -> Step.Step model msg
-setElementViewport offset =
+setViewportOffset : ViewportOffset -> Step.Step model msg
+setViewportOffset offset =
   \context ->
     Message.for "_html" "set-element-viewport"
       |> Message.withBody (

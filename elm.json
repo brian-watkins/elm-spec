@@ -15,7 +15,7 @@
         "Spec.Markup",
         "Spec.Markup.Selector",
         "Spec.Markup.Event",
-        "Spec.Markup.Navigation",
+        "Spec.Navigator",
         "Spec.Observer",
         "Spec.Port",
         "Spec.Report",

@@ -6,6 +6,7 @@ import Spec.Claim as Claim exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
+import Spec.Navigator as Navigator
 import Spec.Observer as Observer
 import Specs.Helpers exposing (..)
 import Specs.EventHelpers
@@ -74,8 +75,8 @@ observeBrowserViewportSpec =
         testSubject
       )
       |> it "observes that the viewport is offset at (0, 0)" (
-        Markup.observeBrowserViewport
-          |> expect (equals { x = 0, y = 0 })
+        Navigator.observe
+          |> expect (Navigator.viewportOffset <| equals { x = 0, y = 0})
       )
     )
   , scenario "the viewport has been set" (
@@ -83,11 +84,11 @@ observeBrowserViewportSpec =
         testSubject
       )
       |> when "the viewport position is set"
-        [ Event.setBrowserViewport { x = 81, y = 9.7 }
+        [ Navigator.setViewportOffset { x = 81, y = 9.7 }
         ]
       |> it "observes that the viewport is offset at the expected position" (
-        Markup.observeBrowserViewport
-          |> expect (equals { x = 81, y = 9.7 })
+        Navigator.observe
+          |> expect (Navigator.viewportOffset <| equals { x = 81, y = 9.7 })
       )
     )
   , scenario "the viewport is observed in another scenario" (
@@ -95,8 +96,8 @@ observeBrowserViewportSpec =
         testSubject
       )
       |> it "observes that the viewport is reset to (0, 0)" (
-        Markup.observeBrowserViewport
-          |> expect (equals { x = 0, y = 0 })
+        Navigator.observe
+          |> expect (Navigator.viewportOffset <| equals { x = 0, y = 0 })
       )
     )
   ]
@@ -111,7 +112,7 @@ setElementViewportSpec =
       )
       |> when "the element is scrolled"
         [ Markup.target << by [ id "scrollable-element" ]
-        , Event.setElementViewport { x = 19, y = 200 }
+        , Event.setViewportOffset { x = 19, y = 200 }
         ]
       |> it "adjusts the element viewport" (
         Markup.observeElement
@@ -123,8 +124,8 @@ setElementViewportSpec =
           )
       )
     )
-  , eventStepFailsWhenNoElementTargeted <| Event.setElementViewport { x = 19, y = 200 }
-  , eventStepFailsWhenDocumentTargeted <| Event.setElementViewport { x = 19, y = 200 }
+  , eventStepFailsWhenNoElementTargeted <| Event.setViewportOffset { x = 19, y = 200 }
+  , eventStepFailsWhenDocumentTargeted <| Event.setViewportOffset { x = 19, y = 200 }
   ]
 
 
@@ -154,7 +155,7 @@ elementPositionSpec =
         testSubject
       )
       |> when "the browser viewport moves"
-        [ Event.setBrowserViewport { x = 30, y = 94 }
+        [ Navigator.setViewportOffset { x = 30, y = 94 }
         ]
       |> whenTheElementIsRequested
       |> observeThat
