@@ -9,7 +9,7 @@ const Compiler = class {
   constructor ({ cwd, specPath, elmPath, logLevel }) {
     this.cwd = cwd || process.cwd()
     this.specPath = specPath
-    this.elmPath = elmPath
+    this.elmPath = elmPath && path.relative(this.cwd, elmPath)
     this.logLevel = logLevel || LOG_LEVEL.ALL
   }
 
@@ -20,7 +20,7 @@ const Compiler = class {
 
     if (files.length > 0) {
       const compiledElm = compiler.compileToStringSync(files, {
-        cwd: path.resolve(this.cwd),
+        cwd: this.cwd,
         processOpts: {
           stdio: [
             'ignore',
@@ -28,7 +28,7 @@ const Compiler = class {
             this.logLevel >= LOG_LEVEL.SILENT ? 'ignore' : 'inherit'
           ] 
         },
-        pathToElm: this.elmPath ? path.resolve(this.elmPath) : undefined
+        pathToElm: this.elmPath
       })
 
       if (compiledElm.length > 0) {

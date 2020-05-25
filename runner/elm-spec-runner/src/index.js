@@ -16,8 +16,9 @@ class RunSuite extends Command {
   async run() {
     const { flags } = this.parse(RunSuite)
 
-    if (!commandExists(flags.elm)) {
-      this.error(`No elm executable found at: ${flags.elm}`)
+    const elmPath = flags.elm || "elm"
+    if (!commandExists(elmPath)) {
+      this.error(`No elm executable found at: ${elmPath}`)
     }
 
     const elmJsonPath = path.join(flags.specRoot, "elm.json")
@@ -78,7 +79,7 @@ RunSuite.flags = {
     description: 'glob for spec modules (relative to specRoot)',
     default: path.join(".", "**", "*Spec.elm")
   }),
-  elm: flags.string({description: 'path to elm', default: 'elm'}),
+  elm: flags.string({description: 'path to elm'}),
   endOnFailure: flags.boolean({description: 'end spec suite run on first failure'}),
   browser: flags.string({
     description: 'browser environment for specs',
