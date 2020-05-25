@@ -14,7 +14,7 @@ module Spec.Markup.Event exposing
   , trigger
   )
 
-{-| Use these steps to trigger events during a scenario.
+{-| Use these steps to trigger events on HTML elements or an HTML document.
 
 To trigger an event, you'll want to first use `Spec.Markup.target` to target a
 particular element (or the document as a whole) to which subsequent events should apply.

@@ -11,7 +11,7 @@ module Spec.Markup exposing
   , log
   )
 
-{-| Target, observe and make claims about aspects of an HTML document.
+{-| Target, observe and make claims about HTML elements.
 
 # Target an HTML Element
 @docs target

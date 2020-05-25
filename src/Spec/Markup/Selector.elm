@@ -14,7 +14,7 @@ module Spec.Markup.Selector exposing
   , toString
   )
 
-{-| Build abstract descriptions that can be used to select aspects of an HTML document.
+{-| Build abstract descriptions that can be used to select HTML elements or an HTML document.
 
 # Build Selectors
 @docs Selector, Element, by, descendantsOf, Object, document, toString
