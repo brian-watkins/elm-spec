@@ -159,7 +159,7 @@ for more details.
 ## More Examples
 
 For more examples, see the [docs for elm-spec](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/).
-In particular, there are examples demonstrating how to describe behavior related to [HTTP requests](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Http), describe behavior related to [ports](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Port), control [time](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Time) during a spec, and use [witnesses](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Witness) to ensure one part of a program acts in an expected way.
+In particular, there are examples demonstrating how to describe behavior related to [HTTP requests](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Http), describe behavior related to [ports](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Port), control [time](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Time) during a spec, select and work with [files and downloads](https://package.elm-lang.org/packages/brian-watkins/latest/Spec-File), and use [witnesses](https://package.elm-lang.org/packages/brian-watkins/elm-spec/latest/Spec-Witness) to ensure one part of a program acts in an expected way.
 
 For even more examples, see the [specs for elm-spec](https://github.com/brian-watkins/elm-spec/tree/master/tests/src/Specs).
 
