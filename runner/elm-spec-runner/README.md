@@ -11,11 +11,20 @@ $ npm install --save-dev elm-spec-runner
 
 ## Usage
 
-Use elm-spec-runner to run elm-spec suites from the command line in the [JSDOM](https://github.com/jsdom/jsdom) environment.
+Use elm-spec-runner to run elm-spec suites from the command line.
 
 ```
 $ elm-spec [options]
 ```
+
+By default, elm-spec executes a spec suite in [JSDOM](https://github.com/jsdom/jsdom).
+Note that while this is probably the fastest way to execute specs,
+JSDOM does have limitations. For example, JSDOM does not calculate layout positions for HTML elements,
+so any specs that describe layout in precise ways may fail unexpectedly.
+
+For the most realistic execution environment, you should run specs in a real browser. To run your
+specs in [Chromium](https://www.chromium.org/Home), simply provide `chromium` (or another valid
+value) for the `--browser` option.
 
 ### Options
 
