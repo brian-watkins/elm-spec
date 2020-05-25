@@ -16,6 +16,37 @@ module Spec.File exposing
 
 {-| Observe and make claims about files during a spec.
 
+Here's an exmaple that describes selecting a text file, and downloading its content:
+
+    Spec.describe "modifying a file"
+    [ Spec.scenario "a text file" (
+        Spec.given (
+          Spec.Setup.init (App.init testFlags)
+            |> Spec.Setup.withView App.view
+            |> Spec.Setup.withUpdate App.update
+        )
+        |> Spec.when "a file is selected"
+          [ Spec.Markup.target << by [ id "file-input" ]
+          , Spec.Markup.Event.click
+          , Spec.File.select
+            [ Spec.File.withText "my-file.txt" "Some text content!"
+            ]
+          ]
+        |> Spec.when "the modified version is downloaded"
+          [ Spec.Markup.target << by [ id "download-button" ]
+          , Spec.Markup.Event.click
+          ]
+        |> Spec.it "downloads the expected content" (
+          Spec.File.observeDownloads
+            |> Spec.expect (Spec.Claim.isListWhere
+              [ Spec.File.text <|
+                  Spec.Claim.isStringContaining 1 "Some text content!"
+              ]
+            )
+        )
+      )
+    ]
+
 # Select Files
 @docs FileFixture, select, atPath, withBytes, withText, withMimeType, withLastModified
 
@@ -61,15 +92,15 @@ type FileContent
     Spec.when "a File is uploaded"
       [ Spec.Markup.target << by [ tag "input", attribute ("type", "file") ]
       , Spec.Markup.Event.click
-      , Spec.File.select [ Spec.File.atPath "./fixtures/myFile.txt" ]
+      , Spec.File.select
+        [ Spec.File.atPath "./fixtures/myFile.txt"
+        ]
       ]
 
 A previous step must open a file selector, either by clicking an input element of type `file` or
 by taking some action that results in a `File.Select.file` command.
 
 You may select multiple files.
-
-The path to the file is relative to the current working directory of the elm-spec runner.
 
 -}
 select : List FileFixture -> Step.Step model msg
@@ -163,6 +194,12 @@ withText path textContent =
 
 
 {-| Update a FileFixture to have the given MIME type.
+
+For example, create a PNG `FileFixture` like so:
+
+    Spec.File.atPath "./fixtures/my-image.png"
+      |> Spec.File.withMimeType "image/png"
+
 -}
 withMimeType : String -> FileFixture -> FileFixture
 withMimeType mime (FileFixture file) =
@@ -196,7 +233,19 @@ type DownloadContent
   | FromUrl String
 
 
-{-| Observe downloads tha occurred during a scenario.
+{-| Observe downloads that occurred during a scenario.
+
+For example, here's a claim about the name of a downloaded file:
+
+    Spec.it "names the downloaded file as expected" (
+      Spec.File.observeDownloads
+        |> Spec.expect (Spec.Claim.isListWhere
+          [ Spec.File.name <|
+              Spec.Claim.isStringContaining 1 "cool-file.txt"
+          ]
+        )
+    )
+
 -}
 observeDownloads : Observer model (List Download)
 observeDownloads =

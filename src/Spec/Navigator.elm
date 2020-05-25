@@ -15,11 +15,8 @@ module Spec.Navigator exposing
 {-| Observe and make claims about how the Browser presents an HTML document: its title, its location,
 the current viewport offset, and so on.
 
-# Observe Document Properties
-@docs Navigator, observe, title, ViewportOffset, viewportOffset
-
-# Observe Navigation
-@docs location, expectReload
+# Observe Navigator Properties
+@docs Navigator, observe, title, ViewportOffset, viewportOffset, location, expectReload
 
 # Navigator Events
 @docs resize, setViewportOffset, hide, show
@@ -72,6 +69,15 @@ observe =
 
 {-| Claim that the title of the HTML document satisfies the given claim.
 
+    Spec.it "has the correct title" (
+      Spec.Navigator.observe
+        |> Spec.expect (
+          Spec.Navigator.title <|
+            Spec.Claim.isEqual Debug.toString
+              "My Cool App"
+        )
+    )
+
 Note: It only makes sense to make a claim about the title if your program is
 constructed with `Browser.document` or `Browser.application`.
 -}
@@ -87,8 +93,8 @@ title claim =
       Spec.Navigator.observe
         |> Spec.expect (
           Spec.Navigator.location <|
-          Spec.Claim.isEqual Debug.toString
-            "http://fake-server.com/something-fun"
+            Spec.Claim.isEqual Debug.toString
+              "http://fake-server.com/something-fun"
         )
     )
 
@@ -96,7 +102,7 @@ This is useful to observe that `Browswer.Navigation.load`,
 `Browser.Navigation.pushUrl`, or `Browser.Navigation.replaceUrl` was
 executed with the value you expect.
 
-Note that you can use `Spec.Setup.withLocation` to set the base location
+Note that you can use [Spec.Setup.withLocation](Spec.Setup#withLocation) to set the base location
 of the document at the start of the scenario.
 
 -}
@@ -111,8 +117,19 @@ location claim =
 Use this function to claim that the viewport of the browser window
 has been set to a certain position via `Browser.Dom.setViewport`.
 
-Note: If you'd like to make a claim about the viewport offset of an *element* set via `Browser.Dom.setViewportOf`,
-use `observeElement` and `property` to make a claim about its `scrollLeft` and `scrollTop` properties.
+    Spec.it "has the correct scroll position" (
+      Spec.Navigator.observe
+        |> Spec.expect (
+          Spec.Navigator.viewportOffset <|
+            Spec.Claim.specifyThat .y <|
+            Spec.Claim.isEqual Debug.toString 27
+        )
+    )
+
+Note: If you'd like to make a claim about the viewport offset of an *element* set via
+`Browser.Dom.setViewportOf`, use [Spec.Markup.observeElement](Spec.Markup#observeElement)
+and [Spec.Markup.property](Spec.Markup#property) to make a claim about its
+`scrollLeft` and `scrollTop` properties.
 
 -}
 viewportOffset : Claim ViewportOffset -> Claim Navigator
