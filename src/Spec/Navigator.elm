@@ -13,7 +13,7 @@ module Spec.Navigator exposing
   )
 
 {-| Observe and make claims about how the Browser presents an HTML document: its title, its location,
-the current viewport offset, and so on.
+the viewport parameters, window visibility, and so on.
 
 # Observe Navigator Properties
 @docs Navigator, observe, title, ViewportOffset, viewportOffset, location, expectReload
@@ -155,6 +155,13 @@ expectReload =
 {-| A step that simulates resizing the browser window to the given (width, height).
 
 This will trigger a `resize` DOM event on the window object.
+
+By default, elm-spec sets the browser window size to 1280 x 800.
+
+Note that elm-spec fakes the browser window size. So if you are viewing elm-spec
+specs in a real browser, then you won't actually see the window size
+change, but the Elm program will think it has.
+
 -}
 resize : (Int, Int) -> Step.Step model msg
 resize (width, height) =
@@ -172,6 +179,11 @@ resize (width, height) =
 {-| A step that simulates hiding the window from view.
 
 This will trigger a `visibilitychange` DOM event on the document object.
+
+Note that elm-spec fakes the browser window visibility. So if you are viewing elm-spec
+specs in a real browser, then you won't actually see the window visibility change,
+but the Elm program will think it has.
+
 -}
 hide : Step.Step model msg
 hide =
@@ -181,6 +193,11 @@ hide =
 {-| A step that simulates the window returning into view.
 
 This will trigger a `visibilitychange` DOM event on the document object.
+
+Note that elm-spec fakes the browser window visibility. So if you are viewing elm-spec
+specs in a real browser, then you won't actually see the window visibility change,
+but the Elm program will think it has.
+
 -}
 show : Step.Step model msg
 show =
@@ -201,6 +218,8 @@ setWindowVisible isVisible _ =
 {-| A step that changes the offset of the browser viewport.
 
 Use this step to simulate a user scrolling the web page.
+
+By default, elm-spec sets the browser viewport offset to `{ x = 0, y = 0 }`.
 
 Note that elm-spec fakes the browser viewport offset. So if you are viewing elm-spec
 specs in a real browser, then you won't actually see the viewport offset

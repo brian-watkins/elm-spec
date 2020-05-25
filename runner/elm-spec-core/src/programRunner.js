@@ -144,6 +144,14 @@ module.exports = class ProgramRunner extends EventEmitter {
           })
         })
         break
+      case "command":
+        this.stepAnimationFrameTaskCount = this.timer.currentAnimationFrameTasks().length
+        out({
+          home: "_step",
+          name: "command",
+          body: null
+        })
+        break
       case "program-command":
         this.timer.whenStackIsComplete(() => {
           this.continueToNext(out)
@@ -269,6 +277,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.context.clearEventListeners()
     this.context.setTimezoneOffset(new Date().getTimezoneOffset())
     this.context.setBaseLocation("http://elm-spec")
+    this.context.resizeWindowTo(1280, 800)
     this.context.setBrowserViewport({ x: 0, y: 0 })
     this.httpPlugin.reset()
     this.context.closeFileSelector()

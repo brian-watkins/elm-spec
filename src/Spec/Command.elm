@@ -10,6 +10,7 @@ module Spec.Command exposing
 
 import Spec.Step as Step
 import Spec.Step.Command as Command
+import Spec.Message as Message exposing (Message)
 import Task
 import Json.Encode as Encode
 
@@ -19,7 +20,14 @@ import Json.Encode as Encode
 send : Cmd msg -> Step.Step model msg
 send cmd =
   \_ ->
-    Command.sendCommand cmd
+    Command.SendRequest commandStep (\_ ->
+      Command.sendCommand cmd
+    )
+    
+
+commandStep : Message
+commandStep =
+  Message.for "_step" "command"
 
 
 {-| Generate a `Cmd` value that will send a `Msg` to the `update`

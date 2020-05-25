@@ -8,17 +8,20 @@ import Spec.Markup.Event as Event
 import Spec.Navigator as Navigator
 import Spec.Observer as Observer
 import Spec.Step as Step
-import Spec.Claim exposing (isSomethingWhere)
+import Spec.Claim exposing (..)
+import Spec.Command
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Browser.Events exposing (Visibility(..))
+import Browser.Dom as Dom
 import Runner
 import Json.Decode as Json exposing (Decoder)
 import Json.Encode as Encode
 import Specs.Helpers exposing (equals, itShouldHaveFailedAlready)
 import Time exposing (Posix)
+import Task
 
 
 keyboardEventsSpec : Spec Model Msg
@@ -152,17 +155,43 @@ mouseMove (x, y) =
 windowResizeSpec : Spec Model Msg
 windowResizeSpec =
   Spec.describe "window resize"
-  [ scenario "simulate window resize event" (
+  [ scenario "default window size" (
+      given (
+        testSubject
+      )
+      |> when "the viewport is requested"
+        [ Spec.Command.send (Dom.getViewport |> Task.perform GotViewport)
+        ]
+      |> it "shows the default size" (
+        Observer.observeModel .viewport
+          |> expect (isSomethingWhere <| specifyThat .viewport <| satisfying
+            [ specifyThat .width <| equals 1280
+            , specifyThat .height <| equals 800
+            ]
+          )
+      )
+    )
+  , scenario "trigger window resize event" (
       given (
         testSubject
       )
       |> when "a window resize occurs"
         [ Navigator.resize (100, 300)
         ]
-      |> it "triggers the resize event" (
-        Observer.observeModel .resize
-          |> expect (equals [(100, 300)])
-      )
+      |> observeThat
+        [ it "triggers the resize event" (
+            Observer.observeModel .resize
+              |> expect (equals [(100, 300)])
+          )
+        , it "updates the viewport" (
+            Observer.observeModel .viewport
+              |> expect (isSomethingWhere <| specifyThat .viewport <| satisfying
+                [ specifyThat .width <| equals 100
+                , specifyThat .height <| equals 300
+                ]
+              )
+          )
+        ]
     )
   , scenario "another scenario simulates a resize" (
       given (
@@ -190,9 +219,25 @@ windowResizeSpec =
       |> when "another window resize occurs"
         [ Navigator.resize (300, 550)
         ]
-      |> it "triggers the resize event" (
+      |> it "no longer updates the size" (
         Observer.observeModel .resize
           |> expect (equals [(200, 450)])
+      )
+    )
+  , scenario "resets to default after previous scenario changes size" (
+      given (
+        testSubject
+      )
+      |> when "the viewport is requested"
+        [ Spec.Command.send (Dom.getViewport |> Task.perform GotViewport)
+        ]
+      |> it "shows the default size" (
+        Observer.observeModel .viewport
+          |> expect (isSomethingWhere <| specifyThat .viewport <| satisfying
+            [ specifyThat .width <| equals 1280
+            , specifyThat .height <| equals 800
+            ]
+          )
       )
     )
   ]
@@ -356,6 +401,7 @@ type Msg
   | VisibilityChange Visibility
   | AnimationFrame Posix
   | ShouldSubscribe Bool
+  | GotViewport Dom.Viewport
 
 
 type alias Model =
@@ -368,6 +414,7 @@ type alias Model =
   , visibility: List Visibility
   , subscribe: Bool
   , animationFrames: Int
+  , viewport: Maybe Dom.Viewport
   }
 
 
@@ -382,6 +429,7 @@ testModel =
   , visibility = []
   , subscribe = True
   , animationFrames = 0
+  , viewport = Nothing
   }
 
 
@@ -413,13 +461,17 @@ testUpdate msg model =
     MouseMove point ->
       ( { model | mouseMove = model.mouseMove ++ [ point ] }, Cmd.none )
     Resize height width ->
-      ( { model | resize = model.resize ++ [ (height, width) ] }, Cmd.none )
+      ( { model | resize = model.resize ++ [ (height, width) ] }
+      , Dom.getViewport |> Task.perform GotViewport
+      )
     VisibilityChange visibility ->
       ( { model | visibility = model.visibility ++ [ visibility ] }, Cmd.none )
     AnimationFrame posix ->
       ( { model | animationFrames = model.animationFrames + 1 }, Cmd.none )
     ShouldSubscribe shouldSubscribe ->
       ( { model | subscribe = shouldSubscribe }, Cmd.none )
+    GotViewport viewport ->
+      ( { model | viewport = Just viewport }, Cmd.none )
 
 
 testSubscriptions : Model -> Sub Msg

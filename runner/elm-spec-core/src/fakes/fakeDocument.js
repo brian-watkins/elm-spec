@@ -29,10 +29,13 @@ module.exports = class FakeDocument {
           return this.location
         }
         if (prop === 'getElementById') {
-          return this.customDocumentElementById(target)
+          return this.customElementById(target)
         }
         if (prop === 'createElement') {
           return this.customCreateElement(target)
+        }
+        if (prop === 'documentElement') {
+          return this.customDocumentElement(target.documentElement)
         }
         const val = target[prop]
         return typeof val === "function"
@@ -57,12 +60,29 @@ module.exports = class FakeDocument {
     }
   }
 
-  customDocumentElementById(target) {
+  customElementById(target) {
     return (elementId) => {
       const element = target.getElementById(elementId)
       if (!element) return null
       return fakeElement(this.window, element)
     }
+  }
+
+  customDocumentElement(documentElement) {
+    return new Proxy(documentElement, {
+      get: (target, prop) => {
+        if (prop === 'clientWidth') {
+          return this.window._elm_spec.innerWidth
+        }
+        if (prop === 'clientHeight') {
+          return this.window._elm_spec.innerHeight
+        }
+        const val = target[prop]
+        return typeof val === "function"
+          ? (...args) => val.apply(target, args)
+          : val;
+      }
+    })
   }
 
   customAddEventListener(target)  {

@@ -164,13 +164,28 @@ eventStepFailsWhenDocumentTargeted =
 elementPositionSpec : Spec Model Msg
 elementPositionSpec =
   Spec.describe "element position as the broswer viewport changes"
-  [ scenario "initial browser viewport" (
+  [ scenario "defaults" (
       given (
         testSubject
       )
       |> whenTheElementIsRequested
       |> observeThat
-        [ itObservesXPositionToBe 0
+        [ itObservesTheBrowserSizeToBe (1280, 800)
+        , itObservesXPositionToBe 0
+        , itObservesYPositionToBe 239
+        ]
+    )
+  , scenario "initial browser viewport" (
+      given (
+        testSubject
+      )
+      |> when "the browser size is set"
+        [ Navigator.resize (600, 800)
+        ]
+      |> whenTheElementIsRequested
+      |> observeThat
+        [ itObservesTheBrowserSizeToBe (600, 800)
+        , itObservesXPositionToBe 0
         , itObservesYPositionToBe 239
         ]
     )
@@ -236,6 +251,17 @@ itObservesYPositionToBe expected =
   it "finds the y position of the element" (
     Observer.observeModel .element
       |> expect (isSomethingWhere <| specifyThat .element <| specifyThat .y <| equals expected)
+  )
+
+
+itObservesTheBrowserSizeToBe (width, height) =
+  it "finds the width and height of the browser window" (
+    Observer.observeModel .element
+      |> expect (isSomethingWhere <| specifyThat .viewport <| satisfying
+        [ specifyThat .width <| equals width
+        , specifyThat .height <| equals height
+        ]
+      )
   )
 
 
