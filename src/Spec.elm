@@ -77,7 +77,7 @@ import Spec.Claim exposing (Claim)
 import Browser
 
 
-requiredElmSpecCoreVersion = 5
+requiredElmSpecCoreVersion = 6
 
 
 {-| Represents the spec.
