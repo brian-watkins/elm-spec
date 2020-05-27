@@ -1,17 +1,17 @@
 module Spec.Http exposing
   ( HttpRequest
-  , HttpRequestData
+  , HttpRequestDataAssertion
   , logRequests
   , observeRequests
   , clearRequestHistory
   , header
   , body
   , bodyPart
-  , textData
-  , jsonData
-  , fileData
+  , asText
+  , asJson
+  , asFile
   , Blob
-  , binaryData
+  , asBlob
   , url
   )
 
@@ -44,8 +44,9 @@ Now, you could write a spec that checks to see if the request body contains a va
           Spec.Http.observeRequests
               (Spec.Http.Route.post "http://fake-api.com/api/sports")
             |> Spec.expect (Spec.Claim.isListWhere
-              [ Spec.Http.body <| Spec.Http.jsonData
-                  (Json.field "name" Json.string)
+              [ Spec.Http.body
+                  (Spec.Http.asJson <|
+                    Json.field "name" Json.string)
                   (Spec.Claim.isEqual Debug.toString "bowling")
               ]
             )
@@ -57,7 +58,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 @docs HttpRequest, observeRequests, clearRequestHistory
 
 # Make Claims About HTTP Requests
-@docs url, header, body, bodyPart, HttpRequestData, textData, jsonData, fileData, Blob, binaryData
+@docs url, header, body, bodyPart, HttpRequestDataAssertion, asText, asJson, asFile, Blob, asBlob
 
 # Debug
 @docs logRequests
@@ -66,7 +67,7 @@ Now, you could write a spec that checks to see if the request body contains a va
 
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
-import Spec.Claim as Claim exposing (Claim)
+import Spec.Claim as Claim exposing (Claim, Verdict)
 import Spec.Report as Report exposing (Report)
 import Spec.Message as Message exposing (Message)
 import Spec.Http.Route as Route exposing (HttpRoute)
@@ -90,10 +91,19 @@ type HttpRequest
   = HttpRequest Request.HttpRequest
 
 
-{-| Represents the contents or (in the case of a multipart request) part of the contents of an HTTP request body.
+{-| Asserts that an HTTP request body (or part of that body) is data of a certain type.
 -}
-type HttpRequestData
-  = HttpRequestData Request.HttpRequestData
+type HttpRequestDataAssertion a
+  = HttpRequestDataAssertion
+      { dataType: String
+      , transformer: (Request.HttpRequestData -> TransformerResult a)
+      }
+
+
+type TransformerResult a
+  = Transformed a
+  | WrongType String
+  | BadValue Report
 
 
 {-| Claim that an HTTP request has a header that satisfies the given claim.
@@ -127,50 +137,91 @@ header name claim =
 For example, if the body of the observed request were `{"sport":"bowling"}`,
 then the following claim would be accepted:
 
-    Spec.Http.body <|
-      Spec.Http.jsonData
-        (Json.Decode.field "sport" Json.Decode.string)
-        (Spec.Claim.isEqualTo Debug.toString "bowling")
+    Spec.Http.body
+      (Spec.Http.asJson <|
+        Json.Decode.field "sport" Json.Decode.string)
+      (Spec.Claim.isEqualTo Debug.toString "bowling")
  
 -}
-body : Claim HttpRequestData -> Claim HttpRequest
-body claim =
+body : HttpRequestDataAssertion a -> Claim a -> Claim HttpRequest
+body (HttpRequestDataAssertion { dataType, transformer }) claim =
   \(HttpRequest request) ->
     case request.body of
       Request.Multipart _ ->
         Claim.Reject <| Report.fact "Claim rejected for request body" "The request has a multipart body.\nUse Spec.Http.bodyPart to make a claim about the request body."
       _ ->
-        claim <| HttpRequestData request.body
+        case transformer request.body of
+          Transformed value ->
+            claim value
+              |> Claim.mapRejection (\report -> Report.batch
+                [ Report.note <| "Claim rejected for " ++ dataType
+                , report
+                ]
+              )
+          WrongType err ->
+            Claim.Reject <| Report.fact ("Claim rejected for " ++ dataType) err
+          BadValue report ->
+            Claim.Reject report
 
 
 {-| Claim that an HTTP request has a multipart body with a named part that satisfies the given claim.
 
+There can be multiple parts, all with the same name. They should all be the same type of data.
+
 For example, if the observed request had a multipart body with a part called `image` that contains a file
 named `fun-image.png`, then the following claim would be accepted:
 
-    Spec.Http.bodyPart "image" <|
+    Spec.Http.bodyPart "image" Spec.Http.asFile <|
       Spec.Claim.isListWhere
-        [ Spec.Http.fileData <|
-            Spec.Claim.specifyThat File.name <|
+        [ Spec.Claim.specifyThat File.name <|
             Spec.Claim.isEqualTo Debug.toString "fun-image.png"
         ]
 
 -}
-bodyPart : String -> Claim (List HttpRequestData) -> Claim HttpRequest
-bodyPart name claim =
+bodyPart : String -> HttpRequestDataAssertion a -> Claim (List a) -> Claim HttpRequest
+bodyPart name (HttpRequestDataAssertion { dataType, transformer }) claim =
   \(HttpRequest request) ->
     case request.body of
       Request.Multipart parts ->
         List.filter (\part -> part.name == name) parts
-          |> List.map (.data >> HttpRequestData)
-          |> claim
-          |> Claim.mapRejection (\report -> Report.batch
-            [ Report.note <| "Claim rejected for body part: " ++ name
-            , report
-            ]
-          )
+          |> List.map .data
+          |> List.map transformer
+          |> tryToCollectValues name dataType
+          |> Result.map claim
+          |> Result.map (Claim.mapRejection (\report -> Report.batch
+              [ Report.note <| "Claim rejected for " ++ dataType ++ " in body part: " ++ name
+              , report
+              ]
+          ))
+          |> toVerdict
       _ ->
-        Claim.Reject <| Report.fact ("Claim rejected for body part: " ++ name) "The request does not have a multipart body.\nUse Spec.Http.body to make a claim about the request body."
+        Claim.Reject <| Report.fact ("Claim rejected for " ++ dataType ++ " in body part: " ++ name) "The request does not have a multipart body.\nUse Spec.Http.body to make a claim about the request body."
+
+
+tryToCollectValues : String -> String -> List (TransformerResult a) -> Result Report (List a)
+tryToCollectValues name dataType =
+  List.foldl (\result collectionResult ->
+    case collectionResult of
+      Ok soFar ->
+        case result of
+          Transformed value ->
+            Ok <| List.append soFar [ value ]
+          WrongType msg ->
+            Err <| Report.fact ("Claim rejected for " ++ dataType ++ " in body part: " ++ name) msg
+          BadValue errorReport ->
+            Err errorReport
+      Err report ->
+        Err report
+  ) (Ok [])
+
+
+toVerdict : Result Report Verdict -> Verdict
+toVerdict result =
+  case result of
+    Ok verdict ->
+      verdict
+    Err report ->
+      Claim.Reject report
 
 
 {-| Claim that some HTTP request data is text that satisfies the given claim.
@@ -178,30 +229,23 @@ bodyPart name claim =
 Note: If you create a request with `Http.emptyBody` then the given claim will be evaluated
 against the empty string.
 -}
-textData : Claim String -> Claim HttpRequestData
-textData claim =
-  \(HttpRequestData requestData) ->
-    case requestData of
-      Request.NoData ->
-        evaluateTextData claim ""
-      Request.TextData actual ->
-        evaluateTextData claim actual
-      Request.FileData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is a file."
-      Request.BinaryData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is binary. Use Spec.Http.binaryData instead."
-      Request.Multipart _ ->
-        Claim.Reject <| Report.fact "Claim rejected for text data" "The request data is multipart."
-
-
-evaluateTextData : Claim String -> String -> Claim.Verdict
-evaluateTextData claim text =
-  claim text
-    |> Claim.mapRejection (\report -> Report.batch
-      [ Report.note "Claim rejected for text data"
-      , report
-      ]
-    )
+asText : HttpRequestDataAssertion String
+asText =
+  HttpRequestDataAssertion
+    { dataType = "text data"
+    , transformer = \requestData ->
+        case requestData of
+          Request.NoData ->
+            Transformed ""
+          Request.TextData actual ->
+            Transformed actual
+          Request.FileData _ ->
+            WrongType "The request data is a file."
+          Request.BinaryData _ ->
+            WrongType "The request data is binary. Use Spec.Http.binaryData instead."
+          Request.Multipart _ ->
+            WrongType "The request data is multipart."  
+    }
 
 
 {-| Claim that some HTTP request data is text that can be decoded with the
@@ -210,65 +254,65 @@ given JSON decoder into a value that satisfies the given claim.
 For example, if the body of the observed request were `{"sport":"bowling"}`,
 then the following claim would be accepted:
 
-    Spec.Http.body <|
-      Spec.Http.jsonData
-        (Json.Decode.field "sport" Json.Decode.string)
-        (Spec.Claim.isEqualTo Debug.toString "bowling")
+    Spec.Http.body
+      (Spec.Http.asJson <|
+        Json.Decode.field "sport" Json.Decode.string)
+      (Spec.Claim.isEqualTo Debug.toString "bowling")
 
 -}
-jsonData : Json.Decoder a -> Claim a -> Claim HttpRequestData
-jsonData decoder claim =
-  \(HttpRequestData requestData) ->
-    case requestData of
-      Request.TextData actual ->
-        case Json.decodeString decoder actual of
-          Ok value ->
-            claim value
-          Err error ->
-            Claim.Reject <| Report.batch
-              [ Report.fact "Expected to decode request data as JSON" actual
-              , Report.fact "but the decoder failed" <| Json.errorToString error
-              ]
-      Request.NoData ->
-        Claim.Reject <| Report.fact "Claim rejected for JSON data" "It has no data at all."
-      Request.FileData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is a file."
-      Request.BinaryData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is binary. Use Spec.Http.binaryData instead."
-      Request.Multipart _ ->
-        Claim.Reject <| Report.fact "Claim rejected for JSON data" "The request data is multipart."
+asJson : Json.Decoder a -> HttpRequestDataAssertion a
+asJson decoder =
+  HttpRequestDataAssertion
+    { dataType = "JSON data"
+    , transformer = \requestData ->
+        case requestData of
+          Request.TextData actual ->
+            case Json.decodeString decoder actual of
+              Ok value ->
+                Transformed value
+              Err error ->
+                BadValue <| Report.batch
+                  [ Report.fact "Expected to decode request data as JSON" actual
+                  , Report.fact "but the decoder failed" <| Json.errorToString error
+                  ]
+          Request.NoData ->
+            WrongType "It has no data at all."
+          Request.FileData _ ->
+            WrongType "The request data is a file."
+          Request.BinaryData _ ->
+            WrongType "The request data is binary. Use Spec.Http.binaryData instead."
+          Request.Multipart _ ->
+            WrongType "The request data is multipart."
+    }
 
 
-{-| Claim that some HTTP request data is a File that satisfies the given claim.
+{-| Claim that some HTTP request data is a `File` that satisfies the given claim.
 
-For example, if the body of an observed request is a File with the name `funFile.txt`, then the
+For example, if the body of an observed request is a `File` with the name `funFile.txt`, then the
 following claim would be accepted:
 
-    Spec.Http.body
-      <| Spec.Http.fileData
+    Spec.Http.body Spec.Http.asFile
       <| Spec.Claim.specifyThat File.name
       <| Claim.isStringContaining 1 "funFile.txt"
 
 -}
-fileData : Claim File -> Claim HttpRequestData
-fileData claim =
-  \(HttpRequestData requestData) ->
-    case requestData of
-      Request.FileData file ->
-        claim file
-          |> Claim.mapRejection (\report -> Report.batch
-            [ Report.note "Claim rejected for file data"
-            , report
-            ]
-          )
-      Request.NoData ->
-        Claim.Reject <| Report.fact "Claim rejected for file data" "It has no data at all."
-      Request.BinaryData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is binary. Use Spec.Http.binaryData instead."
-      Request.TextData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is text."
-      Request.Multipart _ ->
-        Claim.Reject <| Report.fact "Claim rejected for file data" "The request data is multipart."
+asFile : HttpRequestDataAssertion File
+asFile =
+  HttpRequestDataAssertion
+    { dataType = "file data"
+    , transformer = \requestData ->
+        case requestData of
+          Request.FileData file ->
+            Transformed file
+          Request.NoData ->
+            WrongType "It has no data at all."
+          Request.BinaryData _ ->
+            WrongType "The request data is binary. Use Spec.Http.binaryData instead."
+          Request.TextData _ ->
+            WrongType "The request data is text."
+          Request.Multipart _ ->
+            WrongType "The request data is multipart."  
+    }
 
 
 {-| When `Bytes` are sent as the HTTP request body or as part of the HTTP request body, a MIME type
@@ -285,32 +329,29 @@ type alias Blob =
 For example, if the body of an observed request is binary data with a width of 12, then the
 following claim would be accepted:
 
-    Spec.Http.body
-      <| Spec.Http.binaryData
+    Spec.Http.body Spec.Http.binaryData
       <| Spec.Claim.specifyThat .data
       <| Spec.Claim.specifyThat Bytes.width
       <| Claim.isEqual Debug.toString 12
 
 -}
-binaryData : Claim Blob -> Claim HttpRequestData
-binaryData claim =
-  \(HttpRequestData requestData) ->
-    case requestData of
-      Request.BinaryData blob ->
-        claim blob
-          |> Claim.mapRejection (\report -> Report.batch
-            [ Report.note "Claim rejected for binary data"
-            , report
-            ]
-          )
-      Request.NoData ->
-        Claim.Reject <| Report.fact "Claim rejected for binary data" "It has no data at all."
-      Request.TextData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for binary data" "The request data is text."
-      Request.FileData _ ->
-        Claim.Reject <| Report.fact "Claim rejected for binary data" "The request data is a file."
-      Request.Multipart _ ->
-        Claim.Reject <| Report.fact "Claim rejected for binary data" "The request data is multipart."
+asBlob : HttpRequestDataAssertion Blob
+asBlob =
+  HttpRequestDataAssertion
+    { dataType = "binary data"
+    , transformer = \requestData ->
+        case requestData of
+          Request.BinaryData blob ->
+            Transformed blob
+          Request.NoData ->
+            WrongType "It has no data at all."
+          Request.TextData _ ->
+            WrongType "The request data is text."
+          Request.FileData _ ->
+            WrongType "The request data is a file."
+          Request.Multipart _ ->
+            WrongType "The request data is multipart."
+    }
 
 
 {-| Observe HTTP requests that match the given route.

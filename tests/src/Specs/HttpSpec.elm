@@ -484,7 +484,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.textData <| equals "some string body that it does not have"
+                  [ Spec.Http.body Spec.Http.asText <| equals "some string body that it does not have"
                   ]
               )
           )
@@ -492,7 +492,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.jsonData Json.string <| equals "some json that it does not have"
+                  [ Spec.Http.body (Spec.Http.asJson Json.string) <| equals "some json that it does not have"
                   ]
               )
           )
@@ -500,7 +500,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.fileData <| specifyThat File.name <| equals "some file that was not uploaded"
+                  [ Spec.Http.body Spec.Http.asFile <| specifyThat File.name <| equals "some file that was not uploaded"
                   ]
               )
           )
@@ -508,7 +508,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.binaryData <| specifyThat .data <| specifyThat Bytes.width <| equals 11
+                  [ Spec.Http.body Spec.Http.asBlob <| specifyThat .data <| specifyThat Bytes.width <| equals 11
                   ]
               )
           )
@@ -516,7 +516,7 @@ hasBodySpec =
             Spec.Http.observeRequests (get "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.bodyPart "fun" <| isListWhereItemAt 0 <| Spec.Http.textData <| equals "nothing"
+                  [ Spec.Http.bodyPart "fun" Spec.Http.asText <| isListWhereItemAt 0 <| equals "nothing"
                   ]
               )
           )
@@ -539,7 +539,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.textData <| equals "{\"name\":\"fun person\",\"age\":88}"
+                  [ Spec.Http.body Spec.Http.asText <| equals "{\"name\":\"fun person\",\"age\":88}"
                   ]
               )
           )
@@ -547,7 +547,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.textData <| equals "{\"blah\":3}"
+                  [ Spec.Http.body Spec.Http.asText <| equals "{\"blah\":3}"
                   ]
               )
           )
@@ -555,7 +555,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.jsonData (Json.field "age" Json.int) <| equals 88
+                  [ Spec.Http.body (Spec.Http.asJson <| Json.field "age" Json.int) <| equals 88
                   ]
               )
           )
@@ -563,7 +563,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.jsonData (Json.field "name" Json.int) <| equals 31
+                  [ Spec.Http.body (Spec.Http.asJson <| Json.field "name" Json.int) <| equals 31
                   ]
               )
           )
@@ -571,7 +571,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.fileData <| specifyThat File.name <| equals "Some file"
+                  [ Spec.Http.body Spec.Http.asFile <| specifyThat File.name <| equals "Some file"
                   ]
               )
           )
@@ -579,7 +579,7 @@ hasBodySpec =
             Spec.Http.observeRequests (post "http://fake-api.com/stuff")
               |> expect (
                 isListWhere
-                  [ Spec.Http.body <| Spec.Http.binaryData <| specifyThat .data <| specifyThat Bytes.width <| equals 11
+                  [ Spec.Http.body Spec.Http.asBlob <| specifyThat .data <| specifyThat Bytes.width <| equals 11
                   ]
               )
           )

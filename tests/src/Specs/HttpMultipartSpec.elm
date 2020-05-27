@@ -51,24 +51,24 @@ multipartRequestSpec =
         , it "gets the name part" (
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
-                Spec.Http.bodyPart "my-name" <| isListWhere
-                  [ Spec.Http.textData <| equals "Cool Dude"
+                Spec.Http.bodyPart "my-name" Spec.Http.asText <| isListWhere
+                  [ equals "Cool Dude"
                   ]
               )
           )
         , it "gets the file part" (
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
-                Spec.Http.bodyPart "my-file" <| isListWhere
-                  [ Spec.Http.fileData <| specifyThat File.name <| equals "my-file.txt"
+                Spec.Http.bodyPart "my-file" Spec.Http.asFile <| isListWhere
+                  [ specifyThat File.name <| equals "my-file.txt"
                   ]
               )
           )
         , it "gets the bytes part" (
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
-                Spec.Http.bodyPart "my-bytes" <| isListWhere
-                  [ Spec.Http.binaryData <| specifyThat .data <|
+                Spec.Http.bodyPart "my-bytes" Spec.Http.asBlob <| isListWhere
+                  [ specifyThat .data <|
                       (Decode.decode <| Decode.string 16) >> (isSomethingWhere <| equals "Some funny text!")
                   ]
               )
@@ -76,23 +76,39 @@ multipartRequestSpec =
         , it "gets the bytes mime type" (
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
-                Spec.Http.bodyPart "my-bytes" <| isListWhere
-                  [ Spec.Http.binaryData <| specifyThat .mimeType <| equals "text/plain"
+                Spec.Http.bodyPart "my-bytes" Spec.Http.asBlob <| isListWhere
+                  [ specifyThat .mimeType <| equals "text/plain"
+                  ]
+              )
+          )
+        , it "fails when the claim fails" (
+            Spec.Http.observeRequests (post "http://fake.com/api/files")
+              |> expect (isListWhereItemAt 0 <|
+                Spec.Http.bodyPart "my-name" Spec.Http.asText <| isListWhere
+                  [ equals "Awesome Person"
+                  ]
+              )
+          )
+        , it "fails when the data has the wrong type" (
+            Spec.Http.observeRequests (post "http://fake.com/api/files")
+              |> expect (isListWhereItemAt 0 <|
+                Spec.Http.bodyPart "my-name" Spec.Http.asFile <| isListWhere
+                  [ specifyThat File.name <| equals "blah.txt"
                   ]
               )
           )
         , it "fails when there is no part with that name" (
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
-                Spec.Http.bodyPart "bad-name" <| isListWhere
-                  [ Spec.Http.textData <| equals "blah"
+                Spec.Http.bodyPart "bad-name" Spec.Http.asText <| isListWhere
+                  [ equals "blah"
                   ]
               )
           )
         , it "fails when try to treat the body as non-multipart" (
             Spec.Http.observeRequests (post "http://fake.com/api/files")
               |> expect (isListWhereItemAt 0 <|
-                Spec.Http.body <| Spec.Http.textData <| equals "what??"
+                Spec.Http.body Spec.Http.asText <| equals "what??"
               )
           )
         ]

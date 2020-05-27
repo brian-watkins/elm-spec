@@ -128,7 +128,7 @@ describe('HTTP', () => {
         expectRejected(observations[4], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
-          reportLine("Claim rejected for body part: fun", "The request does not have a multipart body.\nUse Spec.Http.body to make a claim about the request body.")
+          reportLine("Claim rejected for text data in body part: fun", "The request does not have a multipart body.\nUse Spec.Http.body to make a claim about the request body.")
         ])
         expectAccepted(observations[5])
         expectRejected(observations[6], [

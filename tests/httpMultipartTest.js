@@ -11,12 +11,25 @@ describe("multipart http request", () => {
       expectRejected(observations[5], [
         reportLine("Claim rejected for route", "POST http://fake.com/api/files"),
         reportLine("Item at index 0 did not satisfy claim:"),
-        reportLine("Claim rejected for body part: bad-name"),
+        reportLine("Claim rejected for text data in body part: my-name"),
+        reportLine("List failed to match at position 1"),
+        reportLine("Expected", "\"Cool Dude\""),
+        reportLine("to equal", "\"Awesome Person\"")
+      ])
+      expectRejected(observations[6], [
+        reportLine("Claim rejected for route", "POST http://fake.com/api/files"),
+        reportLine("Item at index 0 did not satisfy claim:"),
+        reportLine("Claim rejected for file data in body part: my-name", "The request data is text.")
+      ])
+      expectRejected(observations[7], [
+        reportLine("Claim rejected for route", "POST http://fake.com/api/files"),
+        reportLine("Item at index 0 did not satisfy claim:"),
+        reportLine("Claim rejected for text data in body part: bad-name"),
         reportLine("List failed to match"),
         reportLine("Expected list to have length", "1"),
         reportLine("but it has length", "0")
       ])
-      expectRejected(observations[6], [
+      expectRejected(observations[8], [
         reportLine("Claim rejected for route", "POST http://fake.com/api/files"),
         reportLine("Item at index 0 did not satisfy claim:"),
         reportLine("Claim rejected for request body", "The request has a multipart body.\nUse Spec.Http.bodyPart to make a claim about the request body.")
