@@ -20,7 +20,8 @@ specs to be run in a real browser.
 about HTTP requests.
 - `Spec.Claim.require` is now `Spec.Claim.specifyThat`
 - Changed `Spec.Witness` to make it way more flexible.
-- Moved functions for simulating and observing behavior related to the Browser to `Spec.Navigator`.
+- Moved functions for simulating and observing behavior related to the Browser,
+including navigation, to `Spec.Navigator` and removed `Spec.Markup.Navigation`.
 
 ------
 
