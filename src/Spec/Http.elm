@@ -19,7 +19,8 @@ module Spec.Http exposing
 
 Here's an example:
 
-First, create an `HttpResponseStub` that defines the response to return when a request is sent by the program.
+First, create an [HttpResponseStub](Spec.Http.Stub#HttpResponseStub) that defines the response to return
+when a request is sent by the program.
 
     successStub : HttpResponseStub
     successStub =

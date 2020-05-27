@@ -329,7 +329,7 @@ Note that the first argument to this function must be a port defined like so:
     port elmSpecPick : () -> Cmd msg
 
 I suggest adding a function to the main Runner file in your spec suite, where
-you've defined your `Config` and so on:
+you've defined your [Config](Spec#Config) and so on:
 
     pick =
       Spec.pick elmSpecPick
@@ -352,7 +352,7 @@ pick _ =
 {-| Skip this scenario when the spec suite runs.
 
 I suggest adding a function to the main Runner file in your spec suite, where
-you've defined your `Config` and so on:
+you've defined your [Config](Spec#Config) and so on:
 
     skip =
       Spec.skip

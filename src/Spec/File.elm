@@ -154,7 +154,7 @@ andThenSelectFile message =
       Command.nothing
 
 
-{-| Create a FileFixture by loading a file from the local filesystem.
+{-| Create a `FileFixture` by loading a file from the local filesystem.
 
 The path is typically relative to the current working directory of the elm-spec runner (but
 check the docs for the runner you are using).
@@ -169,7 +169,7 @@ atPath path =
     }
 
 
-{-| Create a FileFixture with the given name and bytes.
+{-| Create a `FileFixture` with the given name and bytes.
 -}
 withBytes : String -> Bytes -> FileFixture
 withBytes path binaryContent =
@@ -181,7 +181,7 @@ withBytes path binaryContent =
     }
 
 
-{-| Create a FileFixture with the given name and text content.
+{-| Create a `FileFixture` with the given name and text content.
 -}
 withText : String -> String -> FileFixture
 withText path textContent =
@@ -193,7 +193,7 @@ withText path textContent =
     }
 
 
-{-| Update a FileFixture to have the given MIME type.
+{-| Update a `FileFixture` to have the given MIME type.
 
 For example, create a PNG `FileFixture` like so:
 
@@ -207,7 +207,7 @@ withMimeType mime (FileFixture file) =
     { file | mimeType = mime }
 
 
-{-| Update a FileFixture to have the given last modified
+{-| Update a `FileFixture` to have the given last modified
 date, specified in milliseconds since the UNIX epoch.
 -}
 withLastModified : Int -> FileFixture -> FileFixture

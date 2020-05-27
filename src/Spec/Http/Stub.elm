@@ -77,6 +77,8 @@ type HttpResponseProgress
 
 
 {-| Specify the number of bytes that have been uploaded to the server so far.
+
+Note that the total number of bytes is determined by the HTTP request body.
 -}
 sent : Int -> HttpResponseProgress
 sent =
@@ -84,6 +86,8 @@ sent =
 
 
 {-| Specify the number of bytes received from the server so far.
+
+Note that the total number of bytes is determined by the stubbed HTTP response body.
 -}
 received : Int -> HttpResponseProgress
 received =

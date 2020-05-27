@@ -10,8 +10,8 @@ module Spec.Observer exposing
 
 This module contains functions for working with observers at a high level.
 
-Check out `Spec.Markup`, `Spec.Http`, `Spec.Port`, and `Spec.Witness` for
-more observers.
+Check out `Spec.Markup`, `Spec.Navigator`, `Spec.Http`, `Spec.File`,
+`Spec.Port`, and `Spec.Witness` for more observers.
 
 # Build Observers
 @docs Observer, observeModel
@@ -49,8 +49,9 @@ score like so:
 
 To observe the entire model, just use `identity` as the argument.
 
-Check out `Spec.Markup`, `Spec.Http`, `Spec.Port`, and `Spec.Witness` for
-observers that evaluate claims with respect to the world outside the program.
+Check out `Spec.Markup`, `Spec.Navigator`,
+`Spec.Http`, `Spec.File`, `Spec.Port`, and `Spec.Witness`
+for observers that evaluate claims with respect to the world outside the program.
 
 -}
 observeModel : (model -> a) -> Observer model a
@@ -64,7 +65,16 @@ observeModel mapper =
 
 {-| Create a new `Observer` that will evaluate a `Claim` with respect to
 the successful `Result` observed by the given `Observer`. If the `Result`
-fails then the `Claim` will be rejected.
+fails then the `Claim` will be rejected with the report that is the `Err`
+value.
+
+For example,
+
+    Spec.Observer.observeModel (\_ -> Err <| Report.note "This should fail")
+      |> Spec.Observer.observeResult
+      |> Spec.expect (Spec.Claim.isEqual Debug.toString "Fun")
+
+will be rejected with the message: This should fail.
 -}
 observeResult : Observer model (Result Report a) -> Observer model a
 observeResult =

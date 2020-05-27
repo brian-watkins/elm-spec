@@ -16,7 +16,7 @@ module Spec.Markup.Event exposing
 
 {-| Use these steps to trigger events on HTML elements or an HTML document.
 
-To trigger an event, you'll want to first use `Spec.Markup.target` to target a
+To trigger an event, you'll want to first use [Spec.Markup.target](Spec.Markup#target) to target a
 particular element (or the document as a whole) to which subsequent events should apply.
 
 For example,
@@ -72,7 +72,7 @@ import Json.Decode as Json
 
 
 {-| A step that simulates a click event on the targeted item, either the
-document as a whole (using the `Spec.Markup.Selector.document` selector or
+document as a whole (using the [Spec.Markup.Selector.document](Spec.Markup.Selector#document) selector or
 some particular HTML element).
 
 This will trigger `mousedown`, `mouseup`, and `click` DOM events on the targeted item.
@@ -88,7 +88,7 @@ First of all, any click event handlers associated with the anchor tag will
 be triggered as expected.
 
 If the anchor tag has an `href` attribute, then
-elm-spec can *usually* intercept the navigation, which allows you to use `Spec.Navigation.observeLocation`
+elm-spec can *usually* intercept the navigation, which allows you to use [Spec.Navigator.location](Spec.Navigator#location)
 to make a claim about the location to which you've navigated. Elm-spec will simulate going to another
 page by replacing the program's view with a page that states the program has navigated
 outside the Elm context.
@@ -116,7 +116,7 @@ doubleClick =
 
 
 {-| A step that simulates pressing the mouse button on the targeted item, either the
-document as a whole (using the `Spec.Markup.Selector.document` selector or
+document as a whole (using the [Spec.Markup.Selector.document](Spec.Markup.Selector#document) selector or
 some particular HTML element).
 
 This will trigger a `mouseDown` DOM event on the targeted item.
@@ -127,7 +127,7 @@ mouseDown =
 
 
 {-| A step that simulates releasing the mouse button on the targeted item, either the
-document as a whole (using the `Spec.Markup.Selector.document` selector or
+document as a whole (using the [Spec.Markup.Selector.document](Spec.Markup.Selector#document) selector or
 some particular HTML element).
 
 This will trigger a `mouseup` DOM event on the targeted item.
@@ -191,7 +191,7 @@ and trigger an `input` DOM event on that element.
 
 To trigger input events on a radio button just target the button and simulate a click on it.
 
-To trigger input events on a select, use `selectOption`.
+To trigger input events on a select, use [selectOption](Spec.Markup.Event#selectOption).
 -}
 input : String -> Step.Step model msg
 input text =
@@ -237,7 +237,7 @@ type alias ViewportOffset =
 Use this step to simulate a user scrolling the content within an element.
 
 Note that elm-spec does not fake the element viewport offset. So, if you are running
-specs in a real browser (via Karma), then the element must be scrollable for this step
+specs in a real browser, then the element must be scrollable for this step
 to do anything (i.e., it probably needs a fixed height or width, and it's `overflow`
 CSS property must be set appropriately).
 
@@ -275,7 +275,8 @@ For example, to simulate releasing the `A` key:
           |> Spec.Markup.event.trigger "keyup"
       ]
 
-You may trigger a custom DOM event on the document (by selecting it with `Spec.Markup.Selector.document`)
+You may trigger a custom DOM event on the document (by selecting it with
+[Spec.Markup.Selector.document](Spec.Markup.Selector#document))
 or some particular HTML element.
 
 -}

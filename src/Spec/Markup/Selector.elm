@@ -148,7 +148,7 @@ descendantsOf selectors ( selection, targetable )=
 
 {-| Generate a selector that matches the HTML document.
 
-This is used primarily in conjunction with `Spec.Markup.target` to trigger
+This is used primarily in conjunction with [Spec.Markup.target](Spec.Markup#target) to trigger
 document-level events.
 
 For example,
@@ -158,7 +158,7 @@ For example,
       , Spec.Markup.Event.click
       ]
 
-The `document` selector only works with `Spec.Markup.target`, which is to say
+The `document` selector only works with [Spec.Markup.target](Spec.Markup#target), which is to say
 that you cannot observe the document to make claims about it.
 
 -}
