@@ -1,6 +1,6 @@
 module Spec.Step.Command exposing
   ( Command(..)
-  , sendCommand
+  , sendToProgram
   , sendMessage
   , sendRequest
   , recordCondition
@@ -22,12 +22,16 @@ type Command msg
   | DoNothing
 
 
-sendCommand : Cmd msg -> Command msg
-sendCommand cmd =
-  if cmd == Cmd.none then
-    DoNothing
-  else
+sendToProgram : Cmd msg -> Command msg
+sendToProgram cmd =
+  SendRequest commandStep (\_ ->
     SendCommand cmd
+  )
+
+
+commandStep : Message
+commandStep =
+  Message.for "_step" "command"
 
 
 sendMessage : Message -> Command msg

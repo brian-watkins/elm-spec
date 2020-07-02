@@ -20,14 +20,7 @@ import Json.Encode as Encode
 send : Cmd msg -> Step.Step model msg
 send cmd =
   \_ ->
-    Command.SendRequest commandStep (\_ ->
-      Command.sendCommand cmd
-    )
-    
-
-commandStep : Message
-commandStep =
-  Message.for "_step" "command"
+    Command.sendToProgram cmd
 
 
 {-| Generate a `Cmd` value that will send a `Msg` to the `update`

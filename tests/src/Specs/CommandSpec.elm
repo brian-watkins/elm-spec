@@ -21,6 +21,7 @@ sendMessageToUpdateSpec =
       |> when "messages are sent to the update function"
         [ Command.send <| Command.fake <| ReceivedNumber 8
         , Command.send <| Command.fake <| ReceivedNumber 4
+        , Command.send Cmd.none
         , Command.send <| Command.fake <| ReceivedNumber 21
         ]
       |> it "behaves as expected" (

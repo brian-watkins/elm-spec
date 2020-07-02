@@ -57,7 +57,7 @@ initModel scenario subject =
 initialCommandSteps : Scenario model msg -> Subject model msg -> List (Step model msg)
 initialCommandSteps scenario subject =
   [ \_ -> Step.recordCondition scenario.description
-  , \_ -> Step.sendCommand subject.initialCommand
+  , \_ -> Step.sendToProgram subject.initialCommand
   ]
     |> List.map Internal.buildStep
 

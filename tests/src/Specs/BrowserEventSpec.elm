@@ -243,6 +243,27 @@ windowResizeSpec =
   ]
 
 
+getViewportOnInitSpec : Spec Model Msg
+getViewportOnInitSpec =
+  Spec.describe "get viewport"
+  [ scenario "on init" (
+      given (
+        Setup.init (testModel, Dom.getViewport |> Task.perform GotViewport)
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+      )
+      |> it "shows the default size" (
+        Observer.observeModel .viewport
+          |> expect (isSomethingWhere <| specifyThat .viewport <| satisfying
+            [ specifyThat .width <| equals 1280
+            , specifyThat .height <| equals 800
+            ]
+          )
+      )
+    )
+  ]
+
+
 windowVisibilitySpec : Spec Model Msg
 windowVisibilitySpec =
   Spec.describe "window visibility"
@@ -517,6 +538,7 @@ selectSpec name =
     "windowVisibility" -> Just windowVisibilitySpec
     "animationFrame" -> Just animationFrameSpec
     "noHandler" -> Just noHandlerSpec
+    "getViewportOnInit" -> Just getViewportOnInitSpec
     _ -> Nothing
 
 

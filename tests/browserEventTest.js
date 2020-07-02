@@ -59,6 +59,11 @@ describe("browser events", () => {
         expectAccepted(observations[5])
       })
     })
+    it("gets the viewport on init", (done) => {
+      expectSpec("BrowserEventSpec", "getViewportOnInit", done, (observations) => {
+        expectAccepted(observations[0])
+      })
+    })
   })
 
   context("window visibility", () => {
