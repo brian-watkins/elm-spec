@@ -4,6 +4,7 @@ import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Port as Port
 import Spec.Claim as Claim
+import Spec.Command
 import Specs.Helpers exposing (..)
 import Runner
 import Json.Decode as Json
@@ -21,6 +22,26 @@ witnessPortCommandFromInitSpec =
       |> it "sends the expected message" (
         Port.observe "sendTestMessageOut" Json.string
           |> expect (equals [ "From init!" ])
+      )
+    )
+  , scenario "multiple port messages are observed in the right order" (
+      given (
+        Setup.initWithModel { count = 0 }
+          |> Setup.withUpdate testUpdate
+      )
+      |> when "port messages are sent"
+        [ Spec.Command.send <| sendTestMessageOut "From step 1"
+        , Spec.Command.send <| sendTestMessageOut "From step 2"
+        , Spec.Command.send <| sendTestMessageOut "From step 3"
+        ]
+      |> it "records the messages in the proper order" (
+        Port.observe "sendTestMessageOut" Json.string
+          |> expect (equals
+            [ "From step 1"
+            , "From step 2"
+            , "From step 3"
+            ]
+          )
       )
     )
   , scenario "observing the same port in another scenario" (
@@ -69,7 +90,12 @@ witnessMultiplePortCommandsFromInitSpec =
       )
       |> it "records all the messages sent" (
         Port.observe "sendTestMessageOut" Json.string
-          |> expect (equals [ "One", "Two", "Three" ])
+          |> expect (Claim.satisfying
+            [ Claim.isTrue << List.member "One"
+            , Claim.isTrue << List.member "Two"
+            , Claim.isTrue << List.member "Three"
+            ]
+          )
       )
     )
   ]

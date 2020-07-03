@@ -13,14 +13,15 @@ describe("port commands", () => {
         expectSpec("PortCommandSpec", "one", done, (observations) => {
           expectAccepted(observations[0])
           expectAccepted(observations[1])
+          expectAccepted(observations[2])
 
-          expectRejected(observations[2], [
+          expectRejected(observations[3], [
             reportLine("Claim rejected for port", "some-other-port"),
             reportLine("Expected", "[]"),
             reportLine("to equal", "[\"Unknown!\"]")
           ])
 
-          expectRejected(observations[3], [
+          expectRejected(observations[4], [
             reportLine("Claim rejected for port", "sendTestMessageOut"),
             reportLine("Unable to decode value sent through port", "Problem with the given value:\n\n\"From init!\"\n\nExpecting an INT")
           ])

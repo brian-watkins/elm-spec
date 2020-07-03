@@ -132,6 +132,7 @@ recordsForPort name effects =
   List.filter (Message.is "_port" "received") effects
     |> List.filterMap (Result.toMaybe << Message.decode recordDecoder)
     |> List.filter (\portRecord -> portRecord.name == name)
+    |> List.reverse
 
 
 recordedValues : Json.Decoder a -> List PortRecord -> Result Report (List a)
