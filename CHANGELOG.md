@@ -1,5 +1,14 @@
 # Changelog
 
+## 7.3.2020
+- elm-spec 3.0.1
+
+### Fixed
+- Cmd values sent from the program's init function that examine the DOM (ie Browser.Dom.getViewport)
+are processed as expected.
+- Port messages and File downloads are observed in the order they occurred.
+
+
 ## 5.27.2020
 - elm-spec 3.0.0
 - elm-spec-core 6.0.0
