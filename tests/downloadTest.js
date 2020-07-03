@@ -92,7 +92,7 @@ describe("download", () => {
         expectRejected(observations[1], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded url"),
-          reportLine("Expected", "\"http://fake.com/myFile.txt\""),
+          reportLine("Expected", "\"http://fake.com/myFile-0.txt\""),
           reportLine("to equal", "\"http://wrong.com\"")
         ])
         expectRejected(observations[2], [

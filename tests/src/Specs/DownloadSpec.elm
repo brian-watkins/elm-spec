@@ -35,9 +35,11 @@ downloadTextSpec =
       |> observeThat
       [ it "downloads the file" (
           Spec.File.observeDownloads
-            |> expect (isListWhereItemAt 0 <| satisfying
-              [ Spec.File.name <| equals "funFile.txt"
-              , Spec.File.text <| equals <| "Here is some fun text " ++ (String.fromChar <| Char.fromCode 0x1F603)
+            |> expect (isListWhere <| 
+              [ satisfying
+                [ Spec.File.name <| equals "funFile.txt"
+                , Spec.File.text <| equals <| "Here is some fun text " ++ (String.fromChar <| Char.fromCode 0x1F603)
+                ]
               ]
             )
         )
@@ -142,20 +144,26 @@ downloadAnchorSpec =
           |> Setup.withView (testAnchorView "download.txt")
           |> Setup.withUpdate (testUpdate { defaultData | url = "http://my-fun-url.com/some/path/to/myUrl.txt" })
       )
-      |> when "the file is downloaded"
+      |> when "the file is downloaded multiple times"
         [ Markup.target << by [ id "download-link" ]
+        , Event.click
+        , Event.click
         , Event.click
         ]
       |> observeThat
         [ it "handles the click event" (
             Observer.observeModel .clicks
-              |> expect (equals 1)
+              |> expect (equals 3)
           )
-        , it "downloads the file" (
+        , it "downloads the files in the expected order" (
             Spec.File.observeDownloads
-              |> expect (isListWhereItemAt 0 <| satisfying
-                [ Spec.File.name <| equals "download.txt"
-                , Spec.File.downloadedUrl <| equals "http://fake.com/myFile.txt"
+              |> expect (isListWhere
+                [ satisfying
+                  [ Spec.File.name <| equals "download.txt"
+                  , Spec.File.downloadedUrl <| equals "http://fake.com/myFile-0.txt"
+                  ]
+                , Spec.File.downloadedUrl <| equals "http://fake.com/myFile-1.txt"
+                , Spec.File.downloadedUrl <| equals "http://fake.com/myFile-2.txt"
                 ]
               )
           )
@@ -174,8 +182,8 @@ downloadAnchorSpec =
       |> it "downloads the file" (
           Spec.File.observeDownloads
             |> expect (isListWhereItemAt 0 <| satisfying
-              [ Spec.File.name <| equals "myFile.txt"
-              , Spec.File.downloadedUrl <| equals "http://fake.com/myFile.txt"
+              [ Spec.File.name <| equals "myFile-0.txt"
+              , Spec.File.downloadedUrl <| equals "http://fake.com/myFile-0.txt"
               ]
             )
         )
@@ -303,7 +311,7 @@ testAnchorView filename model =
     [ Attr.id "download-link"
     , Attr.download filename
     , Events.onClick HandleClick
-    , Attr.href "http://fake.com/myFile.txt"
+    , Attr.href <| "http://fake.com/myFile-" ++ String.fromInt model.clicks ++ ".txt"
     ]
     [ Html.text "Click to download the file!" ]
   ]

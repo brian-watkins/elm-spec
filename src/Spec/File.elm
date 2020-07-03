@@ -252,6 +252,7 @@ observeDownloads =
   Observer.observeEffects <|
     \messages ->
       List.filter (Message.is "_file" "download") messages
+        |> List.reverse
         |> List.filterMap (Result.toMaybe << Message.decode downloadDecoder)
 
 
