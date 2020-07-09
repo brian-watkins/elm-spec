@@ -92,8 +92,8 @@ describe('HTTP', () => {
         expect(observations[2].report[0]).to.deep.equal(reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"))
         expect(observations[2].report[1]).to.deep.equal(reportLine("List failed to match at position 1"))
         expect(observations[2].report[2]).to.deep.equal(reportLine("Claim rejected for header", "X-Awesome-Header"))
-        expect(observations[2].report[3]).to.deep.equal(reportLine("Expected", "\"some-awesome-value\""))
-        expect(observations[2].report[4]).to.deep.equal(reportLine("to equal", "\"some-fun-value\""))
+        expect(observations[2].report[3]).to.deep.equal(reportLine("Actual", "\"some-awesome-value\""))
+        expect(observations[2].report[4]).to.deep.equal(reportLine("does not equal expected", "\"some-fun-value\""))
         expect(observations[2].report[5].statement).to.equal("The request actually had these headers")
         expect(observations[2].report[5].detail).to.contain("x-awesome-header = some-awesome-value\nx-fun-header = some-fun-value")
       })
@@ -107,8 +107,8 @@ describe('HTTP', () => {
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
           reportLine("Claim rejected for text data"),
-          reportLine("Expected", "\"\""),
-          reportLine("to equal", "\"some string body that it does not have\"")
+          reportLine("Actual", "\"\""),
+          reportLine("does not equal expected", "\"some string body that it does not have\"")
         ])
         expectRejected(observations[1], [
           reportLine("Claim rejected for route", "GET http://fake-api.com/stuff"),
@@ -135,8 +135,8 @@ describe('HTTP', () => {
           reportLine("Claim rejected for route", "POST http://fake-api.com/stuff"),
           reportLine("List failed to match at position 1"),
           reportLine("Claim rejected for text data"),
-          reportLine("Expected", "\"{\\\"name\\\":\\\"fun person\\\",\\\"age\\\":88}\""),
-          reportLine("to equal", "\"{\\\"blah\\\":3}\"")
+          reportLine("Actual", "\"{\\\"name\\\":\\\"fun person\\\",\\\"age\\\":88}\""),
+          reportLine("does not equal expected", "\"{\\\"blah\\\":3}\"")
         ])
         expectAccepted(observations[7])
         expectRejected(observations[8], [

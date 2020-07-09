@@ -14,8 +14,8 @@ describe("html observers", () => {
         expectRejected(observations[1], [
           reportLine("Claim rejected for selector", "#my-activity"),
           reportLine("Claim rejected for element text"),
-          reportLine("Expected", "\"My activity is: football!\""),
-          reportLine("to equal", "\"football\"")
+          reportLine("Actual", "\"My activity is: football!\""),
+          reportLine("does not equal expected", "\"football\"")
         ])
       })
     })

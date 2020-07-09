@@ -13,8 +13,8 @@ describe("multipart http request", () => {
         reportLine("Item at index 0 did not satisfy claim:"),
         reportLine("Claim rejected for text data in body part: my-name"),
         reportLine("List failed to match at position 1"),
-        reportLine("Expected", "\"Cool Dude\""),
-        reportLine("to equal", "\"Awesome Person\"")
+        reportLine("Actual", "\"Cool Dude\""),
+        reportLine("does not equal expected", "\"Awesome Person\"")
       ])
       expectRejected(observations[6], [
         reportLine("Claim rejected for route", "POST http://fake.com/api/files"),

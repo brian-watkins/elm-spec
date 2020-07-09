@@ -124,8 +124,8 @@ isEqual toString expected =
       Accept
     else
       Reject <| Report.batch
-        [ Report.fact "Expected" <| toString actual
-        , Report.fact "to equal" <| toString expected
+        [ Report.fact "Actual" <| toString actual
+        , Report.fact "does not equal expected" <| toString expected
         ]
 
 

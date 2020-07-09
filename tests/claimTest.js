@@ -8,17 +8,17 @@ describe("observer", () => {
         
         expectRejected(observations[1], [
           reportLine("Expected all claims to be satisfied, but one or more were rejected"),
-          reportLine("Expected", "\"bowling\""),
-          reportLine("to equal", "\"should fail\"")
+          reportLine("Actual", "\"bowling\""),
+          reportLine("does not equal expected", "\"should fail\"")
         ])
 
         expectRejected(observations[2], [
           reportLine("Expected all claims to be satisfied, but one or more were rejected"),
-          reportLine("Expected", "\"bowling\""),
-          reportLine("to equal", "\"should fail\""),
+          reportLine("Actual", "\"bowling\""),
+          reportLine("does not equal expected", "\"should fail\""),
           reportLine("and"),
-          reportLine("Expected", "19"),
-          reportLine("to equal", "27")
+          reportLine("Actual", "19"),
+          reportLine("does not equal expected", "27")
         ])
       })
     })
@@ -30,8 +30,8 @@ describe("observer", () => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectRejected(observations[2], [
-          reportLine("Expected", "True"),
-          reportLine("to equal", "False")
+          reportLine("Actual", "True"),
+          reportLine("does not equal expected", "False")
         ])
       })
     })
@@ -42,8 +42,8 @@ describe("observer", () => {
       expectSpec("ClaimSpec", "isSomethingWhere", done, (observations) => {
         expectAccepted(observations[0])
         expectRejected(observations[1], [
-          reportLine("Expected", "\"hello\""),
-          reportLine("to equal", "\"blah\"")
+          reportLine("Actual", "\"hello\""),
+          reportLine("does not equal expected", "\"blah\"")
         ])
         expectRejected(observations[2], [
           reportLine("Expected", "something"),

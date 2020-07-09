@@ -20,8 +20,8 @@ describe("list observers", () => {
 
         expectRejected(observations[1], [
           reportLine("List failed to match at position 2"),
-          reportLine("Expected", "\"2\""),
-          reportLine("to equal", "\"something\"")
+          reportLine("Actual", "\"2\""),
+          reportLine("does not equal expected", "\"something\"")
         ])
 
         expectRejected(observations[2], [
@@ -40,8 +40,8 @@ describe("list observers", () => {
 
         expectRejected(observations[1], [
           reportLine("Item at index 2 did not satisfy claim:"),
-          reportLine("Expected", "\"3\""),
-          reportLine("to equal", "\"17\"")
+          reportLine("Actual", "\"3\""),
+          reportLine("does not equal expected", "\"17\"")
         ])
 
         expectRejected(observations[2], [

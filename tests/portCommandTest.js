@@ -17,8 +17,8 @@ describe("port commands", () => {
 
           expectRejected(observations[3], [
             reportLine("Claim rejected for port", "some-other-port"),
-            reportLine("Expected", "[]"),
-            reportLine("to equal", "[\"Unknown!\"]")
+            reportLine("Actual", "[]"),
+            reportLine("does not equal expected", "[\"Unknown!\"]")
           ])
 
           expectRejected(observations[4], [

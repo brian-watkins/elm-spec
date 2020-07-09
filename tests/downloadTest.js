@@ -40,14 +40,14 @@ describe("download", () => {
         expectRejected(observations[0], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded file name"),
-          reportLine("Expected", "\"funFile.txt\""),
-          reportLine("to equal", "\"funnyText.text\"")
+          reportLine("Actual", "\"funFile.txt\""),
+          reportLine("does not equal expected", "\"funnyText.text\"")
         ])
         expectRejected(observations[1], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded text"),
-          reportLine("Expected", "\"Here is some fun text!\""),
-          reportLine("to equal", "\"blah\"")
+          reportLine("Actual", "\"Here is some fun text!\""),
+          reportLine("does not equal expected", "\"blah\"")
         ])
         expectRejected(observations[2], [
           reportLine("Item at index 0 did not satisfy claim:"),
@@ -65,14 +65,14 @@ describe("download", () => {
         expectRejected(observations[0], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded file name"),
-          reportLine("Expected", "\"binaryText.txt\""),
-          reportLine("to equal", "\"funnyText.text\"")
+          reportLine("Actual", "\"binaryText.txt\""),
+          reportLine("does not equal expected", "\"funnyText.text\"")
         ])
         expectRejected(observations[1], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded bytes"),
-          reportLine("Expected", "\"Here is binary text!\""),
-          reportLine("to equal", "\"something\"")
+          reportLine("Actual", "\"Here is binary text!\""),
+          reportLine("does not equal expected", "\"something\"")
         ])
         expectRejected(observations[2], [
           reportLine("Item at index 0 did not satisfy claim:"),
@@ -86,14 +86,14 @@ describe("download", () => {
         expectRejected(observations[0], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded file name"),
-          reportLine("Expected", "\"superFile.txt\""),
-          reportLine("to equal", "\"funnyText.text\"")
+          reportLine("Actual", "\"superFile.txt\""),
+          reportLine("does not equal expected", "\"funnyText.text\"")
         ])
         expectRejected(observations[1], [
           reportLine("Item at index 0 did not satisfy claim:"),
           reportLine("Claim rejected for downloaded url"),
-          reportLine("Expected", "\"http://fake.com/myFile-0.txt\""),
-          reportLine("to equal", "\"http://wrong.com\"")
+          reportLine("Actual", "\"http://fake.com/myFile-0.txt\""),
+          reportLine("does not equal expected", "\"http://wrong.com\"")
         ])
         expectRejected(observations[2], [
           reportLine("Item at index 0 did not satisfy claim:"),

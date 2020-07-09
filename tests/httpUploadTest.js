@@ -42,8 +42,8 @@ describe("http upload", () => {
       
       expect(observations[3].summary).to.equal("REJECTED")
       expect(observations[3].report[2].statement).to.equal("Claim rejected for binary data")
-      expect(observations[3].report[3].statement).to.equal("Expected")
-      expect(observations[3].report[4].statement).to.equal("to equal")
+      expect(observations[3].report[3].statement).to.equal("Actual")
+      expect(observations[3].report[4].statement).to.equal("does not equal expected")
 
       expectRejected(observations[4], [
         reportLine("Claim rejected for route", "POST http://fake-api.com/files"),
