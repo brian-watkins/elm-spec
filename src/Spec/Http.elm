@@ -141,7 +141,7 @@ then the following claim would be accepted:
     Spec.Http.body
       (Spec.Http.asJson <|
         Json.Decode.field "sport" Json.Decode.string)
-      (Spec.Claim.isEqualTo Debug.toString "bowling")
+      (Spec.Claim.isEqual Debug.toString "bowling")
  
 -}
 body : HttpRequestDataAssertion a -> Claim a -> Claim HttpRequest
@@ -175,7 +175,7 @@ named `fun-image.png`, then the following claim would be accepted:
     Spec.Http.bodyPart "image" Spec.Http.asFile <|
       Spec.Claim.isListWhere
         [ Spec.Claim.specifyThat File.name <|
-            Spec.Claim.isEqualTo Debug.toString "fun-image.png"
+            Spec.Claim.isEqual Debug.toString "fun-image.png"
         ]
 
 -}
@@ -258,7 +258,7 @@ then the following claim would be accepted:
     Spec.Http.body
       (Spec.Http.asJson <|
         Json.Decode.field "sport" Json.Decode.string)
-      (Spec.Claim.isEqualTo Debug.toString "bowling")
+      (Spec.Claim.isEqual Debug.toString "bowling")
 
 -}
 asJson : Json.Decoder a -> HttpRequestDataAssertion a

@@ -185,9 +185,9 @@ For example:
 
     [ 1, 2, 3 ]
       |> Spec.Claim.isListWhere
-          [ Spec.Claim.isEqualTo Debug.toString 1
-          , Spec.Claim.isEqualTo Debug.toString 27
-          , Spec.Claim.isEqualTo Debug.toString 3
+          [ Spec.Claim.isEqual Debug.toString 1
+          , Spec.Claim.isEqual Debug.toString 27
+          , Spec.Claim.isEqual Debug.toString 3
           ]
 
 would result in a rejected claim, since 2 is not equal to 27.
