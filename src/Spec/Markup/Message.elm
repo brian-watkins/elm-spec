@@ -9,7 +9,7 @@ import Json.Encode as Encode
 
 runToNextAnimationFrame : Message
 runToNextAnimationFrame =
-  Message.for "_html" "nextAnimationFrame"
+  Message.for "_step" "nextAnimationFrame"
 
 
 fetchWindow : Message

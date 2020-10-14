@@ -29,12 +29,6 @@ module.exports = class FakeTimer {
       .filter(t => t.animation)
   }
 
-  triggerAnimationFrameTask(id) {
-    const timer = this.clock.timers[id]
-    timer.func.apply(null, timer.args);
-    this.clock.cancelAnimationFrame(id)
-  }
-
   clearTimers() {
     Object.values(this.clock.timers)
       .filter(t => t.type === "Timeout")

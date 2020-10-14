@@ -45,6 +45,8 @@ module.exports = class ProgramRunner extends EventEmitter {
 
     this.options = options
 
+    this.runAnimationFrame = true
+
     this.context.registerApp(this.app)
   }
 
@@ -162,6 +164,10 @@ module.exports = class ProgramRunner extends EventEmitter {
           this.continueToNext(out)
         })
         break
+      case "nextAnimationFrame":
+        this.runAnimationFrame = false
+        this.timer.runAllAnimationFrameTasks()
+        break
       case "log":
         this.emit('log', specMessage.body)
         break
@@ -173,28 +179,12 @@ module.exports = class ProgramRunner extends EventEmitter {
       this.timer.whenStackIsComplete(() => {
         this.continueToNext(out)
       })
-    } else if (!this.runAnyExtraAnimationFrameTasks()) {
-      out(this.continue())
     } else {
-      this.continueToNext(out)
+      if (this.runAnimationFrame) {
+        this.timer.runAllAnimationFrameTasks()
+      }
+      out(this.continue())
     }
-  }
-
-  runAnyExtraAnimationFrameTasks() {
-    const currentAnimationFrameTasks = this.timer.currentAnimationFrameTasks()
-    const extraAnimationFrameTasks = currentAnimationFrameTasks.length - this.stepAnimationFrameTaskCount
-    if (extraAnimationFrameTasks > 0) {
-      currentAnimationFrameTasks
-        .map(v => v.id)
-        .sort((a, b) => a - b)
-        .slice(-extraAnimationFrameTasks)
-        .forEach(id => {
-          this.timer.triggerAnimationFrameTask(String(id))
-        })
-      return true
-    }
-
-    return false
   }
 
   handleSpecEvent(specMessage) {
@@ -234,6 +224,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "step":
         this.stepAnimationFrameTaskCount = this.timer.currentAnimationFrameTasks().length
+        this.runAnimationFrame = true
         this.handleMessage(specMessage.body.message, out)
         this.timer.whenStackIsComplete(() => {
           out(this.continue())
@@ -281,6 +272,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.context.setBrowserViewport({ x: 0, y: 0 })
     this.httpPlugin.reset()
     this.context.closeFileSelector()
+    this.runAnimationFrame = true
   }
 
   configureComplete(out) {

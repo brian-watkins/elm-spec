@@ -12,21 +12,6 @@ module.exports = class HtmlPlugin {
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
-      case "nextAnimationFrame": {
-        setTimeout(() => {
-          this.renderAndThen(() => {})
-        }, 0)
-        break
-      }
-      default:
-        this.renderAndThen(() => {
-          this.handleMessage(specMessage, out, next, abort)
-        })    
-    }
-  }
-
-  handleMessage(specMessage, out, next, abort) {
-    switch (specMessage.name) {
       case "query-window": {
         out(this.selected(this.window._elm_spec.window))
         break;
@@ -182,11 +167,6 @@ module.exports = class HtmlPlugin {
     element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))
     element.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true }))
     element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }))
-  }
-
-  renderAndThen(callback) {
-    this.context.timer.runAllAnimationFrameTasks()
-    callback()
   }
 
   selected(body) {

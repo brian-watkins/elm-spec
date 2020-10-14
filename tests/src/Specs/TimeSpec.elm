@@ -33,13 +33,13 @@ stubTimeSpec =
           |> Setup.withSubscriptions testSubscriptions
           |> Spec.Time.withTime 1111111111111
       )
-      |> when "time passes"
+      |> when "time passes for at least 1000ms twice"
         [ Spec.Time.tick 1000
         , Spec.Time.tick 1000
         ]
       |> it "increments the time beginning with the stubbed time" (
         Observer.observeModel .current
-          |> expect (equals <| Time.millisToPosix 1111111113111)
+          |> expect (equals <| Time.millisToPosix 1111111113128)
       )
     )
   ]

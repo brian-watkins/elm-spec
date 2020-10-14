@@ -334,9 +334,9 @@ animationFrameSpec =
         , Spec.Time.nextAnimationFrame
         , Spec.Time.nextAnimationFrame
         ]
-      |> it "triggers the onAnimationFrame event" (
+      |> it "triggers the onAnimationFrame event three times plus once for the initial command" (
         Observer.observeModel .animationFrames
-          |> expect (equals 3)
+          |> expect (equals 4)
       )
     )
   , scenario "animation frames during ticks" (
@@ -346,9 +346,9 @@ animationFrameSpec =
       |> when "time passes"
         [ Spec.Time.tick 1000
         ]
-      |> it "triggers the onAnimationFrame event only once" (
+      |> it "triggers the onAnimationFrame event once for the initial command, once for the 1000ms, and once for the end of the step" (
         Observer.observeModel .animationFrames
-          |> expect (equals 1)
+          |> expect (equals 3)
       )
     )
   ]
