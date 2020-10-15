@@ -147,7 +147,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         })
         break
       case "command":
-        this.stepAnimationFrameTaskCount = this.timer.currentAnimationFrameTasks().length
         out({
           home: "_step",
           name: "command",
@@ -156,12 +155,12 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "program-command":
         this.timer.whenStackIsComplete(() => {
-          this.continueToNext(out)
+          this.continueToNextStep(out)
         })
         break
       case "complete":
         this.timer.whenStackIsComplete(() => {
-          this.continueToNext(out)
+          this.continueToNextStep(out)
         })
         break
       case "nextAnimationFrame":
@@ -174,16 +173,27 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
-  continueToNext(out) {
+  continueToNextStep(out) {
     if (this.timer.holds > 0) {
       this.timer.whenStackIsComplete(() => {
-        this.continueToNext(out)
+        this.continueToNextStep(out)
       })
     } else {
       if (this.runAnimationFrame) {
         this.timer.runAllAnimationFrameTasks()
+        this.checkForExtraAnimationFrameTasks()
       }
+      this.runAnimationFrame = true
       out(this.continue())
+    }
+  }
+
+  checkForExtraAnimationFrameTasks() {
+    if (this.timer.animationFrameTaskCount() > 1) {
+      this.emit('log', report(
+        line("A spec step results in extra animation frame tasks!"),
+        line("See the documentation for Spec.Time.nextAnimationFrame for more details.")
+      ))
     }
   }
 
@@ -223,8 +233,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         })
         break
       case "step":
-        this.stepAnimationFrameTaskCount = this.timer.currentAnimationFrameTasks().length
-        this.runAnimationFrame = true
         this.handleMessage(specMessage.body.message, out)
         this.timer.whenStackIsComplete(() => {
           out(this.continue())

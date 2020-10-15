@@ -8,6 +8,7 @@ import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Navigator as Navigator
+import Spec.Command
 import Spec.Time
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -61,7 +62,7 @@ onAnimationFrameSpec =
 minimalAnimationFrameSpec : Spec Model Msg
 minimalAnimationFrameSpec =
   describe "minimal onAnimationFrame subscription example"
-  [ scenario "animation frames occur" (
+  [ scenario "steps that log animation frame warning" (
       given (
         Setup.initWithModel testModel
           |> Setup.withView testView
@@ -71,14 +72,17 @@ minimalAnimationFrameSpec =
       |> when "second animation frame loop occurs and first getElement"
         [ Spec.Time.nextAnimationFrame
         ]
+      |> when "third animation frame loop occurs and second getElement"
+        [ Spec.Command.send Cmd.none
+        ]
       |> observeThat
         [ it "updates the model" (
             Observer.observeModel .loops
-              |> expect (equals 2)
+              |> expect (equals 3)
           )
-        , it "gets the element" (
-            Observer.observeModel .element
-              |> expect isSomething
+        , it "gets the elements" (
+            Observer.observeModel .elements
+              |> expect (isListWithLength 2)
           )
         ]
     )
@@ -112,17 +116,39 @@ noUpdateSpec =
   ]
 
 
+domUpdateSpec : Spec Model Msg
+domUpdateSpec =
+  describe "dom updates"
+  [ scenario "multiple dom updates in one task" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate domUpdate
+          |> Setup.withView domView
+      )
+      |> when "the command is triggered"
+        [ Markup.target << by [ tag "button" ]
+        , Event.click
+        , Spec.Time.nextAnimationFrame
+        ]
+      |> it "updates the viewport" (
+        Navigator.observe
+          |> expect (Navigator.viewportOffset <| equals { x = 0, y = 46 })
+      )
+    )
+  ]
+
+
 type alias Model =
   { loops: Int
   , focus: Int
-  , element: Maybe Browser.Dom.Element
+  , elements: List Browser.Dom.Element
   }
 
 
 testModel =
   { loops = 0
   , focus = 0
-  , element = Nothing
+  , elements = []
   }
 
 
@@ -130,6 +156,7 @@ type Msg
   = OnAnimationFrame
   | DidFocus
   | DoNothing
+  | DoSomething
   | DidSetViewport
   | GotElement (Result Browser.Dom.Error Browser.Dom.Element)
 
@@ -139,6 +166,35 @@ testView model =
   Html.div []
   [ Html.input [ Attr.id "focus-element", Events.onFocus DidFocus ] []
   ]
+
+
+domView : Model -> Html Msg
+domView model =
+  Html.div []
+  [ Html.button [ Events.onClick DoSomething ] [ Html.text "Click me!" ]
+  , Html.div
+    [ Attr.id "test-element"
+    , Attr.style "position" "absolute"
+    , Attr.style "top" "56"
+    , Attr.style "left" "20"
+    ]
+    [ Html.text "TEST!" ]
+  ]
+
+
+domUpdate : Msg -> Model -> (Model, Cmd Msg)
+domUpdate msg model =
+  case msg of
+    DoSomething ->
+      ( model
+      , Browser.Dom.getElement "test-element"
+          |> Task.andThen (\element ->
+            Browser.Dom.setViewport 0.0 (element.element.y - 10.0)
+          )
+          |> Task.attempt (\_ -> DoNothing)
+      )
+    _ ->
+      ( model, Cmd.none )
 
 
 minimalUpdate : Msg -> Model -> (Model, Cmd Msg)
@@ -152,7 +208,7 @@ minimalUpdate msg model =
     GotElement result ->
       case result of
         Ok element ->
-          ( { model | element = Just element }, Cmd.none )
+          ( { model | elements = element :: model.elements }, Cmd.none )
         Err _ ->
           ( model, Cmd.none )
     _ ->
@@ -185,11 +241,7 @@ testUpdate msg model =
       , Browser.Dom.blur "focus-element"
           |> Task.attempt (\_ -> DoNothing)
       )
-    GotElement _ ->
-      ( model, Cmd.none )
-    DidSetViewport ->
-      ( model, Cmd.none )
-    DoNothing ->
+    _ ->
       ( model, Cmd.none )
 
 
@@ -207,6 +259,7 @@ selectSpec name =
     "onFrame" -> Just onAnimationFrameSpec
     "minimal" -> Just minimalAnimationFrameSpec
     "noUpdate" -> Just noUpdateSpec
+    "domUpdate" -> Just domUpdateSpec
     _ -> Nothing
 
 

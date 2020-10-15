@@ -24,9 +24,10 @@ module.exports = class FakeTimer {
     this.clock.runToFrame()
   }
 
-  currentAnimationFrameTasks() {
+  animationFrameTaskCount() {
     return Object.values(this.clock.timers)
       .filter(t => t.animation)
+      .length
   }
 
   clearTimers() {

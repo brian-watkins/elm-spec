@@ -80,7 +80,34 @@ tick duration =
 
 {-| A step that simulates waiting for the next animation frame.
 
-Any subscriptions that depend on animation frame updates will be triggered as expected.
+Any subscriptions or other effects that depend on animation frame updates will be triggered as expected.
+
+Note that some commands like those in the `Browser.Dom` module wait for the next animation frame before
+completing. For example, the following `Cmd`
+
+```
+Browser.Dom.getElement "fun-element"
+  |> Task.andThen (\element -> 
+    Browser.Dom.setViewport 0.0 element.y
+  )
+  |> Task.attempt (\_ -> NoOp)
+```
+
+will wait for the next animation frame to get the element and then wait for another animation frame
+before setting the viewport.
+
+Elm-spec runs any tasks waiting on the current animation frame at the end of each step in the scenario script.
+But sometimes animation frame tasks will remain because there are commands or subscriptions
+waiting on the *next* animation frame. In such cases, you can use `nextAnimationFrame` to simply wait for
+the next animation frame, allowing these commands or subscriptions to complete -- if that is useful for
+triggering the behavior described in this scenario.
+
+So, in the example above, you would need to run `Spec.Time.nextAnimationFrame` after the step that triggers the
+command so that the `Browser.Dom.setViewport` command will complete.
+
+Elm-spec can detect when there are animation frame tasks remaining at the end of a step and will warn you to
+address this. 
+
 -}
 nextAnimationFrame : Step.Step model msg
 nextAnimationFrame =
