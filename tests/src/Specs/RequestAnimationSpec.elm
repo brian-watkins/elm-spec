@@ -67,7 +67,7 @@ minimalAnimationFrameSpec =
         Setup.initWithModel testModel
           |> Setup.withView testView
           |> Setup.withUpdate minimalUpdate
-          |> Setup.withSubscriptions (\_ -> Browser.Events.onAnimationFrame (\_ -> OnAnimationFrame))
+          |> Setup.withSubscriptions minimalSubscriptions
       )
       |> when "second animation frame loop occurs and first getElement"
         [ Spec.Time.nextAnimationFrame
@@ -133,6 +133,65 @@ domUpdateSpec =
       |> it "updates the viewport" (
         Navigator.observe
           |> expect (Navigator.viewportOffset <| equals { x = 0, y = 46 })
+      )
+    )
+  ]
+
+
+noWarningsSpec : Spec Model Msg
+noWarningsSpec =
+  describe "no warnings"
+  [ scenario "extra animation frames but warnings are disabled" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withView testView
+          |> Setup.withSubscriptions minimalSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
+      )
+      |> when "an animation frame occurs"
+        [ Spec.Time.nextAnimationFrame
+        ]
+      |> it "updates the model" (
+        Observer.observeModel .loops
+          |> expect (equals 2)
+      )
+    )
+  ]
+
+
+someWarningsSpec : Spec Model Msg
+someWarningsSpec =
+  describe "warnings after disabled in previous scenario"
+  [ scenario "extra animation frames but warnings are disabled" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withView testView
+          |> Setup.withSubscriptions minimalSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
+      )
+      |> when "an animation frame occurs"
+        [ Spec.Time.nextAnimationFrame
+        ]
+      |> it "updates the model" (
+        Observer.observeModel .loops
+          |> expect (equals 2)
+      )
+    )
+  , scenario "another scenario that does not disable warnings" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withView domView
+          |> Setup.withSubscriptions minimalSubscriptions
+      )
+      |> when "an animation frame occurs"
+        [ Spec.Time.nextAnimationFrame
+        ]
+      |> it "updates the model" (
+        Observer.observeModel .loops
+          |> expect (equals 2)
       )
     )
   ]
@@ -253,6 +312,11 @@ testSubscriptions model =
     ]
 
 
+minimalSubscriptions : Model -> Sub Msg
+minimalSubscriptions model =
+  Browser.Events.onAnimationFrame (\_ -> OnAnimationFrame)
+
+
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
@@ -260,6 +324,8 @@ selectSpec name =
     "minimal" -> Just minimalAnimationFrameSpec
     "noUpdate" -> Just noUpdateSpec
     "domUpdate" -> Just domUpdateSpec
+    "noWarnings" -> Just noWarningsSpec
+    "someWarnings" -> Just someWarningsSpec
     _ -> Nothing
 
 

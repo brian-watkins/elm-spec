@@ -47,6 +47,28 @@ describe("programs with request animation frame", () => {
       })
     })
   })
+  context("animation frame warnings", () => {
+    context("the warnings are disabled", () => {
+      it("shows no warnings", (done) => {
+        expectSpec("RequestAnimationSpec", "noWarnings", done, (observations, error, logs) => {
+          expectAccepted(observations[0])
+        })
+      })
+    })
+    context("the warnings are not disabled after a scenario that does disable them", () => {
+      it("shows the warnings for the second scenario only", (done) => {
+        expectSpec("RequestAnimationSpec", "someWarnings", done, (observations, error, logs) => {
+          expectAccepted(observations[0])
+          expectAccepted(observations[1])
+          expect(logs).to.deep.equal([
+            [ reportLine("A spec step results in extra animation frame tasks!"),
+            reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details.")
+            ]
+          ])
+        })
+      })
+    })
+  })
   context("subscribed to request animation frame and triggering commands that wait for the next frame", () => {
     it("runs the scenario as expected", (done) => {
       expectSpec("RequestAnimationSpec", "onFrame", done, (observations) => {

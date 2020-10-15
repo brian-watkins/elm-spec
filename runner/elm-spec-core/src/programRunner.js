@@ -46,6 +46,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.options = options
 
     this.runAnimationFrame = true
+    this.warnOnExtraAnimationFrames = true
 
     this.context.registerApp(this.app)
   }
@@ -183,7 +184,7 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   checkForExtraAnimationFrameTasks() {
-    if (this.timer.animationFrameTaskCount() > 1) {
+    if (this.warnOnExtraAnimationFrames && this.timer.animationFrameTaskCount() > 1) {
       this.emit('log', report(
         line("A spec step results in extra animation frame tasks!"),
         line("See the documentation for Spec.Time.nextAnimationFrame for more details.")
@@ -232,6 +233,9 @@ module.exports = class ProgramRunner extends EventEmitter {
           out(this.continue())
         })
         break
+      case "warn-on-extra-animation-frames":
+        this.warnOnExtraAnimationFrames = specMessage.body
+        break
       default:
         console.log("Message for unknown scenario event", specMessage)
     }
@@ -275,6 +279,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.httpPlugin.reset()
     this.context.closeFileSelector()
     this.runAnimationFrame = true
+    this.warnOnExtraAnimationFrames = true
   }
 
   configureComplete(out) {

@@ -3,6 +3,7 @@ module Spec.Time exposing
   , withTimezoneOffset
   , tick
   , nextAnimationFrame
+  , allowExtraAnimationFrames
   )
 
 {-| Functions for working with time during a spec.
@@ -32,6 +33,9 @@ Here's a spec you could use to describe that behavior:
 
 # Pass the Time
 @docs tick, nextAnimationFrame
+
+# Handle Special Cases
+@docs allowExtraAnimationFrames
 
 -}
 
@@ -66,6 +70,21 @@ withTimezoneOffset zoneOffset =
     |> Setup.configure
 
 
+{-| Set up the scenario to allow steps that result in effects that wait on the *next* animation frame.
+
+Elm-spec will warn you if a step results in effects that require extra animation frames to resolve.
+Use this function to disable that warning.
+
+See [nextAnimationFrame](#nextAnimationFrame) for more information.
+
+-}
+allowExtraAnimationFrames : Setup model msg -> Setup model msg
+allowExtraAnimationFrames =
+  Message.for "_scenario" "warn-on-extra-animation-frames"
+    |> Message.withBody (Encode.bool False)
+    |> Setup.configure
+
+
 {-| A step that simulates waiting for some number of milliseconds to pass.
 
 Any subscriptions that depend on the passage of time will be triggered as expected.
@@ -80,7 +99,8 @@ tick duration =
 
 {-| A step that simulates waiting for the next animation frame.
 
-Any subscriptions or other effects that depend on animation frame updates will be triggered as expected.
+Any subscriptions or other effects that depend on animation frame updates will be triggered as expected, and
+the view will be re-rendered.
 
 Note that some commands like those in the `Browser.Dom` module wait for the next animation frame before
 completing. For example, the following `Cmd`
@@ -106,7 +126,7 @@ So, in the example above, you would need to run `Spec.Time.nextAnimationFrame` a
 command so that the `Browser.Dom.setViewport` command will complete.
 
 Elm-spec can detect when there are animation frame tasks remaining at the end of a step and will warn you to
-address this. 
+address this. You can disable this warning with [allowExtraAnimationFrames](#allowExtraAnimationFrames).
 
 -}
 nextAnimationFrame : Step.Step model msg

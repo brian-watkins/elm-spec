@@ -57,8 +57,7 @@ update configModel actions msg =
     Abort report ->
       abortWith actions configModel report
     _ ->
-      Report.note "Unknown state!"
-        |> abortWith actions configModel
+      ( configure configModel, Cmd.none )
 
 
 configureWith : Actions msg programMsg -> List Message -> Cmd msg
