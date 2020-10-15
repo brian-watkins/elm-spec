@@ -146,13 +146,6 @@ module.exports = class ProgramRunner extends EventEmitter {
           })
         })
         break
-      case "command":
-        out({
-          home: "_step",
-          name: "command",
-          body: null
-        })
-        break
       case "program-command":
         this.timer.whenStackIsComplete(() => {
           this.continueToNextStep(out)

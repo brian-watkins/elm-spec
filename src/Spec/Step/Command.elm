@@ -24,14 +24,7 @@ type Command msg
 
 sendToProgram : Cmd msg -> Command msg
 sendToProgram cmd =
-  SendRequest commandStep (\_ ->
-    SendCommand cmd
-  )
-
-
-commandStep : Message
-commandStep =
-  Message.for "_step" "command"
+  SendCommand cmd
 
 
 sendMessage : Message -> Command msg
