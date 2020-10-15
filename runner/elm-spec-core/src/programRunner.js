@@ -177,6 +177,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.checkForExtraAnimationFrameTasks()
       }
       this.runAnimationFrame = true
+      this.timer.stopWaitingForStack()
       out(this.continue())
     }
   }

@@ -48,8 +48,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "customEvent": {
-        this.verifySelector(specMessage.body.name, { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
-          const element = this.getElement(props.selector)
+        this.verifySelector(specMessage.body.name, { props: specMessage.body, forElementsOnly: false }, abort, (props, element) => {
           const event = this.getEvent(props.name)
           Object.assign(event, props.event)
           element.dispatchEvent(event)
@@ -57,15 +56,13 @@ module.exports = class HtmlPlugin {
         break
       }
       case "click": {
-        this.verifySelector("click", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
-          const element = this.getElement(props.selector)
+        this.verifySelector("click", { props: specMessage.body, forElementsOnly: false }, abort, (props, element) => {
           this.dispatchClick(element)
         })
         break
       }
       case "doubleClick": {
-        this.verifySelector("doubleClick", { props: specMessage.body, forElementsOnly: false }, abort, (props) => {
-          const element = this.getElement(props.selector)
+        this.verifySelector("doubleClick", { props: specMessage.body, forElementsOnly: false }, abort, (props, element) => {
           this.dispatchClick(element)
           this.dispatchClick(element)
           element.dispatchEvent(this.getEvent("dblclick"))
@@ -73,24 +70,21 @@ module.exports = class HtmlPlugin {
         break
       }
       case "mouseMoveIn": {
-        this.verifySelector("mouseMoveIn", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("mouseMoveIn", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           element.dispatchEvent(this.getEvent("mouseover"))
           element.dispatchEvent(this.getEvent("mouseenter", { bubbles: false }))
         })
         break
       }
       case "mouseMoveOut": {
-        this.verifySelector("mouseMoveOut", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("mouseMoveOut", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           element.dispatchEvent(this.getEvent("mouseout"))
           element.dispatchEvent(this.getEvent("mouseleave", { bubbles: false }))
         })
         break
       }
       case "input": {
-        this.verifySelector("input", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("input", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           element.value = specMessage.body.text
           const event = this.getEvent("input")
           element.dispatchEvent(event)
@@ -98,22 +92,19 @@ module.exports = class HtmlPlugin {
         break
       }
       case "focus": {
-        this.verifySelector("focus", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("focus", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           element.focus()
         })
         break
       }
       case "blur": {
-        this.verifySelector("blur", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("blur", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           element.blur()
         })
         break
       }
       case "select": {
-        this.verifySelector("select", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.document.querySelector(props.selector)
+        this.verifySelector("select", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           const options = element.querySelectorAll("option")
           for (let i = 0; i < options.length; i++) {
             const option = options.item(i)
@@ -148,8 +139,7 @@ module.exports = class HtmlPlugin {
         break
       }
       case "set-element-viewport": {
-        this.verifySelector("setElementViewport", { props: specMessage.body, forElementsOnly: true }, abort, (props) => {
-          const element = this.getElement(props.selector)
+        this.verifySelector("setElementViewport", { props: specMessage.body, forElementsOnly: true }, abort, (props, element) => {
           const viewport = props.viewport
           element.scrollLeft = viewport.x
           element.scrollTop = viewport.y
@@ -217,22 +207,15 @@ module.exports = class HtmlPlugin {
       return
     }
 
-    if (props.selector !== "_document_" && this.document.querySelector(props.selector) == null) {
+    const element = this.getElement(props.selector)
+
+    if (props.selector !== "_document_" && element == null) {
       abort(report(
         line("No match for selector", props.selector)
       ))
       return
     }
 
-    handler(props)
-  }
-
-  getAttributes(element) {
-    let attributes = {}
-    const attrs = element.attributes
-    for (let i = 0; i < attrs.length; i++) {
-      attributes[attrs[i].name] = attrs[i].value
-    }
-    return attributes
+    handler(props, element)
   }
 }
