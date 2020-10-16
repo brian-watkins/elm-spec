@@ -175,7 +175,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     } else {
       if (this.runAnimationFrame) {
         this.timer.runAllAnimationFrameTasks()
-        this.checkForExtraAnimationFrameTasks()
+        this.abortOnExtraAnimationFrameTasks(out)
       }
       this.runAnimationFrame = true
       this.timer.stopWaitingForStack()
@@ -183,12 +183,13 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
-  checkForExtraAnimationFrameTasks() {
+  abortOnExtraAnimationFrameTasks(out) {
     if (this.warnOnExtraAnimationFrames && this.timer.animationFrameTaskCount() > 1) {
-      this.emit('log', report(
+      out(this.abort(report(
         line("A spec step results in extra animation frame tasks!"),
-        line("See the documentation for Spec.Time.nextAnimationFrame for more details.")
-      ))
+        line("See the documentation for Spec.Time.nextAnimationFrame for more details."),
+        line("Set up this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
+      )))
     }
   }
 

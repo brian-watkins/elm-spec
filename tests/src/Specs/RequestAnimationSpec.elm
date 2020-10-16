@@ -31,6 +31,7 @@ onAnimationFrameSpec =
           |> Setup.withView testView
           |> Setup.withUpdate testUpdate
           |> Setup.withSubscriptions testSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
       )
       |> when "the second animation frame sub is triggered, and first setViewport and focus commands complete"
         [ Spec.Time.nextAnimationFrame
@@ -63,6 +64,37 @@ minimalAnimationFrameSpec : Spec Model Msg
 minimalAnimationFrameSpec =
   describe "minimal onAnimationFrame subscription example"
   [ scenario "steps that log animation frame warning" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withView testView
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withSubscriptions minimalSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
+      )
+      |> when "second animation frame loop occurs and first getElement"
+        [ Spec.Time.nextAnimationFrame
+        ]
+      |> when "third animation frame loop occurs and second getElement"
+        [ Spec.Command.send Cmd.none
+        ]
+      |> observeThat
+        [ it "updates the model" (
+            Observer.observeModel .loops
+              |> expect (equals 3)
+          )
+        , it "gets the elements" (
+            Observer.observeModel .elements
+              |> expect (isListWithLength 2)
+          )
+        ]
+    )
+  ]
+
+
+failingAnimationFrameSpec : Spec Model Msg
+failingAnimationFrameSpec =
+  describe "failing onAnimationFrame subscription example"
+  [ scenario "steps that trigger extra animation frame tasks" (
       given (
         Setup.initWithModel testModel
           |> Setup.withView testView
@@ -124,6 +156,7 @@ domUpdateSpec =
         Setup.initWithModel testModel
           |> Setup.withUpdate domUpdate
           |> Setup.withView domView
+          |> Spec.Time.allowExtraAnimationFrames
       )
       |> when "the command is triggered"
         [ Markup.target << by [ tag "button" ]
@@ -138,10 +171,10 @@ domUpdateSpec =
   ]
 
 
-noWarningsSpec : Spec Model Msg
-noWarningsSpec =
-  describe "no warnings"
-  [ scenario "extra animation frames but warnings are disabled" (
+someFailureSpec : Spec Model Msg
+someFailureSpec =
+  describe "failure after allowed in previous scenario"
+  [ scenario "extra animation frames but allowed" (
       given (
         Setup.initWithModel testModel
           |> Setup.withUpdate minimalUpdate
@@ -157,29 +190,7 @@ noWarningsSpec =
           |> expect (equals 2)
       )
     )
-  ]
-
-
-someWarningsSpec : Spec Model Msg
-someWarningsSpec =
-  describe "warnings after disabled in previous scenario"
-  [ scenario "extra animation frames but warnings are disabled" (
-      given (
-        Setup.initWithModel testModel
-          |> Setup.withUpdate minimalUpdate
-          |> Setup.withView testView
-          |> Setup.withSubscriptions minimalSubscriptions
-          |> Spec.Time.allowExtraAnimationFrames
-      )
-      |> when "an animation frame occurs"
-        [ Spec.Time.nextAnimationFrame
-        ]
-      |> it "updates the model" (
-        Observer.observeModel .loops
-          |> expect (equals 2)
-      )
-    )
-  , scenario "another scenario that does not disable warnings" (
+  , scenario "another scenario that does not allow extra animation frames" (
       given (
         Setup.initWithModel testModel
           |> Setup.withUpdate minimalUpdate
@@ -206,6 +217,7 @@ multipleScenariosSpec =
           |> Setup.withUpdate minimalUpdate
           |> Setup.withView testView
           |> Setup.withSubscriptions minimalSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
       )
       |> when "an animation frame occurs"
         [ Spec.Time.nextAnimationFrame
@@ -223,6 +235,7 @@ multipleScenariosSpec =
           |> Setup.withUpdate minimalUpdate
           |> Setup.withView testView
           |> Setup.withSubscriptions minimalSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
       )
       |> when "an animation frame occurs"
         [ Spec.Time.nextAnimationFrame
@@ -364,9 +377,9 @@ selectSpec name =
     "minimal" -> Just minimalAnimationFrameSpec
     "noUpdate" -> Just noUpdateSpec
     "domUpdate" -> Just domUpdateSpec
-    "noWarnings" -> Just noWarningsSpec
-    "someWarnings" -> Just someWarningsSpec
+    "someFailure" -> Just someFailureSpec
     "multipleScenarios" -> Just multipleScenariosSpec
+    "fail" -> Just failingAnimationFrameSpec
     _ -> Nothing
 
 

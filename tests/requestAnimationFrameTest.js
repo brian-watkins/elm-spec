@@ -10,18 +10,24 @@ const {
 
 describe("programs with request animation frame", () => {
   context("minimal request animation frame subscription example", () => {
-    it("warns about extra animation frame tasks on steps, including the initial command", (done) => {
-      expectSpec("RequestAnimationSpec", "minimal", done, (observations, error, logs) => {
-        expectAccepted(observations[0])
-        expectAccepted(observations[1])
-        expect(logs).to.deep.equal([
-          [ reportLine("A spec step results in extra animation frame tasks!"),
-            reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details.")
-          ],
-          [ reportLine("A spec step results in extra animation frame tasks!"),
-            reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details.")
-          ]
-        ])
+    context("when allowing extra animation frames", () => {
+      it("runs the animation frames as expected", (done) => {
+        expectSpec("RequestAnimationSpec", "minimal", done, (observations, error, logs) => {
+          expectAccepted(observations[0])
+          expectAccepted(observations[1])
+        })
+      })  
+    })
+    context("when not allowing extra animation frames", () => {
+      it("aborts the test run at the first sign of an extra animation frame", (done) => {
+        expectSpec("RequestAnimationSpec", "fail", done, (observations) => {
+          expect(observations).to.have.length(1)
+          expectRejected(observations[0], [
+            reportLine("A spec step results in extra animation frame tasks!"),
+            reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details."),
+            reportLine("Setup this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
+          ])
+        })
       })
     })
   })
@@ -47,23 +53,15 @@ describe("programs with request animation frame", () => {
       })
     })
   })
-  context("animation frame warnings", () => {
-    context("the warnings are disabled", () => {
-      it("shows no warnings", (done) => {
-        expectSpec("RequestAnimationSpec", "noWarnings", done, (observations, error, logs) => {
+  context("animation frame failures", () => {
+    context("the extra frames are not allowed after a scenario that does allow them", () => {
+      it("fails the second scenario only", (done) => {
+        expectSpec("RequestAnimationSpec", "someFailure", done, (observations) => {
           expectAccepted(observations[0])
-        })
-      })
-    })
-    context("the warnings are not disabled after a scenario that does disable them", () => {
-      it("shows the warnings for the second scenario only", (done) => {
-        expectSpec("RequestAnimationSpec", "someWarnings", done, (observations, error, logs) => {
-          expectAccepted(observations[0])
-          expectAccepted(observations[1])
-          expect(logs).to.deep.equal([
-            [ reportLine("A spec step results in extra animation frame tasks!"),
-            reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details.")
-            ]
+          expectRejected(observations[1], [
+            reportLine("A spec step results in extra animation frame tasks!"),
+            reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details."),
+            reportLine("Setup this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
           ])
         })
       })

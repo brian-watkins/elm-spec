@@ -72,8 +72,11 @@ withTimezoneOffset zoneOffset =
 
 {-| Set up the scenario to allow steps that result in effects that wait on the *next* animation frame.
 
-Elm-spec will warn you if a step results in effects that require extra animation frames to resolve.
-Use this function to disable that warning.
+By default, elm-spec rejects any scenario with a step that results in effects that reuire extra
+animation frames to resolve, since you may need to use [nextAnimationFrame](#nextAnimationFrame) to
+trigger the behavior you want to describe.
+
+Use this function to allow such a scenario to continue.
 
 See [nextAnimationFrame](#nextAnimationFrame) for more information.
 

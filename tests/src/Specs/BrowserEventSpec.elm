@@ -410,6 +410,7 @@ testSubject =
     |> Setup.withView testView
     |> Setup.withUpdate testUpdate
     |> Setup.withSubscriptions testSubscriptions
+    |> Spec.Time.allowExtraAnimationFrames
 
 
 type Msg
