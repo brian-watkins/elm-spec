@@ -43,6 +43,10 @@ window._elm_spec.runSpec = (specProgram, specName, options) => {
     return Promise.reject("Elm not compiled!")
   }
 
+  if (!Elm.Specs[specProgram]) {
+    return Promise.reject("No spec program found for: " + specProgram)
+  }
+
   elmContext.timer.reset()
   var app = Elm.Specs[specProgram].init({
     flags: { specName }
