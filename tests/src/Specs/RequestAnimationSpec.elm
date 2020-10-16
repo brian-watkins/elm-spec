@@ -91,6 +91,31 @@ minimalAnimationFrameSpec =
   ]
 
 
+viewSpec : Spec Model Msg
+viewSpec =
+  describe "update the view on animation frame"
+  [ scenario "next animation frame triggers view update" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withView testView
+          |> Setup.withSubscriptions testSubscriptions
+          |> Spec.Time.allowExtraAnimationFrames
+      )
+      |> when "animation frames occur"
+        [ Spec.Time.nextAnimationFrame
+        , Spec.Time.nextAnimationFrame
+        , Spec.Time.nextAnimationFrame
+        ]
+      |> it "updates the view" (
+          Markup.observeElement
+            |> Markup.query << by [ id "loops" ]
+            |> expect (isSomethingWhere <| Markup.text <| equals "3 loops!")
+        )
+    )
+  ]
+
+
 failingAnimationFrameSpec : Spec Model Msg
 failingAnimationFrameSpec =
   describe "failing onAnimationFrame subscription example"
@@ -277,6 +302,8 @@ testView : Model -> Html Msg
 testView model =
   Html.div []
   [ Html.input [ Attr.id "focus-element", Events.onFocus DidFocus ] []
+  , Html.div [ Attr.id "loops" ]
+    [ Html.text <| String.fromInt model.loops ++ " loops!" ]
   ]
 
 
@@ -380,6 +407,7 @@ selectSpec name =
     "someFailure" -> Just someFailureSpec
     "multipleScenarios" -> Just multipleScenariosSpec
     "fail" -> Just failingAnimationFrameSpec
+    "view" -> Just viewSpec
     _ -> Nothing
 
 

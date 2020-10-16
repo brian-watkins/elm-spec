@@ -25,9 +25,16 @@ describe("programs with request animation frame", () => {
           expectRejected(observations[0], [
             reportLine("A spec step results in extra animation frame tasks!"),
             reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details."),
-            reportLine("Setup this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
+            reportLine("Set up this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
           ])
         })
+      })
+    })
+  })
+  context("when the view updates on animation frame", () => {
+    it("updates the view", (done) => {
+      expectSpec("RequestAnimationSpec", "view", done, (observations) => {
+        expectAccepted(observations[0])
       })
     })
   })
@@ -61,7 +68,7 @@ describe("programs with request animation frame", () => {
           expectRejected(observations[1], [
             reportLine("A spec step results in extra animation frame tasks!"),
             reportLine("See the documentation for Spec.Time.nextAnimationFrame for more details."),
-            reportLine("Setup this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
+            reportLine("Set up this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
           ])
         })
       })

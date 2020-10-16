@@ -128,6 +128,61 @@ triggering the behavior described in this scenario.
 So, in the example above, you would need to run `Spec.Time.nextAnimationFrame` after the step that triggers the
 command so that the `Browser.Dom.setViewport` command will complete.
 
+Note that, for all other steps, an animation frame runs at the end of the step, updating the view. But
+for `Spec.Time.nextAnimationFrame` sometimes you may need to trigger the frame that update the view explicitly.
+
+Consider another example. Suppose you have a subscription to `Browser.Events.onAnimationFrame` that sends a
+message `AnimationFrame` on each animation frame. And suppose your update function looks something like:
+
+```
+update : Model -> Msg -> (Model, Cmd Msg)
+update model msg =
+  case msg of
+    AnimationFrame ->
+      ( { model | frames = model.frames + 1 }
+      , Cmd.none
+      )
+```
+
+Now, you could have a scenario that checks to see that the view is updated with the number of frames:
+
+```
+frameSpce =
+  describe "view changes on animation frame"
+  [ scenario "three animation frames" (
+      given (
+        Spec.Setup.initWithModel { frames = 0 }
+          |> ...
+      )
+      |> when "two more frames pass"
+        [ Spec.Time.nextAnimationFrame
+        , Spec.Time.nextAnimationFrame
+        ]
+      |> it "displays the count in the view" (
+        Spec.Markup.observeElement
+          |> Spec.Markup.query << by [ id "frame-count" ]
+          |> expect (Spec.Claim.isSomethingWhere <|
+            Spec.Markup.text <|
+            Spec.Claim.isEqual Debug.toString "2 frames!"
+          )
+      )
+    )
+  ]
+```
+
+Note that by the end of this scenario, three animation frames have passed: 1 after the initial
+command, and then 2 explicitly. If you were to observe the model after this scenario, `frames` would be `3`, but
+the view only shows `2 frames!`. What's happening?
+
+When you call `Spec.Time.nextAnimationFrame` it runs only one animation frame. In this case,
+that animation frame triggers the subscription, which calls your update function and changes the model. But
+another animation frame must pass before the view is rendered with the updated model. The second call to
+`Spec.Time.nextAnimationFrame` will update the view, but it will be based on the state of the model at that
+time, which had `frames` equal to `2`.
+
+In any case, the point here is that when you write a spec that depends on triggering individual animation
+frames you may unfortunately start to see some details of the Elm runtime implementation leak into your specs.
+
 Elm-spec can detect when there are animation frame tasks remaining at the end of a step and will warn you to
 address this. You can disable this warning with [allowExtraAnimationFrames](#allowExtraAnimationFrames).
 
