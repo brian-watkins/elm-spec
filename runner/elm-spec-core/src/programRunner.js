@@ -245,7 +245,15 @@ module.exports = class ProgramRunner extends EventEmitter {
     switch (state) {
       case "START":
         this.prepareForScenario()
-        out(this.continue())
+        if (this.timer.animationFrameTaskCount() > 1) {
+          out({
+            home: "start",
+            name: "flush-animation-tasks",
+            body: null
+          })
+        } else {
+          out(this.continue())
+        }
         break
       case "CONFIGURE_COMPLETE":
         this.configureComplete(out)
@@ -269,7 +277,6 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   prepareForScenario() {
-    this.timer.runAllAnimationFrameTasks()
     this.timer.clearTimers()
     this.context.clearEventListeners()
     this.context.setTimezoneOffset(new Date().getTimezoneOffset())

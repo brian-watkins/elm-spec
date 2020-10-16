@@ -197,6 +197,46 @@ someWarningsSpec =
   ]
 
 
+multipleScenariosSpec : Spec Model Msg
+multipleScenariosSpec =
+  describe "multiple scenarios with extra animation frames"
+  [ scenario "first" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withView testView
+          |> Setup.withSubscriptions minimalSubscriptions
+      )
+      |> when "an animation frame occurs"
+        [ Spec.Time.nextAnimationFrame
+        ]
+      |> observeThat
+        [ it "updates the model" (
+            Observer.observeModel .elements
+              |> expect (isListWithLength 1)
+          )
+        ]
+    )
+  , scenario "second" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate minimalUpdate
+          |> Setup.withView testView
+          |> Setup.withSubscriptions minimalSubscriptions
+      )
+      |> when "an animation frame occurs"
+        [ Spec.Time.nextAnimationFrame
+        ]
+      |> observeThat
+        [ it "updates the model" (
+            Observer.observeModel .elements
+              |> expect (isListWithLength 1)
+          )
+        ]
+    )
+  ]
+
+
 type alias Model =
   { loops: Int
   , focus: Int
@@ -326,6 +366,7 @@ selectSpec name =
     "domUpdate" -> Just domUpdateSpec
     "noWarnings" -> Just noWarningsSpec
     "someWarnings" -> Just someWarningsSpec
+    "multipleScenarios" -> Just multipleScenariosSpec
     _ -> Nothing
 
 

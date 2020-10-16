@@ -78,4 +78,12 @@ describe("programs with request animation frame", () => {
       })
     })
   })
+  context("multiple scenarios with extra animation frames", () => {
+    it("runs both scenarios as expected", (done) => {
+      expectSpec("RequestAnimationSpec", "multipleScenarios", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
+      })
+    })
+  })
 })

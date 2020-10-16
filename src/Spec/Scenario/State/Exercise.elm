@@ -166,7 +166,7 @@ update exerciseModel actions msg =
 
 sendComplete : Actions msg programMsg -> Cmd msg
 sendComplete actions =
-  State.send actions <| Message.for "_step" "complete"
+  State.send actions <| Message.stepComplete
 
 
 stepRequest : Message -> Message
