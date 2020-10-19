@@ -15,8 +15,8 @@
     "chokidar": "^3.3.1",
     "command-exists": "^1.2.8",
     "elm-spec-core": "^6.0.0",
-    "jsdom": "^16.2.2",
-    "playwright": "^1.0.2"
+    "jsdom": "^16.4.0",
+    "playwright": "^1.5.1"
   },
   "devDependencies": {
     "browserify": "^16.5.1",
