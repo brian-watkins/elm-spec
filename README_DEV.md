@@ -12,6 +12,14 @@ $ npm install
 $ npx lerna bootstrap
 ```
 
+## Updating Dependencies
+
+```
+$ npx lernaupdate
+```
+
+and follow the prompts.
+
 ## Running Tests
 
 ```

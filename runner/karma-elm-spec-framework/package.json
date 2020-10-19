@@ -23,7 +23,7 @@
     "testing"
   ],
   "dependencies": {
-    "chalk": "^3.0.0",
+    "chalk": "^4.1.0",
     "elm-spec-core": "^6.0.0"
   },
   "devDependencies": {
@@ -33,6 +33,6 @@
     "karma-chrome-launcher": "^3.1.0",
     "mocha": "^7.1.1",
     "shelljs": "^0.8.3",
-    "tinyify": "^2.5.2"
+    "tinyify": "^3.0.0"
   }
 }
