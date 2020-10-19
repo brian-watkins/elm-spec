@@ -19,7 +19,7 @@
     "playwright": "^1.5.1"
   },
   "devDependencies": {
-    "browserify": "^16.5.1",
+    "browserify": "^17.0.0",
     "chai": "^4.2.0",
     "chai-string": "^1.5.0",
     "chai-things": "^0.2.0",
