@@ -34,7 +34,12 @@ directory to the `source-directories` field of `elm.json`.
 5. Add a file called `Runner.elm` to your specs src directory. It should look something like this:
 
 ```
-port module Runner exposing (program, browserProgram)
+port module Runner exposing
+  ( program
+  , browserProgram
+  , skip
+  , pick
+  )
 
 import Spec exposing (Message)
 
@@ -180,5 +185,5 @@ equals =
   Claim.isEqual Debug.toString
 ```
 
-Then, you can import the `equals` function from this library without having to write out
+Then, you can import the `equals` function from this module without having to write out
 `Claim.isEqual Debug.toString` every time.
