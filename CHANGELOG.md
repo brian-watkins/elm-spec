@@ -1,5 +1,18 @@
 # Changelog
 
+## ???
+- elm-spec 3.1.0
+- elm-spec-core 7.0.0
+- elm-spec-runner 2.1.0
+- karma-elm-spec-runner 1.6.0
+
+### Fixed
+- Run animation frames after each step, including the step that runs the initial command.
+- Reject scenarios that have extra animation frame tasks; use `Spec.Time.allowExtraAnimationFrames` and
+`Spec.Time.nextAnimationFrame` to address.
+- Updated dependencies
+
+
 ## 7.3.2020
 - elm-spec 3.0.1
 
