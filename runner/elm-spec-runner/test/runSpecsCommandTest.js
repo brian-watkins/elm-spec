@@ -4,17 +4,14 @@ const expect = chai.expect
 const RunSpecsCommand = require("../src/runSpecsCommand")
 
 describe("Run Specs Command", () => {
-  let testReporter
-  let testRunner
-  let testFileWatcher
-  let testCompiler
-  let subject
+  let testReporter, testRunner, testFileWatcher, testCompiler, subject
 
   beforeEach(() => {
     testReporter = new TestReporter()
     testRunner = new TestRunner()
     testFileWatcher = new TestFileWatcher()
     testCompiler = new TestCompiler("compiled-code")
+
     subject = new RunSpecsCommand(testCompiler, testRunner, testReporter, testFileWatcher)
   })
 

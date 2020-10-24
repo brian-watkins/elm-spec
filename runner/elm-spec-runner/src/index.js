@@ -12,6 +12,7 @@ const RunSpecsCommand = require('./runSpecsCommand')
 const FileWatcher = require('./fileWatcher')
 const ElmFiles = require('./elmFiles')
 const FileLoader = require('./fileLoader')
+const PerformanceTimer = require('./performanceTimer')
 
 class RunSuite extends Command {
   async run() {
@@ -69,7 +70,7 @@ class RunSuite extends Command {
   }
 
   getReporter() {
-    return new ConsoleReporter({
+    return new ConsoleReporter(new PerformanceTimer(), {
       write: (c) => process.stdout.write(c),
       writeLine: this.log,
       stream: process.stdout

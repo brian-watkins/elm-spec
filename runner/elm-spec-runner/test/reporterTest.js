@@ -3,8 +3,15 @@ const expect = chai.expect
 const Reporter = require('../src/consoleReporter')
 
 describe("reporter", () => {
+  let testHarness
+  let reporter
+
+  beforeEach(() => {
+    testHarness = new TestHarness()
+    reporter = testHarness.reporter
+  })
+
   it("counts the number of accepted observations", () => {
-    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {} })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -14,7 +21,6 @@ describe("reporter", () => {
   })
 
   it("counts the number of rejected observations", () => {
-    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {} })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -25,7 +31,6 @@ describe("reporter", () => {
   })
 
   it("counts the number of skipped observations", () => {
-    const reporter = new Reporter({ write: (character) => {}, writeLine: (line) => {} })
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())
     reporter.record(acceptedMessage())
@@ -38,42 +43,45 @@ describe("reporter", () => {
     expect(reporter.skipped).to.equal(3)
   })
 
+  it("prints the duration", () => {
+    reporter.startSuite()
+    reporter.record(acceptedMessage())
+    reporter.record(acceptedMessage())
+    reporter.record(acceptedMessage())
+    testHarness.testTimer.time = 76222
+    reporter.finish()
+    
+    expect(testHarness.header).to.contain("76.2s")
+  })
+
   describe("when there are no rejected or skipped observations", () => {
-    let lines
-
     beforeEach(() => {
-      lines = []
-      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line) })
-
-      subject.record(acceptedMessage())
-      subject.record(acceptedMessage())
-      subject.finish()
+      reporter.startSuite()
+      testHarness.testTimer.time = 29987  
+      reporter.record(acceptedMessage())
+      reporter.record(acceptedMessage())
+      reporter.finish()
     })
 
     it("writes just the number accepted", () => {
-      expectToContain(lines, [
-        "Accepted: 2"
+      expectToContain(testHarness.lines, [
+        "Accepted: 2",
       ])
     })
   })
 
   describe("when there are skipped observations", () => {
-    let lines
-
     beforeEach(() => {
-      lines = []
-      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line) })
-
-      subject.record(acceptedMessage())
-      subject.record(skippedMessage())
-      subject.record(acceptedMessage())
-      subject.record(skippedMessage())
-      subject.record(skippedMessage())
-      subject.finish()
+      reporter.record(acceptedMessage())
+      reporter.record(skippedMessage())
+      reporter.record(acceptedMessage())
+      reporter.record(skippedMessage())
+      reporter.record(skippedMessage())
+      reporter.finish()
     })
 
     it("writes the number skipped", () => {
-      expectToContain(lines, [
+      expectToContain(testHarness.lines, [
         "Accepted: 2",
         "Skipped: 3"
       ])
@@ -81,17 +89,8 @@ describe("reporter", () => {
   })
 
   describe("when there are rejected observations but none skipped", () => {
-    let lines
-    let subject
-
     beforeEach(() => {
-      lines = []
-      subject = new Reporter({
-        write: (character) => {},
-        writeLine: (line) => lines.push(line)
-      })
-
-      subject.record(rejectedMessage({
+      reporter.record(rejectedMessage({
         conditions: [ "Given a subject", "When something happens" ],
         description: "It does something else",
         report: [
@@ -101,11 +100,11 @@ describe("reporter", () => {
         ],
         modulePath: "/base/path/elm/specs/Some/Funny/RejectedSpec.elm"
       }))
-      subject.finish()
+      reporter.finish()
     })
 
     it("writes the reason for rejection", () => {
-      expectToContain(lines, [
+      expectToContain(testHarness.lines, [
         "Accepted: 0",
         "Rejected: 1",
         "Failed to satisfy spec:",
@@ -126,28 +125,18 @@ describe("reporter", () => {
     })
 
     it("shows there was no error", () => {
-      expect(subject.hasError).to.be.false
+      expect(reporter.hasError).to.be.false
     })
   })
 
   describe("when there are multiple parallel segments", () => {
-    let lines
-    let header
-
     beforeEach(() => {
-      lines = []
-      header = ""
-      const subject = new Reporter({
-        write: (character) => { header += character },
-        writeLine: (line) => lines.push(line)
-      })
+      reporter.startSuite()
+      reporter.startSuite()
+      reporter.startSuite()
 
-      subject.startSuite()
-      subject.startSuite()
-      subject.startSuite()
-
-      subject.record(acceptedMessage())
-      subject.record(rejectedMessage({
+      reporter.record(acceptedMessage())
+      reporter.record(rejectedMessage({
         conditions: [ "Given a subject", "When something happens" ],
         description: "It does something else",
         report: [
@@ -155,18 +144,18 @@ describe("reporter", () => {
         ],
         modulePath: "/base/path/elm/specs/Some/Funny/RejectedSpec.elm"
       }))
-      subject.record(acceptedMessage())
-      subject.record(acceptedMessage())
-      subject.record(acceptedMessage())
+      reporter.record(acceptedMessage())
+      reporter.record(acceptedMessage())
+      reporter.record(acceptedMessage())
 
-      subject.finish()
-      subject.finish()
-      subject.finish()
+      reporter.finish()
+      reporter.finish()
+      reporter.finish()
     })
 
     it("writes the expected test output once", () => {
-      expect(header).to.have.entriesCount("Running specs:", 1)
-      expectToContain(lines, [
+      expect(testHarness.header).to.have.entriesCount("Running specs:", 1)
+      expectToContain(testHarness.lines, [
         "Accepted: 4",
         "Rejected: 1",
         "Failed to satisfy spec:",
@@ -181,22 +170,16 @@ describe("reporter", () => {
   })
 
   describe("when there is an error", () => {
-    let lines
-    let subject
-
     beforeEach(() => {
-      lines = []
-      subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
-
-      subject.error([
+      reporter.error([
         { statement: "You received an error", detail: "something" },
         { statement: "and a final statement\nwith multiple lines", detail: null }
       ])
-      subject.finish()
+      reporter.finish()
     })
 
     it("writes the error", () => {
-      expectToContain(lines, [
+      expectToContain(testHarness.lines, [
         "Error running spec suite!",
         "You received an error",
         "something",
@@ -206,37 +189,31 @@ describe("reporter", () => {
     })
 
     it("records that an error occurred", () => {
-      expect(subject.hasError).to.be.true
+      expect(reporter.hasError).to.be.true
     })
   })
 
   context("when there is an error and multiple parallel segments", () => {
-    let lines
-    let subject
-
     beforeEach(() => {
-      lines = []
-      subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
-
-      subject.error([
+      reporter.error([
         { statement: "You received one error", detail: "something" },
         { statement: "and a final statement\nwith multiple lines", detail: null }
       ])
-      subject.finish()
-      subject.error([
+      reporter.finish()
+      reporter.error([
         { statement: "You received a second error", detail: "something" },
         { statement: "and a final statement\nwith multiple lines", detail: null }
       ])
-      subject.finish()
-      subject.error([
+      reporter.finish()
+      reporter.error([
         { statement: "You received a third error", detail: "something" },
         { statement: "and a final statement\nwith multiple lines", detail: null }
       ])
-      subject.finish()
+      reporter.finish()
     })
 
     it("writes only the first error", () => {
-      expectToContain(lines, [
+      expectToContain(testHarness.lines, [
         "Error running spec suite!",
         "You received one error",
         "something",
@@ -247,26 +224,20 @@ describe("reporter", () => {
   })
 
   context("when there is a log message", () => {
-    let lines
-    let subject
-
     beforeEach(() => {
-      lines = []
-      subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
-
-      subject.log([
+      reporter.log([
         { statement: "Log message one", detail: "with some detail" },
       ])
 
-      subject.log([
+      reporter.log([
         { statement: "Log message two!", detail: null }
       ])
 
-      subject.finish()
+      reporter.finish()
     })
 
     it("writes the log message", () => {
-      expectToContain(lines, [
+      expectToContain(testHarness.lines, [
         "Log message one",
         "with some detail",
         "Log message two!",
@@ -276,16 +247,11 @@ describe("reporter", () => {
   })
 
   context("when the reporter is reset, like when in watch mode", () => {
-    let lines
-
     beforeEach(() => {
-      lines = []
-      const subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line) })
-
-      subject.record(acceptedMessage())
-      subject.record(skippedMessage())
-      subject.record(acceptedMessage())
-      subject.record(rejectedMessage({
+      reporter.record(acceptedMessage())
+      reporter.record(skippedMessage())
+      reporter.record(acceptedMessage())
+      reporter.record(rejectedMessage({
         conditions: [ "Given a subject", "When something happens" ],
         description: "It does something else",
         report: [
@@ -295,17 +261,17 @@ describe("reporter", () => {
         ],
         modulePath: "/base/path/elm/specs/Some/Funny/RejectedSpec.elm"
       }))
-      subject.finish()
-      subject.reset()
-      subject.record(acceptedMessage())
-      subject.record(acceptedMessage())
-      subject.record(acceptedMessage())
-      subject.record(acceptedMessage())
-      subject.finish()
+      reporter.finish()
+      reporter.reset()
+      reporter.record(acceptedMessage())
+      reporter.record(acceptedMessage())
+      reporter.record(acceptedMessage())
+      reporter.record(acceptedMessage())
+      reporter.finish()
     })
 
     it("clears the number of accepted, skipped, rejected", () => {
-      expectToContain(lines, [
+      expectToContain(testHarness.lines, [
         "Accepted: 2",
         "Skipped: 1",
         "Rejected: 1",
@@ -328,6 +294,33 @@ describe("reporter", () => {
     })
   })
 })
+
+class TestHarness {
+  constructor() {
+    this.testTimer = new TestTimer()
+    this.lines = []
+    this.header = ""
+    this.reporter = new Reporter(this.testTimer, {
+      write: (character) => { this.header += character },
+      writeLine: (line) => this.lines.push(line)
+    })
+  }
+}
+
+class TestTimer {
+  constructor() {
+    this.time = 1276
+  }
+
+  start() {}
+
+  stop() {}
+
+  getTime() {
+    return this.time
+  }
+}
+
 
 const expectToContain = (actualLines, expectedLines) => {
   const actualWithoutBlanks = actualLines.filter(line => line !== "\n" && line !== undefined)

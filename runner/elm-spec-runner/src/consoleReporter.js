@@ -7,7 +7,8 @@ const skip = chalk.yellow
 const logMessage = chalk.cyan
 
 module.exports = class ConsoleReporter {
-  constructor({ write, writeLine, stream }) {
+  constructor(timer, { write, writeLine, stream }) {
+    this.timer = timer
     this.write = write
     this.writeLine = writeLine
     this.stream = stream
@@ -46,6 +47,7 @@ module.exports = class ConsoleReporter {
     this.segments += 1
     if (this.segments === 1) {
       this.write("\nRunning specs: ")
+      this.timer.start()
     }
   }
 
@@ -87,6 +89,9 @@ module.exports = class ConsoleReporter {
     this.segments -= 1
     if (this.segments > 0) return
 
+    this.timer.stop()
+    this.write(logMessage(` (${this.getDuration()})`))
+
     this.writeLine("\n")
     this.writeLine(ok(`Accepted: ${this.accepted}`))
     if (this.skipped > 0) {
@@ -98,6 +103,10 @@ module.exports = class ConsoleReporter {
     } else {
       this.writeLine()
     }
+  }
+
+  getDuration() {
+    return `${(this.timer.getTime() / 1000).toFixed(1)}s`
   }
 
   printConditions(conditions) {
