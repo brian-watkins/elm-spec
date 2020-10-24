@@ -14,18 +14,9 @@
     "chalk": "^4.1.0",
     "chokidar": "^3.4.3",
     "command-exists": "^1.2.8",
-    "elm-spec-core": "^6.0.0",
-    "jsdom": "^16.4.0",
-    "playwright": "^1.5.1"
-  },
-  "devDependencies": {
-    "browserify": "^17.0.0",
-    "chai": "^4.2.0",
-    "chai-string": "^1.5.0",
-    "chai-things": "^0.2.0",
-    "mocha": "^7.1.1",
-    "shelljs": "^0.8.3",
-    "tinyify": "^3.0.0"
+    "elm-spec-core": "file:../elm-spec-core",
+    "jsdom": "^16.2.2",
+    "playwright": "^1.0.2"
   },
   "engines": {
     "node": ">=8.0.0"
