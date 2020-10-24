@@ -1,6 +1,6 @@
 {
   "name": "karma-elm-spec-framework",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Run elm-spec specs with Karma",
   "main": "lib/index.js",
   "scripts": {
