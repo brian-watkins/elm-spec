@@ -17,11 +17,13 @@ before(async () => {
   const bundle = await bundleRunnerCode()
   dom.window.eval(bundle)
 
-  runner.prepareElm(dom, {
+  const compiledElm = new Compiler({
     cwd: specSrcDir,
     specPath: "./Specs/*Spec.elm",
     logLevel: Compiler.LOG_LEVEL.QUIET
-  })
+  }).compile()
+
+  runner.prepareElm(dom, compiledElm)
 })
 
 after(() => {

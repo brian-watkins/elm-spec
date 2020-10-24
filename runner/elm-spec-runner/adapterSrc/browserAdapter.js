@@ -8,12 +8,12 @@ window.document.head.appendChild(base)
 
 const elmContext = new ElmContext(window)
 
-window._elm_spec.run = (options) => {
+window._elm_spec.run = (options, segment) => {
   return new Promise((resolve) => {
     const reporter = new BrowserReporter()
   
     new SuiteRunner(elmContext, reporter, options)
       .on('complete', resolve)
-      .runAll()
+      .runSegment(segment, options.parallelSegments)
   })
 }

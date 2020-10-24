@@ -40,6 +40,9 @@ value) for the `--browser` option.
 
 `--watch` -- Rerun the spec when files change in directories listed in the `source-directories` of your specs' elm.json file.
 
+`--parallel` -- Run scenarios in parallel, up to the number of CPU cores. This can lower spec suite
+run time for larger spec suites.
+
 `--endOnFailure` -- Stop the spec suite run on the first failure.
 
 `--css` -- Path to a CSS file to load in the browser, relative to the current directory. You may specify multiple css files.

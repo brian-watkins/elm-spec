@@ -3,6 +3,7 @@ const commandExists = require('command-exists').sync
 const process = require('process')
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
 const { Compiler } = require('elm-spec-core')
 const ConsoleReporter = require('./consoleReporter')
 const JSDOMSpecRunner = require('./jsdomSpecRunner')
@@ -28,23 +29,33 @@ class RunSuite extends Command {
     }
 
     const fileLoader = new FileLoader(flags.specRoot)
-    const command = new RunSpecsCommand(this.runnerFor(flags.browser, fileLoader), this.getReporter(), FileWatcher)
+
+    const command = new RunSpecsCommand(
+      this.compilerFor(flags),
+      this.runnerFor(flags.browser, fileLoader),
+      this.getReporter(),
+      FileWatcher
+    )
 
     await command.execute({
       browserOptions: {
         visible: flags.visible,
         cssFiles: flags.css || []
       },
-      compilerOptions: {
-        cwd: flags.specRoot,
-        specPath: flags.specs,
-        elmPath: flags.elm,
-        logLevel: Compiler.LOG_LEVEL.QUIET
-      },
       runOptions: {
-        endOnFailure: flags.endOnFailure
+        endOnFailure: flags.endOnFailure,
+        parallelSegments: flags.parallel ? numberOfCPUs() : 1
       },
       watchOptions: flags.watch ? ElmFiles.find(elmJsonPath) : { globs: [] }
+    })
+  }
+
+  compilerFor(flags) {
+    return new Compiler({
+      cwd: flags.specRoot,
+      specPath: flags.specs,
+      elmPath: flags.elm,
+      logLevel: Compiler.LOG_LEVEL.QUIET
     })
   }
 
@@ -64,6 +75,10 @@ class RunSuite extends Command {
       stream: process.stdout
     })
   }
+}
+
+const numberOfCPUs = () => {
+  return os.cpus().length
 }
 
 RunSuite.description = `Run Elm-Spec specs from the command line`
@@ -89,6 +104,9 @@ RunSuite.flags = {
   visible: flags.boolean({description: 'show browser while running specs (does nothing for jsdom)'}),
   watch: flags.boolean({
     description: "watch all elm files in the source-directories of the specRoot elm.json"
+  }),
+  parallel: flags.boolean({
+    description: `run scenarios in parallel, up to ${numberOfCPUs()} at a time`
   }),
   css: flags.string({
     description: "path to .css file to load in the browser (may specify multiple)",

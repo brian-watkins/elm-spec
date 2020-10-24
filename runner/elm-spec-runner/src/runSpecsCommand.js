@@ -3,13 +3,14 @@ const fs = require('fs')
 
 
 module.exports = class RunSpecsCommand {
-  constructor(runner, reporter, fileWatcher) {
+  constructor(compiler, runner, reporter, fileWatcher) {
+    this.compiler = compiler
     this.runner = runner
     this.reporter = reporter
     this.fileWatcher = fileWatcher
   }
   
-  async execute({ browserOptions, compilerOptions, runOptions, watchOptions }) {
+  async execute({ browserOptions, runOptions, watchOptions }) {
     await this.runner.start(browserOptions)
 
     if (shouldWatch(watchOptions)) {
@@ -18,17 +19,25 @@ module.exports = class RunSpecsCommand {
       this.fileWatcher.watch(watchOptions.globs, async (path) => {
         this.log(`File changed: ${path}`)
         this.reporter.reset()
-        await this.runner.run(this.reporter, compilerOptions, runOptions)
+        await this.runSpecs(runOptions)
       })
     }
 
-    await this.runner.run(this.reporter, compilerOptions, runOptions)
+    await this.runSpecs(runOptions)
 
     if (shouldWatch(watchOptions) || (browserOptions.visible && runOptions.endOnFailure)) {
       return
     }
 
     await this.runner.stop()
+  }
+
+  async runSpecs(runOptions) {
+    const compiledElm = await this.reporter.performAction("Compiling Elm ... ", "Done!", async () => {
+      return this.compiler.compile()
+    })
+
+    await this.runner.run(runOptions, compiledElm, this.reporter)
   }
 
   log(message) {

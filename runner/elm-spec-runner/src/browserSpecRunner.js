@@ -1,5 +1,4 @@
 const Playwright = require('playwright')
-const { Compiler } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 
@@ -17,26 +16,44 @@ module.exports = class BrowserSpecRunner {
     })
   }
 
-  async run(reporter, compilerOptions, runnerOptions) {
-    const page = await this.getPage(compilerOptions.cwd)
+  async run(runOptions, compiledSpecs, reporter) {
+    const browsers = await this.getBrowsersForSegments(runOptions.parallelSegments, reporter, compiledSpecs)
 
-    await this.loadCSS(page)
+    await Promise.all(browsers.map(this.runSpecInBrowser(runOptions)))
 
-    await this.adaptPageForElm(page)
+  }
 
-    await this.adaptReporterToBrowser(page, reporter)
+  async getBrowsersForSegments(segmentCount, reporter, compiledElm) {
+    const browserContext = await this.getBrowserContext()
 
-    await reporter.performAction("Compiling Elm ... ", "Done!", async () => {
-      return this.prepareElm(page, compilerOptions)
-    })
+    const browsers = []
+    for (let i = 0; i < segmentCount; i++) {
+      const browser = await this.prepareBrowser(browserContext, reporter, compiledElm)
+      browsers.push(browser)
+    }
 
-    await page.evaluate((options) => {
-      return window._elm_spec.run(options)
-    }, runnerOptions)
+    return browsers
+  }
+
+  runSpecInBrowser(runnerOptions) {
+    return (browser, index) => {
+      return browser.evaluate((options) => {
+        return window._elm_spec.run(options.runnerOptions, options.segment)
+      }, { runnerOptions, segment: index })
+    }
   }
 
   async stop() {
     await this.browser.close()
+  }
+
+  async prepareBrowser(browserContext, reporter, compiledElm) {
+    const page = await this.getPage(browserContext)
+    await this.loadCSS(page)
+    await this.adaptPageForElm(page)
+    await this.adaptReporterToBrowser(page, reporter)
+    await this.prepareElm(page, compiledElm)
+    return page
   }
 
   async loadCSS(page) {
@@ -57,21 +74,22 @@ module.exports = class BrowserSpecRunner {
     await page.exposeFunction('_elm_spec_reporter_finish', () => { reporter.finish() })
   }
 
-  async prepareElm(page, options) {
-    const compiler = new Compiler(options)
-    const compiledCode = compiler.compile()
+  async prepareElm(page, compiledCode) {
     await page.evaluate(compiledCode)
     return await page.evaluate(() => {
       return window.hasOwnProperty("Elm")
     })
   }
 
-  async getPage() {
+  async getBrowserContext() {
     if (this.browser.contexts().length > 0) {
       this.browser.contexts().map(async (context) => await context.close())
     }
 
-    const context = await this.browser.newContext()
+    return this.browser.newContext()
+  }
+
+  async getPage(context) {
     const page = await context.newPage()
 
     page.on('console', async (msg) => {

@@ -14,7 +14,7 @@ describe("Suite Runner", () => {
   })
 
   it("runs the scenarios", (done) => {
-    expectScenarios("Passing", { endOnFailure: false }, done, (observations) => {
+    expectScenarios("Passing", standardOptions, done, (observations) => {
       expect(observations).to.have.length(10)
 
       expectAccepted(observations[0])
@@ -51,7 +51,7 @@ describe("Suite Runner", () => {
 
   context("when the runner supports loading files", () => {
     it("handles all the file loading specs as expected", (done) => {
-      expectScenarios("WithFileSpecs",  { endOnFailure: false }, done, (observations) => {
+      expectScenarios("WithFileSpecs",  standardOptions, done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -63,7 +63,7 @@ describe("Suite Runner", () => {
 
   context("when the runner does not support loading files", () => {
     it("presents an error when a scenario attempts to load a file", (done) => {
-      expectSpecWithNoBrowserCapabilities('./specs/WithFileSpecs/FileSpec.elm', { endOnFailure: false }, done, (observations) => {
+      expectSpecWithNoBrowserCapabilities('./specs/WithFileSpecs/FileSpec.elm', standardOptions, done, (observations) => {
         expectRejected(observations[0], [
           reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
           reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
@@ -90,17 +90,18 @@ describe("Suite Runner", () => {
 
   context("when the suite should end on the first failure", () => {
     it("stops at the first failure", (done) => {
-      expectScenarios('WithFailure', { endOnFailure: true }, done, (observations) => {
-        expect(observations).to.have.length(2)
+      expectScenarios('WithFailure', { ...standardOptions, endOnFailure: true }, done, (observations) => {
+        expect(observations).to.have.length(3)
         expectAccepted(observations[0])
-        expectRejected(observations[1])
+        expectSkipped(observations[1])
+        expectRejected(observations[2])
       })
     })
   })
 
   context("when some scenarios are picked", () => {
     it("runs only the picked scenarios and skips the others", (done) => {
-      expectScenarios("WithPicked", { endOnFailure: false }, done, (observations) => {
+      expectScenarios("WithPicked", standardOptions, done, (observations) => {
         expectSkipped(observations[0])
 
         expectAccepted(observations[1])
@@ -119,7 +120,7 @@ describe("Suite Runner", () => {
 
   context("when some scenarios are skipped", () => {
     it("does not executed the skipped scenarios", (done) => {
-      expectScenarios("WithSkipped", { endOnFailure: false }, done, (observations) => {
+      expectScenarios("WithSkipped", standardOptions, done, (observations) => {
         expect(observations).to.have.length(6)
 
         expectSkipped(observations[0])
@@ -141,21 +142,22 @@ describe("Suite Runner", () => {
 
   context("when the suite should report all results", () => {
     it("reports all results", (done) => {
-      expectScenarios('WithFailure', { endOnFailure: false }, done, (observations) => {
-        expect(observations).to.have.length(6)
+      expectScenarios('WithFailure', standardOptions, done, (observations) => {
+        expect(observations).to.have.length(7)
         expectAccepted(observations[0])
-        expectRejected(observations[1])
+        expectSkipped(observations[1])
         expectRejected(observations[2])
-        expectAccepted(observations[3])
+        expectRejected(observations[3])
         expectAccepted(observations[4])
         expectAccepted(observations[5])
+        expectAccepted(observations[6])
       })
     })
   })
   
   context("when the suite has multiple programs with global event listeners", () => {
     it("resets visibility change events as expected", (done) => {
-      expectScenarios('WithMultiVisibilityChange', { endOnFailure: false }, done, (observations) => {
+      expectScenarios('WithMultiVisibilityChange', standardOptions, done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -163,7 +165,7 @@ describe("Suite Runner", () => {
       })
     })
     it("resets resize events as expected", (done) => {
-      expectScenarios("WithMultiResize", { endOnFailure: false }, done, (observations) => {
+      expectScenarios("WithMultiResize", standardOptions, done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -171,7 +173,7 @@ describe("Suite Runner", () => {
       })
     })
     it("resets arbitrary document events as expected", (done) => {
-      expectScenarios("WithMultiDocumentClick", { endOnFailure: false }, done, (observations) => {
+      expectScenarios("WithMultiDocumentClick", standardOptions, done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
@@ -182,7 +184,7 @@ describe("Suite Runner", () => {
 
   context("when a scenario logs a message", () => {
     it("sends the message to the reporter", (done) => {
-      expectScenarios("WithLogs", { endOnFailure: false }, done, (observations, error, logs) => {
+      expectScenarios("WithLogs", standardOptions, done, (observations, error, logs) => {
         expectAccepted(observations[0])
         expect(logs).to.deep.equal([
           [ reportLine("After two clicks!") ]
@@ -193,7 +195,7 @@ describe("Suite Runner", () => {
 
   context("when no specs are found", () => {
     it("reports an error", (done) => {
-      expectScenarios('WithNoSpecs', { endOnFailure: false }, done, (observations, error) => {
+      expectScenarios('WithNoSpecs', standardOptions, done, (observations, error) => {
         expect(observations).to.have.length(0)
         expect(error).to.deep.equal([
           reportLine("No spec modules found!"),
@@ -206,7 +208,7 @@ describe("Suite Runner", () => {
 
   context("when the code does not compile", () => {
     it("reports zero tests", (done) => {
-      expectScenarios('WithCompilationError', { endOnFailure: false }, done, (observations, error) => {
+      expectScenarios('WithCompilationError', standardOptions, done, (observations, error) => {
         expect(observations).to.have.length(0)
         expect(error).to.deep.equal([
           reportLine("Unable to compile the elm-spec program!")
@@ -218,7 +220,7 @@ describe("Suite Runner", () => {
   context("when the expected ports are not found", () => {
     context("when the elmSpecOut port is not found", () => {
       it("fails and reports an error", (done) => {
-        expectScenarios("WithNoSendOutPort", { endOnFailure: false }, done, (observations, error) => {
+        expectScenarios("WithNoSendOutPort", standardOptions, done, (observations, error) => {
           expect(observations).to.have.length(0)
           expect(error).to.deep.equal([
             reportLine("No elmSpecOut port found!"),
@@ -230,7 +232,7 @@ describe("Suite Runner", () => {
 
     context("when the elmSpecIn port is not found", () => {
       it("fails and reports an error", (done) => {
-        expectScenarios("WithNoSendInPort", { endOnFailure: false }, done, (observations, error) => {
+        expectScenarios("WithNoSendInPort", standardOptions, done, (observations, error) => {
           expect(observations).to.have.length(0)
           expect(error).to.deep.equal([
             reportLine("No elmSpecIn port found!"),
@@ -243,7 +245,7 @@ describe("Suite Runner", () => {
 
   context("when the flags passed on init are messed up", () => {
     it("fails and reports an error", (done) => {
-      expectScenariosForVersion("BAD VERSION", "Passing", { endOnFailure: false }, done, (reporter) => {
+      expectScenariosForVersion("BAD VERSION", "Passing", standardOptions, done, (reporter) => {
         expect(reporter.observations).to.have.length(0)
         expect(reporter.errorCount).to.equal(1)
         expect(reporter.specError).to.not.be.null
@@ -253,7 +255,7 @@ describe("Suite Runner", () => {
 
   context("when the version is not correct", () => {
     it("fails and reports only one error", (done) => {
-      expectScenariosForVersion(-1, "Passing", { endOnFailure: false }, done, (reporter) => {
+      expectScenariosForVersion(-1, "Passing", standardOptions, done, (reporter) => {
         expect(reporter.observations).to.have.length(0)
         expect(reporter.errorCount).to.equal(1)
         expect(reporter.specError).to.not.be.null
@@ -262,6 +264,10 @@ describe("Suite Runner", () => {
   })
 
 })
+
+const standardOptions = {
+  endOnFailure: false
+}
 
 const expectSpecWithNoBrowserCapabilities = (specPath, options, done, matcher) => {
   expectScenariosAt({

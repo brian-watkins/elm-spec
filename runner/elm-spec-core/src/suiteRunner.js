@@ -12,6 +12,12 @@ module.exports = class SuiteRunner extends EventEmitter {
     this.reporter = reporter
     this.options = options
     this.version = version || ELM_SPEC_CORE_VERSION
+    this.segment = { id: 0, count: 1 }
+  }
+
+  runSegment(id, count) {
+    this.segment = { id, count }
+    this.runAll()
   }
 
   runAll() {
@@ -70,7 +76,9 @@ module.exports = class SuiteRunner extends EventEmitter {
     try {
       app = program.init({
         flags: {
-          version: this.version
+          version: this.version,
+          segment: this.segment.id,
+          segmentCount: this.segment.count
         }
       })
     } catch (err) {

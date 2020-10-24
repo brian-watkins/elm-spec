@@ -50,7 +50,14 @@ new Compiler({
 
   // Path to the elm executable
   // By default, the compiler uses the `elm` executable in the current path
-  elmPath: './node_modules/.bin/elm'
+  elmPath: './node_modules/.bin/elm',
+
+  // Log level
+  // By default, the compiler prints all log output
+  // Compiler.LOG_LEVEL.ALL -- will print info and errors
+  // Compiler.LOG_LEVEL.QUIET -- will only print compiler errors
+  // Compiler.LOG_LEVEL.SILENT -- will print nothing at all
+  logLevel: Compiler.LOG_LEVEL.QUIET
 })
 ```
 
@@ -143,6 +150,10 @@ and `version` is just used for testing.
 
 Execute all the compiled spec programs, one by one.
 
+**suiteRunner#runSegment(segment, totalSegments)**
+
+Run only scenarios for the given segment. (eg, 0, 1, 2, ...)
+
 ## Reporter
 
 A Reporter is an object with the following functions:
@@ -150,18 +161,20 @@ A Reporter is an object with the following functions:
 ```
 {
   // Called at the start of a suite run.
+  // Note: this will be called once for each parallel segment.
   startSuite: () => {},
 
   // Called with an Observation after each expectation is evaluated.
   record: (observation) => {},
 
-  // Called with a Report. If there is an error, the spec suite will immediately end.
+  // Called with a Report. If there is an error, the spec suite segment will immediately end.
   error: (err) => {},
 
   // Called with a Report.
   log: (report) => {},
 
   // Called at the end of the spec suite run.
+  // Note: this will be called once for each parallel segment.
   finish: () => {}
 }
 ```

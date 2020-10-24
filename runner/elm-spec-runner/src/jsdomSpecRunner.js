@@ -1,5 +1,4 @@
 const { JSDOM } = require("jsdom");
-const { Compiler } = require('elm-spec-core')
 const path = require('path')
 const fs = require('fs')
 
@@ -10,21 +9,32 @@ module.exports = class JSDOMSpecRunner {
 
   async start() {}
 
-  async run(reporter, compilerOptions, runnerOptions) {
-    const dom = this.getDom(compilerOptions.cwd)
-
-    this.adaptForElmSpec(dom.window)
-
-    this.adaptReporter(dom.window, reporter)
-
-    await reporter.performAction("Compiling Elm ... ", "Done!", async () => {
-      return this.prepareElm(dom, compilerOptions)
-    })
-
-    await dom.window._elm_spec.run(runnerOptions)
+  async run(runOptions, compiledSpecs, reporter) {
+    const browsers = this.getBrowsersForSegments(runOptions.parallelSegments, reporter, compiledSpecs)
+    await Promise.all(browsers.map(this.runSpecInBrowser(runOptions)))
   }
 
   async stop() {}
+
+  runSpecInBrowser(runnerOptions) {
+    return async (browser, index) => {
+      return browser.window._elm_spec.run(runnerOptions, index)
+    }
+  }
+
+  getBrowsersForSegments(segmentCount, reporter, compiledElm) {
+    const browsers = []
+    
+    for (let i = 0; i < segmentCount; i++) {
+      const dom = this.getDom()
+      this.adaptForElmSpec(dom.window)
+      this.adaptReporter(dom.window, reporter)
+      this.prepareElm(dom, compiledElm)  
+      browsers.push(dom)
+    }
+
+    return browsers
+  }
 
   getDom() {
     const dom = new JSDOM(
@@ -57,10 +67,7 @@ module.exports = class JSDOMSpecRunner {
     window._elm_spec_reporter_finish = () => { reporter.finish() }
   }
 
-  prepareElm(dom, options) {
-    const compiler = new Compiler(options)
-    const code = compiler.compile()
-    dom.window.eval(code)
-    return dom.window.hasOwnProperty("Elm")
+  prepareElm(dom, compiledCode) {
+    dom.window.eval(compiledCode)
   }
 }

@@ -2,25 +2,20 @@ const chai = require('chai')
 chai.use(require('chai-things'));
 const expect = chai.expect
 const RunSpecsCommand = require("../src/runSpecsCommand")
-const path = require('path')
 
 describe("Run Specs Command", () => {
   let testReporter
   let testRunner
   let testFileWatcher
+  let testCompiler
   let subject
-
-  const compilerOptions = {
-    cwd: path.join(__dirname, "./fixtures/sampleSuite"),
-    specPath: "**/*Spec.elm",
-    elmPath: path.join(__dirname, "../../node_modules/.bin/elm")
-  }
 
   beforeEach(() => {
     testReporter = new TestReporter()
     testRunner = new TestRunner()
     testFileWatcher = new TestFileWatcher()
-    subject = new RunSpecsCommand(testRunner, testReporter, testFileWatcher)
+    testCompiler = new TestCompiler("compiled-code")
+    subject = new RunSpecsCommand(testCompiler, testRunner, testReporter, testFileWatcher)
   })
 
   context("when not watching files", () => {
@@ -30,7 +25,9 @@ describe("Run Specs Command", () => {
     }
 
     const itRunsTheSpecsOnce = () => {
-      it("runs the specs", () => {
+      it("compiles and runs the specs", () => {
+        expect(testCompiler.compileCount).to.equal(1)
+        expect(testRunner.compiledCode).to.equal("compiled-code")
         expect(testRunner.runCount).to.equal(1)
       })
   
@@ -47,7 +44,7 @@ describe("Run Specs Command", () => {
       beforeEach(async () => {
         const browserOptions = { visible: false }
         const runOptions = { endOnFailure: false }
-        await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
+        await subject.execute({ browserOptions, runOptions, watchOptions })
       })
   
       itRunsTheSpecsOnce()
@@ -61,7 +58,7 @@ describe("Run Specs Command", () => {
       beforeEach(async () => {
         const browserOptions = { visible: false }
         const runOptions = { endOnFailure: true }
-        await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
+        await subject.execute({ browserOptions, runOptions, watchOptions })
       })
   
       itRunsTheSpecsOnce()
@@ -75,7 +72,7 @@ describe("Run Specs Command", () => {
       beforeEach(async () => {
         const browserOptions = { visible: true }
         const runOptions = { endOnFailure: false }
-        await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
+        await subject.execute({ browserOptions, runOptions, watchOptions })
       })
   
       itRunsTheSpecsOnce()
@@ -89,7 +86,7 @@ describe("Run Specs Command", () => {
       beforeEach(async () => {
         const browserOptions = { visible: true }
         const runOptions = { endOnFailure: true }
-        await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
+        await subject.execute({ browserOptions, runOptions, watchOptions })
       })
   
       itRunsTheSpecsOnce()
@@ -112,7 +109,7 @@ describe("Run Specs Command", () => {
       }
 
       beforeEach(async () => {
-        await subject.execute({ browserOptions, compilerOptions, runOptions, watchOptions })
+        await subject.execute({ browserOptions, runOptions, watchOptions })
       })
 
       it("prints the globs that will be watched", async () => {
@@ -125,8 +122,11 @@ describe("Run Specs Command", () => {
         expect(testFileWatcher.isWatching).to.equal(true)
       })
 
-      it("runs the specs", () => {
+      it("compiles and runs the specs", () => {
+        expect(testCompiler.compileCount).to.equal(1)
+        expect(testRunner.compiledCode).to.equal("compiled-code")
         expect(testRunner.runCount).to.equal(1)
+
       })
 
       it("does not stop the runner", () => {
@@ -135,6 +135,7 @@ describe("Run Specs Command", () => {
 
       context("when a file changes", () => {
         beforeEach(async () => {
+          testCompiler.code = "newly-compiled-code"
           await testFileWatcher.callback("/some/path/to/a/file.elm")
         })
 
@@ -142,7 +143,9 @@ describe("Run Specs Command", () => {
           expect(testReporter.logs).to.contain("File changed: /some/path/to/a/file.elm")
         })
 
-        it("runs the specs again", () => {
+        it("compiles and runs the specs again", () => {
+          expect(testCompiler.compileCount).to.equal(2)
+          expect(testRunner.compiledCode).to.equal("newly-compiled-code")
           expect(testRunner.runCount).to.equal(2)
         })
 
@@ -173,10 +176,12 @@ class TestRunner {
   start(browserOptions) {
     this.runCount = 0
     this.didStop = false
+    this.compiledCode = ""
   }
 
-  run(reporter, compilerOptions, runOptions) {
+  run(runOptions, compiledCode, reporter) {
     this.runCount += 1
+    this.compiledCode = compiledCode
   }
 
   stop() {
@@ -184,10 +189,26 @@ class TestRunner {
   }
 }
 
+class TestCompiler {
+  constructor(code) {
+    this.code = code
+    this.compileCount = 0
+  }
+
+  compile() {
+    this.compileCount += 1
+    return this.code
+  }
+}
+
 class TestReporter {
   constructor() {
     this.logs = []
     this.didReset = false
+  }
+
+  performAction(startMessage, finishMessage, action) {
+    return action()
   }
 
   printLine(line) {

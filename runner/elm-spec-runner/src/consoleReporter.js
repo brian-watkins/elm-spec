@@ -19,17 +19,19 @@ module.exports = class ConsoleReporter {
     this.skipped = 0
     this.rejected = []
     this.hasError = false
+    this.segments = 0
   }
 
   async performAction(startMessage, doneMessage, action) {
     this.printLine(startMessage)
     this.printLine()
-    const didAction = await action()
-    if (didAction) {
+    const actionResult = await action()
+    if (actionResult) {
       readline.cursorTo(this.stream, 0)
       readline.moveCursor(this.stream, 0, -2)
       this.printLine(`${startMessage}${doneMessage}`)
     }
+    return actionResult
   }
 
   print(message = "") {
@@ -41,7 +43,10 @@ module.exports = class ConsoleReporter {
   }
 
   startSuite() {
-    this.write("\nRunning specs: ")
+    this.segments += 1
+    if (this.segments === 1) {
+      this.write("\nRunning specs: ")
+    }
   }
 
   record(observation) {
@@ -68,6 +73,8 @@ module.exports = class ConsoleReporter {
   }
 
   error(err) {
+    if (this.hasError) return
+
     this.writeLine("Error running spec suite!")
     this.writeLine()
     err.forEach(r => this.printReport(r))
@@ -76,6 +83,9 @@ module.exports = class ConsoleReporter {
 
   finish() {
     if (this.hasError) return
+
+    this.segments -= 1
+    if (this.segments > 0) return
 
     this.writeLine("\n")
     this.writeLine(ok(`Accepted: ${this.accepted}`))

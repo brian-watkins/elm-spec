@@ -20,6 +20,8 @@ import Url exposing (Url)
 
 type alias Flags =
   { version: Int
+  , segment: Int
+  , segmentCount: Int
   }
 
 
@@ -36,11 +38,18 @@ type Msg msg
   | ReceivedMessage Message
 
 
+type alias Segment =
+  { id: Int
+  , total: Int
+  }
+
+
 type alias Model model msg =
   { scenarios: List (Internal.Scenario model msg)
   , scenarioModel: ScenarioProgram.Model (Msg msg) msg
   , key: Maybe Key
   , tags: List String
+  , segment: Segment
   }
 
 
@@ -51,6 +60,7 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
       , tags = []
+      , segment = { id = flags.segment, total = flags.segmentCount }
       }
     , Cmd.none
     )
@@ -59,6 +69,7 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
       , tags = []
+      , segment = { id = 0, total = 1 }
       }
     , versionMismatchErrorMessage requiredElmSpecCoreVersion flags.version
         |> config.send
@@ -79,12 +90,15 @@ update config msg model =
         [] ->
           ( model, config.send specComplete )
         next :: remaining ->
-          if shouldRunScenario model.tags next then
-            ScenarioProgram.run (scenarioActions config) model.key next
-              |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
+          if isInSegment model.segment <| List.length remaining then
+            if shouldRunScenario model.tags next then
+              ScenarioProgram.run (scenarioActions config) model.key next
+                |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
+            else
+              ScenarioProgram.skip (scenarioActions config) next
+                |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
           else
-            ScenarioProgram.skip (scenarioActions config) next
-              |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated, scenarios = remaining })
+            update config msg { model | scenarios = remaining }
     ScenarioMsg scenarioMsg ->
       ScenarioProgram.update (scenarioActions config) scenarioMsg model.scenarioModel
         |> Tuple.mapFirst (\updated -> { model | scenarioModel = updated })
@@ -114,6 +128,11 @@ startSuite message model =
       ( { model | tags = tags }, sendUpdateMsg RunNextScenario )
     Err _ ->
       ( model, sendUpdateMsg RunNextScenario )
+
+
+isInSegment : Segment -> Int -> Bool
+isInSegment segment scenarioIndex =
+  modBy segment.total scenarioIndex == segment.id
 
 
 shouldRunScenario : List String -> Internal.Scenario model msg -> Bool

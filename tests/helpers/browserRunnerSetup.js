@@ -13,16 +13,19 @@ before(async () => {
   await browserSpecRunner.start({
     visible: false
   })
-  global.page = await browserSpecRunner.getPage()
+  const context = await browserSpecRunner.getBrowserContext()
+  global.page = await browserSpecRunner.getPage(context)
 
   const bundle = await bundleRunnerCode()
   await page.evaluate(bundle)
 
-  await browserSpecRunner.prepareElm(page, {
+  const compiledElm = new Compiler({
     cwd: specSrcDir,
     specPath: "./Specs/*Spec.elm",
     logLevel: Compiler.LOG_LEVEL.QUIET
-  })
+  }).compile()
+  
+  await browserSpecRunner.prepareElm(page, compiledElm)
 })
 
 after(async () => {

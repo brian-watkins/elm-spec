@@ -130,6 +130,56 @@ describe("reporter", () => {
     })
   })
 
+  describe("when there are multiple parallel segments", () => {
+    let lines
+    let header
+
+    beforeEach(() => {
+      lines = []
+      header = ""
+      const subject = new Reporter({
+        write: (character) => { header += character },
+        writeLine: (line) => lines.push(line)
+      })
+
+      subject.startSuite()
+      subject.startSuite()
+      subject.startSuite()
+
+      subject.record(acceptedMessage())
+      subject.record(rejectedMessage({
+        conditions: [ "Given a subject", "When something happens" ],
+        description: "It does something else",
+        report: [
+          { statement: "Expected something", detail: "cool" }
+        ],
+        modulePath: "/base/path/elm/specs/Some/Funny/RejectedSpec.elm"
+      }))
+      subject.record(acceptedMessage())
+      subject.record(acceptedMessage())
+      subject.record(acceptedMessage())
+
+      subject.finish()
+      subject.finish()
+      subject.finish()
+    })
+
+    it("writes the expected test output once", () => {
+      expect(header).to.have.entriesCount("Running specs:", 1)
+      expectToContain(lines, [
+        "Accepted: 4",
+        "Rejected: 1",
+        "Failed to satisfy spec:",
+        "/base/path/elm/specs/Some/Funny/RejectedSpec.elm",
+        "Given a subject",
+        "When something happens",
+        "It does something else",
+        "Expected something",
+        "cool"
+      ])
+    })
+  })
+
   describe("when there is an error", () => {
     let lines
     let subject
@@ -157,6 +207,42 @@ describe("reporter", () => {
 
     it("records that an error occurred", () => {
       expect(subject.hasError).to.be.true
+    })
+  })
+
+  context("when there is an error and multiple parallel segments", () => {
+    let lines
+    let subject
+
+    beforeEach(() => {
+      lines = []
+      subject = new Reporter({ write: (character) => {}, writeLine: (line) => lines.push(line), specFiles: [] })
+
+      subject.error([
+        { statement: "You received one error", detail: "something" },
+        { statement: "and a final statement\nwith multiple lines", detail: null }
+      ])
+      subject.finish()
+      subject.error([
+        { statement: "You received a second error", detail: "something" },
+        { statement: "and a final statement\nwith multiple lines", detail: null }
+      ])
+      subject.finish()
+      subject.error([
+        { statement: "You received a third error", detail: "something" },
+        { statement: "and a final statement\nwith multiple lines", detail: null }
+      ])
+      subject.finish()
+    })
+
+    it("writes only the first error", () => {
+      expectToContain(lines, [
+        "Error running spec suite!",
+        "You received one error",
+        "something",
+        "and a final statement",
+        "with multiple lines"
+      ])
     })
   })
 

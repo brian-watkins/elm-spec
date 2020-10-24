@@ -34,7 +34,34 @@ clickSpec =
   ]
 
 
+skippedSpec : Spec App.Model App.Msg
+skippedSpec =
+  Spec.describe "an html program"
+  [ Runner.skip <| scenario "a click event" (
+      given (
+        Setup.initWithModel App.defaultModel
+          |> Setup.withUpdate App.update
+          |> Setup.withView App.view
+      )
+      |> when "the button is clicked three times"
+        [ Markup.target << by [ id "my-button" ]
+        , Event.click
+        , Event.click
+        , Event.click
+        , Event.click
+        , Event.click
+        ]
+      |> it "renders the count" (
+        Markup.observeElement
+          |> Markup.query << by [ id "count-results" ]
+          |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 "You clicked the button 3 time(s)")
+      )
+    )
+  ]
+
+
 main =
   Runner.program
     [ clickSpec
+    , skippedSpec
     ]

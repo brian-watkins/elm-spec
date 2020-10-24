@@ -15,9 +15,7 @@ const expectBehaviorFor = (browserName, runner) => {
 
     context(`when there is an error running the specs in ${browserName}`, () => {
       beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, errorSpecs, { endOnFailure: false })
+        testReporter = await runForTest(runner, errorSpecs)
       })
       
       it("reports the error", () => {
@@ -27,9 +25,7 @@ const expectBehaviorFor = (browserName, runner) => {
 
     context(`when all the observations are accepted in ${browserName}`, () => {
       beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, allSpecs, { endOnFailure: false })
+        testReporter = await runForTest(runner, allSpecs)
       })
  
       it("calls start and finish", () => {
@@ -44,7 +40,7 @@ const expectBehaviorFor = (browserName, runner) => {
       context(`when the specs are executed again in ${browserName}, like in watch mode`, () => {
         beforeEach(async () => {
           testReporter = new TestReporter()
-          await runner.run(testReporter, allSpecs, { endOnFailure: false })
+          await runner.run(testRunnerOptions, compileCodeForTests(allSpecs), testReporter)
         })
 
         it("reports all are still accepted", () => {
@@ -53,11 +49,26 @@ const expectBehaviorFor = (browserName, runner) => {
       })
     })
 
+    context(`when the scenarios are executed in parallel in ${browserName}`, () => {
+      beforeEach(async () => {
+        testReporter = await runForTest(runner, passingAndFailingSpecs, { ...testRunnerOptions, parallelSegments: 3 })
+      })
+
+      it("calls start and finish for each segment", () => {
+        expect(testReporter.startCount).to.equal(3)
+        expect(testReporter.finishCount).to.equal(3)
+      })
+
+      it("reports the correct number of accepted, skipped, and rejected scenarios", () => {
+        expect(testReporter.accepted).to.equal(4)
+        expect(testReporter.rejected).to.equal(2)
+        expect(testReporter.skipped).to.equal(1)
+      })
+    })
+
     context(`when the spec emits log messages in ${browserName}`, () => {
       beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, specsWithLogs, { endOnFailure: false })
+        testReporter = await runForTest(runner, specsWithLogs)
       })
 
       it("reports the log message", () => {
@@ -67,9 +78,7 @@ const expectBehaviorFor = (browserName, runner) => {
 
     context(`when scenarios are skipped in ${browserName}`, () => {
       beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, skippedSpecs, { endOnFailure: false })
+        testReporter = await runForTest(runner, skippedSpecs)
       })
 
       it(`reports the correct number of skipped observations in ${browserName}`, () => {
@@ -79,9 +88,7 @@ const expectBehaviorFor = (browserName, runner) => {
 
     context(`when observations are rejected in ${browserName}`, () => {
       beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, failingSpec, { endOnFailure: false })
+        testReporter = await runForTest(runner, failingSpec)
       })
 
       it(`reports the correct number of rejections in ${browserName}`, () => {
@@ -91,9 +98,7 @@ const expectBehaviorFor = (browserName, runner) => {
 
     context(`when end on first failure in ${browserName}`, () => {
       beforeEach(async () => {
-        testReporter = new TestReporter()
-        await runner.start(testBrowserOptions)
-        await runner.run(testReporter, failingSpec, { endOnFailure: true })
+        testReporter = await runForTest(runner, failingSpec, { ...testRunnerOptions, endOnFailure: true })
       })
 
       it(`reports only the first failure in ${browserName}`, () => {
@@ -101,6 +106,18 @@ const expectBehaviorFor = (browserName, runner) => {
       })
     })
   })
+}
+
+const runForTest = async (runner, compilerOptions, runnerOptions = testRunnerOptions) => {
+  const testReporter = new TestReporter()
+  await runner.start(testBrowserOptions)
+  await runner.run(runnerOptions, compileCodeForTests(compilerOptions), testReporter)
+  return testReporter
+}
+
+const compileCodeForTests = (compilerOptions) => {
+  const compiler = new Compiler(compilerOptions)
+  return compiler.compile()
 }
 
 describe("Spec Runners", () => {
@@ -112,6 +129,18 @@ describe("Spec Runners", () => {
 const testBrowserOptions = {
   visible: false,
   cssFiles: []
+}
+
+const testRunnerOptions = {
+  endOnFailure: false,
+  parallelSegments: 1
+}
+
+const passingAndFailingSpecs = {
+  cwd: "../elm-spec-core/tests/sample/",
+  specPath: "./specs/WithFailure/**/*Spec.elm",
+  elmPath: "../../node_modules/.bin/elm",
+  logLevel: Compiler.LOG_LEVEL.SILENT
 }
 
 const failingSpec = {
@@ -162,7 +191,7 @@ const TestReporter = class {
   print() {}
   printLine() {}
   async performAction(startMessage, endMessage, action) {
-    await action()
+    return await action()
   }
 
   startSuite() {

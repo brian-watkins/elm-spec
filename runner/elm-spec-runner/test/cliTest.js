@@ -13,6 +13,18 @@ describe('elm-spec-runner', () => {
       const runnerOutput = shell.exec(command, { silent: true })
       expect(runnerOutput.stdout).to.contain("Accepted: 10")
     })
+
+    context("in parallel", () => {
+      it("executes all the scenarios and prints the number accepted", () => {
+        const command = "./bin/run" +
+          " --elm ../../node_modules/.bin/elm" +
+          " --specRoot ../elm-spec-core/tests/sample/" +
+          " --specs ./specs/Passing/**/*Spec.elm" +
+          " --parallel"
+        const runnerOutput = shell.exec(command, { silent: true })
+        expect(runnerOutput.stdout).to.contain("Accepted: 10")
+      })
+    })
   })
 
   context("when files are watched", () => {
