@@ -94,6 +94,7 @@ module.exports = class BrowserSpecRunner {
 
     page.on('console', async (msg) => {
       const logParts = await Promise.all(msg.args().map((arg) => arg.jsonValue()))
+      if (logParts.length == 0) return
       console.log(...logParts)
     });
 
