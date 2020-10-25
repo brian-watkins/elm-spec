@@ -68,6 +68,24 @@ new Compiler({
 Compiles the spec modules into a single string of JavaScript, adds an elm-spec
 specific wrapper around the compiled code to facilitate testing, and returns the string.
 
+**compiler#status()**
+
+Returns the status of the compiler, updated after each call to `compile()`. Possible values are:
+
+```
+// no compilation has occurred
+Compiler.STATUS.READY
+
+// no files found to compile
+Compiler.STATUS.NO_FILES
+
+// files were found and successfully compiled
+Compiler.STATUS.COMPILATION_SUCCEEDED
+
+// files were found but compilation failed
+Compiler.STATUS.COMPILATION_FAILED
+```
+
 
 ## ElmContext
 
