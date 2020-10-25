@@ -1,5 +1,16 @@
 # Changelog
 
+## 10.25.2020
+- elm-spec-core 7.1.0
+- elm-spec-runner 2.1.1
+
+### Added
+- Compiler provides info on status of last compile
+
+### Fixed
+- elm-spec-runner prints compilation failure messages correctly once again
+
+
 ## 10.24.2020
 - elm-spec 3.1.0
 - elm-spec-core 7.0.0
