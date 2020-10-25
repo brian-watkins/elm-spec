@@ -26,13 +26,13 @@ module.exports = class ConsoleReporter {
   async performAction(startMessage, doneMessage, action) {
     this.printLine(startMessage)
     this.printLine()
-    const actionResult = await action()
-    if (actionResult) {
+    const { isOk, value } = await action()
+    if (isOk) {
       readline.cursorTo(this.stream, 0)
       readline.moveCursor(this.stream, 0, -2)
       this.printLine(`${startMessage}${doneMessage}`)
     }
-    return actionResult
+    return value
   }
 
   print(message = "") {

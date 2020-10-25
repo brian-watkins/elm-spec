@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const { Compiler } = require('elm-spec-core')
 
 
 module.exports = class RunSpecsCommand {
@@ -34,7 +35,11 @@ module.exports = class RunSpecsCommand {
 
   async runSpecs(runOptions) {
     const compiledElm = await this.reporter.performAction("Compiling Elm ... ", "Done!", async () => {
-      return this.compiler.compile()
+      const code = this.compiler.compile()
+      return {
+        isOk: this.compiler.status() === Compiler.STATUS.COMPILATION_SUCCEEDED,
+        value: code
+      }
     })
 
     await this.runner.run(runOptions, compiledElm, this.reporter)

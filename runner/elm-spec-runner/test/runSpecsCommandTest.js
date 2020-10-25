@@ -2,6 +2,7 @@ const chai = require('chai')
 chai.use(require('chai-things'));
 const expect = chai.expect
 const RunSpecsCommand = require("../src/runSpecsCommand")
+const { Compiler } = require("elm-spec-core")
 
 describe("Run Specs Command", () => {
   let testReporter, testRunner, testFileWatcher, testCompiler, subject
@@ -92,7 +93,6 @@ describe("Run Specs Command", () => {
         expect(testRunner.didStop).to.equal(false)
       })
     })
-
   })
 
   context("when watching files", () => {
@@ -123,7 +123,6 @@ describe("Run Specs Command", () => {
         expect(testCompiler.compileCount).to.equal(1)
         expect(testRunner.compiledCode).to.equal("compiled-code")
         expect(testRunner.runCount).to.equal(1)
-
       })
 
       it("does not stop the runner", () => {
@@ -156,6 +155,39 @@ describe("Run Specs Command", () => {
       })
     })
   })
+
+  context("when compilation fails", () => {
+    beforeEach(async () => {
+      testCompiler.compilerStatus = Compiler.STATUS.COMPILATION_FAILED
+      const browserOptions = { visible: false }
+      const runOptions = { endOnFailure: false }
+      const watchOptions = {
+        globs: []
+      }
+      await subject.execute({ browserOptions, runOptions, watchOptions })
+    })
+
+    it("alerts the reporter", () => {
+      expect(testReporter.actionPerformed).to.equal(false)
+    })
+  })
+
+  context("when compilation succeeds", () => {
+    beforeEach(async () => {
+      testCompiler.compilerStatus = Compiler.STATUS.COMPILATION_SUCCEEDED
+      const browserOptions = { visible: false }
+      const runOptions = { endOnFailure: false }
+      const watchOptions = {
+        globs: []
+      }
+      await subject.execute({ browserOptions, runOptions, watchOptions })
+    })
+
+    it("alerts the reporter", () => {
+      expect(testReporter.actionPerformed).to.equal(true)
+    })
+  })
+
 })
 
 class TestFileWatcher {
@@ -190,11 +222,16 @@ class TestCompiler {
   constructor(code) {
     this.code = code
     this.compileCount = 0
+    this.compilerStatus = Compiler.STATUS.COMPILATION_SUCCEEDED
   }
 
   compile() {
     this.compileCount += 1
     return this.code
+  }
+
+  status() {
+    return this.compilerStatus
   }
 }
 
@@ -202,10 +239,13 @@ class TestReporter {
   constructor() {
     this.logs = []
     this.didReset = false
+    this.actionPerformed = false
   }
 
-  performAction(startMessage, finishMessage, action) {
-    return action()
+  async performAction(startMessage, finishMessage, action) {
+    const result = await action()
+    this.actionPerformed = result.isOk
+    return result.value
   }
 
   printLine(line) {

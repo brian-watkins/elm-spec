@@ -190,9 +190,6 @@ const TestReporter = class {
 
   print() {}
   printLine() {}
-  async performAction(startMessage, endMessage, action) {
-    return await action()
-  }
 
   startSuite() {
     this.startCount += 1

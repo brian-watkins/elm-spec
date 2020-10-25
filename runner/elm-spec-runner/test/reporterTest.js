@@ -11,6 +11,35 @@ describe("reporter", () => {
     reporter = testHarness.reporter
   })
 
+  context("when an action is not successfull performed", () => {
+    it("does not print the final text", async () => {
+      const result = await reporter.performAction("start", "end", async () => {
+        return { isOk: false, value: "blah" }
+      })
+
+      expect(result).to.equal("blah")
+      expectToContain(testHarness.lines, [
+        "start",
+        ""
+      ])
+    })
+  })
+
+  context("when an action is successfully performed", () => {
+    it("prints the start and the final text", async () => {
+      const result = await reporter.performAction("start", "end", async () => {
+        return { isOk: true, value: "blahblah" }
+      })
+
+      expect(result).to.equal("blahblah")
+      expectToContain(testHarness.lines, [
+        "start",
+        "",
+        "startend"
+      ])
+    })
+  })
+
   it("counts the number of accepted observations", () => {
     reporter.record(acceptedMessage())
     reporter.record(rejectedMessage())

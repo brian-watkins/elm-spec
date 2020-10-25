@@ -11,6 +11,7 @@ describe('elm-spec-runner', () => {
         " --specRoot ../elm-spec-core/tests/sample/" +
         " --specs ./specs/Passing/**/*Spec.elm"
       const runnerOutput = shell.exec(command, { silent: true })
+      expect(runnerOutput.stdout).to.contain("Compiling Elm ... Done")
       expect(runnerOutput.stdout).to.contain("Accepted: 10")
     })
 
