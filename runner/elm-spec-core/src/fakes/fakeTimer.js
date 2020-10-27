@@ -20,14 +20,31 @@ module.exports = class FakeTimer {
     }
   }
 
+  resetClock(time) {
+    this.clock.setSystemTime(time)
+
+    // Note: This fixes a bug in SinonJS/FakeTimers where animation tasks
+    // aren't correctly set to run in the next animation frame if the time is reset
+    this.animationTasks().forEach(t => {
+      t.callAt -= time % 16
+    })
+  }
+
+  tick(time) {
+    this.clock.tick(time)
+  }
+
   runAllAnimationFrameTasks() {
     this.clock.runToFrame()
   }
 
-  animationFrameTaskCount() {
+  animationTasks() {
     return Object.values(this.clock.timers)
       .filter(t => t.animation)
-      .length
+  }
+
+  animationFrameTaskCount() {
+    return this.animationTasks().length
   }
 
   clearTimers() {

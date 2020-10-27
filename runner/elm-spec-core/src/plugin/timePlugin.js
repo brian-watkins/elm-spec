@@ -1,13 +1,12 @@
 module.exports = class TimePlugin {
   constructor(context) {
     this.context = context
-    this.clock = context.timer.clock
   }
 
   handle(specMessage) {
     switch (specMessage.name) {
       case "set-time": {
-        this.clock.setSystemTime(specMessage.body)
+        this.context.timer.resetClock(specMessage.body)
         break
       }
       case "set-timezone": {
@@ -15,7 +14,7 @@ module.exports = class TimePlugin {
         break
       }
       case "tick": {
-        this.clock.tick(specMessage.body)
+        this.context.timer.tick(specMessage.body)
         break
       }
     }

@@ -27,6 +27,10 @@ describe("time plugin", () => {
   })
   
   describe("when the program is a browser program", () => {
+    it("stubs the time as expected", (done) => {
+      expectPassingSpec("HtmlTimeSpec", "stub", done)
+    })
+
     it("allows the spec to control Time.every as necessary", (done) => {
       expectPassingSpec("HtmlTimeSpec", "interval", done)
     })
