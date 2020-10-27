@@ -1,8 +1,18 @@
 # Changelog
 
+## 10.27.2020
+- elm-spec-core 7.1.1
+- elm-spec-runner 2.1.2
+- karma-elm-spec-framework 1.6.2
+
+### Fixed
+- View updates as expected when setup the scenario at a particular time via `Spec.Time.withTime`
+
+
 ## 10.25.2020
 - elm-spec-core 7.1.0
 - elm-spec-runner 2.1.1
+- karma-elm-spec-framework 1.6.1
 
 ### Added
 - Compiler provides info on status of last compile
