@@ -66,3 +66,30 @@ affected by this change.
 One downside is that in certain cases some implementation details of the Elm runtime will leak
 into the scenario script -- especially those involving DOM commands that might need an
 extra animation frame to run. However, these cases are probably rare.
+
+
+## Update
+There was a problem that showed up in scenarios where the final step needed to wait on one
+animation frame. So, for example, a step that sends a command to get an element and then
+updates the view based on that. Running one animation frame would kick off the command but then
+the view would never be updated, and a message would be sent to continue to the next step, which
+in the case of the last step would start observations so the animation frame would never be run.
+Plus, there would be no warning to the spec writer since there was not more than one animation
+task remaining after running the frame.
+
+To fix this problem we now check the count of animation frame tasks before and after running
+the frame. If the delta is greater than 0 then we know that some tasks occurred and so we
+can be confident that the update function will be called, resulting in another program command,
+which will ultimately result in another animation frame. So, if the delta is greater than zero
+then we do nothing. If the delta is zero, we send a message to continue to the next step.
+
+One caveat: It turns out that in certain cases, the Elm runtime does not actually add the animator
+task to the next animation frame. This appears to happen when certain input events occur, like
+`Html.Events.onInput`. In that case, the number of tasks actually goes to zero after we run the
+frame for that step. So, in that case, we need to explicitly send the message to go to the next step.
+
+Interestingly, if a scenario causes an input event and triggers a task that waits on an animation
+frame things will work fine, since the task itself seems to add the animator back as a task.
+
+Anyway, this is just to say that things get complicated with animation frames. We hope we've covered
+the cases but may still discover more problems ...

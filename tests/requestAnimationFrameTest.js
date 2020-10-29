@@ -49,14 +49,21 @@ describe("programs with request animation frame", () => {
   context("dom updates", () => {
     it("triggers multiple dom events", (done) => {
       expectSpec("RequestAnimationSpec", "domUpdate", done, (observations) => {
+        expectAccepted(observations[0])
         if (isForRealBrowser()) {
-          expectAccepted(observations[0])
+          expectAccepted(observations[1])
         } else {
-          expectRejected(observations[0], [
+          expectRejected(observations[1], [
             reportLine("Actual", "{ x = 0, y = -10 }"),
             reportLine("does not equal expected", "{ x = 0, y = 46 }")
           ])
         }
+      })
+    })
+    it("handles dom events when there is an input event also", (done) => {
+      expectSpec("RequestAnimationSpec", "input", done, (observations) => {
+        expectAccepted(observations[0])
+        expectAccepted(observations[1])
       })
     })
   })

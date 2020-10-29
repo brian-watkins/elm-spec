@@ -176,7 +176,23 @@ noUpdateSpec =
 domUpdateSpec : Spec Model Msg
 domUpdateSpec =
   describe "dom updates"
-  [ scenario "multiple dom updates in one task" (
+  [ scenario "dom update triggers a view update" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate domUpdate
+          |> Setup.withView domView
+      )
+      |> when "the dom command is triggered"
+        [ Markup.target << by [ id "fetch-button" ]
+        , Event.click
+        ]
+      |> it "updates the view" (
+        Markup.observeElement
+          |> Markup.query << by [ id "fetched-elements" ]
+          |> expect (isSomethingWhere <| Markup.text <| equals "1")
+      )
+    )
+  , scenario "multiple dom updates in one task" (
       given (
         Setup.initWithModel testModel
           |> Setup.withUpdate domUpdate
@@ -192,6 +208,36 @@ domUpdateSpec =
         Navigator.observe
           |> expect (Navigator.viewportOffset <| equals { x = 0, y = 46 })
       )
+    )
+  ]
+
+
+inputSpec : Spec Model Msg
+inputSpec =
+  describe "input event and dom task"
+  [ scenario "input event and dom task" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate domUpdate
+          |> Setup.withView domView
+      )
+      |> when "the input occurs"
+        [ Markup.target << by [ tag "input" ]
+        , Event.input "Helloooo!"
+        , Event.input "Cool!"
+        ]
+      |> observeThat
+        [ it "updates the view" (
+            Markup.observeElement
+              |> Markup.query << by [ id "input-text" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "Cool!")
+          )
+        , it "got the element" (
+            Markup.observeElement
+              |> Markup.query << by [ id "fetched-elements" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "2")
+          )
+        ]
     )
   ]
 
@@ -279,6 +325,7 @@ type alias Model =
   { loops: Int
   , focus: Int
   , elements: List Browser.Dom.Element
+  , text: String
   }
 
 
@@ -286,6 +333,7 @@ testModel =
   { loops = 0
   , focus = 0
   , elements = []
+  , text = ""
   }
 
 
@@ -294,6 +342,8 @@ type Msg
   | DidFocus
   | DoNothing
   | DoSomething
+  | FetchElement
+  | GotInput String
   | DidSetViewport
   | GotElement (Result Browser.Dom.Error Browser.Dom.Element)
 
@@ -311,6 +361,8 @@ domView : Model -> Html Msg
 domView model =
   Html.div []
   [ Html.button [ Events.onClick DoSomething ] [ Html.text "Click me!" ]
+  , Html.button [ Attr.id "fetch-button", Events.onClick FetchElement ] [ Html.text "Fetch" ]
+  , Html.div [ Attr.id "fetched-elements" ] [ Html.text <| String.fromInt <| List.length model.elements ]
   , Html.div
     [ Attr.id "test-element"
     , Attr.style "position" "absolute"
@@ -318,6 +370,8 @@ domView model =
     , Attr.style "left" "20"
     ]
     [ Html.text "TEST!" ]
+  , Html.input [ Events.onInput GotInput ] []
+  , Html.div [ Attr.id "input-text" ] [ Html.text model.text ]
   ]
 
 
@@ -331,6 +385,22 @@ domUpdate msg model =
             Browser.Dom.setViewport 0.0 (element.element.y - 10.0)
           )
           |> Task.attempt (\_ -> DoNothing)
+      )
+    FetchElement ->
+      ( model
+      , Browser.Dom.getElement "test-element"
+          |> Task.attempt GotElement
+      )
+    GotElement elementResult ->
+      case elementResult of
+        Ok element ->
+          ( { model | elements = element :: model.elements }, Cmd.none )
+        Err _ ->
+          ( model, Cmd.none )
+    GotInput text ->
+      ( { model | text = text }
+      , Browser.Dom.getElement "test-element"
+          |> Task.attempt GotElement
       )
     _ ->
       ( model, Cmd.none )
@@ -408,6 +478,7 @@ selectSpec name =
     "multipleScenarios" -> Just multipleScenariosSpec
     "fail" -> Just failingAnimationFrameSpec
     "view" -> Just viewSpec
+    "input" -> Just inputSpec
     _ -> Nothing
 
 

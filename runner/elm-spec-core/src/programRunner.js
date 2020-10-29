@@ -174,23 +174,39 @@ module.exports = class ProgramRunner extends EventEmitter {
       })
     } else {
       if (this.runAnimationFrame) {
+        const tasksBeforeRun = this.timer.animationFrameTaskCount()
         this.timer.runAllAnimationFrameTasks()
-        this.abortOnExtraAnimationFrameTasks(out)
+        const tasksAfterRun = this.timer.animationFrameTaskCount()
+
+        if (this.shouldReceiveProgramCommand(tasksBeforeRun, tasksAfterRun)) {
+          return
+        }
+
+        if (this.warnOnExtraAnimationFrames && this.hasExtraRecurringAnimationFrameTasks(tasksAfterRun)) {
+          this.abortDueToExtraAnimationFrameTasks(out)
+        }
       }
+
       this.runAnimationFrame = true
       this.timer.stopWaitingForStack()
       out(this.continue())
     }
   }
 
-  abortOnExtraAnimationFrameTasks(out) {
-    if (this.warnOnExtraAnimationFrames && this.timer.animationFrameTaskCount() > 1) {
-      out(this.abort(report(
-        line("A spec step results in extra animation frame tasks!"),
-        line("See the documentation for Spec.Time.nextAnimationFrame for more details."),
-        line("Set up this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
-      )))
-    }
+  shouldReceiveProgramCommand(tasksBeforeRun, tasksAfterRun) {
+    return tasksAfterRun > 0 && tasksBeforeRun - tasksAfterRun > 0
+  }
+
+  hasExtraRecurringAnimationFrameTasks(tasksAfterRun) {
+    return tasksAfterRun > 1
+  }
+
+  abortDueToExtraAnimationFrameTasks(out) {
+    out(this.abort(report(
+      line("A spec step results in extra animation frame tasks!"),
+      line("See the documentation for Spec.Time.nextAnimationFrame for more details."),
+      line("Set up this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
+    )))
   }
 
   handleSpecEvent(specMessage) {
