@@ -1,5 +1,15 @@
 # Changelog
 
+## 10.29.2020
+- elm-spec-core 7.1.2
+- elm-spec-runner 2.1.3
+- karma-elm-spec-framework 1.6.3
+
+### Fixed
+- View updates as expected when the final step of a scenario triggers a task
+that waits on the next animation frame.
+
+
 ## 10.27.2020
 - elm-spec-core 7.1.1
 - elm-spec-runner 2.1.2
