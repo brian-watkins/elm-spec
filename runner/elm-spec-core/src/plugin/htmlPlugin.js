@@ -50,7 +50,11 @@ module.exports = class HtmlPlugin {
       case "customEvent": {
         this.verifySelector(specMessage.body.name, { props: specMessage.body, forElementsOnly: false }, abort, (props, element) => {
           const event = this.getEvent(props.name)
-          Object.assign(event, props.event)
+
+          for (let customProperty in props.event) {
+            Object.defineProperty(event, customProperty, { value: props.event[customProperty] })
+          }
+
           element.dispatchEvent(event)
         })
         break

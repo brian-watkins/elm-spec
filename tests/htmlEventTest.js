@@ -88,6 +88,13 @@ describe("Events", () => {
         })
       })
     })
+    context("when a custom event with custom target properties is triggered", () => {
+      it("updates as expected", (done) => {
+        expectSpec("CustomTargetEventSpec", "customTarget", done, (observations) => {
+          expectAccepted(observations[0])
+        })
+      })
+    })
   })
 
   describe("no handler", () => {
