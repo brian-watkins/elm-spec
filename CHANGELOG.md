@@ -1,5 +1,15 @@
 # Changelog
 
+## 11.25.2020
+- elm-spec-core 7.1.3
+- elm-spec-runner 2.1.4
+- karma-elm-spec-framework 1.6.4
+
+### Fixed
+- When using `Spec.Markup.Event.trigger` to simulate an event, the event object can set properties
+under the `target` attribute.
+
+
 ## 10.29.2020
 - elm-spec-core 7.1.2
 - elm-spec-runner 2.1.3
