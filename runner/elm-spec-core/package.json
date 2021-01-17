@@ -24,5 +24,10 @@
     "glob": "^7.1.6",
     "mock-xmlhttprequest": "^6.0.0",
     "node-elm-compiler": "^5.0.4"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1"
   }
 }

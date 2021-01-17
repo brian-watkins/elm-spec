@@ -11,7 +11,7 @@ describe("HTTP download", () => {
       expectSpec("HttpDownloadSpec", "stubBytes", done, (observations) => {
         expectAccepted(observations[0])
         expectAccepted(observations[1])
-        expectRejectedWithFileError(observations[2], "tests/src/some/bad/path.txt")
+        expectRejectedWithFileError(observations[2], "tests/some/bad/path.txt")
       })
     })
   
@@ -21,8 +21,8 @@ describe("HTTP download", () => {
         expectAccepted(observations[1])
         expectAccepted(observations[2])
         expectAccepted(observations[3])
-        expectRejectedWithFileError(observations[4], "tests/src/some/wrong/path.txt")
-        expectRejectedWithFileError(observations[5], "tests/src/huh/what/file.txt")
+        expectRejectedWithFileError(observations[4], "tests/some/wrong/path.txt")
+        expectRejectedWithFileError(observations[5], "tests/huh/what/file.txt")
       })
     })
   })
@@ -31,7 +31,7 @@ describe("HTTP download", () => {
     it("downloads the text as expected", (done) => {
       expectSpec("HttpDownloadSpec", "stubText", done, (observations) => {
         expectAccepted(observations[0])
-        expectRejectedWithFileError(observations[1], "tests/src/some/nonExisting/file.txt")
+        expectRejectedWithFileError(observations[1], "tests/some/nonExisting/file.txt")
       })
     })
   })

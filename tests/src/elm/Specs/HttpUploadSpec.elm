@@ -57,7 +57,7 @@ uploadFileSpec =
             Spec.Http.observeRequests (post "http://fake-api.com/files")
               |> expect (isListWhere
                 [ Spec.Http.body Spec.Http.asFile <| specifyThat File.name <|
-                    normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
+                    normalizedPath >> isStringContaining 1 "tests/fixtures/funFile.txt"
                 ]
               )
           )

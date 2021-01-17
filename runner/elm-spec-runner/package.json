@@ -14,7 +14,7 @@
     "chalk": "^4.1.0",
     "chokidar": "^3.4.3",
     "command-exists": "^1.2.8",
-    "elm-spec-core": "file:../elm-spec-core",
+    "elm-spec-core": "^7.1.3",
     "jsdom": "^16.2.2",
     "playwright": "^1.0.2"
   },
@@ -41,5 +41,14 @@
     "start": "./bin/run --specRoot ../karma-elm-spec-framework/sample --elm ../../node_modules/.bin/elm",
     "test": "mocha --timeout 5000 \"test/**/*Test.js\"",
     "build": "browserify -p tinyify ./adapterSrc/browserAdapter.js -o ./src/browserAdapter.js"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "chai": "^4.2.0",
+    "chai-string": "^1.5.0",
+    "chai-things": "^0.2.0",
+    "mocha": "^8.2.1",
+    "shelljs": "^0.8.4",
+    "tinyify": "^3.0.0"
   }
 }

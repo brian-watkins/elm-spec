@@ -1,6 +1,7 @@
 {
   "packages": [
-    "runner/*"
+    "runner/*",
+    "tests"
   ],
   "version": "independent"
 }

@@ -1,5 +1,4 @@
-const SuiteRunner = require('elm-spec-core/src/suiteRunner')
-const ElmContext = require('elm-spec-core/src/elmContext')
+const { ElmContext, SuiteRunner } = require('elm-spec-core')
 const BrowserReporter = require('./browserReporter')
 
 const base = document.createElement("base")

@@ -1,0 +1,18 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "description": "Tests for Elm-Spec",
+  "private": "true",
+  "scripts": {
+    "test:elm:jsdom": "ELM_SPEC_CONTEXT=jsdom mocha --file ./src/js/helpers/jsdomRunnerSetup.js --timeout 5000 './src/js/*Test.js'",
+    "test:elm:browser": "ELM_SPEC_CONTEXT=browser mocha --file ./src/js/helpers/browserRunnerSetup.js --timeout 5000 './src/js/*Test.js'"
+  },
+  "author": "Brian Watkins",
+  "license": "MIT",
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "chai": "^4.2.0",
+    "elm-spec-core": "^7.1.3",
+    "mocha": "^8.2.1"
+  }
+}

@@ -4,8 +4,8 @@
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
     "test": "run-s test:elm test:elm:browser test:core build:runner test:runner build:karma test:karma build:docs",
-    "test:elm": "ELM_SPEC_CONTEXT=jsdom mocha --file ./tests/helpers/jsdomRunnerSetup.js './tests/*Test.js'",
-    "test:elm:browser": "ELM_SPEC_CONTEXT=browser mocha --file ./tests/helpers/browserRunnerSetup.js --timeout 5000 './tests/*Test.js'",
+    "test:elm": "npm run test:elm:jsdom --prefix tests",
+    "test:elm:browser": "npm run test:elm:browser --prefix tests",
     "test:core": "npm test --prefix runner/elm-spec-core",
     "build:runner": "npm run build --prefix runner/elm-spec-runner",
     "test:runner": "npm test --prefix runner/elm-spec-runner",
@@ -20,23 +20,13 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "elm-spec-core": "file:runner/elm-spec-core",
-    "elm-spec-runner": "file:runner/elm-spec-runner",
-    "karma-elm-spec-framework": "file:runner/karma-elm-spec-framework",
-    "browserify": "^17.0.0",
-    "chai": "^4.2.0",
-    "chai-string": "^1.5.0",
-    "chai-things": "^0.2.0",
     "elm": "^0.19.1-3",
     "elm-doc-preview": "^5.0.3",
     "elm-json": "^0.2.6",
     "karma": "^4.4.1",
     "karma-chrome-launcher": "^3.1.0",
     "lerna": "^3.20.2",
-    "mocha": "^7.1.1",
     "npm-run-all": "^4.1.5",
-    "oclif": "^1.13.6",
-    "shelljs": "^0.8.3",
-    "tinyify": "^2.5.2"
+    "oclif": "^1.13.6"
   }
 }

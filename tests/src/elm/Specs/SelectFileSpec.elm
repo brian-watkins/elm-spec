@@ -44,7 +44,7 @@ selectFileSpec =
         , it "finds the file in the model" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ File.name >> normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
+                [ File.name >> normalizedPath >> isStringContaining 1 "tests/fixtures/funFile.txt"
                 ]
               )
           )
@@ -91,8 +91,8 @@ selectFileSpec =
         [ it "finds the file name" (
             Observer.observeModel .files
               |> expect (isListWhere
-                [ File.name >> normalizedPath >> isStringContaining 1 "tests/src/fixtures/funFile.txt"
-                , File.name >> normalizedPath >> isStringContaining 1 "tests/src/fixtures/awesomeFile.txt"
+                [ File.name >> normalizedPath >> isStringContaining 1 "tests/fixtures/funFile.txt"
+                , File.name >> normalizedPath >> isStringContaining 1 "tests/fixtures/awesomeFile.txt"
                 ]
               )
           )

@@ -2,8 +2,7 @@
 (function(window) {
 
   const KarmaReporter = require('./karmaReporter')
-  const SuiteRunner = require('elm-spec-core/src/suiteRunner')
-  const ElmContext = require('elm-spec-core/src/elmContext')
+  const { ElmContext, SuiteRunner } = require('elm-spec-core')
 
   const defaultConfig = {
     endOnFailure: false
