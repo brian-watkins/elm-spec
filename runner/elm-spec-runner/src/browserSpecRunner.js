@@ -24,10 +24,11 @@ module.exports = class BrowserSpecRunner {
   }
 
   async getBrowsersForSegments(segmentCount, reporter, compiledElm) {
-    const browserContext = await this.getBrowserContext()
+    await this.clearBrowserContexts()
 
     const browsers = []
     for (let i = 0; i < segmentCount; i++) {
+      const browserContext = await this.getBrowserContext()
       const browser = await this.prepareBrowser(browserContext, reporter, compiledElm)
       browsers.push(browser)
     }
@@ -81,11 +82,13 @@ module.exports = class BrowserSpecRunner {
     })
   }
 
-  async getBrowserContext() {
+  async clearBrowserContexts() {
     if (this.browser.contexts().length > 0) {
-      this.browser.contexts().map(async (context) => await context.close())
+      return Promise.all(this.browser.contexts().map(async (context) => await context.close()))
     }
+  }
 
+  async getBrowserContext() {
     return this.browser.newContext()
   }
 
