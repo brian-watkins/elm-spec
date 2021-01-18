@@ -17,6 +17,9 @@ describe("subscriptions", () => {
           expectRejected(observations[2], [
             reportLine("Attempt to send message to unknown subscription", "unknown-subscription")
           ])
+          expectRejected(observations[3], [
+            reportLine("A step tried to send an unexpected value through the port 'listenForSuperObject'", "{\n  \"somethingWeird\": \"blah\"\n}")
+          ])
         })
       })
     })

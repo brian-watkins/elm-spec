@@ -11,7 +11,16 @@ module.exports = class PortPlugin {
       case "send": {
         const subscription = specMessage.body
         if (this.app.ports.hasOwnProperty(subscription.sub)) {
-          this.app.ports[subscription.sub].send(subscription.value)
+          try {
+            this.app.ports[subscription.sub].send(subscription.value)
+          } catch (err) {
+            abort(report(
+              line(
+                `A step tried to send an unexpected value through the port '${subscription.sub}'`,
+                JSON.stringify(subscription.value, null, 2)
+              )
+            ))
+          }
         } else {
           abort(report(
             line("Attempt to send message to unknown subscription", subscription.sub)

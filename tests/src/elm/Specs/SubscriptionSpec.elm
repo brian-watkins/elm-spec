@@ -65,6 +65,18 @@ sendsSubscriptionSpec =
           |> expect (equals 78)
       )
     )
+  , scenario "send subscription message with bad shape" (
+      given (
+        Setup.initWithModel { count = 0, subscribe = True }
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
+      )
+      |> when "bad subscription message is sent"
+        [ Port.send "listenForSuperObject" (Encode.object [ ("somethingWeird", Encode.string "blah") ])
+        , Port.send "listenForSuperObject" (Encode.object [ ("number", Encode.int 78) ])
+        ]
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
