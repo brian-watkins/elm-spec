@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.19.2021
+- elm-spec-core 7.1.4
+- elm-spec-runner 2.1.5
+- karma-elm-spec-framework 1.6.5
+
+### Fixed
+- When an unexpected value is sent via `Spec.Port.send`, the scenario fails properly.
+- elm-spec-runner utilizes Playwright browser contexts to run scenarios in parallel.
+- karma-elm-spec-framework specifies a peer dependency on the latest version of Karma.
+
+
 ## 11.25.2020
 - elm-spec-core 7.1.3
 - elm-spec-runner 2.1.4
