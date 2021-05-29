@@ -26,6 +26,9 @@ For the most realistic execution environment, you should run specs in a real bro
 specs in [Chromium](https://www.chromium.org/Home), simply provide `chromium` (or another valid
 value) for the `--browser` option.
 
+Note: `elm-spec` will result in a non-zero exit code if any observations are rejected or an error prevents
+the spec suite from running to completion.
+
 ### Options
 
 `--elm` -- Specify path to elm executable. Defaults to `elm`
