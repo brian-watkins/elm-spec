@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs')
-const { Compiler } = require('elm-spec-core')
+const { Compiler, SuiteRunner } = require('elm-spec-core')
 
 
 module.exports = class RunSpecsCommand {
@@ -24,13 +24,15 @@ module.exports = class RunSpecsCommand {
       })
     }
 
-    await this.runSpecs(runOptions)
+    const results = await this.runSpecs(runOptions)
 
     if (shouldWatch(watchOptions) || (browserOptions.visible && runOptions.endOnFailure)) {
-      return
+      return { status: "Watching" }
     }
 
     await this.runner.stop()
+
+    return summarizedResults(results)
   }
 
   async runSpecs(runOptions) {
@@ -42,7 +44,7 @@ module.exports = class RunSpecsCommand {
       }
     })
 
-    await this.runner.run(runOptions, compiledElm, this.reporter)
+    return await this.runner.run(runOptions, compiledElm, this.reporter)
   }
 
   log(message) {
@@ -63,4 +65,19 @@ module.exports = class RunSpecsCommand {
 
 const shouldWatch = (options) => {
   return options.globs.length > 0
+}
+
+const summarizedResults = (results) => {
+  const summarized = { status: SuiteRunner.STATUS.OK, accepted: 0, rejected: 0, skipped: 0 }
+
+  for (const result of results) {
+    if (result.status === SuiteRunner.STATUS.ERROR) {
+      return result
+    }
+    summarized.accepted += result.accepted
+    summarized.rejected += result.rejected
+    summarized.skipped += result.skipped
+  }
+
+  return summarized
 }

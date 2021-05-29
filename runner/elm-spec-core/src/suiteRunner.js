@@ -5,7 +5,9 @@ const { report, line } = require('./report')
 
 const ELM_SPEC_CORE_VERSION = 7
 
-module.exports = class SuiteRunner extends EventEmitter {
+const RESULT_STATUS = Object.freeze({ OK: "Ok", ERROR: "Error" })
+
+class SuiteRunner extends EventEmitter {
   constructor(context, reporter, options, version) {
     super()
     this.context = context
@@ -23,14 +25,14 @@ module.exports = class SuiteRunner extends EventEmitter {
   runAll() {
     if (this.context.specFiles().length == 0) {
       this.reporter.error(this.noSpecModulesError())
-      this.finish()
+      this.finish(this.errorResult())
       return
     }
 
     this.context.evaluate((Elm) => {
       if (!Elm) {
         this.reporter.error(this.compilationError())
-        this.finish()
+        this.finish(this.errorResult())
         return
       }
 
@@ -40,6 +42,7 @@ module.exports = class SuiteRunner extends EventEmitter {
 
   run(programReferences) {
     this.reporter.startSuite()
+    this.summary = { accepted: 0, rejected: 0, skipped: 0 }
     this.runNextSpecProgram(programReferences)
   }
 
@@ -47,7 +50,7 @@ module.exports = class SuiteRunner extends EventEmitter {
     const programReference = programReferences.shift()
   
     if (programReference === undefined) {
-      this.finish()
+      this.finish(this.okResult())
       return
     }
   
@@ -55,7 +58,7 @@ module.exports = class SuiteRunner extends EventEmitter {
     const app = this.initializeApp(programReference.program)
 
     if (!app) {
-      this.finish()
+      this.finish(this.errorResult())
       return
     }
 
@@ -99,18 +102,19 @@ module.exports = class SuiteRunner extends EventEmitter {
     new ProgramRunner(app, this.context, this.options)
       .on("observation", (obs) => {
         const observation = Object.assign(obs, { modulePath })
+        this.updateSummary(observation)
         this.reporter.record(observation)
       })
       .on("complete", (shouldContinue) => {
         if (shouldContinue) {
           runNextSpec()
         } else {
-          this.finish()
+          this.finish(this.okResult())
         }
       })
       .on("error", (error) => {
         this.reporter.error(error)
-        this.finish()
+        this.finish(this.errorResult())
       })
       .on("log", (report) => {
         this.reporter.log(report)
@@ -118,9 +122,23 @@ module.exports = class SuiteRunner extends EventEmitter {
       .run()
   }
 
-  finish() {
+  updateSummary(observation) {
+    switch(observation.summary) {
+      case "ACCEPTED":
+        this.summary.accepted += 1
+        break
+      case "REJECTED":
+        this.summary.rejected += 1
+        break
+      case "SKIPPED":
+        this.summary.skipped += 1
+        break
+    }
+  }
+
+  finish(result) {
     this.reporter.finish()
-    this.emit('complete')
+    this.emit('complete', result)
   }
 
   noSpecModulesError() {
@@ -144,4 +162,16 @@ module.exports = class SuiteRunner extends EventEmitter {
       line("Try upgrading your JavaScript runner and/or your elm-spec Elm package to the latest version.")
     )
   }
+
+  okResult() {
+    return Object.assign({ status: RESULT_STATUS.OK }, this.summary)
+  }
+
+  errorResult() {
+    return { status: RESULT_STATUS.ERROR }
+  }
 }
+
+SuiteRunner.STATUS = RESULT_STATUS
+
+module.exports = SuiteRunner

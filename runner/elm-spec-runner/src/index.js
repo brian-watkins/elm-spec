@@ -4,7 +4,7 @@ const process = require('process')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
-const { Compiler } = require('elm-spec-core')
+const { Compiler, SuiteRunner } = require('elm-spec-core')
 const ConsoleReporter = require('./consoleReporter')
 const JSDOMSpecRunner = require('./jsdomSpecRunner')
 const BrowserSpecRunner = require('./browserSpecRunner')
@@ -38,7 +38,7 @@ class RunSuite extends Command {
       FileWatcher
     )
 
-    await command.execute({
+    const result = await command.execute({
       browserOptions: {
         visible: flags.visible,
         cssFiles: flags.css || []
@@ -49,6 +49,14 @@ class RunSuite extends Command {
       },
       watchOptions: flags.watch ? ElmFiles.find(elmJsonPath) : { globs: [] }
     })
+
+    if (completedWithRejectedScenarios(result)) {
+      this.exit(1)
+    }
+
+    if (unableToCompleteDueToError(result)) {
+      this.exit(2)
+    }
   }
 
   compilerFor(flags) {
@@ -113,6 +121,14 @@ RunSuite.flags = {
     description: "path to .css file to load in the browser (may specify multiple)",
     multiple: true
   })
+}
+
+const completedWithRejectedScenarios = (result) => {
+  return result.status === SuiteRunner.STATUS.OK && result.rejected > 0
+}
+
+const unableToCompleteDueToError = (result) => {
+  return result.status === SuiteRunner.STATUS.ERROR
 }
 
 module.exports = RunSuite

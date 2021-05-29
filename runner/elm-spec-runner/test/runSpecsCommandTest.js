@@ -2,10 +2,10 @@ const chai = require('chai')
 chai.use(require('chai-things'));
 const expect = chai.expect
 const RunSpecsCommand = require("../src/runSpecsCommand")
-const { Compiler } = require("elm-spec-core")
+const { Compiler, SuiteRunner } = require("elm-spec-core")
 
 describe("Run Specs Command", () => {
-  let testReporter, testRunner, testFileWatcher, testCompiler, subject
+  let testReporter, testRunner, testFileWatcher, testCompiler, subject, executionResult
 
   beforeEach(() => {
     testReporter = new TestReporter()
@@ -37,6 +37,55 @@ describe("Run Specs Command", () => {
         expect(testReporter.logs).to.deep.equal([])
       })
     }
+
+    context("when the spec run completes normally", () => {
+      context("when there is only one segment", () => {
+        beforeEach(async () => {
+          const browserOptions = { visible: false }
+          const runOptions = { endOnFailure: false }
+          testRunner.result = [ { status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 0, skipped: 0 } ]
+          executionResult = await subject.execute({ browserOptions, runOptions, watchOptions })
+        })
+
+        it("returns the summarized status", () => {
+          expect(executionResult).to.deep.equal({ status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 0, skipped: 0 })
+        })
+      })
+
+      context("when there are multiple segments", () => {
+        beforeEach(async () => {
+          const browserOptions = { visible: false }
+          const runOptions = { parallelSegments: 3, endOnFailure: false }
+          testRunner.result = [
+            { status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 0, skipped: 3 },
+            { status: SuiteRunner.STATUS.OK, accepted: 2, rejected: 1, skipped: 0 },
+            { status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 2, skipped: 1 }
+          ]
+          executionResult = await subject.execute({ browserOptions, runOptions, watchOptions })
+        })
+
+        it("returns the summarized status", () => {
+          expect(executionResult).to.deep.equal({ status: "Ok", accepted: 4, rejected: 3, skipped: 4 })
+        })
+      })
+    })
+
+    context("when there is an error running the specs", () => {
+      beforeEach(async () => {
+        const browserOptions = { visible: false }
+        const runOptions = { parallelSegments: 3, endOnFailure: false }
+        testRunner.result = [
+          { status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 0, skipped: 3 },
+          { status: SuiteRunner.STATUS.ERROR },
+          { status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 2, skipped: 1 }
+        ]
+        executionResult = await subject.execute({ browserOptions, runOptions, watchOptions })
+      })
+
+      it("returns the summarized status", () => {
+        expect(executionResult).to.deep.equal({ status: SuiteRunner.STATUS.ERROR })
+      })
+    })
 
     context("when browser is not visible and not ending on failure", () => {
       beforeEach(async () => {
@@ -105,8 +154,14 @@ describe("Run Specs Command", () => {
         globs: [ '/some/path/src/**/*.elm', '/some/other/path/specs/**/*.elm' ]
       }
 
+      let executionResult
+
       beforeEach(async () => {
-        await subject.execute({ browserOptions, runOptions, watchOptions })
+        executionResult = await subject.execute({ browserOptions, runOptions, watchOptions })
+      })
+
+      it("returns that it is watching", () => {
+        expect(executionResult).to.deep.equal({ status: "Watching" })
       })
 
       it("prints the globs that will be watched", async () => {
@@ -202,6 +257,8 @@ class TestFileWatcher {
 }
 
 class TestRunner {
+  result = [ { status: SuiteRunner.STATUS.OK, accepted: 1, rejected: 0, skipped: 0 } ]
+
   start(browserOptions) {
     this.runCount = 0
     this.didStop = false
@@ -211,6 +268,8 @@ class TestRunner {
   run(runOptions, compiledCode, reporter) {
     this.runCount += 1
     this.compiledCode = compiledCode
+
+    return Promise.resolve(this.result)
   }
 
   stop() {

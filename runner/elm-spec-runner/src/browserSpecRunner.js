@@ -18,9 +18,7 @@ module.exports = class BrowserSpecRunner {
 
   async run(runOptions, compiledSpecs, reporter) {
     const browsers = await this.getBrowsersForSegments(runOptions.parallelSegments, reporter, compiledSpecs)
-
-    await Promise.all(browsers.map(this.runSpecInBrowser(runOptions)))
-
+    return await Promise.all(browsers.map(this.runSpecInBrowser(runOptions)))
   }
 
   async getBrowsersForSegments(segmentCount, reporter, compiledElm) {

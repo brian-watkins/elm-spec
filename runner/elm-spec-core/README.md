@@ -172,6 +172,31 @@ Execute all the compiled spec programs, one by one.
 
 Run only scenarios for the given segment. (eg, 0, 1, 2, ...)
 
+When `runAll` or `runSegment` is called, the following event will be emitted:
+
+`complete` -- an attempt has been made to run all scenarios. When there is an error an object
+like so is emitted:
+
+```
+{
+  status: "Error"
+}
+```
+
+When all scenarios were able to be executed, an object like so is emitted:
+
+```
+{
+  status: "Ok",
+
+  // A summary of the results is provided.
+  accepted: 1,
+  rejected: 1,
+  skipped: 0
+}
+```
+
+
 ## Reporter
 
 A Reporter is an object with the following functions:

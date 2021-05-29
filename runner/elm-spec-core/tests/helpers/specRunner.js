@@ -12,8 +12,8 @@ window._elm_spec.run = (options, version) => {
     const reporter = new TestReporter()
 
     new SuiteRunner(elmContext, reporter, options, version)
-      .on('complete', () => {
-        resolve(reporter)
+      .on('complete', (result) => {
+        resolve({ result, reporter })
       })
       .runAll()
   })
