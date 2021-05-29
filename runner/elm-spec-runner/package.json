@@ -16,7 +16,7 @@
     "command-exists": "^1.2.8",
     "elm-spec-core": "^7.1.4",
     "jsdom": "^16.2.2",
-    "playwright": "^1.0.2"
+    "playwright": "^1.11.1"
   },
   "engines": {
     "node": ">=8.0.0"
