@@ -26,26 +26,25 @@ const Compiler = class {
       return header
     }
 
-    const compiledElm = compiler.compileToStringSync(files, {
-      cwd: this.cwd,
-      processOpts: {
-        stdio: [
-          'ignore',
-          this.logLevel >= LOG_LEVEL.QUIET ? 'ignore' : 'inherit',
-          this.logLevel >= LOG_LEVEL.SILENT ? 'ignore' : 'inherit'
-        ]
-      },
-      pathToElm: this.elmPath
-    })
+    try {
+      const compiledElm = compiler.compileToStringSync(files, {
+        cwd: this.cwd,
+        processOpts: {
+          stdio: [
+            'ignore',
+            this.logLevel >= LOG_LEVEL.QUIET ? 'ignore' : 'inherit',
+            this.logLevel >= LOG_LEVEL.SILENT ? 'ignore' : 'inherit'
+          ]
+        },
+        pathToElm: this.elmPath
+      })
 
-    if (compiledElm.length == 0) {
+      this.compilerStatus = COMPILER_STATUS.COMPILATION_SUCCEEDED
+      return header + ElmContext.setElmCode(compiledElm)
+    } catch (_) {
       this.compilerStatus = COMPILER_STATUS.COMPILATION_FAILED
       return header
     }
-
-    this.compilerStatus = COMPILER_STATUS.COMPILATION_SUCCEEDED
-    
-    return header + ElmContext.setElmCode(compiledElm)
   }
 
   status() {

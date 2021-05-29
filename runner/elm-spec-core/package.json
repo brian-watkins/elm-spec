@@ -23,7 +23,7 @@
     "@sinonjs/fake-timers": "^6.0.1",
     "glob": "^7.1.6",
     "mock-xmlhttprequest": "^6.0.0",
-    "node-elm-compiler": "^5.0.4"
+    "node-elm-compiler": "^5.0.6"
   },
   "devDependencies": {
     "browserify": "^17.0.0",
