@@ -1,5 +1,5 @@
 const ElmContext = require('./elmContext')
-const compiler = require("node-elm-compiler/dist/index")
+const compiler = require("node-elm-compiler")
 const glob = require('glob')
 const path = require('path')
 
