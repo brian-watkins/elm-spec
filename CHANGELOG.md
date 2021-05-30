@@ -1,5 +1,20 @@
 # Changelog
 
+## 5.30.2021
+- elm-spec-core 7.2.0
+- elm-spec-runner 2.2.0
+- karma-elm-spec-framework 1.6.6
+
+### Added
+- In elm-spec-core, SuiteRunner returns the high-level result of a spec suite run.
+- elm-spec-runner results in a non-zero exit code if any observations are rejected or an error prevents
+the spec suite run from completing.
+
+### Fixed
+- More precise imports result in a smaller bundle size for the browser adapter in elm-spec-runner
+and karma-elm-spec-framework.
+
+
 ## 1.19.2021
 - elm-spec-core 7.1.4
 - elm-spec-runner 2.1.5
