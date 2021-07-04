@@ -10,9 +10,7 @@ module Spec.Command exposing
 
 import Spec.Step as Step
 import Spec.Step.Command as Command
-import Spec.Message as Message exposing (Message)
 import Task
-import Json.Encode as Encode
 
 
 {-| A step that sends a command.

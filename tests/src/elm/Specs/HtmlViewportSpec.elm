@@ -2,7 +2,7 @@ module Specs.HtmlViewportSpec exposing (main)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Claim as Claim exposing (..)
+import Spec.Claim exposing (..)
 import Spec.Markup as Markup
 import Spec.Markup.Event as Event
 import Spec.Markup.Selector exposing (..)
@@ -298,7 +298,7 @@ testSubject =
 
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.input [ Attr.id "x-position", Events.onInput GotX ] []
   , Html.input [ Attr.id "y-position", Events.onInput GotY ] []

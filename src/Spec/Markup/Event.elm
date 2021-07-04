@@ -66,7 +66,7 @@ For example,
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
-import Spec.Message as Message exposing (Message)
+import Spec.Message as Message
 import Json.Encode as Encode
 import Json.Decode as Json
 

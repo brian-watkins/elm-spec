@@ -455,7 +455,7 @@ testUpdate msg model =
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   Sub.batch
     [ Browser.Events.onAnimationFrame (\_ -> OnAnimationFrame)
     , Time.every 2000 (\_ -> DoNothing)
@@ -463,7 +463,7 @@ testSubscriptions model =
 
 
 minimalSubscriptions : Model -> Sub Msg
-minimalSubscriptions model =
+minimalSubscriptions _ =
   Browser.Events.onAnimationFrame (\_ -> OnAnimationFrame)
 
 

@@ -21,7 +21,7 @@ module Spec.Http.Route exposing
 -}
 
 import Json.Encode as Encode
-import Url exposing (Url, Protocol(..))
+import Url exposing (Protocol(..))
 
 
 {-| Represents an HTTP route.

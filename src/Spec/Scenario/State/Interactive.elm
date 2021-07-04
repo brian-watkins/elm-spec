@@ -68,7 +68,7 @@ update interactiveModel actions msg =
     Continue ->
       ( interactive interactiveModel, actions.complete )
 
-    Abort report ->
+    Abort _ ->
       ( interactive interactiveModel, Cmd.none )
 
     OnUrlChange url ->

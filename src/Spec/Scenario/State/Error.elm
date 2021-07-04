@@ -23,5 +23,5 @@ initModel =
 
 
 update : Actions msg programMsg -> State.Msg programMsg -> ( State.Model model programMsg, Cmd msg )
-update actions msg =
+update actions _ =
   ( initModel, actions.complete )

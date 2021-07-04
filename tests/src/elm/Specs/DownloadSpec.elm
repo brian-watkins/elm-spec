@@ -295,7 +295,7 @@ testModel =
 
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.button [ Attr.id "download-text", Events.onClick DoAnotherThing, Events.onMouseDown DownloadText ]
     [ Html.text "Download File!" ]

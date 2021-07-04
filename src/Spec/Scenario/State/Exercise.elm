@@ -13,11 +13,9 @@ import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Observer.Message as Message
 import Spec.Report as Report exposing (Report)
-import Spec.Claim as Claim
 import Spec.Scenario.State.NavigationHelpers exposing (..)
 import Spec.Scenario.State.Interactive as Interactive
 import Spec.Scenario.State.Observe as Observe
-import Html exposing (Html)
 import Browser exposing (Document)
 import Json.Decode as Json
 

@@ -3,7 +3,6 @@ port module Specs.SleepSpec exposing (..)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Port as Port
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Spec.Time as Time
 import Runner
@@ -133,7 +132,7 @@ port processSub : (String -> msg) -> Sub msg
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   processSub ReceivedMessage
 
 

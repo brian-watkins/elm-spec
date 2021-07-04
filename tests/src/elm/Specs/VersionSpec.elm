@@ -26,13 +26,6 @@ type Msg
   = Msg
 
 
-selectSpec : String -> Maybe (Spec () Msg)
-selectSpec name =
-  case name of
-    "version" -> Just versionSpec
-    _ -> Nothing
-
-
 main =
   Runner.runSuiteWithVersion 10
     [ versionSpec

@@ -5,7 +5,6 @@ import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Observer as Observer
 import Spec.Time
 import Spec.Claim exposing (isSomethingWhere)
 import Html exposing (Html)

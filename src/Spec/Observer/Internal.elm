@@ -8,7 +8,7 @@ module Spec.Observer.Internal exposing
   )
 
 import Spec.Message exposing (Message)
-import Spec.Claim as Claim exposing (Claim)
+import Spec.Claim exposing (Claim)
 import Spec.Scenario.Internal exposing (Expectation, Judgment(..))
 import Spec.Step.Context as Context
 
@@ -47,7 +47,7 @@ observeEffects mapper =
 inquire : Message -> (Message -> a) -> Observer model a
 inquire message mapper =
   Observer <| \claim ->
-    \context ->
+    \_ ->
       Inquire message <|
         \response ->
           mapper response

@@ -1,13 +1,9 @@
 module Specs.MultipleSpecSpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Message exposing (Message)
 import Spec.Setup as Setup
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner as TestRunner
-import Json.Encode as Encode
-import Json.Decode as Json
 import Specs.Helpers exposing (..)
 
 
@@ -70,7 +66,7 @@ specWithAScenario =
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
-testUpdate msg model =
+testUpdate _ model =
   ( model, Cmd.none )
 
 

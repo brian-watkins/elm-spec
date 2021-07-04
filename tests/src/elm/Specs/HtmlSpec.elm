@@ -433,7 +433,7 @@ testSubView model =
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   htmlSpecSub ReceivedNumber
 
 

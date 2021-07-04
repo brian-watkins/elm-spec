@@ -245,7 +245,7 @@ testUpdate msg (Model model) =
 
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.button [ Attr.id "request-button", Events.onClick SendRequest ] [ Html.text "Send Next Request!" ]
   , Html.button [ Attr.id "select-file", Events.onClick SelectFile ] [ Html.text "Select file!" ]

@@ -2,10 +2,9 @@ port module Specs.WitnessSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Message exposing (Message)
 import Spec.Claim as Claim
 import Spec.Port as Port
-import Spec.Witness as Witness exposing (Witness)
+import Spec.Witness as Witness
 import Json.Encode as Encode
 import Json.Decode as Json
 import Runner
@@ -96,7 +95,7 @@ testSubscriptions _ =
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
-selectSpec name =
+selectSpec _ =
   Just recordSpec
 
 

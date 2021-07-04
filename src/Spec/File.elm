@@ -105,7 +105,7 @@ You may select multiple files.
 -}
 select : List FileFixture -> Step.Step model msg
 select fixtures =
-  \context ->
+  \_ ->
     Message.for "_file" "fetch"
       |> Message.withBody (
         Encode.object

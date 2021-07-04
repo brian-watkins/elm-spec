@@ -4,11 +4,9 @@ import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
-import Spec.Observer as Observer
-import Spec.Claim as Claim exposing (isListWithLength, isSomethingWhere)
+import Spec.Claim exposing (isListWithLength, isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
-import Html.Events as Events
 import Specs.Helpers exposing (..)
 import Runner
 

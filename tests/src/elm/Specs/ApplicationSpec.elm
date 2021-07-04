@@ -9,7 +9,6 @@ import Spec.Markup.Event as Event
 import Spec.Navigator as Navigator
 import Spec.Observer as Observer
 import Spec.Report as Report
-import Spec.Command as Command
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

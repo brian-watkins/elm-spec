@@ -3,13 +3,10 @@ module Specs.HttpMultipartSpec exposing (main)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
-import Spec.Observer as Observer
-import Spec.Report as Report
-import Spec.Claim as Claim exposing (..)
+import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Http
-import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
 import Spec.File
 import Html exposing (Html)
@@ -134,7 +131,7 @@ type Msg
 
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.button [ Attr.id "select-file", Events.onClick SelectFile ] [ Html.text "Select file" ]
   , Html.button [ Attr.id "send-request", Events.onClick SendRequest ] [ Html.text "Send File" ]

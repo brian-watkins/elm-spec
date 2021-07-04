@@ -59,7 +59,7 @@ testView model =
 
 
 programView : ProgramModel -> Html ProgramMsg
-programView model =
+programView _ =
   Html.div []
   [ Html.button [ Attr.id "trigger", Events.onClick HandleClick ] [ Html.text "Increment!" ]
   ]

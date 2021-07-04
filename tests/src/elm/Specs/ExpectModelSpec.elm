@@ -3,7 +3,6 @@ module Specs.ExpectModelSpec exposing (..)
 import Spec exposing (..)
 import Spec.Observer as Observer
 import Spec.Setup as Setup
-import Spec.Claim as Claim
 import Runner
 import Specs.Helpers exposing (..)
 
@@ -63,7 +62,7 @@ multipleObservationsSpec =
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
-testUpdate msg model =
+testUpdate _ model =
   ( model, Cmd.none )
 
 

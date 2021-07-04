@@ -2,7 +2,6 @@ module Specs.InitWorkerSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Runner
 import Task

@@ -77,10 +77,7 @@ Now, I can write a spec that uses a witness to record the score passed to the in
 
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
-import Spec.Setup.Internal as Internal
-import Spec.Setup as Setup exposing (Setup)
 import Spec.Message as Message exposing (Message)
-import Spec.Claim as Claim exposing (Claim)
 import Spec.Report as Report exposing (Report)
 import Json.Encode as Encode
 import Json.Decode as Json

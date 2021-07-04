@@ -126,7 +126,7 @@ port sendSomethingOut : String -> Cmd msg
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   listenForObject ReceivedSuperObject
 
 

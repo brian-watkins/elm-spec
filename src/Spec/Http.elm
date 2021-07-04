@@ -76,10 +76,7 @@ import Spec.Http.Request as Request
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Json.Decode as Json
-import Dict exposing (Dict)
-import Url exposing (Url)
-import Url.Parser
-import Url.Parser.Query
+import Dict
 import File exposing (File)
 import Bytes exposing (Bytes)
 

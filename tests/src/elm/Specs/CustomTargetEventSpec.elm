@@ -63,7 +63,7 @@ type Msg
 
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
-testUpdate msg model =
+testUpdate msg _ =
   case msg of
     LoadedMetadata updatedModel ->
       ( updatedModel, Cmd.none )

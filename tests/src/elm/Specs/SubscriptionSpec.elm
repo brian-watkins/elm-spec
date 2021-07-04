@@ -9,7 +9,6 @@ import Spec.Http
 import Spec.Http.Route exposing (..)
 import Spec.Http.Stub as Stub
 import Runner
-import Task
 import Http
 import Json.Encode as Encode
 import Specs.Helpers exposing (..)
@@ -129,7 +128,7 @@ testUpdate msg model =
   case msg of
     ReceivedSuperObject superObject ->
       ( { model | count = superObject.number }, Cmd.none )
-    AlsoReceivedSuperObject superObject ->
+    AlsoReceivedSuperObject _ ->
       ( model
       , Http.get
           { url = "http://fake-stuff.com/fake"
@@ -164,12 +163,12 @@ port listenForSuperObject : (SuperObject -> msg) -> Sub msg
 port enableSubscription : (Bool -> msg) -> Sub msg
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   listenForSuperObject ReceivedSuperObject
 
 
 testMultipleSubscriptions : Model -> Sub Msg
-testMultipleSubscriptions model =
+testMultipleSubscriptions _ =
   Sub.batch
     [ listenForSuperObject ReceivedSuperObject
     , listenForSuperObject AlsoReceivedSuperObject

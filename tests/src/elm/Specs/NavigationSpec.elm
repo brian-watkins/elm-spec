@@ -3,7 +3,6 @@ module Specs.NavigationSpec exposing (..)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
-import Spec.Observer as Observer
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Navigator as Navigator
@@ -173,7 +172,7 @@ type Msg
   | Ignore
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.button [ Attr.id "load-button", Events.onClick ChangeLocation ]
     [ Html.text "Click to change location!" ]

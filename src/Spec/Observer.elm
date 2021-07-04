@@ -22,10 +22,9 @@ Check out `Spec.Markup`, `Spec.Navigator`, `Spec.Http`, `Spec.File`,
 -}
 
 import Spec.Observer.Internal as Internal
-import Spec.Message as Message exposing (Message)
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Step.Context as Context
-import Spec.Scenario.Internal as Scenario exposing (Judgment(..))
+import Spec.Scenario.Internal exposing (Judgment(..))
 import Spec.Report exposing (Report)
 
 

@@ -3,8 +3,8 @@ module Spec.Scenario.State.Start exposing
   )
 
 import Spec.Scenario.State as State exposing (Msg(..), Actions)
-import Spec.Setup.Internal as Internal exposing (Subject)
-import Spec.Scenario.Internal as Internal exposing (Scenario)
+import Spec.Setup.Internal exposing (Subject)
+import Spec.Scenario.Internal exposing (Scenario)
 import Spec.Message as Message
 import Spec.Scenario.Message as Message
 import Spec.Report as Report

@@ -7,16 +7,16 @@ module Spec.Scenario.Program exposing
   )
 
 import Spec.Scenario.Internal exposing (Scenario)
-import Spec.Setup.Internal as Internal exposing (Subject)
+import Spec.Setup.Internal as Internal
 import Spec.Scenario.Message as Message
 import Spec.Scenario.State as State exposing (Msg(..), Actions, StateProgram)
 import Spec.Message as Message exposing (Message)
-import Spec.Report as Report exposing (Report)
+import Spec.Report as Report
 import Spec.Scenario.State.Start as Start
 import Spec.Scenario.State.Error as Error
 import Spec.Scenario.State.Observe as Observe
 import Spec.Helpers exposing (mapDocument)
-import Html exposing (Html)
+import Html
 import Json.Decode as Json
 import Browser exposing (Document)
 import Browser.Navigation exposing (Key)

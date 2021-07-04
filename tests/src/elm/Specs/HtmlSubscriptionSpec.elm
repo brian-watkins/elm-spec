@@ -6,10 +6,8 @@ import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Port as Port
 import Spec.Claim exposing (isSomethingWhere)
-import Spec.Http
 import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
-import Spec.Time as Time
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Runner

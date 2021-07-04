@@ -24,9 +24,7 @@ module Spec.Markup.Selector exposing
 
 -}
 
-import Json.Encode as Encode
 import Spec.Step as Step
-import Spec.Message exposing (Message)
 
 
 {-| A selector is built from one or more characteristics. 

@@ -25,7 +25,7 @@ See `Spec.Command`, `Spec.File`, `Spec.Navigator`, `Spec.Http`, `Spec.Markup`,
 
 import Spec.Step.Command as Command
 import Spec.Step.Context as Context
-import Spec.Report as Report exposing (Report)
+import Spec.Report exposing (Report)
 
 
 {-| Represents a step in a scenario script.

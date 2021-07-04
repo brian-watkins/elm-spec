@@ -8,7 +8,6 @@ import Spec.Command
 import Specs.Helpers exposing (..)
 import Runner
 import Json.Decode as Json
-import Json.Encode as Encode
 
 
 witnessPortCommandFromInitSpec : Spec Model Msg

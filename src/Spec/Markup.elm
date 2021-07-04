@@ -34,7 +34,6 @@ import Spec.Report as Report exposing (Report)
 import Spec.Markup.Selector as Selector exposing (Selector, Element)
 import Spec.Step as Step
 import Spec.Step.Command as Command
-import Spec.Step.Context as Context
 import Spec.Message as Message exposing (Message)
 import Spec.Markup.Message as Message
 import Json.Encode as Encode
@@ -77,7 +76,7 @@ observeElement : MarkupObservation (Maybe HtmlElement)
 observeElement =
   MarkupObservation
     { query = Single
-    , inquiryHandler = \selection message ->
+    , inquiryHandler = \_ message ->
         Message.decode maybeHtmlDecoder message
           |> Result.mapError (\err ->
             Report.fact "Unable to decode element JSON!" err
@@ -97,7 +96,7 @@ observeElements : MarkupObservation (List HtmlElement)
 observeElements =
   MarkupObservation
     { query = All
-    , inquiryHandler = \selection message ->
+    , inquiryHandler = \_ message ->
         Message.decode (Json.list htmlDecoder) message
           |> Result.mapError (\err ->
             Report.fact "Unable to decode element JSON!" err

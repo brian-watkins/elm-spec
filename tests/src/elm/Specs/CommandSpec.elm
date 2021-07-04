@@ -2,11 +2,9 @@ module Specs.CommandSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Spec.Command as Command
 import Runner
-import Task
 import Specs.Helpers exposing (..)
 
 
@@ -55,7 +53,7 @@ testUpdate msg model =
 
 
 selectSpec : String -> Maybe (Spec Model Msg)
-selectSpec name =
+selectSpec _ =
   Just sendMessageToUpdateSpec
 
 

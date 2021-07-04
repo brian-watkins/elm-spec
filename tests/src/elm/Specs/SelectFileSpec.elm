@@ -365,7 +365,7 @@ testModel =
   }
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.input 
     [ Attr.type_ "file"
@@ -375,7 +375,7 @@ testView model =
   ]
 
 testSelectView : Model -> Html Msg
-testSelectView model =
+testSelectView _ =
   Html.div []
   [ Html.button [ Attr.id "select-file-button", Events.onClick SelectFile ] [ Html.text "Click to select a file!" ]
   , Html.button [ Attr.id "read-text-and", Events.onMouseDown HandleRead, Events.onClick HandleClick ]
@@ -384,7 +384,7 @@ testSelectView model =
 
 
 testSelectMultipleView : Model -> Html Msg
-testSelectMultipleView model =
+testSelectMultipleView _ =
   Html.div []
   [ Html.button [ Attr.id "select-files-button", Events.onClick SelectFiles ] [ Html.text "Click to select some files!" ]
   ]

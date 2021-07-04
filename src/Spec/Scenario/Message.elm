@@ -12,7 +12,7 @@ module Spec.Scenario.Message exposing
 
 import Spec.Message as Message exposing (Message)
 import Spec.Message.Internal as Message
-import Json.Encode as Encode exposing (Value)
+import Json.Encode as Encode
 
 
 isScenarioMessage : Message -> Bool

@@ -2,12 +2,10 @@ module Specs.TimeSpec exposing (..)
 
 import Spec exposing (..)
 import Spec.Setup as Setup
-import Spec.Port as Port
 import Spec.Time
 import Spec.Observer as Observer
 import Runner
 import Task
-import Json.Encode as Encode
 import Time exposing (Posix, Zone)
 import Specs.Helpers exposing (..)
 
@@ -128,7 +126,7 @@ testModel =
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   Time.every 1000 ReceivedTime
 
 

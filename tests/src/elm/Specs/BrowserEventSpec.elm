@@ -488,7 +488,7 @@ testUpdate msg model =
       )
     VisibilityChange visibility ->
       ( { model | visibility = model.visibility ++ [ visibility ] }, Cmd.none )
-    AnimationFrame posix ->
+    AnimationFrame _ ->
       ( { model | animationFrames = model.animationFrames + 1 }, Cmd.none )
     ShouldSubscribe shouldSubscribe ->
       ( { model | subscribe = shouldSubscribe }, Cmd.none )

@@ -3,12 +3,10 @@ port module Specs.SpecSpec exposing (..)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Port as Port
-import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Spec.Command as Command
 import Runner
 import Json.Encode as Encode
-import Json.Decode as Json
 import Specs.Helpers exposing (..)
 
 
@@ -168,7 +166,7 @@ port specSpecOut : String -> Cmd msg
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   specSpecSub ReceivedSuperObject
 
 

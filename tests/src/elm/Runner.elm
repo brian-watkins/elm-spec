@@ -9,11 +9,8 @@ port module Runner exposing
 import Spec exposing (Spec)
 import Spec.Program
 import Spec.Message exposing (Message)
-import Task
-import Browser exposing (UrlRequest)
+import Browser
 import Browser.Navigation exposing (Key)
-import Url exposing (Url)
-import Html
 
 
 port elmSpecOut : Message -> Cmd msg

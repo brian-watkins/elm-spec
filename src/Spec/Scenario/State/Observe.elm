@@ -3,7 +3,7 @@ module Spec.Scenario.State.Observe exposing
   , initForSkip
   )
 
-import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Expectation, Judgment(..))
+import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Judgment(..))
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Step.Context as Context exposing (Context)
@@ -13,7 +13,6 @@ import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Observer.Message as Message
 import Spec.Scenario.State.Interactive as Interactive
-import Html exposing (Html)
 import Browser exposing (Document)
 
 
@@ -79,7 +78,7 @@ update observeModel actions msg =
         |> Result.withDefault
           (abortObservation actions observeModel <| Report.note "Unable to decode inquiry result!")
 
-    ProgramMsg programMsg ->
+    ProgramMsg _ ->
       ( observe observeModel, Cmd.none )
     
     Continue ->
@@ -102,10 +101,10 @@ update observeModel actions msg =
           "Unable to complete observation" report
       )
 
-    OnUrlChange url ->
+    OnUrlChange _ ->
       ( observe observeModel, Cmd.none )
 
-    OnUrlRequest request ->
+    OnUrlRequest _ ->
       ( observe observeModel, Cmd.none )
 
 
@@ -206,7 +205,7 @@ skip model actions msg =
           ( State.Waiting
           , actions.complete
           )
-        observation :: remaining ->
+        _ :: remaining ->
           ( skipModel { observations = remaining }
           , actions.send Message.skipObservation
           )

@@ -3,8 +3,7 @@ module Spec.Scenario.State.NavigationHelpers exposing
   , handleUrlRequest
   )
 
-import Spec.Setup.Internal as Internal exposing (Subject, ProgramView(..))
-import Spec.Message as Message exposing (Message)
+import Spec.Setup.Internal exposing (Subject, ProgramView(..))
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation
 import Html
@@ -31,7 +30,7 @@ navigatedSubject url subject =
 
 navigatedView : String -> ProgramView model msg
 navigatedView location =
-  Element <| \model ->
+  Element <| \_ ->
     Html.text <| "[Navigated to a page outside the control of the Elm program: " ++ location ++ "]"
 
 

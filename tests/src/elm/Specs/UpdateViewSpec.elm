@@ -14,7 +14,6 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Browser.Dom
 import Task
-import Spec.Time
 
 
 updateViewFromPort : Spec Model Msg
@@ -92,7 +91,7 @@ testView model =
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   updateViewPort ReceivedMessage
 
 

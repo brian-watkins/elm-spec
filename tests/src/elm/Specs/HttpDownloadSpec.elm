@@ -3,12 +3,9 @@ module Specs.HttpDownloadSpec exposing (main)
 import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
-import Spec.Observer as Observer
-import Spec.Report as Report
-import Spec.Claim as Claim exposing (..)
+import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Http
 import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
 import Html exposing (Html)
@@ -291,7 +288,7 @@ testView model =
     [ model.downloadProgress
         |> Maybe.map (\progress ->
           case progress of
-            Http.Sending details ->
+            Http.Sending _ ->
               Html.text "Sending ..."
             Http.Receiving details ->
               Html.text <| "Downloaded " ++ (String.fromInt <| round <| Http.fractionReceived details * 100) ++ "%"
@@ -351,14 +348,14 @@ testUpdate msg model =
 
 
 testSubscriptions : Model -> Sub Msg
-testSubscriptions model =
+testSubscriptions _ =
   Http.track "download" GotProgress
 
 
 handleBytesResponse : Http.Response Bytes -> Result String Bytes
 handleBytesResponse response =
   case response of
-    Http.GoodStatus_ metadata bytes ->
+    Http.GoodStatus_ _ bytes ->
       Ok bytes
     _ ->
       Err "Something not good happened!"

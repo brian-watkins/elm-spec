@@ -14,7 +14,7 @@ import Spec.Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Observer.Message as Message
 import Spec.Claim as Claim
-import Spec.Report as Report exposing (Report)
+import Spec.Report exposing (Report)
 import Browser exposing (UrlRequest, Document)
 import Url exposing (Url)
 import Task

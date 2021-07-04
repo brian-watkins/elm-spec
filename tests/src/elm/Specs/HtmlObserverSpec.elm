@@ -4,7 +4,6 @@ import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
-import Spec.Observer as Observer
 import Spec.Claim exposing (..)
 import Specs.Helpers exposing (equals)
 import Html exposing (Html)
@@ -181,7 +180,7 @@ testAttributeView model =
 
 
 testPropertyView : Model -> Html Msg
-testPropertyView model =
+testPropertyView _ =
   Html.div [ Attr.id "root" ]
   [ Html.button [ Attr.disabled True ] [ Html.text "Click me!" ]
   , Html.div []

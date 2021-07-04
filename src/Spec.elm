@@ -77,6 +77,7 @@ import Spec.Claim exposing (Claim)
 import Browser
 
 
+requiredElmSpecCoreVersion : number
 requiredElmSpecCoreVersion = 7
 
 

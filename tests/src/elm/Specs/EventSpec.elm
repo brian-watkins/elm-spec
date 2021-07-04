@@ -9,8 +9,7 @@ import Spec.Markup.Event as Event
 import Spec.Observer as Observer
 import Specs.Helpers exposing (..)
 import Specs.EventHelpers
-import Spec.Report as Report
-import Spec.Claim as Claim exposing (isSomethingWhere)
+import Spec.Claim exposing (isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

@@ -1,13 +1,10 @@
 module Specs.NoKeySpec exposing (..)
 
 import Spec exposing (..)
-import Spec.Message exposing (Message)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
-import Spec.Markup.Event as Event
-import Spec.Observer as Observer
-import Spec.Claim exposing (isEqual, isSomethingWhere)
+import Spec.Claim exposing (isSomethingWhere)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events

@@ -4,7 +4,7 @@ import Spec exposing (..)
 import Spec.Setup as Setup
 import Spec.Markup as Markup
 import Spec.Observer as Observer
-import Spec.Claim as Claim exposing (..)
+import Spec.Claim exposing (..)
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Http
@@ -214,7 +214,7 @@ type Msg
 
 
 testView : Model -> Html Msg
-testView model =
+testView _ =
   Html.div []
   [ Html.button [ Attr.id "trigger", Events.onClick MakeRequest ]
     [ Html.text "Click to make request!" ]

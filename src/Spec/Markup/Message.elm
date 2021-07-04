@@ -3,7 +3,6 @@ module Spec.Markup.Message exposing
   )
 
 import Spec.Message as Message exposing (Message)
-import Json.Encode as Encode
 
 
 fetchWindow : Message

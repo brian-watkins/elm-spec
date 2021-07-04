@@ -20,7 +20,6 @@ import Json.Encode as Encode
 import Bytes
 import File
 import Http
-import Url.Builder
 import Dict
 import Specs.Helpers exposing (..)
 
@@ -400,7 +399,7 @@ fancyRequest _ =
 responseHandler : Http.Response String -> Result () Http.Metadata
 responseHandler response =
   case response of
-    Http.GoodStatus_ metadata body ->
+    Http.GoodStatus_ metadata _ ->
       Ok metadata
     _ ->
       Err ()
