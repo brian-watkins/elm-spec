@@ -10,7 +10,6 @@ const { proxiedConsole } = require('./fakes/proxiedConsole')
 const { fakeWindow } = require('./fakes/fakeWindow')
 const { fakeMouseEvent } = require('./fakes/fakeMouseEvent')
 const { fileReaderProxy } = require('./fakes/fileReaderProxy')
-const path = require('path')
 
 module.exports = class ElmContext {
   static storeCompiledFiles({ cwd, specPath, files }) {
@@ -136,8 +135,8 @@ window._elm_spec.compiler = {
   }
 
   fullPathToModule(moduleName) {
-    const modulePath = path.join(...moduleName) + ".elm"
-    return this.specFiles().find(f => f.endsWith(modulePath))
+    const modulePath = moduleName.join("[/\\\\]") + "\\.elm$"
+    return this.specFiles().find(f => f.match(modulePath))
   }
 
   resizeWindowTo(width, height) {
