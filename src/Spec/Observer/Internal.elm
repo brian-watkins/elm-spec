@@ -1,5 +1,7 @@
 module Spec.Observer.Internal exposing
   ( Observer
+  , Judgment(..)
+  , Expectation
   , for
   , observeEffects
   , inquire
@@ -8,14 +10,22 @@ module Spec.Observer.Internal exposing
   )
 
 import Spec.Message exposing (Message)
-import Spec.Claim exposing (Claim)
-import Spec.Scenario.Internal exposing (Expectation, Judgment(..))
-import Spec.Step.Context as Context
+import Spec.Claim exposing (Claim, Verdict)
+import Spec.Step.Context as Context exposing (Context)
 
 
 type Observer model a =
   Observer
     (Claim a -> Expectation model)
+
+type alias Expectation model =
+  Context model -> Judgment model
+
+
+type Judgment model
+  = Complete Verdict
+  | Inquire Message (Message -> Judgment model)
+
 
 
 for : (Claim a -> Expectation model) -> Observer model a

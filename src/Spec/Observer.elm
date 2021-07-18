@@ -24,8 +24,8 @@ Check out `Spec.Markup`, `Spec.Navigator`, `Spec.Http`, `Spec.File`,
 import Spec.Observer.Internal as Internal
 import Spec.Claim as Claim exposing (Claim)
 import Spec.Step.Context as Context
-import Spec.Scenario.Internal exposing (Judgment(..))
 import Spec.Report exposing (Report)
+import Spec.Observer.Internal exposing (Judgment(..))
 
 
 {-| An `Observer` examines some particular part of the world so that a
@@ -51,7 +51,7 @@ To observe the entire model, just use `identity` as the argument.
 Check out `Spec.Markup`, `Spec.Navigator`,
 `Spec.Http`, `Spec.File`, `Spec.Port`, and `Spec.Witness`
 for observers that evaluate claims with respect to the world outside the program.
-
+`
 -}
 observeModel : (model -> a) -> Observer model a
 observeModel mapper =

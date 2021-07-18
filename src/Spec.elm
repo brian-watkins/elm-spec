@@ -112,7 +112,7 @@ script have been performed.
 -}
 type Expectation model =
   Expectation
-    (Internal.Expectation model)
+    (Observer.Expectation model)
 
 
 {-| Specify a description and a list of scenarios that compose the spec.

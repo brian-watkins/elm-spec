@@ -3,7 +3,7 @@ module Spec.Scenario.State.Observe exposing
   , initForSkip
   )
 
-import Spec.Scenario.Internal as Internal exposing (Scenario, Observation, Judgment(..))
+import Spec.Scenario.Internal as Internal exposing (Scenario, Observation)
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Step.Context as Context exposing (Context)
@@ -12,6 +12,7 @@ import Spec.Claim as Claim exposing (Verdict)
 import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Observer.Message as Message
+import Spec.Observer.Internal exposing (Judgment(..))
 import Spec.Scenario.State.Interactive as Interactive
 import Browser exposing (Document)
 
