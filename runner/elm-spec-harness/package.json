@@ -1,0 +1,31 @@
+{
+  "name": "elm-spec-harness",
+  "version": "1.0.0",
+  "description": "Control and observe an elm program",
+  "author": "Brian Watkins <brian.watkins@gmail.com>",
+  "homepage": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-harness#readme",
+  "license": "MIT",
+  "main": "lib/elm-spec-harness.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brian-watkins/elm-spec.git"
+  },
+  "scripts": {
+    "prepublish": "npm run build",
+    "test": "tape test/**/*.test.js | tap-difflet",
+    "build": "esbuild ./adapterSrc/browserAdapter.js --bundle --outfile=./src/browserAdapter.js"
+  },
+  "bugs": {
+    "url": "https://github.com/brian-watkins/elm-spec/issues"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "esbuild": "^0.12.15",
+    "playwright": "^1.12.3",
+    "tap-difflet": "^0.7.2",
+    "tape": "^5.2.2"
+  },
+  "dependencies": {
+    "elm-spec-core": "^7.2.0"
+  }
+}
