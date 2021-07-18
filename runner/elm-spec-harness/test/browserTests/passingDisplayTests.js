@@ -1,5 +1,5 @@
-const test = require("tape")
-const HarnessRunner = require("../../src/HarnessRunner")
+import test, { onFinish } from "tape"
+import HarnessRunner from "../../src/HarnessRunner"
 
 test("initial state of app", async function(t) {
   // initialize the spec harness
@@ -17,6 +17,6 @@ test("initial state of app", async function(t) {
   }
 })
 
-test.onFinish(() => {
+onFinish(() => {
   console.log("END")
 })
