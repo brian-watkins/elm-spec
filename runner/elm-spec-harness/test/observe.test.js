@@ -1,9 +1,10 @@
-const test = require("tape")
-const browserify = require('browserify')
-const { chromium } = require('playwright');
-const path = require("path")
-const fs = require("fs")
-const Harness = require("../src/Harness")
+import test from "tape";
+import { chromium } from 'playwright';
+import { join } from "path";
+import Harness from "../src/Harness";
+import { serve } from "esbuild";
+import NodeModulesPolyfill from "@esbuild-plugins/node-modules-polyfill";
+import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 
 test('observe', async function (t) {
   const output = await runTestInBrowser("passingDisplayTests.js")
@@ -11,7 +12,7 @@ test('observe', async function (t) {
 })
 
 const runTestInBrowser = async (testFile) => {
-  const testCode = await bundleBrowserTests(testFile)
+  const serveResult = await serveTests(testFile)
 
   const browser = await chromium.launch({
     headless: false
@@ -36,9 +37,11 @@ const runTestInBrowser = async (testFile) => {
   await page.evaluate(compiledHarness)
 
   // load/start the test in playwright
-  await Promise.all([waitForTestsToComplete, page.evaluate(testCode)])
+  await Promise.all([waitForTestsToComplete, page.addScriptTag({ url: "http://localhost:8888/tests.js" })])
 
   await browser.close()
+
+  serveResult.stop()
 
   return output
 }
@@ -51,18 +54,19 @@ const expectContains = (t, list, item, success) => {
   }
 }
 
-const bundleBrowserTests = (testFile) => {
-  const b = browserify();
-  b.add(path.join(__dirname, "browserTests", testFile));
-
-  return new Promise((resolve, reject) => {
-    let bundle = ''
-    const stream = b.bundle()
-    stream.on('data', function (data) {
-      bundle += data.toString()
-    })
-    stream.on('end', function () {
-      resolve(bundle)
-    })
+const serveTests = async (testFile) => {
+  return serve({
+    port: 8888
+  }, {
+    entryPoints: [ join(__dirname, "browserTests", testFile) ],
+    bundle: true,
+    outfile: "tests.js",
+    define: { global: 'window' },
+    plugins: [
+      NodeModulesPolyfill(),
+      GlobalsPolyfills({
+        process: true
+      })
+    ]
   })
 }

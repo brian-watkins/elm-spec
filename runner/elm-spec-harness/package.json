@@ -12,15 +12,17 @@
   },
   "scripts": {
     "prepublish": "npm run build",
-    "test": "tape test/**/*.test.js | tap-difflet",
+    "test": "tape -r esm test/**/*.test.js | tap-difflet",
     "build": "esbuild ./adapterSrc/browserAdapter.js --bundle --outfile=./src/browserAdapter.js"
   },
   "bugs": {
     "url": "https://github.com/brian-watkins/elm-spec/issues"
   },
   "devDependencies": {
-    "browserify": "^17.0.0",
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.0",
+    "@esbuild-plugins/node-modules-polyfill": "^0.1.1",
     "esbuild": "^0.12.15",
+    "esm": "^3.2.25",
     "playwright": "^1.12.3",
     "tap-difflet": "^0.7.2",
     "tape": "^5.2.2"
