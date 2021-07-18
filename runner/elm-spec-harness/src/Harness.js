@@ -10,6 +10,7 @@ module.exports = class Harness {
     const compiler = new Compiler({
       cwd: "./test/browserTests/harness",
       specPath: harnessPath,
+      logLevel: Compiler.LOG_LEVEL.QUIET
     })
   
     const compiledHarness = compiler.compile()
