@@ -1,19 +1,19 @@
 const { Compiler } = require("elm-spec-core")
+const fs = require("fs")
+const path = require("path")
 
-// This lives on the Node side
-// probably shouldn't call it harness
-// It really just compiles the elm code
-// Maybe it could also append the browserAdapter code?
 module.exports = class Harness {
 
-  compile(path) {
+  compile(harnessPath) {
+    const adapter = fs.readFileSync(path.join(__dirname, "browserAdapter.js"))
+
     const compiler = new Compiler({
       cwd: "./test/browserTests/harness",
-      specPath: path,
+      specPath: harnessPath,
     })
   
     const compiledHarness = compiler.compile()
 
-    return compiledHarness
+    return adapter + "\n\n" + compiledHarness
   }
 }

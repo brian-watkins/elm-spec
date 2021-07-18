@@ -30,11 +30,7 @@ const runTestInBrowser = async (testFile) => {
     })
   })
 
-  // load the browser adapter
-  const adapter = fs.readFileSync("./src/browserAdapter.js")
-  await page.evaluate(adapter)
-  
-  // then load the compiled js
+  // then load the compiled js (also loads the browser adapter)
   const harness = new Harness()
   const compiledHarness = harness.compile("./src/Basic.elm")
   await page.evaluate(compiledHarness)
