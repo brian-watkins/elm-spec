@@ -8,7 +8,8 @@ import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 
 test('observe', async function (t) {
   const output = await runTestInBrowser("passingDisplayTests.js")
-  expectContains(t, output, "ok 1 it finds the default name", "an expectation about the default model passes")
+  expectContains(t, output, "ok 1 it finds the default name", "a test observing the default model passes")
+  expectContains(t, output, "ok 2 it finds the default attributes", "another test observing the default model passes")
 })
 
 const runTestInBrowser = async (testFile) => {
@@ -61,7 +62,7 @@ const serveTests = async (testFile) => {
     entryPoints: [ join(__dirname, "browserTests", testFile) ],
     bundle: true,
     outfile: "tests.js",
-    define: { global: 'window' },
+    define: { global: 'window', "__dirname": `"${__dirname}"` },
     plugins: [
       NodeModulesPolyfill(),
       GlobalsPolyfills({

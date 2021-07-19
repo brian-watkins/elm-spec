@@ -5,12 +5,14 @@ import Html exposing (Html)
 
 type alias Model =
   { name: String
+  , attributes: List String
   }
 
 
 defaultModel : Model
 defaultModel =
   { name = "Brian"
+  , attributes = [ "cool", "fun" ]
   }
 
 

@@ -1,21 +1,24 @@
 import test, { onFinish } from "tape"
-import HarnessRunner from "../../src/HarnessRunner"
+import * as runner from "../../src/HarnessRunner"
 
-test("initial state of app", async function(t) {
-  // initialize the spec harness
-  const runner = new HarnessRunner()
-  
-  // run the setup
+test("initial state of app", async function (t) {
   runner.setup()
-  
-  // run the observer
-  const titleObservation = await runner.observe("name", "Brian")
-  if (titleObservation.summary === "ACCEPTED") {
-    t.pass("it finds the default name")
-  } else {
-    t.fail("Failed! " + titleObservation.report)
-  }
+  await expectEqual(t, "name", "Brian", "it finds the default name")
 })
+
+test("another test of the initial state", async function (t) {
+  runner.setup()
+  await expectEqual(t, "attributes", [ "cool", "fun" ], "it finds the default attributes")
+})
+
+const expectEqual = async (t, name, actual, message) => {
+  const observer = await runner.observe(name, actual)
+  if (observer.summary === "ACCEPTED") {
+    t.pass(message)
+  } else {
+    t.fail(message)
+  }
+}
 
 onFinish(() => {
   console.log("END")
