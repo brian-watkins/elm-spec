@@ -1,6 +1,7 @@
 module App exposing (..)
 
 import Html exposing (Html)
+import Html.Attributes as Attr
 
 
 type alias Model =
@@ -22,8 +23,9 @@ type Msg
 
 view : Model -> Html Msg
 view model =
-  Html.h1 []
-    [ Html.text "Hey!"]
+  Html.div []
+    [ Html.h1 [ Attr.id "title" ] [ Html.text "Hey!" ]
+    ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

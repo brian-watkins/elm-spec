@@ -21,7 +21,8 @@ import Spec.Observer.Internal as Observer exposing (Judgment(..))
 import Spec.Message as Message
 import Spec.Observer.Message as Message
 import Spec.Setup exposing (Setup)
-import Spec.Claim exposing (Verdict)
+import Spec.Claim as Claim exposing (Verdict)
+import Spec.Report as Report
 import Url exposing (Url)
 import Html exposing (Html)
 import Spec.Setup.Internal exposing (initializeSubject)
@@ -55,6 +56,7 @@ type alias HarnessModel model msg =
   { subject: Subject model msg
   , programModel: model
   , effects: List Message
+  , inquiryHandler: Maybe (Message -> Judgment model)
   }
 
 type alias Flags =
@@ -73,7 +75,7 @@ init setup =
   in
     case maybeSubject of
       Ok subject ->
-        ( Running { subject = subject, programModel = subject.model, effects = [] }, Cmd.none )
+        ( Running { subject = subject, programModel = subject.model, effects = [], inquiryHandler = Nothing }, Cmd.none )
       Err _ ->
         ( Waiting, Cmd.none )
 
@@ -114,33 +116,40 @@ type alias ExposedExpectation model =
 
 update : Config msg -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config expectations msg model =
-  case msg of
-    ReceivedMessage message ->
-      let
-        d = Debug.log "got message!!" message
-      in
-        if Message.is "_harness" "observe" message then
+  case model of
+    Running harnessModel ->
+      case msg of
+        ReceivedMessage message ->
           let
-            maybeExpectation = Message.decode (Json.field "observer" Json.string) message
-              |> Result.toMaybe
-              |> Maybe.andThen (\observerName -> Dict.get observerName expectations)
-            expected = Message.decode (Json.field "expected" Json.value) message
-              |> Result.toMaybe
-              |> Maybe.withDefault Encode.null
+            d = Debug.log "got message!!" message
           in
-            case maybeExpectation of
-              Just expectation ->
-                case model of
-                  Running harness ->
-                    observe config harness (expectation expected)
-                  Waiting ->
-                    ( model, Cmd.none )
-              Nothing ->
-                ( model, Cmd.none )
-        else
+            if Message.is "_harness" "observe" message then
+              initObserve config expectations harnessModel message
+            else if Message.belongsTo "_observer" message then
+              handleObserveMessage config harnessModel message
+            else
+              ( model, Cmd.none )
+        _ ->
           ( model, Cmd.none )
-    _ ->
+    Waiting ->
       ( model, Cmd.none )
+
+
+initObserve : Config msg -> Dict String (ExposedExpectation model) -> HarnessModel model msg -> Message -> ( Model model msg, Cmd (Msg msg) )
+initObserve config expectations model message =
+  let
+    maybeExpectation = Message.decode (Json.field "observer" Json.string) message
+      |> Result.toMaybe
+      |> Maybe.andThen (\observerName -> Dict.get observerName expectations)
+    expected = Message.decode (Json.field "expected" Json.value) message
+      |> Result.toMaybe
+      |> Maybe.withDefault Encode.null
+  in
+    case maybeExpectation of
+      Just expectation ->
+        observe config model (expectation expected)
+      Nothing ->
+        ( Running model, Cmd.none )
 
 
 observe : Config msg -> HarnessModel model msg -> Expectation model -> ( Model model msg, Cmd (Msg msg) )
@@ -151,10 +160,48 @@ observe config model (Expectation expectation) =
       , sendVerdict config verdict 
       )
     Inquire message handler ->
-      -- Not handling this yet
-      ( Running model
-      , Cmd.none
+      ( Running { model | inquiryHandler = Just handler }
+      , config.send <| Message.inquiry message
       )
+
+
+handleObserveMessage : Config msg -> HarnessModel model msg -> Message -> ( Model model msg, Cmd (Msg msg) )
+handleObserveMessage config model message =
+  Message.decode Message.inquiryDecoder message
+    |> Result.map .message
+    |> Result.map (processInquiryMessage config model)
+    |> Result.withDefault ( Running model, Cmd.none )
+      -- (abortObservation actions observeModel <| Report.note "Unable to decode inquiry result!")
+
+
+processInquiryMessage : Config msg -> HarnessModel model msg -> Message -> ( Model model msg, Cmd (Msg msg) )
+processInquiryMessage config model message =
+  if Message.is "_scenario" "abort" message then
+    ( Running model, Cmd.none )
+    -- Message.decode Report.decoder message
+    --   |> Result.withDefault (Report.note "Unable to decode abort message!")
+    --   |> abortObservation actions observeModel
+  else
+    ( Running { model | inquiryHandler = Nothing }
+    , handleInquiry message model.inquiryHandler
+        |> sendVerdict config
+    )
+
+
+handleInquiry : Message -> Maybe (Message -> Judgment model) -> Verdict
+handleInquiry message maybeHandler =
+  maybeHandler
+    |> Maybe.map (inquiryResult message)
+    |> Maybe.withDefault (Claim.Reject <| Report.note "No Inquiry Handler!")
+
+
+inquiryResult : Message -> (Message -> Judgment model) -> Verdict
+inquiryResult message handler =
+  case handler message of
+    Complete verdict ->
+      verdict
+    Inquire _ _ ->
+      Claim.Reject <| Report.note "Recursive Inquiry not supported!"
 
 
 establishContext : model -> List Message -> Context model

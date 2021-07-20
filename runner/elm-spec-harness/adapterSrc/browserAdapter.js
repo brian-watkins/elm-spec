@@ -40,7 +40,7 @@ window._elm_spec.startHarness = (options) => {
         runner.on("observation", function(obs) {
           resolve(obs)
         })
-        app.ports.elmSpecIn.send({
+        elmContext.sendToProgram({
           home: "_harness",
           name: "observe",
           body: {

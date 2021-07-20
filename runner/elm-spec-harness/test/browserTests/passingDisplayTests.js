@@ -11,6 +11,11 @@ test("another test of the initial state", async function (t) {
   await expectEqual(t, "attributes", [ "cool", "fun" ], "it finds the default attributes")
 })
 
+test("the initial view", async function(t) {
+  runner.setup()
+  await expectEqual(t, "title", "Hey!", "it shows the page title in the view")
+})
+
 const expectEqual = async (t, name, actual, message) => {
   const observer = await runner.observe(name, actual)
   if (observer.summary === "ACCEPTED") {
