@@ -14,6 +14,7 @@ test('observe', async function (t) {
   expectContains(t, output, "ok 4 it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
   expectContains(t, output, "ok 5 it finds the updated name", "a test passes that involves sending a message to the app")
   expectContains(t, output, "ok 6 it receives the expected message", "a test passes that receives a message from the app")
+  expectContains(t, output, "ok 7 it finds the name updated after the message is received", "a test passes that sends a message to the app in response to receiving one")
 })
 
 const runTestInBrowser = async (testFile) => {

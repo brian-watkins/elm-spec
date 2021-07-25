@@ -257,6 +257,12 @@ subscriptions config model =
           |> Sub.map ProgramMsg
       , config.listen ReceivedMessage
       ]
+    Exercising subject exerciseModel ->
+      Sub.batch
+      [ subject.subscriptions exerciseModel.programModel
+          |> Sub.map ProgramMsg
+      , config.listen ReceivedMessage
+      ]
     _ ->
       config.listen ReceivedMessage
 

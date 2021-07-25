@@ -1,7 +1,7 @@
 const ElmContext = require('elm-spec-core/src/elmContext')
 const ProgramRunner = require('elm-spec-core/src/programRunner')
 const ProgramReference = require('elm-spec-core/src/programReference')
-
+const { createProxyApp } = require('./ProxyApp')
 
 const base = document.createElement("base")
 base.setAttribute("href", "http://elm-spec")
@@ -32,10 +32,13 @@ window._elm_spec.startHarness = (options) => {
 
   const sendToProgram = elmContext.sendToProgram()
 
+  const proxyApp = createProxyApp(app)
+
   return {
-    app,
+    app: proxyApp,
     setup: async () => {
       console.log("Setup")
+      proxyApp.resetPorts()
       return new Promise((resolve) => {
         runner.on("complete", function(shouldContinue) {
           resolve()

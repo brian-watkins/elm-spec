@@ -24,7 +24,7 @@ test("the app is reset", async function(t) {
 
 test("a message is sent to the app", async function(t) {
   await runner.setup()
-  runner.getElmApp().ports.triggerStuff.send({ name: "Super cool dude!" })
+  runner.getElmApp().ports.triggerStuff.send({ name: "Super cool dude" })
   await expectEqual(t, "name", "Super cool dude", "it finds the updated name")
 })
 
@@ -34,6 +34,15 @@ test("a message is received from the app", async function(t) {
     t.deepEquals(data, { attributes: [ "awesome", "cool", "fun" ] }, "it receives the expected message")
   })
   await runner.runSteps("inform")
+})
+
+test("a message is sent in response to a message that is received", async function(t) {
+  await runner.setup()
+  runner.getElmApp().ports.inform.subscribe(data => {
+    runner.getElmApp().ports.triggerStuff.send({ name: "Dr. Cool" })
+  })
+  await runner.runSteps("inform")
+  await expectEqual(t, "name", "Dr. Cool", "it finds the name updated after the message is received")
 })
 
 const expectEqual = async (t, name, actual, message) => {
