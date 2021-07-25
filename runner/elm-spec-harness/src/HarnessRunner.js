@@ -1,11 +1,11 @@
 
 let wrapper = null
 
-const setup = async() => {
-  // this needs to wait until the app has run the setup ...
+const setup = async () => {
   if (!wrapper) {
     wrapper = window._elm_spec.startHarness()
   }
+  await wrapper.setup()
 }
 
 const observe = async (name, expected) => {

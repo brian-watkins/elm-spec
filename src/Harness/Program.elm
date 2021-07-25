@@ -16,6 +16,7 @@ import Browser exposing (UrlRequest, Document)
 import Spec.Setup.Internal as Setup exposing (Subject)
 import Spec.Step.Command as Step
 import Spec.Observer.Internal exposing (Judgment(..))
+import Spec.Scenario.Message as Message
 import Spec.Message as Message
 import Spec.Observer.Message as Message
 import Harness.Message as Message
@@ -28,6 +29,7 @@ import Html exposing (Html)
 import Spec.Setup.Internal exposing (initializeSubject)
 import Dict exposing (Dict)
 import Task
+import Json.Decode as Json
 
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
@@ -46,6 +48,7 @@ type Msg msg
 
 type Model model msg
   = Waiting
+  | Setup (Subject model msg)
   | Ready (Subject model msg) (HarnessModel model)
   | Exercising (Subject model msg) (Exercise.Model model msg)
   | Observing (Subject model msg) (Observe.Model model)
@@ -71,9 +74,9 @@ init setup =
   in
     case maybeSubject of
       Ok subject ->
-        ( Ready subject { programModel = subject.model, effects = [] }, Cmd.none )
+        ( Setup subject, Cmd.none )
       Err _ ->
-        ( Waiting, Cmd.none )
+        Debug.todo "Could not initialize subject!"
 
 
 view : Model model msg -> Document (Msg msg)
@@ -85,7 +88,7 @@ view model =
       programView subject observeModel.programModel
     Exercising subject exerciseModel ->
       programView subject exerciseModel.programModel
-    Waiting ->
+    _ ->
       { title = "Harness Program"
       , body = [ fakeBody ]
       }
@@ -122,13 +125,37 @@ fakeBody =
 -- Ultimately Setup needs to run some configure step, but then it's just like the Exercise state
 -- where the step is just to run the initial command
 
+-- For Setup, several things need to happen:
+-- 1. Create the subject (at least once, but we could do it every time)
+-- 2. Reset the elm context (and wait for any animation tasks to finish)
+-- 3. Run any configuration steps (no tests for this yet)
+-- 4. Run the initial command (in the right way that triggers a view update, but no tests with an initial command yet)
+
 update : Config msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config steps expectations msg model =
   case model of
+    Setup subject ->
+      case msg of
+        ReceivedMessage message ->
+          if Message.is "_harness" "setup" message then
+            ( model, config.send Message.startScenario )
+          else if Message.is "_scenario" "state" message then
+            case Message.decode Json.string message |> Result.withDefault "" of
+              "CONTINUE" ->
+                Exercise.initForInitialCommand (exerciseActions config) subject
+                  |> Tuple.mapFirst (Exercising subject)
+              _ ->
+                Debug.todo "Unexpected scenario state message in Harness Program!"
+          else
+            ( model, Cmd.none )
+        _ ->
+          ( model, Cmd.none )
     Ready subject harnessModel ->
       case msg of
         ReceivedMessage message ->
-          if Message.is "_harness" "observe" message then
+          if Message.is "_harness" "setup" message then
+            update config steps expectations (ReceivedMessage message) (Setup subject)
+          else if Message.is "_harness" "observe" message then
             Observe.init (observeActions config) (expectationsRepo expectations) (Observe.defaultModel harnessModel.programModel harnessModel.effects) message
               |> Tuple.mapFirst (Observing subject)
           else if Message.is "_harness" "run" message then
@@ -191,9 +218,10 @@ stepsRepo steps =
   }
 
 
-exerciseActions : Config msg -> Exercise.Actions (Msg msg)
+exerciseActions : Config msg -> Exercise.Actions (Msg msg) msg
 exerciseActions config =
   { send = config.send
+  , programMsg = ProgramMsg
   , continue =
       Task.succeed never
         |> Task.perform (always Continue)

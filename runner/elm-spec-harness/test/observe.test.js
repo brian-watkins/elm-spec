@@ -10,8 +10,8 @@ test('observe', async function (t) {
   const output = await runTestInBrowser("passingDisplayTests.js")
   expectContains(t, output, "ok 1 it finds the default name", "a test observing the default model passes")
   expectContains(t, output, "ok 2 it finds the default attributes", "another test observing the default model passes")
-  expectContains(t, output, "ok 3 it shows the page title in the view", "a test observing the view passes")
-  expectContains(t, output, "ok 4 it counts the number of clicks", "a test that runs steps")
+  expectContains(t, output, "ok 3 it counts the number of clicks", "a test passes that runs steps and changes the model")
+  expectContains(t, output, "ok 4 it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
 })
 
 const runTestInBrowser = async (testFile) => {

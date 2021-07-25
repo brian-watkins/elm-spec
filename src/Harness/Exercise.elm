@@ -4,6 +4,7 @@ module Harness.Exercise exposing
   , ExposedStepsRepository
   , defaultModel
   , init
+  , initForInitialCommand
   , update
   )
 
@@ -14,6 +15,7 @@ import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
 import Json.Decode as Json
+import Spec.Setup.Internal exposing (Subject)
 
 
 type alias Model model programMsg =
@@ -31,13 +33,14 @@ defaultModel programModel effects =
   }
 
 
-type Msg
+type Msg programMsg
   = Continue
   | ReceivedMessage Message
 
 
-type alias Actions msg =
+type alias Actions msg programMsg =
   { send : Message -> Cmd msg
+  , programMsg : programMsg -> msg
   , continue: Cmd msg
   , finished: Cmd msg
   }
@@ -48,7 +51,7 @@ type alias ExposedStepsRepository model msg =
   }
 
 
-init : Actions msg -> ExposedStepsRepository model programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )
+init : Actions msg programMsg -> ExposedStepsRepository model programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )
 init actions steps model message =
   let
     maybeSteps = Message.decode (Json.field "steps" Json.string) message
@@ -64,7 +67,17 @@ init actions steps model message =
         Debug.todo "Could not find steps!"
 
 
-update : Actions msg -> Msg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
+initForInitialCommand : Actions msg programMsg -> Subject model programMsg -> ( Model model programMsg, Cmd msg )
+initForInitialCommand actions subject =
+  let
+    model = defaultModel subject.model []
+  in
+  ( { model | stepsToRun = [ \_ -> Step.sendToProgram subject.initialCommand ] }
+  , actions.continue
+  )
+
+
+update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
 update actions msg model =
   case msg of
     ReceivedMessage message ->
@@ -89,12 +102,20 @@ update actions msg model =
             |> handleStepCommand actions { model | stepsToRun = remaining }
 
 
-handleStepCommand : Actions msg -> Model model programMsg -> Step.Command programMsg -> ( Model model programMsg, Cmd msg)
+handleStepCommand : Actions msg programMsg -> Model model programMsg -> Step.Command programMsg -> ( Model model programMsg, Cmd msg)
 handleStepCommand actions model command =
   case command of
     Step.SendMessage message ->
       ( model
       , actions.send <| Message.stepMessage message
       )
+    Step.SendCommand cmd ->
+      ( model
+      , Cmd.batch
+        [ Cmd.map actions.programMsg cmd
+        , actions.send Step.programCommand
+        ]
+      )
+
     _ ->
       Debug.todo "Try to handle a command we can't yet handle!"

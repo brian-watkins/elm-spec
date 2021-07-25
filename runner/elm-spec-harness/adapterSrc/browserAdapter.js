@@ -33,6 +33,19 @@ window._elm_spec.startHarness = (options) => {
   const sendToProgram = elmContext.sendToProgram()
 
   return {
+    setup: async () => {
+      console.log("Setup")
+      return new Promise((resolve) => {
+        runner.on("complete", function(shouldContinue) {
+          resolve()
+        })
+        sendToProgram({
+          home: "_harness",
+          name: "setup",
+          body: null
+        })
+      })
+    },
     observe: async (name, expected) => {
       console.log("Observing", name, expected)
       return new Promise((resolve) => {
