@@ -22,6 +22,7 @@ defaultModel =
 
 type Msg
   = CounterClicked
+  | InformClicked
   | Triggered TriggerMessage
 
 
@@ -31,6 +32,10 @@ view model =
     [ Html.h1 [ Attr.id "title" ] [ Html.text <| "Hey " ++ model.name ++ "!" ]
     , Html.button [ Attr.id "counter-button", Events.onClick CounterClicked ] [ Html.text "Click me!" ]
     , Html.h3 [ Attr.id "counter-status" ] [ Html.text <| String.fromInt model.clicks ++ " clicks!" ]
+    , Html.hr [] []
+    , Html.div []
+      [ Html.button [ Attr.id "inform-button", Events.onClick InformClicked ] [ Html.text "Inform!" ]
+      ]
     ]
 
 
@@ -41,6 +46,8 @@ update msg model =
       ( { model | clicks = model.clicks + 1 }, Cmd.none )
     Triggered message ->
       ( { model | name = message.name }, Cmd.none )
+    InformClicked ->
+      ( model, inform { attributes = "awesome" :: model.attributes } )
 
 
 type alias TriggerMessage =
@@ -49,7 +56,7 @@ type alias TriggerMessage =
 
 
 port triggerStuff : (TriggerMessage -> msg) -> Sub msg
-
+port inform : { attributes: List String } -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

@@ -32,9 +32,16 @@ clickMultiple =
   ]
 
 
+inform =
+  [ Markup.target << by [ id "inform-button" ]
+  , Event.click
+  ]
+
+
 steps =
   Dict.fromList
     [ ( "click", Harness.exposeSteps clickMultiple )
+    , ( "inform", Harness.exposeSteps inform )
     ]
 
 

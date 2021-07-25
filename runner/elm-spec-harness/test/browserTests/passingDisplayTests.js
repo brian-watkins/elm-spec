@@ -28,6 +28,13 @@ test("a message is sent to the app", async function(t) {
   await expectEqual(t, "name", "Super cool dude", "it finds the updated name")
 })
 
+test("a message is received from the app", async function(t) {
+  await runner.setup()
+  runner.getElmApp().ports.inform.subscribe(data => {
+    t.deepEquals(data, { attributes: [ "awesome", "cool", "fun" ] }, "it receives the expected message")
+  })
+  await runner.runSteps("inform")
+})
 
 const expectEqual = async (t, name, actual, message) => {
   const observer = await runner.observe(name, actual)
