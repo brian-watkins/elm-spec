@@ -33,6 +33,7 @@ window._elm_spec.startHarness = (options) => {
   const sendToProgram = elmContext.sendToProgram()
 
   return {
+    app,
     setup: async () => {
       console.log("Setup")
       return new Promise((resolve) => {

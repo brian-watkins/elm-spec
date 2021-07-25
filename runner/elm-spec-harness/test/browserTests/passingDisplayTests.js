@@ -22,6 +22,11 @@ test("the app is reset", async function(t) {
   await expectEqual(t, "count", "0 clicks!", "it resets the app at the beginning of each test")
 })
 
+test("a message is sent to the app", async function(t) {
+  await runner.setup()
+  runner.getElmApp().ports.triggerStuff.send({ name: "Super cool dude!" })
+  await expectEqual(t, "name", "Super cool dude", "it finds the updated name")
+})
 
 
 const expectEqual = async (t, name, actual, message) => {

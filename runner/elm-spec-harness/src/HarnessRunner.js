@@ -16,7 +16,12 @@ const runSteps = async (name) => {
   return await wrapper.runSteps(name)
 }
 
+const getElmApp = () => {
+  return wrapper.app
+}
+
 module.exports = {
+  getElmApp,
   setup,
   observe,
   runSteps

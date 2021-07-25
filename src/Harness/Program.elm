@@ -163,6 +163,15 @@ update config steps expectations msg model =
               |> Tuple.mapFirst (Exercising subject)
           else
             ( model, Cmd.none )
+        ProgramMsg programMsg ->
+          subject.update programMsg harnessModel.programModel
+            |> Tuple.mapFirst (\updated -> Ready subject { harnessModel | programModel = updated })
+            |> Tuple.mapSecond (\nextCommand ->
+              Cmd.batch
+              [ Cmd.map ProgramMsg nextCommand
+              , config.send Step.programCommand
+              ]
+            )
         _ ->
           ( model, Cmd.none )
     Exercising subject exerciseModel ->
@@ -240,8 +249,16 @@ observeActions config =
 
 
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
-subscriptions config _ =
-  config.listen ReceivedMessage
+subscriptions config model =
+  case model of
+    Ready subject harnessModel ->
+      Sub.batch
+      [ subject.subscriptions harnessModel.programModel
+          |> Sub.map ProgramMsg
+      , config.listen ReceivedMessage
+      ]
+    _ ->
+      config.listen ReceivedMessage
 
 
 onUrlRequest : UrlRequest -> (Msg msg)

@@ -19,6 +19,7 @@ setup =
   Setup.initWithModel App.defaultModel
     |> Setup.withUpdate App.update
     |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
 
 
 -- Steps
