@@ -94,6 +94,9 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "_observer":
         this.handleObserverEvent(specMessage, out)
         break
+      case "_harness":
+        this.handleHarnessEvent(specMessage, out)
+        break
       default:
         const plugin = this.plugins[specMessage.home]
         if (plugin) {
@@ -108,6 +111,14 @@ module.exports = class ProgramRunner extends EventEmitter {
   sendAbortMessage(out) {
     return (reason) => {
       out(this.abort(reason))
+    }
+  }
+
+  handleHarnessEvent(specMessage, out) {
+    switch (specMessage.name) {
+      case "complete":
+        this.emit("complete", true)
+        break
     }
   }
 

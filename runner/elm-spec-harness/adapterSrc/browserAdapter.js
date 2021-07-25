@@ -22,9 +22,6 @@ window._elm_spec.startHarness = (options) => {
   // then call the program runner with the app
   const runner = new ProgramRunner(app, elmContext, {})
   runner
-    .on("complete", (shouldContinue) => {
-      console.log("Complete!")
-    })
     .on("error", (error) => {
       console.log("Error", error)
     })
@@ -33,6 +30,8 @@ window._elm_spec.startHarness = (options) => {
     })
     .run()
 
+  const sendToProgram = elmContext.sendToProgram()
+
   return {
     observe: async (name, expected) => {
       console.log("Observing", name, expected)
@@ -40,12 +39,27 @@ window._elm_spec.startHarness = (options) => {
         runner.on("observation", function(obs) {
           resolve(obs)
         })
-        elmContext.sendToProgram({
+        sendToProgram({
           home: "_harness",
           name: "observe",
           body: {
             observer: name,
             expected
+          }
+        })
+      })
+    },
+    runSteps: async (name) => {
+      console.log("Running steps", name)
+      return new Promise((resolve) => {
+        runner.on("complete", function(shouldContinue) {
+          resolve()
+        })
+        sendToProgram({
+          home: "_harness",
+          name: "run",
+          body: {
+            steps: name
           }
         })
       })

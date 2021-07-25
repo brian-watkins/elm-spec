@@ -5,7 +5,7 @@ module Spec.Scenario.State.Interactive exposing
 import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Message as Message exposing (Message)
-import Spec.Scenario.Message as Message
+import Spec.Step.Message as Message
 import Spec.Scenario.State.NavigationHelpers exposing (..)
 import Browser exposing (Document)
 import Json.Decode as Json

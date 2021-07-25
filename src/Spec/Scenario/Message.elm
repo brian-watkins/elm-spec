@@ -3,9 +3,6 @@ module Spec.Scenario.Message exposing
   , startScenario
   , configureComplete
   , configMessage
-  , stepMessage
-  , stepComplete
-  , runToNextAnimationFrame
   , startObservation
   , abortScenario
   )
@@ -25,29 +22,9 @@ configureComplete =
   scenarioStateMessage "CONFIGURE_COMPLETE"
 
 
-stepComplete : Message
-stepComplete =
-  Message.for "_step" "complete"
-
-
-runToNextAnimationFrame : Message
-runToNextAnimationFrame =
-  Message.for "_step" "nextAnimationFrame"
-
-
 configMessage : Message -> Message
 configMessage message =
   Message.for "_scenario" "configure"
-    |> Message.withBody (
-      Encode.object
-        [ ("message", Message.encode message)
-        ]
-    )
-
-
-stepMessage : Message -> Message
-stepMessage message =
-  Message.for "_scenario" "step"
     |> Message.withBody (
       Encode.object
         [ ("message", Message.encode message)

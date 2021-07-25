@@ -16,6 +16,12 @@ test("the initial view", async function(t) {
   await expectEqual(t, "title", "Hey!", "it shows the page title in the view")
 })
 
+test("the view updates", async function(t) {
+  runner.setup()
+  await runner.runSteps("click")
+  await expectEqual(t, "count", "3 clicks!", "it counts the number of clicks")
+})
+
 const expectEqual = async (t, name, actual, message) => {
   const observer = await runner.observe(name, actual)
   if (observer.summary === "ACCEPTED") {

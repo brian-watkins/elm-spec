@@ -8,6 +8,7 @@ import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Message as Message exposing (Message)
 import Spec.Message.Internal as Message
 import Spec.Scenario.Message as Message
+import Spec.Step.Message as Message
 import Spec.Markup.Message as Message
 import Spec.Step.Context as Context
 import Spec.Step.Command as Step

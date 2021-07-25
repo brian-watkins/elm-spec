@@ -11,6 +11,7 @@ test('observe', async function (t) {
   expectContains(t, output, "ok 1 it finds the default name", "a test observing the default model passes")
   expectContains(t, output, "ok 2 it finds the default attributes", "another test observing the default model passes")
   expectContains(t, output, "ok 3 it shows the page title in the view", "a test observing the view passes")
+  expectContains(t, output, "ok 4 it counts the number of clicks", "a test that runs steps")
 })
 
 const runTestInBrowser = async (testFile) => {

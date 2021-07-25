@@ -2,6 +2,7 @@ module Harness exposing
   ( Config
   , expect, Expectation
   , expose
+  , exposeSteps
   , browserHarness
   , Message
   )
@@ -12,7 +13,9 @@ module Harness exposing
 -}
 
 import Spec.Message as Message
+import Spec.Step exposing (Step)
 import Harness.Program as Program
+import Harness.Types as Harness
 import Spec.Setup exposing (Setup)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Report as Report
@@ -57,14 +60,14 @@ Expectations are checked at the end of the scenario, after all steps of the
 script have been performed.
 -}
 type alias Expectation model =
-  Program.Expectation model
+  Harness.Expectation model
 
 
 {-| Provide an observer with a claim to evaluate.
 -}
 expect : Claim a -> Observer model a -> Expectation model
 expect claim observer =
-  Program.Expectation <| Observer.expect claim observer
+  Harness.Expectation <| Observer.expect claim observer
 
 
 {-|
@@ -79,15 +82,24 @@ expose decoder generator =
         expect (\_ -> Reject <| Report.note "Could not decode value for expectation!") (Observer.observeModel identity)
 
 
+type alias ExposedSteps model msg
+  = List (Step model msg)
+
+
+exposeSteps : List (Step model msg) -> ExposedSteps model msg
+exposeSteps steps =
+  steps
+
+
 {-|
 -}
-browserHarness : Config msg -> Setup model msg -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
-browserHarness config setup expectations =
+browserHarness : Config msg -> Setup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
+browserHarness config setup steps expectations =
   Browser.application
     { init = \_ _ _ ->
         Program.init setup 
     , view = Program.view
-    , update = Program.update config expectations
+    , update = Program.update config steps expectations
     , subscriptions = Program.subscriptions config
     , onUrlRequest = Program.onUrlRequest
     , onUrlChange = Program.onUrlChange

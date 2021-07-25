@@ -6,6 +6,7 @@ import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Setup.Internal exposing (Subject)
 import Spec.Scenario.Internal exposing (Scenario)
 import Spec.Message as Message
+import Spec.Step.Message as Message
 import Spec.Scenario.Message as Message
 import Spec.Report as Report
 import Spec.Scenario.State.Error as Error

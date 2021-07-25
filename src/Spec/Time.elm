@@ -44,7 +44,7 @@ import Spec.Setup.Internal as Setup
 import Spec.Step as Step
 import Spec.Step.Command as Command
 import Spec.Message as Message
-import Spec.Scenario.Message as Message
+import Spec.Step.Message as Message
 import Json.Encode as Encode
 
 
