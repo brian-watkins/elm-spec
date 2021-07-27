@@ -72,7 +72,8 @@ initForInitialCommand actions subject =
   let
     model = defaultModel subject.model []
   in
-  ( { model | stepsToRun = [ \_ -> Step.sendToProgram subject.initialCommand ] }
+  -- note that we need to replace this with subject.initialCommand when we have a test for it
+  ( { model | stepsToRun = [ \_ -> Step.sendToProgram Cmd.none ] }
   , actions.continue
   )
 
