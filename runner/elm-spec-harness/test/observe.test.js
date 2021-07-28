@@ -8,13 +8,13 @@ import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 
 test('observe', async function (t) {
   const output = await runTestInBrowser("passingDisplayTests.js")
-  expectContains(t, output, "ok 1 it finds the default name", "a test observing the default model passes")
-  expectContains(t, output, "ok 2 it finds the default attributes", "another test observing the default model passes")
-  expectContains(t, output, "ok 3 it counts the number of clicks", "a test passes that runs steps and changes the model")
-  expectContains(t, output, "ok 4 it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
-  expectContains(t, output, "ok 5 it finds the updated name", "a test passes that involves sending a message to the app")
-  expectContains(t, output, "ok 6 it receives the expected message", "a test passes that receives a message from the app")
-  expectContains(t, output, "ok 7 it finds the name updated after the message is received", "a test passes that sends a message to the app in response to receiving one")
+  expectPassingTest(t, output, "it finds the default attributes", "a test observing the default model passes")
+  expectPassingTest(t, output, "it finds the configured default name", "a test passes that configures the setup")
+  expectPassingTest(t, output, "it counts the number of clicks", "a test passes that runs steps and changes the model")
+  expectPassingTest(t, output, "it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
+  expectPassingTest(t, output, "it finds the updated name", "a test passes that involves sending a message to the app")
+  expectPassingTest(t, output, "it receives the expected message", "a test passes that receives a message from the app")
+  expectPassingTest(t, output, "it finds the name updated after the message is received", "a test passes that sends a message to the app in response to receiving one")
 })
 
 const runTestInBrowser = async (testFile) => {
@@ -50,6 +50,18 @@ const runTestInBrowser = async (testFile) => {
   serveResult.stop()
 
   return output
+}
+
+const expectPassingTest = (t, output, testName, message) => {
+  expectListItemMatches(t, output, `^ok \\d+ ${testName}$`, message)
+}
+
+const expectListItemMatches = (t, list, regex, success) => {
+  if (list.find(element => element.match(regex))) {
+    t.pass(success)
+  } else {
+    t.fail(`Expected [ ${list} ] to have an item matching: ${regex}`)
+  }
 }
 
 const expectContains = (t, list, item, success) => {

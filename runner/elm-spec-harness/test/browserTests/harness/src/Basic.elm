@@ -1,7 +1,7 @@
 module Basic exposing (..)
 
 import Harness exposing (Expectation, expect)
-import Spec.Setup as Setup
+import Spec.Setup as Setup exposing (Setup)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining)
 import Spec.Observer as Observer
 import Spec.Markup as Markup
@@ -15,11 +15,26 @@ import App
 
 -- Setup
 
-setup =
-  Setup.initWithModel App.defaultModel
-    |> Setup.withUpdate App.update
-    |> Setup.withView App.view
-    |> Setup.withSubscriptions App.subscriptions
+type alias SetupConfiguration =
+  { name: String
+  }
+
+
+setupConfigDecoder : Json.Decoder SetupConfiguration
+setupConfigDecoder=
+  Json.field "name" Json.string
+    |> Json.map SetupConfiguration
+
+
+setup : SetupConfiguration -> Setup App.Model App.Msg
+setup config =
+  let
+    model = App.defaultModel
+  in
+    Setup.initWithModel { model | name = config.name }
+      |> Setup.withUpdate App.update
+      |> Setup.withView App.view
+      |> Setup.withSubscriptions App.subscriptions
 
 
 -- Steps
@@ -83,4 +98,4 @@ observers =
 
 
 main =
-  Runner.harness setup steps observers
+  Runner.harness (Harness.exposeSetup setupConfigDecoder setup) steps observers

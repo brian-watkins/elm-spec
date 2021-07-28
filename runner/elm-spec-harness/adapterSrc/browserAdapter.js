@@ -36,7 +36,7 @@ window._elm_spec.startHarness = (options) => {
 
   return {
     app: proxyApp,
-    setup: async () => {
+    setup: async (config) => {
       console.log("Setup")
       proxyApp.resetPorts()
       return new Promise((resolve) => {
@@ -46,7 +46,9 @@ window._elm_spec.startHarness = (options) => {
         sendToProgram({
           home: "_harness",
           name: "setup",
-          body: null
+          body: {
+            config
+          }
         })
       })
     },

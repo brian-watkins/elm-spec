@@ -1,8 +1,9 @@
 module Harness exposing
   ( Config
   , expect, Expectation
-  , expose
-  , exposeSteps
+  , expose, ExposedExpectation
+  , exposeSteps, ExposedSteps
+  , exposeSetup, ExposedSetup
   , browserHarness
   , Message
   )
@@ -51,8 +52,6 @@ type alias Flags =
 -- requiredElmSpecCoreVersion : number
 -- requiredElmSpecCoreVersion = 7
 
-type alias ExposedExpectation model =
-  Json.Value -> Expectation model
 
 {-| Represents what should be the case about some part of the world.
 
@@ -68,6 +67,10 @@ type alias Expectation model =
 expect : Claim a -> Observer model a -> Expectation model
 expect claim observer =
   Harness.Expectation <| Observer.expect claim observer
+
+
+type alias ExposedExpectation model =
+  Json.Value -> Expectation model
 
 
 {-|
@@ -91,15 +94,29 @@ exposeSteps steps =
   steps
 
 
+type alias ExposedSetup model msg =
+  Json.Value -> Setup model msg
+
+
+exposeSetup : Json.Decoder a -> (a -> Setup model msg) -> ExposedSetup model msg
+exposeSetup decoder generator =
+  \value ->
+    case Json.decodeValue decoder value of
+      Ok config ->
+        generator config
+      Err message ->
+        Debug.todo <| "Could not configure setup! " ++ Json.errorToString message
+
+
 {-|
 -}
-browserHarness : Config msg -> Setup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
+browserHarness : Config msg -> ExposedSetup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
 browserHarness config setup steps expectations =
   Browser.application
     { init = \_ _ _ ->
-        Program.init setup 
+        Program.init
     , view = Program.view
-    , update = Program.update config steps expectations
+    , update = Program.update config setup steps expectations
     , subscriptions = Program.subscriptions config
     , onUrlRequest = Program.onUrlRequest
     , onUrlChange = Program.onUrlChange

@@ -31,6 +31,7 @@ import Dict exposing (Dict)
 import Task
 import Json.Decode as Json
 
+
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
@@ -62,21 +63,9 @@ type alias Flags =
   { }
 
 
-init : Setup model msg -> ( Model model msg, Cmd (Msg msg) )
-init setup =
-  let
-    -- probably don't want to do this here but once we get the start message we should initialize the harness
-    -- subject. BUT would we have multiple setups in the same harness? It might fire a command though ...
-    -- It might not be that we have multiple setup functions ... but it might be that we have one function
-    -- that takes an argument resulting in different setups. But in any case, if we want to be able to
-    -- run multiple times, we can't do this (only) in the init. But fine for now.
-    maybeSubject = initializeSubject setup Nothing
-  in
-    case maybeSubject of
-      Ok subject ->
-        ( Setup subject, Cmd.none )
-      Err _ ->
-        Debug.todo "Could not initialize subject!"
+init : ( Model model msg, Cmd (Msg msg) )
+init =
+  ( Waiting, Cmd.none )
 
 
 view : Model model msg -> Document (Msg msg)
@@ -131,15 +120,35 @@ fakeBody =
 -- 3. Run any configuration steps (no tests for this yet)
 -- 4. Run the initial command (in the right way that triggers a view update, but no tests with an initial command yet)
 
-update : Config msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-update config steps expectations msg model =
+update : Config msg -> ExposedSetup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update config setupGenerator steps expectations msg model =
   case model of
-    Setup subject ->
+    Waiting ->
       case msg of
         ReceivedMessage message ->
           if Message.is "_harness" "setup" message then
-            ( model, config.send Message.startScenario )
-          else if Message.is "_scenario" "state" message then
+            case Message.decode (Json.field "config" Json.value) message of
+              Ok setupConfig ->
+                let
+                  maybeSubject = 
+                    initializeSubject (setupGenerator setupConfig) Nothing
+                      |> Result.toMaybe
+                in
+                  case maybeSubject of
+                    Just subject ->
+                      ( Setup subject, config.send Message.startScenario )
+                    Nothing ->
+                      Debug.todo "Could not initialize subject!"
+              Err _ ->
+                Debug.todo "Could not decode setup config!"
+          else
+            ( model, Cmd.none )
+        _ ->
+          ( model, Cmd.none )
+    Setup subject ->
+      case msg of
+        ReceivedMessage message ->
+          if Message.is "_scenario" "state" message then
             case Message.decode Json.string message |> Result.withDefault "" of
               "CONTINUE" ->
                 Exercise.initForInitialCommand (exerciseActions config) subject
@@ -154,7 +163,7 @@ update config steps expectations msg model =
       case msg of
         ReceivedMessage message ->
           if Message.is "_harness" "setup" message then
-            update config steps expectations (ReceivedMessage message) (Setup subject)
+            update config setupGenerator steps expectations (ReceivedMessage message) Waiting
           else if Message.is "_harness" "observe" message then
             Observe.init (observeActions config) (expectationsRepo expectations) (Observe.defaultModel harnessModel.programModel harnessModel.effects) message
               |> Tuple.mapFirst (Observing subject)
@@ -208,8 +217,6 @@ update config steps expectations msg model =
           )
         _ ->
           ( model, Cmd.none )
-    Waiting ->
-      ( model, Cmd.none )
 
 
 
