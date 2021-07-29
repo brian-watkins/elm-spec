@@ -40,8 +40,10 @@ type alias Config msg =
 type Msg msg
   = ProgramMsg msg
   | Effect Message
+  | InitializingFinished
+  | ExerciseFinished
+  | ObservingFinished
   | Continue
-  | Finished
   | ReceivedMessage Message
   | OnUrlRequest UrlRequest
   | OnUrlChange Url
@@ -189,23 +191,21 @@ update config setupGenerator steps expectations msg model =
                 |> Tuple.mapFirst Running
             _ ->
               ( model, Cmd.none )
-        Finished ->
-          case runModel.state of
-            Ready ->
-              ( model, Cmd.none )
-            Initializing _ ->
-              Exercise.initForInitialCommand (exerciseActions config) runModel.subject
-                |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
-                |> Tuple.mapFirst Running
-            Exercising _ ->
-              ( Running { runModel | state = Ready }
-              , config.send Message.harnessActionComplete
-              )
-            Observing _ ->
-              ( Running { runModel | state = Ready }
-              , Cmd.none
-              )
-        _ ->
+        InitializingFinished ->
+          Exercise.initForInitialCommand (exerciseActions config) runModel.subject
+            |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
+            |> Tuple.mapFirst Running
+        ExerciseFinished ->
+          ( Running { runModel | state = Ready }
+          , config.send Message.harnessActionComplete
+          )
+        ObservingFinished ->
+          ( Running { runModel | state = Ready }
+          , Cmd.none
+          )
+        OnUrlChange _ ->
+          ( model, Cmd.none )
+        OnUrlRequest _ ->
           ( model, Cmd.none )
 
 
@@ -232,7 +232,7 @@ stepsRepo steps =
 initializeActions : Config msg -> Initialize.Actions (Msg msg)
 initializeActions config =
   { send = config.send
-  , finished = sendMessage Finished
+  , finished = sendMessage InitializingFinished
   }
 
 
@@ -242,13 +242,13 @@ exerciseActions config =
   , programMsg = ProgramMsg
   , storeEffect = \message -> sendMessage <| Effect message
   , continue = sendMessage Continue
-  , finished = sendMessage Finished
+  , finished = sendMessage ExerciseFinished
   }
 
 observeActions : Config msg -> Observe.Actions (Msg msg)
 observeActions config =
   { send = config.send
-  , finished = sendMessage Finished
+  , finished = sendMessage ObservingFinished
   }
 
 
