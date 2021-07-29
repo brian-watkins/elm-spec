@@ -28,6 +28,7 @@ import Url exposing (Url)
 import Html exposing (Html)
 import Dict exposing (Dict)
 import Task
+import Spec.Step.Context as Context exposing (Context)
 
 
 type alias Config msg =
@@ -38,6 +39,7 @@ type alias Config msg =
 
 type Msg msg
   = ProgramMsg msg
+  | Effect Message
   | Continue
   | Finished
   | ReceivedMessage Message
@@ -148,6 +150,10 @@ update config setupGenerator steps expectations msg model =
               , config.send Step.programCommand
               ]
             )
+        Effect message ->
+          ( Running { runModel | effects = message :: runModel.effects }
+          , Cmd.none
+          )
         ReceivedMessage message ->
           case runModel.state of
             Initializing initializeModel ->
@@ -162,13 +168,13 @@ update config setupGenerator steps expectations msg model =
                   |> Tuple.mapFirst (\updated -> { runModel | state = Observing updated })
                   |> Tuple.mapFirst Running
               else if Message.is "_harness" "run" message then
-                Exercise.init (exerciseActions config) (stepsRepo steps) (Exercise.defaultModel runModel.programModel runModel.effects) message
+                Exercise.init (exerciseActions config) (stepsRepo steps) Exercise.defaultModel message
                   |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
                   |> Tuple.mapFirst Running
               else
                 ( model, Cmd.none )
             Exercising exerciseModel ->
-              Exercise.update (exerciseActions config) (Exercise.ReceivedMessage message) exerciseModel
+              Exercise.update (exerciseActions config) (programContext runModel) (Exercise.ReceivedMessage message) exerciseModel
                 |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
                 |> Tuple.mapFirst Running
             Observing observeModel ->
@@ -178,7 +184,7 @@ update config setupGenerator steps expectations msg model =
         Continue ->
           case runModel.state of
             Exercising exerciseModel ->
-              Exercise.update (exerciseActions config) Exercise.Continue exerciseModel
+              Exercise.update (exerciseActions config) (programContext runModel) Exercise.Continue exerciseModel
                 |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
                 |> Tuple.mapFirst Running
             _ ->
@@ -191,8 +197,8 @@ update config setupGenerator steps expectations msg model =
               Exercise.initForInitialCommand (exerciseActions config) runModel.subject
                 |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
                 |> Tuple.mapFirst Running
-            Exercising exerciseModel ->
-              ( Running { runModel | effects = exerciseModel.effects, state = Ready }
+            Exercising _ ->
+              ( Running { runModel | state = Ready }
               , config.send Message.harnessActionComplete
               )
             Observing _ ->
@@ -201,6 +207,12 @@ update config setupGenerator steps expectations msg model =
               )
         _ ->
           ( model, Cmd.none )
+
+
+programContext : RunModel model msg -> Context model
+programContext model =
+  Context.for model.programModel
+    |> Context.withEffects model.effects
 
 
 expectationsRepo : Dict String (ExposedExpectation model) -> Observe.ExposedExpectationRepository model
@@ -228,6 +240,7 @@ exerciseActions : Config msg -> Exercise.Actions (Msg msg) msg
 exerciseActions config =
   { send = config.send
   , programMsg = ProgramMsg
+  , storeEffect = \message -> sendMessage <| Effect message
   , continue = sendMessage Continue
   , finished = sendMessage Finished
   }

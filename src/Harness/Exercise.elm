@@ -11,25 +11,21 @@ module Harness.Exercise exposing
 import Spec.Message as Message exposing (Message)
 import Harness.Types exposing (..)
 import Spec.Step exposing (Step)
-import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
 import Json.Decode as Json
 import Spec.Setup.Internal exposing (Subject)
+import Spec.Step.Context exposing (Context)
 
 
 type alias Model model programMsg =
-  { programModel: model
-  , effects: List Message 
-  , stepsToRun: List (Step model programMsg)
+  { stepsToRun: List (Step model programMsg)
   }
 
 
-defaultModel : model -> List Message -> Model model programMsg
-defaultModel programModel effects =
-  { programModel = programModel
-  , effects = effects
-  , stepsToRun = []
+defaultModel : Model model programMsg
+defaultModel =
+  { stepsToRun = []
   }
 
 
@@ -39,8 +35,9 @@ type Msg programMsg
 
 
 type alias Actions msg programMsg =
-  { send : Message -> Cmd msg
-  , programMsg : programMsg -> msg
+  { send: Message -> Cmd msg
+  , programMsg: programMsg -> msg
+  , storeEffect: Message -> Cmd msg
   , continue: Cmd msg
   , finished: Cmd msg
   }
@@ -68,38 +65,37 @@ init actions steps model message =
 
 
 initForInitialCommand : Actions msg programMsg -> Subject model programMsg -> ( Model model programMsg, Cmd msg )
-initForInitialCommand actions subject =
-  let
-    model = defaultModel subject.model []
-  in
+initForInitialCommand actions _ =
   -- note that we need to replace this with subject.initialCommand when we have a test for it
-  ( { model | stepsToRun = [ \_ -> Step.sendToProgram Cmd.none ] }
+  ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram Cmd.none ] }
   , actions.continue
   )
 
 
-update : Actions msg programMsg -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
-update actions msg model =
+update : Actions msg programMsg -> Context model -> Msg programMsg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
+update actions context msg model =
   case msg of
     ReceivedMessage message ->
+      -- This should probably be promoted to the Program module and we just receive a Continue message?
       if Message.is "_scenario" "state" message then
         case Message.decode Json.string message |> Result.withDefault "" of
           "CONTINUE" ->
-            update actions Continue model
+            update actions context Continue model
           _ ->
             ( model, Cmd.none )
       else
-        ( { model | effects = message :: model.effects }
-        , actions.send Message.stepComplete
+        ( model
+        , Cmd.batch
+          [ actions.storeEffect message
+          , actions.send Message.stepComplete
+          ]
         )
     Continue ->
       case model.stepsToRun of
         [] -> 
           ( model, actions.finished )
         step :: remaining ->
-          Context.for model.programModel
-            |> Context.withEffects model.effects
-            |> step
+          step context
             |> handleStepCommand actions { model | stepsToRun = remaining }
 
 
@@ -117,6 +113,5 @@ handleStepCommand actions model command =
         , actions.send Step.programCommand
         ]
       )
-
     _ ->
       Debug.todo "Try to handle a command we can't yet handle!"
