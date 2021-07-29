@@ -20,16 +20,14 @@ import Spec.Scenario.Message as Message
 import Spec.Message as Message
 import Spec.Observer.Message as Message
 import Harness.Message as Message
-import Spec.Setup exposing (Setup)
+import Harness.Initialize as Initialize
 import Harness.Observe as Observe
 import Harness.Exercise as Exercise
 import Harness.Types exposing (..)
 import Url exposing (Url)
 import Html exposing (Html)
-import Spec.Setup.Internal exposing (initializeSubject)
 import Dict exposing (Dict)
 import Task
-import Json.Decode as Json
 
 
 type alias Config msg =
@@ -49,7 +47,7 @@ type Msg msg
 
 type Model model msg
   = Waiting
-  | Setup (Subject model msg)
+  | Initializing (Initialize.Model model msg)
   | Ready (Subject model msg) (HarnessModel model)
   | Exercising (Subject model msg) (Exercise.Model model msg)
   | Observing (Subject model msg) (Observe.Model model)
@@ -127,36 +125,21 @@ update config setupGenerator steps expectations msg model =
       case msg of
         ReceivedMessage message ->
           if Message.is "_harness" "setup" message then
-            case Message.decode (Json.field "config" Json.value) message of
-              Ok setupConfig ->
-                let
-                  maybeSubject = 
-                    initializeSubject (setupGenerator setupConfig) Nothing
-                      |> Result.toMaybe
-                in
-                  case maybeSubject of
-                    Just subject ->
-                      ( Setup subject, config.send Message.startScenario )
-                    Nothing ->
-                      Debug.todo "Could not initialize subject!"
-              Err _ ->
-                Debug.todo "Could not decode setup config!"
+            Initialize.init (initializeActions config) setupGenerator message
+              |> Tuple.mapFirst Initializing
           else
+            -- Note that here we get _spec start message ... need to not send that for a harness ...
             ( model, Cmd.none )
         _ ->
           ( model, Cmd.none )
-    Setup subject ->
+    Initializing initializeModel ->
       case msg of
         ReceivedMessage message ->
-          if Message.is "_scenario" "state" message then
-            case Message.decode Json.string message |> Result.withDefault "" of
-              "CONTINUE" ->
-                Exercise.initForInitialCommand (exerciseActions config) subject
-                  |> Tuple.mapFirst (Exercising subject)
-              _ ->
-                Debug.todo "Unexpected scenario state message in Harness Program!"
-          else
-            ( model, Cmd.none )
+          Initialize.update (initializeActions config) (Initialize.ReceivedMessage message) initializeModel
+            |> Tuple.mapFirst Initializing
+        Finished ->
+          Exercise.initForInitialCommand (exerciseActions config) initializeModel.subject
+            |> Tuple.mapFirst (Exercising initializeModel.subject)
         _ ->
           ( model, Cmd.none )
     Ready subject harnessModel ->
@@ -234,25 +217,32 @@ stepsRepo steps =
   }
 
 
+initializeActions : Config msg -> Initialize.Actions (Msg msg)
+initializeActions config =
+  { send = config.send
+  , finished = sendMessage Finished
+  }
+
+
 exerciseActions : Config msg -> Exercise.Actions (Msg msg) msg
 exerciseActions config =
   { send = config.send
   , programMsg = ProgramMsg
-  , continue =
-      Task.succeed never
-        |> Task.perform (always Continue)
-  , finished =
-      Task.succeed never
-        |> Task.perform (always Finished)
+  , continue = sendMessage Continue
+  , finished = sendMessage Finished
   }
 
 observeActions : Config msg -> Observe.Actions (Msg msg)
 observeActions config =
   { send = config.send
-  , finished =
-      Task.succeed never
-        |> Task.perform (always Finished)
+  , finished = sendMessage Finished
   }
+
+
+sendMessage : (Msg msg) -> Cmd (Msg msg)
+sendMessage msg =
+  Task.succeed never
+    |> Task.perform (always msg)
 
 
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
