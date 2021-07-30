@@ -37,7 +37,7 @@ type Msg programMsg
 
 type alias Actions msg programMsg =
   { send: Message -> Cmd msg
-  , programMsg: programMsg -> msg
+  , sendProgramCommand: Cmd programMsg -> Cmd msg
   , storeEffect: Message -> Cmd msg
   , sendToSelf: (Msg programMsg) -> Cmd msg
   , finished: Cmd msg
@@ -102,10 +102,7 @@ handleStepCommand actions model command =
       )
     Step.SendCommand cmd ->
       ( model
-      , Cmd.batch
-        [ Cmd.map actions.programMsg cmd
-        , actions.send Step.programCommand
-        ]
+      , actions.sendProgramCommand cmd
       )
     _ ->
       Debug.todo "Try to handle a command we can't yet handle!"

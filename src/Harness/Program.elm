@@ -130,6 +130,7 @@ update config setupGenerator steps expectations msg model =
               |> Tuple.mapFirst Running
           else
             -- Note that here we could get _spec start message ... need to not send that for a harness ...
+            -- And we want an error here if you try to run steps or observe without having called setup first
             ( model, Cmd.none )
         _ ->
           -- If we have a WaitingMsg then we don't need to skip all the other irrelevant cases ...
@@ -139,12 +140,7 @@ update config setupGenerator steps expectations msg model =
         ProgramMsg programMsg ->
           runModel.subject.update programMsg runModel.programModel
             |> Tuple.mapFirst (\updated -> Running { runModel | programModel = updated })
-            |> Tuple.mapSecond (\nextCommand ->
-              Cmd.batch
-              [ Cmd.map ProgramMsg nextCommand
-              , config.send Step.programCommand
-              ]
-            )
+            |> Tuple.mapSecond (sendCommand config)
         OnUrlChange _ ->
           ( model, Cmd.none )
         OnUrlRequest _ ->
@@ -224,9 +220,8 @@ initializeActions config =
 exerciseActions : Config msg -> Exercise.Actions (Msg msg) msg
 exerciseActions config =
   { send = config.send
-  , programMsg = ProgramMsg
+  , sendProgramCommand = sendCommand config
   , storeEffect = \message -> sendMessage <| StoreEffect message
-  -- , continue = sendMessage (ExercisMsgContinue
   , sendToSelf = \msg -> sendMessage (ExerciseMsg msg)
   , finished = sendMessage Finished
   , listen = \messageHandler ->
@@ -246,6 +241,14 @@ observeActions config =
           |> ObserveMsg
       )
   }
+
+
+sendCommand : Config msg -> Cmd msg -> Cmd (Msg msg)
+sendCommand config cmd =
+  Cmd.batch
+    [ Cmd.map ProgramMsg cmd
+    , config.send Step.programCommand
+    ]
 
 
 sendMessage : (Msg msg) -> Cmd (Msg msg)
