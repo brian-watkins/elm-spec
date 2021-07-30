@@ -5,10 +5,11 @@ module Harness.Observe exposing
   , init
   , update
   , ExposedExpectationRepository
+  , subscriptions
   )
 
 import Spec.Claim as Claim exposing (Verdict)
-import Spec.Step.Context as Context exposing (Context)
+import Spec.Step.Context exposing (Context)
 import Spec.Message as Message exposing (Message)
 import Spec.Observer.Message as Message
 import Spec.Observer.Internal exposing (Judgment(..))
@@ -19,24 +20,21 @@ import Json.Encode as Encode
 
 
 type alias Model model =
-  { programModel: model
-  , effects: List Message
-  , inquiryHandler: Maybe (Message -> Judgment model)
+  { inquiryHandler: Maybe (Message -> Judgment model)
   }
 
-defaultModel : model -> List Message -> Model model
-defaultModel programModel effects =
-  { programModel = programModel
-  , effects = effects
-  , inquiryHandler = Nothing
+defaultModel : Model model
+defaultModel =
+  { inquiryHandler = Nothing
   }
 
-type Msg =
-  ReceivedMessage Message
+type Msg
+  = ReceivedMessage Message
 
 type alias Actions msg =
   { send : Message -> Cmd msg
   , finished: Cmd msg
+  , listen: (Message -> Msg) -> Sub msg
   }
 
 
@@ -45,8 +43,8 @@ type alias ExposedExpectationRepository model =
   }
 
 
-init : Actions msg -> ExposedExpectationRepository model -> Model model -> Message -> ( Model model, Cmd msg )
-init config expectations model message =
+init : Actions msg -> ExposedExpectationRepository model -> Context model -> Model model -> Message -> ( Model model, Cmd msg )
+init config expectations context model message =
   let
     maybeExpectation = Message.decode (Json.field "observer" Json.string) message
       |> Result.toMaybe
@@ -57,7 +55,7 @@ init config expectations model message =
   in
     case maybeExpectation of
       Just expectation ->
-        observe config model (expectation expected)
+        observe config context model (expectation expected)
       Nothing ->
         ( model, Cmd.none )
 
@@ -72,9 +70,9 @@ update config msg model =
         ( model, Cmd.none )
 
 
-observe : Actions msg -> Model model -> Expectation model -> ( Model model, Cmd msg )
-observe config model (Expectation expectation) =
-  case expectation <| establishContext model.programModel model.effects of
+observe : Actions msg -> Context model -> Model model -> Expectation model -> ( Model model, Cmd msg )
+observe config context model (Expectation expectation) =
+  case expectation context of
     Complete verdict ->
       ( model
       , sendVerdict config verdict 
@@ -121,11 +119,6 @@ inquiryResult message handler =
       Claim.Reject <| Report.note "Recursive Inquiry not supported!"
 
 
-establishContext : model -> List Message -> Context model
-establishContext programModel effects =
-  Context.for programModel
-    |> Context.withEffects effects
-
 sendVerdict : Actions msg -> Verdict -> Cmd msg
 sendVerdict actions verdict =
   Cmd.batch
@@ -133,3 +126,8 @@ sendVerdict actions verdict =
         |> actions.send
     , actions.finished
     ]
+
+
+subscriptions : Actions msg -> Model model -> Sub msg
+subscriptions actions _ =
+  actions.listen ReceivedMessage

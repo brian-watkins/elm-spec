@@ -6,6 +6,7 @@ module Harness.Exercise exposing
   , init
   , initForInitialCommand
   , update
+  , subscriptions
   )
 
 import Spec.Message as Message exposing (Message)
@@ -38,8 +39,9 @@ type alias Actions msg programMsg =
   { send: Message -> Cmd msg
   , programMsg: programMsg -> msg
   , storeEffect: Message -> Cmd msg
-  , continue: Cmd msg
+  , sendToSelf: (Msg programMsg) -> Cmd msg
   , finished: Cmd msg
+  , listen: (Message -> Msg programMsg) -> Sub msg
   }
 
 
@@ -58,7 +60,7 @@ init actions steps model message =
     case maybeSteps of
       Just stepsToRun ->
         ( { model | stepsToRun = stepsToRun }
-        , actions.continue
+        , actions.sendToSelf Continue
         )
       Nothing ->
         Debug.todo "Could not find steps!"
@@ -68,7 +70,7 @@ initForInitialCommand : Actions msg programMsg -> Subject model programMsg -> ( 
 initForInitialCommand actions _ =
   -- note that we need to replace this with subject.initialCommand when we have a test for it
   ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram Cmd.none ] }
-  , actions.continue
+  , actions.sendToSelf Continue
   )
 
 
@@ -76,20 +78,12 @@ update : Actions msg programMsg -> Context model -> Msg programMsg -> Model mode
 update actions context msg model =
   case msg of
     ReceivedMessage message ->
-      -- This should probably be promoted to the Program module and we just receive a Continue message?
-      if Message.is "_scenario" "state" message then
-        case Message.decode Json.string message |> Result.withDefault "" of
-          "CONTINUE" ->
-            update actions context Continue model
-          _ ->
-            ( model, Cmd.none )
-      else
-        ( model
-        , Cmd.batch
-          [ actions.storeEffect message
-          , actions.send Message.stepComplete
-          ]
-        )
+      ( model
+      , Cmd.batch
+        [ actions.storeEffect message
+        , actions.send Message.stepComplete
+        ]
+      )
     Continue ->
       case model.stepsToRun of
         [] -> 
@@ -115,3 +109,17 @@ handleStepCommand actions model command =
       )
     _ ->
       Debug.todo "Try to handle a command we can't yet handle!"
+
+
+subscriptions : Actions msg programMsg -> Model model programMsg -> Sub msg
+subscriptions actions _ =
+  actions.listen (\message ->
+    if Message.is "_scenario" "state" message then
+      case Message.decode Json.string message |> Result.withDefault "" of
+        "CONTINUE" ->
+          Continue
+        _ ->
+          Debug.todo "Unknown scenario state message in Exercise state!"
+    else
+      ReceivedMessage message
+  )

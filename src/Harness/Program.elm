@@ -39,11 +39,12 @@ type alias Config msg =
 
 type Msg msg
   = ProgramMsg msg
-  | Effect Message
-  | InitializingFinished
-  | ExerciseFinished
-  | ObservingFinished
-  | Continue
+  | StoreEffect Message
+  | InitializeMsg Initialize.Msg
+  | RunInitialCommand
+  | ExerciseMsg (Exercise.Msg msg)
+  | ObserveMsg Observe.Msg
+  | Finished
   | ReceivedMessage Message
   | OnUrlRequest UrlRequest
   | OnUrlChange Url
@@ -59,14 +60,17 @@ type alias RunModel model msg =
   , effects: List Message
   , subject: Subject model msg
   , state: RunState model msg
+  , initializeModel: Initialize.Model model msg
+  , exerciseModel: Exercise.Model model msg
+  , observeModel: Observe.Model model
   }
 
 
 type RunState model msg
-  = Initializing (Initialize.Model model msg)
+  = Initializing
   | Ready
-  | Exercising (Exercise.Model model msg)
-  | Observing (Observe.Model model)
+  | Exercising
+  | Observing
 
 
 type alias Flags =
@@ -114,18 +118,6 @@ fakeBody =
     ]
 
 
--- Maybe we need to have different subscriptions, based on the model
--- so we can just send the received message directly to the state handler? 
--- Then our Msg type is more about ObserveMsg, ExerciseMsg, etc
--- Ultimately Setup needs to run some configure step, but then it's just like the Exercise state
--- where the step is just to run the initial command
-
--- For Setup, several things need to happen:
--- 1. Create the subject (at least once, but we could do it every time)
--- 2. Reset the elm context (and wait for any animation tasks to finish)
--- 3. Run any configuration steps (no tests for this yet)
--- 4. Run the initial command (in the right way that triggers a view update, but no tests with an initial command yet)
-
 update : Config msg -> ExposedSetup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config setupGenerator steps expectations msg model =
   case model of
@@ -134,12 +126,13 @@ update config setupGenerator steps expectations msg model =
         ReceivedMessage message ->
           if Message.is "_harness" "setup" message then
             Initialize.init (initializeActions config) setupGenerator message
-              |> Tuple.mapFirst (\updated -> { programModel = updated.subject.model, effects = [], subject = updated.subject, state = Initializing updated })
+              |> Tuple.mapFirst (\updated -> { programModel = updated.subject.model, effects = [], subject = updated.subject, state = Initializing, initializeModel = updated, exerciseModel = Exercise.defaultModel, observeModel = Observe.defaultModel })
               |> Tuple.mapFirst Running
           else
-            -- Note that here we get _spec start message ... need to not send that for a harness ...
+            -- Note that here we could get _spec start message ... need to not send that for a harness ...
             ( model, Cmd.none )
         _ ->
+          -- If we have a WaitingMsg then we don't need to skip all the other irrelevant cases ...
           ( model, Cmd.none )
     Running runModel ->
       case msg of
@@ -152,61 +145,48 @@ update config setupGenerator steps expectations msg model =
               , config.send Step.programCommand
               ]
             )
-        Effect message ->
-          ( Running { runModel | effects = message :: runModel.effects }
-          , Cmd.none
-          )
-        ReceivedMessage message ->
-          case runModel.state of
-            Initializing initializeModel ->
-              Initialize.update (initializeActions config) (Initialize.ReceivedMessage message) initializeModel
-                |> Tuple.mapFirst (\updated -> { runModel | state = Initializing updated })
-                |> Tuple.mapFirst Running
-            Ready ->
-              if Message.is "_harness" "setup" message then
-                update config setupGenerator steps expectations (ReceivedMessage message) Waiting
-              else if Message.is "_harness" "observe" message then
-                Observe.init (observeActions config) (expectationsRepo expectations) (Observe.defaultModel runModel.programModel runModel.effects) message
-                  |> Tuple.mapFirst (\updated -> { runModel | state = Observing updated })
-                  |> Tuple.mapFirst Running
-              else if Message.is "_harness" "run" message then
-                Exercise.init (exerciseActions config) (stepsRepo steps) Exercise.defaultModel message
-                  |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
-                  |> Tuple.mapFirst Running
-              else
-                ( model, Cmd.none )
-            Exercising exerciseModel ->
-              Exercise.update (exerciseActions config) (programContext runModel) (Exercise.ReceivedMessage message) exerciseModel
-                |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
-                |> Tuple.mapFirst Running
-            Observing observeModel ->
-              Observe.update (observeActions config) (Observe.ReceivedMessage message) observeModel
-                |> Tuple.mapFirst (\updated -> { runModel | state = Observing updated })
-                |> Tuple.mapFirst Running
-        Continue ->
-          case runModel.state of
-            Exercising exerciseModel ->
-              Exercise.update (exerciseActions config) (programContext runModel) Exercise.Continue exerciseModel
-                |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
-                |> Tuple.mapFirst Running
-            _ ->
-              ( model, Cmd.none )
-        InitializingFinished ->
-          Exercise.initForInitialCommand (exerciseActions config) runModel.subject
-            |> Tuple.mapFirst (\updated -> { runModel | state = Exercising updated })
-            |> Tuple.mapFirst Running
-        ExerciseFinished ->
-          ( Running { runModel | state = Ready }
-          , config.send Message.harnessActionComplete
-          )
-        ObservingFinished ->
-          ( Running { runModel | state = Ready }
-          , Cmd.none
-          )
         OnUrlChange _ ->
           ( model, Cmd.none )
         OnUrlRequest _ ->
           ( model, Cmd.none )
+        StoreEffect message ->
+          ( Running { runModel | effects = message :: runModel.effects }
+          , Cmd.none
+          )
+        InitializeMsg initializeMsg ->
+          Initialize.update (initializeActions config) initializeMsg runModel.initializeModel
+            |> Tuple.mapFirst (\updated -> { runModel | initializeModel = updated })
+            |> Tuple.mapFirst Running
+        ExerciseMsg exerciseMsg ->
+          Exercise.update (exerciseActions config) (programContext runModel) exerciseMsg runModel.exerciseModel
+            |> Tuple.mapFirst (\updated -> { runModel | exerciseModel = updated })
+            |> Tuple.mapFirst Running
+        ObserveMsg observeMsg ->
+          Observe.update (observeActions config) observeMsg runModel.observeModel
+            |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
+            |> Tuple.mapFirst Running
+        ReceivedMessage message ->
+          if Message.is "_harness" "setup" message then
+            update config setupGenerator steps expectations (ReceivedMessage message) Waiting
+          else if Message.is "_harness" "observe" message then
+            Observe.init (observeActions config) (expectationsRepo expectations) (programContext runModel) Observe.defaultModel message
+              |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
+              |> Tuple.mapFirst Running
+          else if Message.is "_harness" "run" message then
+            Exercise.init (exerciseActions config) (stepsRepo steps) Exercise.defaultModel message
+              |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+              |> Tuple.mapFirst Running
+          else
+            -- Here we are receiving the start scenario message, which we should stop I think ...
+            ( model, Cmd.none ) 
+        RunInitialCommand ->
+          Exercise.initForInitialCommand (exerciseActions config) runModel.subject
+            |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+            |> Tuple.mapFirst Running
+        Finished ->
+          ( Running { runModel | state = Ready }
+          , config.send Message.harnessActionComplete
+          )
 
 
 programContext : RunModel model msg -> Context model
@@ -232,7 +212,12 @@ stepsRepo steps =
 initializeActions : Config msg -> Initialize.Actions (Msg msg)
 initializeActions config =
   { send = config.send
-  , finished = sendMessage InitializingFinished
+  , finished = sendMessage RunInitialCommand
+  , listen = \messageHandler ->
+      config.listen (\message ->
+        messageHandler message
+          |> InitializeMsg
+      )
   }
 
 
@@ -240,15 +225,26 @@ exerciseActions : Config msg -> Exercise.Actions (Msg msg) msg
 exerciseActions config =
   { send = config.send
   , programMsg = ProgramMsg
-  , storeEffect = \message -> sendMessage <| Effect message
-  , continue = sendMessage Continue
-  , finished = sendMessage ExerciseFinished
+  , storeEffect = \message -> sendMessage <| StoreEffect message
+  -- , continue = sendMessage (ExercisMsgContinue
+  , sendToSelf = \msg -> sendMessage (ExerciseMsg msg)
+  , finished = sendMessage Finished
+  , listen = \messageHandler ->
+      config.listen (\message ->
+        messageHandler message
+          |> ExerciseMsg
+      )
   }
 
 observeActions : Config msg -> Observe.Actions (Msg msg)
 observeActions config =
   { send = config.send
-  , finished = sendMessage ObservingFinished
+  , finished = sendMessage Finished
+  , listen = \messageHandler ->
+      config.listen (\message ->
+        messageHandler message
+          |> ObserveMsg
+      )
   }
 
 
@@ -261,14 +257,26 @@ sendMessage msg =
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
   case model of
-    Running runModel ->
-      Sub.batch
-      [ runModel.subject.subscriptions runModel.programModel
-          |> Sub.map ProgramMsg
-      , config.listen ReceivedMessage
-      ]
-    _ ->
+    Waiting ->
       config.listen ReceivedMessage
+    Running runModel ->
+      case runModel.state of
+        Ready ->
+          Sub.batch
+          [ config.listen ReceivedMessage
+          , runModel.subject.subscriptions runModel.programModel
+              |> Sub.map ProgramMsg
+          ]
+        Initializing ->
+          Initialize.subscriptions (initializeActions config) runModel.initializeModel
+        Exercising ->
+          Sub.batch
+          [ Exercise.subscriptions (exerciseActions config) runModel.exerciseModel
+          , runModel.subject.subscriptions runModel.programModel
+              |> Sub.map ProgramMsg
+          ]
+        Observing ->
+          Observe.subscriptions (observeActions config) runModel.observeModel
 
 
 onUrlRequest : UrlRequest -> (Msg msg)

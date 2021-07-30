@@ -4,6 +4,7 @@ module Harness.Initialize exposing
   , Actions
   , init
   , update
+  , subscriptions
   )
 
 import Spec.Setup.Internal exposing (initializeSubject)
@@ -16,6 +17,7 @@ import Spec.Setup.Internal exposing (Subject)
 type alias Actions msg =
   { send: Message -> Cmd msg
   , finished: Cmd msg
+  , listen: (Message -> Msg) -> Sub msg
   }
 
 
@@ -24,7 +26,7 @@ type alias Model model msg =
   }
 
 type Msg
-  = ReceivedMessage Message
+  = Continue
 
 -- This has to do several things
 -- 1. call startScenario to reset the context
@@ -58,12 +60,19 @@ init actions setupGenerator message =
 update : Actions msg -> Msg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
 update actions msg model =
   case msg of
-    ReceivedMessage message ->
-      if Message.is "_scenario" "state" message then
-        case Message.decode Json.string message |> Result.withDefault "" of
-          "CONTINUE" ->
-            ( model, actions.finished )
-          _ ->
-            Debug.todo "Unexpected scenario state message in Harness Program!"
-      else
-        ( model, Cmd.none )
+    Continue ->
+      ( model, actions.finished )
+
+
+subscriptions : Actions msg -> Model model programMsg -> Sub msg
+subscriptions actions _ =
+  actions.listen (\message -> 
+    if Message.is "_scenario" "state" message then
+      case Message.decode Json.string message |> Result.withDefault "" of
+        "CONTINUE" ->
+          Continue
+        _ ->
+          Debug.todo "Unexpected scenario state message in Harness Program!"
+    else
+      Debug.todo "Unexpected message in Harness Program!"
+  )
