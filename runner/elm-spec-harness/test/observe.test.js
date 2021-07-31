@@ -11,6 +11,7 @@ test('observe', async function (t) {
   expectPassingTest(t, output, "it finds the default attributes", "a test observing the default model passes")
   expectPassingTest(t, output, "it finds the configured default name", "a test passes that configures the setup")
   expectPassingTest(t, output, "it counts the number of clicks", "a test passes that runs steps and changes the model")
+  expectPassingTest(t, output, "it counts the number of clicks again", "a test passes that runs steps and changes the model again after an observation")
   expectPassingTest(t, output, "it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
   expectPassingTest(t, output, "it finds the updated name", "a test passes that involves sending a message to the app")
   expectPassingTest(t, output, "it receives the expected message", "a test passes that receives a message from the app")

@@ -11,6 +11,8 @@ test("the view updates", async function(t) {
   await runner.setup("default")
   await runner.runSteps("click", 5)
   await expectEqual(t, "count", "5 clicks!", "it counts the number of clicks")
+  await runner.runSteps("click", 2)
+  await expectEqual(t, "count", "7 clicks!", "it counts the number of clicks again")
 })
 
 test("the app is reset", async function(t) {
