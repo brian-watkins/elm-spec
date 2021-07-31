@@ -26,12 +26,9 @@ test("a message is sent to the app", async function(t) {
   await expectEqual(t, "name", "Super cool dude", "it finds the updated name")
 })
 
-test("a message is received from the app", async function(t) {
-  await runner.setup("default")
-  runner.getElmApp().ports.inform.subscribe(data => {
-    t.deepEquals(data, { attributes: [ "awesome", "cool", "fun" ] }, "it receives the expected message")
-  })
-  await runner.runSteps("inform")
+test("the iniial command sends a message out of the app", async function(t) {
+  await runner.setup("withInitialCommand", [ "apple", "banana", "pear" ])
+  await expectEqual(t, "stuff", "Got apple, banana, pear (3)", "it runs the initial command")
 })
 
 test("a message is sent in response to a message that is received", async function(t) {

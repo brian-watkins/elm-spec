@@ -14,6 +14,7 @@ import Extra exposing (equals)
 import Runner
 import Dict
 import Json.Decode as Json
+import Json.Encode as Encode
 import App
 
 -- Setup
@@ -62,11 +63,21 @@ setupWithStub stuff =
     |> Stub.serve [ stuffStub stuff ]
 
 
+setupWithInitialCommand : List String -> Setup App.Model App.Msg
+setupWithInitialCommand attributes =
+  Setup.init (App.init attributes)
+    |> Setup.withUpdate App.update
+    |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
+    |> Stub.serve [ stuffStub <| Encode.object [ ("thing", Encode.string <| String.join ", " attributes), ("count", Encode.int <| List.length attributes) ] ]
+
+
 setups =
   Dict.fromList
     [ ( "default", Harness.exposeSetup Json.value defaultSetup )
     , ( "withName", Harness.exposeSetup setupConfigDecoder setupWithName )
     , ( "withStub", Harness.exposeSetup Json.value setupWithStub )
+    , ( "withInitialCommand", Harness.exposeSetup (Json.list Json.string) setupWithInitialCommand )
     ]
 
 

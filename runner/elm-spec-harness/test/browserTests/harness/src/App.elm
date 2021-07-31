@@ -45,6 +45,13 @@ noStuff =
   }
 
 
+init : List String -> ( Model, Cmd Msg )
+init initialAttributes =
+  ( defaultModel
+  , getFakeStuff
+  )
+
+
 view : Model -> Html Msg
 view model =
   Html.div []
@@ -81,16 +88,18 @@ update msg model =
     InformClicked ->
       ( model, inform { attributes = "awesome" :: model.attributes } )
     SendRequest ->
-      ( model
-      , Http.get
-        { url = "http://fake.com/fakeStuff"
-        , expect = Http.expectJson GotStuff stuffDecoder
-        }
-      )
+      ( model, getFakeStuff )
     GotStuff (Ok stuff) ->
       ( { model | stuff = stuff }, Cmd.none )
     GotStuff (Err _) ->
       ( { model | stuff = noStuff }, Cmd.none )
+
+
+getFakeStuff =
+  Http.get
+    { url = "http://fake.com/fakeStuff"
+    , expect = Http.expectJson GotStuff stuffDecoder
+    }
 
 
 stuffDecoder : Json.Decoder Stuff

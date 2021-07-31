@@ -69,9 +69,8 @@ init actions steps model message =
 
 
 initForInitialCommand : Actions msg programMsg -> Subject model programMsg -> ( Model model programMsg, Cmd msg )
-initForInitialCommand actions _ =
-  -- note that we need to replace this with subject.initialCommand when we have a test for it
-  ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram Cmd.none ] }
+initForInitialCommand actions subject =
+  ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram subject.initialCommand ] }
   , actions.sendToSelf Continue
   )
 
