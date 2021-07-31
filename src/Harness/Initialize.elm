@@ -1,6 +1,7 @@
 module Harness.Initialize exposing
   ( Model
   , Msg(..)
+  , ExposedSetupRepository
   , Actions
   , init
   , update
@@ -38,23 +39,35 @@ type Msg
 -- Basically we will need a kind of state machine inside this state, since sending Continue is
 -- how we know to go to the next step each time
 
-init : Actions msg -> ExposedSetup model programMsg -> Message -> ( Model model programMsg, Cmd msg )
-init actions setupGenerator message =
-  case Message.decode (Json.field "config" Json.value) message of
-    Ok setupConfig ->
-      let
-        maybeSubject = 
-          initializeSubject (setupGenerator setupConfig) Nothing
-            |> Result.toMaybe
-      in
-        case maybeSubject of
-          Just subject ->
-            -- note: Is this the best message to send out? Maybe 'configure'? or something?
-            ( { subject = subject }, actions.send Message.startScenario )
-          Nothing ->
-            Debug.todo "Could not initialize subject!"
-    Err _ ->
-      Debug.todo "Could not decode setup config!"
+type alias ExposedSetupRepository model programMsg =
+  { get: String -> Maybe (ExposedSetup model programMsg)
+  }
+
+
+init : Actions msg -> ExposedSetupRepository model programMsg -> Message -> ( Model model programMsg, Cmd msg )
+init actions setups message =
+  let
+    maybeSetup = Message.decode (Json.field "setup" Json.string) message
+      |> Result.toMaybe
+      |> Maybe.andThen setups.get
+    maybeConfig = Message.decode (Json.field "config" Json.value) message
+      |> Result.toMaybe
+  in
+    case Maybe.map2 (<|) maybeSetup maybeConfig of
+      Just setup ->
+        let
+          maybeSubject =
+            initializeSubject setup Nothing
+              |> Result.toMaybe
+        in
+          case maybeSubject of
+            Just subject ->
+              -- note: Is this the best message to send out? Maybe 'configure'? or something?
+              ( { subject = subject }, actions.send Message.startScenario )
+            Nothing ->
+              Debug.todo "Could not initialize subject!"
+      Nothing ->
+        Debug.todo "Could not decode setup config!"
 
 
 update : Actions msg -> Msg -> Model model programMsg -> ( Model model programMsg, Cmd msg )

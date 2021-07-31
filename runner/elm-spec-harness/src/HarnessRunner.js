@@ -1,8 +1,8 @@
 
 let wrapper = window._elm_spec.startHarness()
 
-const setup = async (config) => {
-  await wrapper.setup(config)
+const setup = async (name, config) => {
+  await wrapper.setup(name, config)
 }
 
 const observe = async (name, expected) => {

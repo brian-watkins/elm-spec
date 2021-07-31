@@ -110,13 +110,13 @@ exposeSetup decoder generator =
 
 {-|
 -}
-browserHarness : Config msg -> ExposedSetup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
-browserHarness config setup steps expectations =
+browserHarness : Config msg -> Dict String (ExposedSetup model msg) -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
+browserHarness config setups steps expectations =
   Browser.application
     { init = \_ _ _ ->
         Program.init
     , view = Program.view
-    , update = Program.update config setup steps expectations
+    , update = Program.update config setups steps expectations
     , subscriptions = Program.subscriptions config
     , onUrlRequest = Program.onUrlRequest
     , onUrlChange = Program.onUrlChange

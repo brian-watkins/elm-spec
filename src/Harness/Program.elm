@@ -118,12 +118,12 @@ fakeBody =
     ]
 
 
-update : Config msg -> ExposedSetup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-update config setupGenerator steps expectations msg model =
+update : Config msg -> Dict String (ExposedSetup model msg) -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update config setups steps expectations msg model =
   case ( model, msg ) of
     ( Waiting, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
-        Initialize.init (initializeActions config) setupGenerator message
+        Initialize.init (initializeActions config) (setupsRepo setups) message
           |> Tuple.mapFirst (\updated -> { programModel = updated.subject.model, effects = [], subject = updated.subject, state = Initializing, initializeModel = updated, exerciseModel = Exercise.defaultModel, observeModel = Observe.defaultModel })
           |> Tuple.mapFirst Running
       else
@@ -164,7 +164,7 @@ update config setupGenerator steps expectations msg model =
     
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
-        update config setupGenerator steps expectations (ReceivedMessage message) Waiting
+        update config setups steps expectations (ReceivedMessage message) Waiting
       else if Message.is "_harness" "observe" message then
         Observe.init (observeActions config) (expectationsRepo expectations) (programContext runModel) Observe.defaultModel message
           |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
@@ -195,6 +195,13 @@ programContext : RunModel model msg -> Context model
 programContext model =
   Context.for model.programModel
     |> Context.withEffects model.effects
+
+
+setupsRepo : Dict String (ExposedSetup model msg) -> Initialize.ExposedSetupRepository model msg
+setupsRepo setups =
+  { get = \name ->
+      Dict.get name setups
+  }
 
 
 expectationsRepo : Dict String (ExposedExpectation model) -> Observe.ExposedExpectationRepository model

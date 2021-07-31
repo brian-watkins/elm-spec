@@ -1,4 +1,4 @@
-module Basic exposing (..)
+module BasicHarness exposing (..)
 
 import Harness exposing (Expectation, expect)
 import Spec.Setup as Setup exposing (Setup)
@@ -26,8 +26,16 @@ setupConfigDecoder=
     |> Json.map SetupConfiguration
 
 
-setup : SetupConfiguration -> Setup App.Model App.Msg
-setup config =
+defaultSetup : Json.Value -> Setup App.Model App.Msg
+defaultSetup _ =
+  Setup.initWithModel App.defaultModel
+    |> Setup.withUpdate App.update
+    |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
+
+
+setupWithName : SetupConfiguration -> Setup App.Model App.Msg
+setupWithName config =
   let
     model = App.defaultModel
   in
@@ -35,6 +43,13 @@ setup config =
       |> Setup.withUpdate App.update
       |> Setup.withView App.view
       |> Setup.withSubscriptions App.subscriptions
+
+
+setups =
+  Dict.fromList
+    [ ( "default", Harness.exposeSetup Json.value defaultSetup )
+    , ( "withName", Harness.exposeSetup setupConfigDecoder setupWithName )
+    ]
 
 
 -- Steps
@@ -98,4 +113,4 @@ observers =
 
 
 main =
-  Runner.harness (Harness.exposeSetup setupConfigDecoder setup) steps observers
+  Runner.harness setups steps observers
