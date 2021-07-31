@@ -120,69 +120,75 @@ fakeBody =
 
 update : Config msg -> ExposedSetup model msg -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config setupGenerator steps expectations msg model =
-  case model of
-    Waiting ->
-      case msg of
-        ReceivedMessage message ->
-          if Message.is "_harness" "setup" message then
-            Initialize.init (initializeActions config) setupGenerator message
-              |> Tuple.mapFirst (\updated -> { programModel = updated.subject.model, effects = [], subject = updated.subject, state = Initializing, initializeModel = updated, exerciseModel = Exercise.defaultModel, observeModel = Observe.defaultModel })
-              |> Tuple.mapFirst Running
-          else
-            -- Note that here we could get _spec start message ... need to not send that for a harness ...
-            -- And we want an error here if you try to run steps or observe without having called setup first
-            ( model, Cmd.none )
-        _ ->
-          -- If we have a WaitingMsg then we don't need to skip all the other irrelevant cases ...
-          ( model, Cmd.none )
-    Running runModel ->
-      case msg of
-        ProgramMsg programMsg ->
-          runModel.subject.update programMsg runModel.programModel
-            |> Tuple.mapFirst (\updated -> Running { runModel | programModel = updated })
-            |> Tuple.mapSecond (sendCommand config)
-        OnUrlChange _ ->
-          ( model, Cmd.none )
-        OnUrlRequest _ ->
-          ( model, Cmd.none )
-        StoreEffect message ->
-          ( Running { runModel | effects = message :: runModel.effects }
-          , Cmd.none
-          )
-        InitializeMsg initializeMsg ->
-          Initialize.update (initializeActions config) initializeMsg runModel.initializeModel
-            |> Tuple.mapFirst (\updated -> { runModel | initializeModel = updated })
-            |> Tuple.mapFirst Running
-        ExerciseMsg exerciseMsg ->
-          Exercise.update (exerciseActions config) (programContext runModel) exerciseMsg runModel.exerciseModel
-            |> Tuple.mapFirst (\updated -> { runModel | exerciseModel = updated })
-            |> Tuple.mapFirst Running
-        ObserveMsg observeMsg ->
-          Observe.update (observeActions config) observeMsg runModel.observeModel
-            |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
-            |> Tuple.mapFirst Running
-        ReceivedMessage message ->
-          if Message.is "_harness" "setup" message then
-            update config setupGenerator steps expectations (ReceivedMessage message) Waiting
-          else if Message.is "_harness" "observe" message then
-            Observe.init (observeActions config) (expectationsRepo expectations) (programContext runModel) Observe.defaultModel message
-              |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
-              |> Tuple.mapFirst Running
-          else if Message.is "_harness" "run" message then
-            Exercise.init (exerciseActions config) (stepsRepo steps) Exercise.defaultModel message
-              |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
-              |> Tuple.mapFirst Running
-          else
-            -- Here we are receiving the start scenario message, which we should stop I think ...
-            ( model, Cmd.none ) 
-        RunInitialCommand ->
-          Exercise.initForInitialCommand (exerciseActions config) runModel.subject
-            |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
-            |> Tuple.mapFirst Running
-        Finished ->
-          ( Running { runModel | state = Ready }
-          , config.send Message.harnessActionComplete
-          )
+  case ( model, msg ) of
+    ( Waiting, ReceivedMessage message ) ->
+      if Message.is "_harness" "setup" message then
+        Initialize.init (initializeActions config) setupGenerator message
+          |> Tuple.mapFirst (\updated -> { programModel = updated.subject.model, effects = [], subject = updated.subject, state = Initializing, initializeModel = updated, exerciseModel = Exercise.defaultModel, observeModel = Observe.defaultModel })
+          |> Tuple.mapFirst Running
+      else
+        -- Note that here we could get _spec start message ... need to not send that for a harness ...
+        -- And we want an error here if you try to run steps or observe without having called setup first
+        ( model, Cmd.none )
+    
+    ( Running runModel, ProgramMsg programMsg ) ->
+      runModel.subject.update programMsg runModel.programModel
+        |> Tuple.mapFirst (\updated -> Running { runModel | programModel = updated })
+        |> Tuple.mapSecond (sendCommand config)
+    
+    ( Running _, OnUrlChange _ ) ->
+      ( model, Cmd.none )
+    
+    ( Running _, OnUrlRequest _ ) ->
+      ( model, Cmd.none )
+    
+    ( Running runModel, StoreEffect message ) ->
+      ( Running { runModel | effects = message :: runModel.effects }
+      , Cmd.none
+      )
+    
+    ( Running runModel, InitializeMsg initializeMsg ) ->
+      Initialize.update (initializeActions config) initializeMsg runModel.initializeModel
+        |> Tuple.mapFirst (\updated -> { runModel | initializeModel = updated })
+        |> Tuple.mapFirst Running
+    
+    ( Running runModel, ExerciseMsg exerciseMsg ) ->
+      Exercise.update (exerciseActions config) (programContext runModel) exerciseMsg runModel.exerciseModel
+        |> Tuple.mapFirst (\updated -> { runModel | exerciseModel = updated })
+        |> Tuple.mapFirst Running
+    
+    ( Running runModel, ObserveMsg observeMsg ) ->
+      Observe.update (observeActions config) observeMsg runModel.observeModel
+        |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
+        |> Tuple.mapFirst Running
+    
+    ( Running runModel, ReceivedMessage message ) ->
+      if Message.is "_harness" "setup" message then
+        update config setupGenerator steps expectations (ReceivedMessage message) Waiting
+      else if Message.is "_harness" "observe" message then
+        Observe.init (observeActions config) (expectationsRepo expectations) (programContext runModel) Observe.defaultModel message
+          |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
+          |> Tuple.mapFirst Running
+      else if Message.is "_harness" "run" message then
+        Exercise.init (exerciseActions config) (stepsRepo steps) Exercise.defaultModel message
+          |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+          |> Tuple.mapFirst Running
+      else
+        -- Here we are receiving the start scenario message, which we should stop I think ...
+        ( model, Cmd.none )
+    
+    ( Running runModel, RunInitialCommand ) ->
+      Exercise.initForInitialCommand (exerciseActions config) runModel.subject
+        |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+        |> Tuple.mapFirst Running
+    
+    ( Running runModel, Finished ) ->
+      ( Running { runModel | state = Ready }
+      , config.send Message.harnessActionComplete
+      )
+    
+    _ ->
+      ( model, Cmd.none )
 
 
 programContext : RunModel model msg -> Context model
