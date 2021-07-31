@@ -16,6 +16,7 @@ test('observe', async function (t) {
   expectPassingTest(t, output, "it finds the updated name", "a test passes that involves sending a message to the app")
   expectPassingTest(t, output, "it receives the expected message", "a test passes that receives a message from the app")
   expectPassingTest(t, output, "it finds the name updated after the message is received", "a test passes that sends a message to the app in response to receiving one")
+  expectPassingTest(t, output, "it observes that the stubbed response was processed", "a test passes that requires the context to be configured")
 })
 
 const runTestInBrowser = async (testFile) => {

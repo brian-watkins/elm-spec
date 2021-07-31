@@ -43,6 +43,12 @@ test("a message is sent in response to a message that is received", async functi
   await expectEqual(t, "name", "Dr. Cool", "it finds the name updated after the message is received")
 })
 
+test("the setup configures the context to stub an HTTP request", async function(t) {
+  await runner.setup("withStub", { thing: "trees", count: 17 })
+  await runner.runSteps("requestStuff")
+  await expectEqual(t, "stuff", "Got trees (17)", "it observes that the stubbed response was processed")
+})
+
 const expectEqual = async (t, name, actual, message) => {
   const observer = await runner.observe(name, actual)
   if (observer.summary === "ACCEPTED") {

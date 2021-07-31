@@ -6,6 +6,7 @@ module Harness.Initialize exposing
   , init
   , update
   , subscriptions
+  , harnessSubject
   )
 
 import Spec.Setup.Internal exposing (initializeSubject)
@@ -22,18 +23,30 @@ type alias Actions msg =
   }
 
 
-type alias Model model msg =
-  { subject: Subject model msg
-  }
+type Model model msg
+  = ResetContext (Subject model msg)
+  | Configure (Subject model msg)
+
+
+harnessSubject : Model model msg -> Subject model msg
+harnessSubject model =
+  case model of
+    ResetContext subject ->
+      subject
+    Configure subject ->
+      subject
+
 
 type Msg
-  = Continue
+  = ResetComplete
+  | ConfigureComplete
 
 -- This has to do several things
--- 1. call startScenario to reset the context
+-- 1. (DONE) call startScenario to reset the context
 -- 2. do something with flushing animation tasks I think
--- 3. Initialize the setup (and report on failure if necessary)
--- 4. Configure the context for the setup
+-- 3. (DONE) Initialize the setup
+-- 4. Report on failure if necessary
+-- 4. (DONE) Configure the context for the setup
 -- 5. Send and wait for the initial command (this is done in the exercise state, called after this is finished)
 
 -- Basically we will need a kind of state machine inside this state, since sending Continue is
@@ -63,7 +76,7 @@ init actions setups message =
           case maybeSubject of
             Just subject ->
               -- note: Is this the best message to send out? Maybe 'configure'? or something?
-              ( { subject = subject }, actions.send Message.startScenario )
+              ( ResetContext subject, actions.send Message.startScenario )
             Nothing ->
               Debug.todo "Could not initialize subject!"
       Nothing ->
@@ -72,20 +85,45 @@ init actions setups message =
 
 update : Actions msg -> Msg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
 update actions msg model =
-  case msg of
-    Continue ->
+  case ( model, msg ) of
+    ( ResetContext subject, ResetComplete ) ->
+      ( Configure subject
+      , configureWith actions subject.configureEnvironment
+      )
+    ( Configure _, ConfigureComplete ) ->
       ( model, actions.finished )
+    _ ->
+      ( model, Cmd.none )
+
+
+configureWith : Actions msg -> List Message -> Cmd msg
+configureWith actions configMessages =
+  if List.isEmpty configMessages then
+    actions.send Message.configureComplete
+  else
+    List.map Message.configMessage configMessages
+      |> List.map actions.send
+      |> Cmd.batch
 
 
 subscriptions : Actions msg -> Model model programMsg -> Sub msg
-subscriptions actions _ =
-  actions.listen (\message -> 
-    if Message.is "_scenario" "state" message then
-      case Message.decode Json.string message |> Result.withDefault "" of
-        "CONTINUE" ->
-          Continue
-        _ ->
-          Debug.todo "Unexpected scenario state message in Harness Program!"
-    else
-      Debug.todo "Unexpected message in Harness Program!"
-  )
+subscriptions actions model =
+  case model of
+    ResetContext _ ->
+      actions.listen (\message -> 
+        if Message.is "_scenario" "state" message then
+          case Message.decode Json.string message |> Result.withDefault "" of
+            "CONTINUE" ->
+              ResetComplete
+            _ ->
+              Debug.todo "Unexpected scenario state message in Harness Program!"
+        else
+          Debug.todo "Unknown message received in Initialize state!"
+      )
+    Configure _ ->
+      actions.listen (\message -> 
+        if Message.is "_configure" "complete" message then
+          ConfigureComplete
+        else
+          Debug.todo "Unknown message received in Initialize state!"
+      )

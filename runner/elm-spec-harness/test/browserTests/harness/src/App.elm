@@ -3,12 +3,15 @@ port module App exposing (..)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
+import Http
+import Json.Decode as Json
 
 
 type alias Model =
   { name: String
   , attributes: List String
   , clicks: Int
+  , stuff: Stuff
   }
 
 
@@ -17,6 +20,7 @@ defaultModel =
   { name = "Brian"
   , attributes = [ "cool", "fun" ]
   , clicks = 0
+  , stuff = noStuff
   }
 
 
@@ -24,6 +28,21 @@ type Msg
   = CounterClicked
   | InformClicked
   | Triggered TriggerMessage
+  | SendRequest
+  | GotStuff (Result Http.Error Stuff)
+
+
+type alias Stuff =
+  { thing: String
+  , count: Int
+  }
+
+
+noStuff : Stuff
+noStuff =
+  { thing = "Nothing"
+  , count = 0
+  }
 
 
 view : Model -> Html Msg
@@ -36,7 +55,20 @@ view model =
     , Html.div []
       [ Html.button [ Attr.id "inform-button", Events.onClick InformClicked ] [ Html.text "Inform!" ]
       ]
+    , Html.hr [] []
+    , Html.div []
+      [ Html.button [ Attr.id "send-request", Events.onClick SendRequest ] [ Html.text "Send Request!" ]
+      ]
+    , Html.div [ Attr.id "stuff-description" ] <| stuffDescription model.stuff
     ]
+
+
+stuffDescription : Stuff -> List (Html Msg)
+stuffDescription stuff =
+  [ Html.text <| "Got " ++ stuff.thing
+  , Html.text " "
+  , Html.text <| "(" ++ String.fromInt stuff.count ++ ")"
+  ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -48,6 +80,24 @@ update msg model =
       ( { model | name = message.name }, Cmd.none )
     InformClicked ->
       ( model, inform { attributes = "awesome" :: model.attributes } )
+    SendRequest ->
+      ( model
+      , Http.get
+        { url = "http://fake.com/fakeStuff"
+        , expect = Http.expectJson GotStuff stuffDecoder
+        }
+      )
+    GotStuff (Ok stuff) ->
+      ( { model | stuff = stuff }, Cmd.none )
+    GotStuff (Err _) ->
+      ( { model | stuff = noStuff }, Cmd.none )
+
+
+stuffDecoder : Json.Decoder Stuff
+stuffDecoder =
+  Json.map2 Stuff
+    ( Json.field "thing" Json.string )
+    ( Json.field "count" Json.int )
 
 
 type alias TriggerMessage =

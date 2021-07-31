@@ -66,6 +66,21 @@ type alias RunModel model msg =
   }
 
 
+generateRunModel : Initialize.Model model msg -> RunModel model msg
+generateRunModel initializeModel =
+  let
+    subject = Initialize.harnessSubject initializeModel
+  in
+    { programModel = subject.model
+    , effects = []
+    , subject = subject
+    , state = Initializing
+    , initializeModel = initializeModel
+    , exerciseModel = Exercise.defaultModel
+    , observeModel = Observe.defaultModel
+    }
+
+
 type RunState model msg
   = Initializing
   | Ready
@@ -124,7 +139,7 @@ update config setups steps expectations msg model =
     ( Waiting, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
         Initialize.init (initializeActions config) (setupsRepo setups) message
-          |> Tuple.mapFirst (\updated -> { programModel = updated.subject.model, effects = [], subject = updated.subject, state = Initializing, initializeModel = updated, exerciseModel = Exercise.defaultModel, observeModel = Observe.defaultModel })
+          |> Tuple.mapFirst generateRunModel
           |> Tuple.mapFirst Running
       else
         -- Note that here we could get _spec start message ... need to not send that for a harness ...
