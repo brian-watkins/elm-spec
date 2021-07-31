@@ -9,8 +9,8 @@ test("initial state of app", async function (t) {
 
 test("the view updates", async function(t) {
   await runner.setup("default")
-  await runner.runSteps("click")
-  await expectEqual(t, "count", "3 clicks!", "it counts the number of clicks")
+  await runner.runSteps("click", 5)
+  await expectEqual(t, "count", "5 clicks!", "it counts the number of clicks")
 })
 
 test("the app is reset", async function(t) {

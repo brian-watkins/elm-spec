@@ -11,7 +11,7 @@ type alias ExposedExpectation model =
 
 
 type alias ExposedSteps model msg
-  = List (Step model msg)
+  = Json.Value -> List (Step model msg)
 
 
 type alias ExposedSetup model msg =

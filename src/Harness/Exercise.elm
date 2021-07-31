@@ -56,8 +56,10 @@ init actions steps model message =
     maybeSteps = Message.decode (Json.field "steps" Json.string) message
       |> Result.toMaybe
       |> Maybe.andThen (\observerName -> steps.get observerName)
+    maybeConfig = Message.decode (Json.field "config" Json.value) message
+      |> Result.toMaybe
   in
-    case maybeSteps of
+    case Maybe.map2 (<|) maybeSteps maybeConfig of
       Just stepsToRun ->
         ( { model | stepsToRun = stepsToRun }
         , actions.sendToSelf Continue

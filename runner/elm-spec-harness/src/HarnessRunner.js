@@ -9,8 +9,8 @@ const observe = async (name, expected) => {
   return await wrapper.observe(name, expected)
 }
 
-const runSteps = async (name) => {
-  return await wrapper.runSteps(name)
+const runSteps = async (name, config) => {
+  return await wrapper.runSteps(name, config)
 }
 
 const getElmApp = () => {

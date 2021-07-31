@@ -86,12 +86,17 @@ expose decoder generator =
 
 
 type alias ExposedSteps model msg
-  = List (Step model msg)
+  = Json.Value -> List (Step model msg)
 
 
-exposeSteps : List (Step model msg) -> ExposedSteps model msg
-exposeSteps steps =
-  steps
+exposeSteps : Json.Decoder a -> (a -> List (Step model msg)) -> ExposedSteps model msg
+exposeSteps decoder generator =
+  \value ->
+    case Json.decodeValue decoder value of
+      Ok config ->
+        generator config
+      Err message ->
+        Debug.todo <| "Could not configure steps! " ++ Json.errorToString message
 
 
 type alias ExposedSetup model msg =

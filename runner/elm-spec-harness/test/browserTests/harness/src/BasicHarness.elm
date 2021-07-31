@@ -2,6 +2,7 @@ module BasicHarness exposing (..)
 
 import Harness exposing (Expectation, expect)
 import Spec.Setup as Setup exposing (Setup)
+import Spec.Step exposing (Step)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining)
 import Spec.Observer as Observer
 import Spec.Markup as Markup
@@ -54,15 +55,13 @@ setups =
 
 -- Steps
 
-clickMultiple =
-  [ Markup.target << by [ id "counter-button" ]
-  , Event.click
-  , Event.click
-  , Event.click
-  ]
+clickMultiple : Int -> List (Step model msg)
+clickMultiple times =
+  [ Markup.target << by [ id "counter-button" ] ]
+    ++ (List.repeat times Event.click)
 
 
-inform =
+inform _ =
   [ Markup.target << by [ id "inform-button" ]
   , Event.click
   ]
@@ -70,8 +69,8 @@ inform =
 
 steps =
   Dict.fromList
-    [ ( "click", Harness.exposeSteps clickMultiple )
-    , ( "inform", Harness.exposeSteps inform )
+    [ ( "click", Harness.exposeSteps Json.int clickMultiple )
+    , ( "inform", Harness.exposeSteps Json.value inform )
     ]
 
 
