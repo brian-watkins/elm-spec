@@ -66,14 +66,6 @@ const expectListItemMatches = (t, list, regex, success) => {
   }
 }
 
-const expectContains = (t, list, item, success) => {
-  if (list.includes(item)) {
-    t.pass(success)
-  } else {
-    t.fail(`Expected [ ${list} ] to include: ${item}`)
-  }
-}
-
 const serveTests = async (testFile) => {
   return serve({
     port: 8888
