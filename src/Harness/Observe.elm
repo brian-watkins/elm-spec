@@ -16,7 +16,6 @@ import Spec.Observer.Internal exposing (Judgment(..))
 import Harness.Types exposing (..)
 import Spec.Report as Report
 import Json.Decode as Json
-import Json.Encode as Encode
 
 
 type alias Model model =
@@ -49,15 +48,14 @@ init config expectations context model message =
     maybeExpectation = Message.decode (Json.field "observer" Json.string) message
       |> Result.toMaybe
       |> Maybe.andThen (\observerName -> expectations.get observerName)
-    expected = Message.decode (Json.field "expected" Json.value) message
+    maybeExpected = Message.decode (Json.field "expected" Json.value) message
       |> Result.toMaybe
-      |> Maybe.withDefault Encode.null
   in
-    case maybeExpectation of
-      Just expectation ->
-        observe config context model (expectation expected)
+    case Maybe.map2 (<|) maybeExpectation maybeExpected of
+      Just observation ->
+        observe config context model observation
       Nothing ->
-        ( model, Cmd.none )
+        Debug.todo "Could not parse the observation!"
 
 
 update : Actions msg -> Msg -> Model model -> ( Model model, Cmd msg )
