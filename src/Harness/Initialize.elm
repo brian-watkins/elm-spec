@@ -9,12 +9,13 @@ module Harness.Initialize exposing
   , harnessSubject
   )
 
-import Spec.Setup.Internal exposing (initializeSubject)
+import Spec.Setup.Internal exposing (Subject, initializeSubject)
 import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Harness.Types exposing (ExposedSetup)
 import Json.Decode as Json
-import Spec.Setup.Internal exposing (Subject)
+import Browser.Navigation as Navigation
+
 
 type alias Actions msg =
   { send: Message -> Cmd msg
@@ -57,8 +58,8 @@ type alias ExposedSetupRepository model programMsg =
   }
 
 
-init : Actions msg -> ExposedSetupRepository model programMsg -> Message -> ( Model model programMsg, Cmd msg )
-init actions setups message =
+init : Actions msg -> ExposedSetupRepository model programMsg -> Maybe Navigation.Key -> Message -> ( Model model programMsg, Cmd msg )
+init actions setups maybeKey message =
   let
     maybeSetup = Message.decode (Json.field "setup" Json.string) message
       |> Result.toMaybe
@@ -68,17 +69,12 @@ init actions setups message =
   in
     case Maybe.map2 (<|) maybeSetup maybeConfig of
       Just setup ->
-        let
-          maybeSubject =
-            initializeSubject setup Nothing
-              |> Result.toMaybe
-        in
-          case maybeSubject of
-            Just subject ->
-              -- note: Is this the best message to send out? Maybe 'configure'? or something?
-              ( ResetContext subject, actions.send Message.startScenario )
-            Nothing ->
-              Debug.todo "Could not initialize subject!"
+        case initializeSubject setup maybeKey of
+          Ok subject ->
+            -- note: Is this the best message to send out? Maybe 'configure'? or something?
+            ( ResetContext subject, actions.send Message.startScenario )
+          Err error ->
+            Debug.todo <| "Could not initialize subject: " ++ error
       Nothing ->
         Debug.todo "Could not decode setup config!"
 

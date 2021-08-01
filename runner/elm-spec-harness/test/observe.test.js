@@ -17,6 +17,7 @@ test('observe', async function (t) {
   expectPassingTest(t, output, "it runs the initial command", "a test passes that runs an initial command")
   expectPassingTest(t, output, "it finds the name updated after the message is received", "a test passes that sends a message to the app in response to receiving one")
   expectPassingTest(t, output, "it observes that the stubbed response was processed", "a test passes that requires the context to be configured")
+  expectPassingTest(t, output, "it observes that the initial location was processed", "a test passes that sets an initial location")
 })
 
 const runTestInBrowser = async (testFile) => {

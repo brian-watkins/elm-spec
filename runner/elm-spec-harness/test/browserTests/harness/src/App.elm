@@ -5,6 +5,10 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Http
 import Json.Decode as Json
+import Url exposing (Url)
+import Url.Parser as UrlParser exposing (Parser)
+import Browser exposing (UrlRequest)
+import Browser.Navigation as Navigation
 
 
 type alias Model =
@@ -12,7 +16,13 @@ type alias Model =
   , attributes: List String
   , clicks: Int
   , stuff: Stuff
+  , page: Page
   }
+
+
+type Page
+  = Home
+  | Fun
 
 
 defaultModel : Model
@@ -21,6 +31,7 @@ defaultModel =
   , attributes = [ "cool", "fun" ]
   , clicks = 0
   , stuff = noStuff
+  , page = Home
   }
 
 
@@ -30,6 +41,8 @@ type Msg
   | Triggered TriggerMessage
   | SendRequest
   | GotStuff (Result Http.Error Stuff)
+  | OnUrlChange Url
+  | OnUrlRequest UrlRequest
 
 
 type alias Stuff =
@@ -52,22 +65,42 @@ init initialAttributes =
   )
 
 
+initForNavigation : Url -> Navigation.Key -> ( Model, Cmd Msg )
+initForNavigation url key =
+  let
+    maybePage =
+      UrlParser.parse (UrlParser.map Fun <| UrlParser.s "funPage") url
+  in
+    case maybePage of
+      Just page ->
+        ( { defaultModel | page = page }, Cmd.none )
+      Nothing ->
+        ( defaultModel, Cmd.none )
+
+
+
 view : Model -> Html Msg
 view model =
-  Html.div []
-    [ Html.h1 [ Attr.id "title" ] [ Html.text <| "Hey " ++ model.name ++ "!" ]
-    , Html.button [ Attr.id "counter-button", Events.onClick CounterClicked ] [ Html.text "Click me!" ]
-    , Html.h3 [ Attr.id "counter-status" ] [ Html.text <| String.fromInt model.clicks ++ " clicks!" ]
-    , Html.hr [] []
-    , Html.div []
-      [ Html.button [ Attr.id "inform-button", Events.onClick InformClicked ] [ Html.text "Inform!" ]
-      ]
-    , Html.hr [] []
-    , Html.div []
-      [ Html.button [ Attr.id "send-request", Events.onClick SendRequest ] [ Html.text "Send Request!" ]
-      ]
-    , Html.div [ Attr.id "stuff-description" ] <| stuffDescription model.stuff
-    ]
+  case model.page of
+    Home ->
+      Html.div []
+        [ Html.h1 [ Attr.id "title" ] [ Html.text <| "Hey " ++ model.name ++ "!" ]
+        , Html.button [ Attr.id "counter-button", Events.onClick CounterClicked ] [ Html.text "Click me!" ]
+        , Html.h3 [ Attr.id "counter-status" ] [ Html.text <| String.fromInt model.clicks ++ " clicks!" ]
+        , Html.hr [] []
+        , Html.div []
+          [ Html.button [ Attr.id "inform-button", Events.onClick InformClicked ] [ Html.text "Inform!" ]
+          ]
+        , Html.hr [] []
+        , Html.div []
+          [ Html.button [ Attr.id "send-request", Events.onClick SendRequest ] [ Html.text "Send Request!" ]
+          ]
+        , Html.div [ Attr.id "stuff-description" ] <| stuffDescription model.stuff
+        ]
+    Fun ->
+      Html.div []
+        [ Html.h1 [ Attr.id "title" ] [ Html.text "On the fun page!" ]
+        ]
 
 
 stuffDescription : Stuff -> List (Html Msg)
@@ -93,6 +126,10 @@ update msg model =
       ( { model | stuff = stuff }, Cmd.none )
     GotStuff (Err _) ->
       ( { model | stuff = noStuff }, Cmd.none )
+    OnUrlChange _ ->
+      ( model, Cmd.none )
+    OnUrlRequest _ ->
+      ( model, Cmd.none )
 
 
 getFakeStuff =

@@ -118,8 +118,8 @@ exposeSetup decoder generator =
 browserHarness : Config msg -> Dict String (ExposedSetup model msg) -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Program Flags (Model model msg) (Msg msg)
 browserHarness config setups steps expectations =
   Browser.application
-    { init = \_ _ _ ->
-        Program.init
+    { init = \_ _ key ->
+        Program.init (Just key)
     , view = Program.view
     , update = Program.update config setups steps expectations
     , subscriptions = Program.subscriptions config

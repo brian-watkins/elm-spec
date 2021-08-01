@@ -46,6 +46,11 @@ test("the setup configures the context to stub an HTTP request", async function(
   await observe(t, "stuff", "Got trees (17)", "it observes that the stubbed response was processed")
 })
 
+test("the setup specifies an initial location", async function(t) {
+  await runner.setup("withLocation", "http://test.com/funPage")
+  await observe(t, "title", "On the fun page!", "it observes that the initial location was processed")
+})
+
 const observe = async (t, name, actual, message) => {
   const observer = await runner.observe(name, actual)
   if (observer.summary === "ACCEPTED") {

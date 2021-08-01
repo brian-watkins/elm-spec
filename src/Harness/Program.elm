@@ -15,6 +15,7 @@ import Spec.Message exposing (Message)
 import Browser exposing (UrlRequest, Document)
 import Spec.Setup.Internal as Setup exposing (Subject)
 import Spec.Step.Command as Step
+import Spec.Step.Context as Context exposing (Context)
 import Spec.Observer.Internal exposing (Judgment(..))
 import Spec.Scenario.Message as Message
 import Spec.Message as Message
@@ -28,7 +29,7 @@ import Url exposing (Url)
 import Html exposing (Html)
 import Dict exposing (Dict)
 import Task
-import Spec.Step.Context as Context exposing (Context)
+import Browser.Navigation as Navigation
 
 
 type alias Config msg =
@@ -51,8 +52,13 @@ type Msg msg
 
 
 type Model model msg
-  = Waiting
+  = Waiting WaitingModel
   | Running (RunModel model msg)
+
+
+type alias WaitingModel =
+  { key: Maybe Navigation.Key
+  }
 
 
 type alias RunModel model msg =
@@ -63,11 +69,12 @@ type alias RunModel model msg =
   , initializeModel: Initialize.Model model msg
   , exerciseModel: Exercise.Model model msg
   , observeModel: Observe.Model model
+  , key: Maybe Navigation.Key
   }
 
 
-generateRunModel : Initialize.Model model msg -> RunModel model msg
-generateRunModel initializeModel =
+generateRunModel : Maybe Navigation.Key -> Initialize.Model model msg -> RunModel model msg
+generateRunModel maybeKey initializeModel =
   let
     subject = Initialize.harnessSubject initializeModel
   in
@@ -78,6 +85,7 @@ generateRunModel initializeModel =
     , initializeModel = initializeModel
     , exerciseModel = Exercise.defaultModel
     , observeModel = Observe.defaultModel
+    , key = maybeKey
     }
 
 
@@ -92,15 +100,15 @@ type alias Flags =
   { }
 
 
-init : ( Model model msg, Cmd (Msg msg) )
-init =
-  ( Waiting, Cmd.none )
+init : Maybe Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
+init maybeKey =
+  ( Waiting { key = maybeKey }, Cmd.none )
 
 
 view : Model model msg -> Document (Msg msg)
 view model =
   case model of
-    Waiting ->
+    Waiting _ ->
       { title = "Harness Program"
       , body = [ fakeBody ]
       }
@@ -136,10 +144,10 @@ fakeBody =
 update : Config msg -> Dict String (ExposedSetup model msg) -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update config setups steps expectations msg model =
   case ( model, msg ) of
-    ( Waiting, ReceivedMessage message ) ->
+    ( Waiting waitingModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
-        Initialize.init (initializeActions config) (setupsRepo setups) message
-          |> Tuple.mapFirst generateRunModel
+        Initialize.init (initializeActions config) (setupsRepo setups) waitingModel.key message
+          |> Tuple.mapFirst (generateRunModel waitingModel.key)
           |> Tuple.mapFirst Running
       else
         -- Note that here we could get _spec start message ... need to not send that for a harness ...
@@ -179,7 +187,7 @@ update config setups steps expectations msg model =
     
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
-        update config setups steps expectations (ReceivedMessage message) Waiting
+        update config setups steps expectations (ReceivedMessage message) (Waiting { key = runModel.key })
       else if Message.is "_harness" "observe" message then
         Observe.init (observeActions config) (expectationsRepo expectations) (programContext runModel) Observe.defaultModel message
           |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
@@ -288,7 +296,7 @@ sendMessage msg =
 subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
   case model of
-    Waiting ->
+    Waiting _ ->
       config.listen ReceivedMessage
     Running runModel ->
       case runModel.state of

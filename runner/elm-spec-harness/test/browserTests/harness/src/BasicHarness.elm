@@ -15,6 +15,7 @@ import Runner
 import Dict
 import Json.Decode as Json
 import Json.Encode as Encode
+import Url exposing (Url)
 import App
 
 -- Setup
@@ -72,12 +73,39 @@ setupWithInitialCommand attributes =
     |> Stub.serve [ stuffStub <| Encode.object [ ("thing", Encode.string <| String.join ", " attributes), ("count", Encode.int <| List.length attributes) ] ]
 
 
+setupWithInitialLocation : String -> Setup App.Model App.Msg
+setupWithInitialLocation location =
+  Setup.initForApplication App.initForNavigation
+    |> Setup.withUpdate App.update
+    |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
+    |> Setup.forNavigation { onUrlRequest = App.OnUrlRequest, onUrlChange = App.OnUrlChange }
+    |> Setup.withLocation (urlFrom location)
+
+
+urlFrom : String -> Url
+urlFrom location =
+  Url.fromString location
+    |> Maybe.withDefault defaultUrl
+
+
+defaultUrl =
+  { protocol = Url.Http
+  , host = "blah.com"
+  , port_ = Nothing
+  , path = "/"
+  , query = Nothing
+  , fragment = Nothing
+  }
+
+
 setups =
   Dict.fromList
     [ ( "default", Harness.exposeSetup Json.value defaultSetup )
     , ( "withName", Harness.exposeSetup setupConfigDecoder setupWithName )
     , ( "withStub", Harness.exposeSetup Json.value setupWithStub )
     , ( "withInitialCommand", Harness.exposeSetup (Json.list Json.string) setupWithInitialCommand )
+    , ( "withLocation", Harness.exposeSetup Json.string setupWithInitialLocation )
     ]
 
 
