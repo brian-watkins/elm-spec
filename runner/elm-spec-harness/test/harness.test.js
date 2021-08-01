@@ -18,6 +18,7 @@ runTests((testOutput) => {
   
   test('navigation', function(t) {
     expectPassingTest(t, testOutput, "it observes that the initial location was processed", "a test passes that sets an initial location")
+    expectPassingTest(t, testOutput, "the updated location was processed", "a test passes that changes the location")
     t.end()
   })  
 

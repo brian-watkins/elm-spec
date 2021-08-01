@@ -7,6 +7,7 @@ import Http
 import Json.Decode as Json
 import Url exposing (Url)
 import Url.Parser as UrlParser exposing (Parser)
+import Url.Builder
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
 
@@ -17,12 +18,14 @@ type alias Model =
   , clicks: Int
   , stuff: Stuff
   , page: Page
+  , key: Maybe Navigation.Key
   }
 
 
 type Page
   = Home
   | Fun
+  | Awesome
 
 
 defaultModel : Model
@@ -32,6 +35,7 @@ defaultModel =
   , clicks = 0
   , stuff = noStuff
   , page = Home
+  , key = Nothing
   }
 
 
@@ -43,6 +47,7 @@ type Msg
   | GotStuff (Result Http.Error Stuff)
   | OnUrlChange Url
   | OnUrlRequest UrlRequest
+  | NavigateToAwesome
 
 
 type alias Stuff =
@@ -69,14 +74,21 @@ initForNavigation : Url -> Navigation.Key -> ( Model, Cmd Msg )
 initForNavigation url key =
   let
     maybePage =
-      UrlParser.parse (UrlParser.map Fun <| UrlParser.s "funPage") url
+      UrlParser.parse routes url
   in
     case maybePage of
       Just page ->
-        ( { defaultModel | page = page }, Cmd.none )
+        ( { defaultModel | page = page, key = Just key }, Cmd.none )
       Nothing ->
         ( defaultModel, Cmd.none )
 
+
+routes =
+  UrlParser.oneOf
+    [ UrlParser.map Fun <| UrlParser.s "funPage"
+    , UrlParser.map Awesome <| UrlParser.s "awesomePage"
+    , UrlParser.map Home <| UrlParser.top
+    ]
 
 
 view : Model -> Html Msg
@@ -96,10 +108,18 @@ view model =
           [ Html.button [ Attr.id "send-request", Events.onClick SendRequest ] [ Html.text "Send Request!" ]
           ]
         , Html.div [ Attr.id "stuff-description" ] <| stuffDescription model.stuff
+        , Html.hr [] []
+        , Html.div []
+          [ Html.button [ Attr.id "awesome-location", Events.onClick NavigateToAwesome ] [ Html.text "Let's go!!!" ]
+          ]
         ]
     Fun ->
       Html.div []
         [ Html.h1 [ Attr.id "title" ] [ Html.text "On the fun page!" ]
+        ]
+    Awesome ->
+      Html.div []
+        [ Html.h1 [ Attr.id "title" ] [ Html.text "On the awesome page!" ]
         ]
 
 
@@ -126,10 +146,19 @@ update msg model =
       ( { model | stuff = stuff }, Cmd.none )
     GotStuff (Err _) ->
       ( { model | stuff = noStuff }, Cmd.none )
-    OnUrlChange _ ->
-      ( model, Cmd.none )
+    OnUrlChange url ->
+      UrlParser.parse routes url
+        |> Maybe.withDefault Home
+        |> \page ->
+          ( { model | page = page }, Cmd.none )
     OnUrlRequest _ ->
       ( model, Cmd.none )
+    NavigateToAwesome ->
+      case model.key of
+        Just key ->
+          ( model, Navigation.pushUrl key <| Url.Builder.absolute [ "awesomePage" ] [] )
+        Nothing ->
+          ( model, Cmd.none )
 
 
 getFakeStuff =

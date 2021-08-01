@@ -129,11 +129,17 @@ requestStuff _ =
   ]
 
 
+gotoAwesome _ =
+  [ Markup.target << by [ id "awesome-location" ]
+  , Event.click
+  ]
+
 steps =
   Dict.fromList
     [ ( "click", Harness.exposeSteps Json.int clickMultiple )
     , ( "inform", Harness.exposeSteps Json.value inform )
     , ( "requestStuff", Harness.exposeSteps Json.value requestStuff )
+    , ( "gotoAwesome", Harness.exposeSteps Json.value gotoAwesome )
     ]
 
 
