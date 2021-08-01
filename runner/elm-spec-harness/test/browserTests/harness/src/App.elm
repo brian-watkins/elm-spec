@@ -8,7 +8,7 @@ import Json.Decode as Json
 import Url exposing (Url)
 import Url.Parser as UrlParser exposing (Parser)
 import Url.Builder
-import Browser exposing (UrlRequest)
+import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Navigation
 
 
@@ -26,6 +26,7 @@ type Page
   = Home
   | Fun
   | Awesome
+  | Super
 
 
 defaultModel : Model
@@ -87,6 +88,7 @@ routes =
   UrlParser.oneOf
     [ UrlParser.map Fun <| UrlParser.s "funPage"
     , UrlParser.map Awesome <| UrlParser.s "awesomePage"
+    , UrlParser.map Super <| UrlParser.s "superPage"
     , UrlParser.map Home <| UrlParser.top
     ]
 
@@ -112,6 +114,10 @@ view model =
         , Html.div []
           [ Html.button [ Attr.id "awesome-location", Events.onClick NavigateToAwesome ] [ Html.text "Let's go!!!" ]
           ]
+        , Html.hr [] []
+        , Html.div []
+          [ Html.a [ Attr.id "super-link", Attr.href "/superPage" ] [ Html.text "A Super Link" ]
+          ]
         ]
     Fun ->
       Html.div []
@@ -120,6 +126,10 @@ view model =
     Awesome ->
       Html.div []
         [ Html.h1 [ Attr.id "title" ] [ Html.text "On the awesome page!" ]
+        ]
+    Super ->
+      Html.div []
+        [ Html.h1 [ Attr.id "title" ] [ Html.text "On the super page!" ]
         ]
 
 
@@ -151,8 +161,16 @@ update msg model =
         |> Maybe.withDefault Home
         |> \page ->
           ( { model | page = page }, Cmd.none )
-    OnUrlRequest _ ->
-      ( model, Cmd.none )
+    OnUrlRequest urlRequest ->
+      case model.key of
+        Just key ->
+          case urlRequest of
+            Internal url ->
+              ( model, Navigation.pushUrl key <| Url.toString url )
+            External externalUrl ->
+              ( model, Navigation.load externalUrl )
+        Nothing ->
+          ( model, Cmd.none )
     NavigateToAwesome ->
       case model.key of
         Just key ->

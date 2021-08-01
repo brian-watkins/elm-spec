@@ -12,3 +12,9 @@ test("a step causes a location change", async function(t) {
   await harness.runSteps("gotoAwesome")
   await observe(t, "title", "On the awesome page!", "the updated location was processed")
 })
+
+test("clicking a link causes a location change", async function(t) {
+  await harness.setup("withLocation", "http://test.com/")
+  await harness.runSteps("clickLinkToChangeLocation")
+  await observe(t, "title", "On the super page!", "the location change request was processed")
+})

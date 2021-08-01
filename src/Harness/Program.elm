@@ -162,17 +162,16 @@ update config setups steps expectations msg model =
     ( Running runModel, OnUrlChange url ) ->
       case runModel.subject.navigationConfig of
         Just navConfig ->
-          runModel.subject.update (navConfig.onUrlChange url) runModel.programModel
-            |> Tuple.mapFirst (\updated -> Running { runModel | programModel = updated })
-            |> Tuple.mapSecond (sendCommand config)
+          update config setups steps expectations (ProgramMsg <| navConfig.onUrlChange url) model
         Nothing ->
           Debug.todo "No navigation config defined!!"
     
-    ( Running _, OnUrlRequest request ) ->
-      let
-        k = Debug.log "URL Request" request
-      in
-      ( model, Cmd.none )
+    ( Running runModel, OnUrlRequest request ) ->
+      case runModel.subject.navigationConfig of
+         Just navConfig ->
+          update config setups steps expectations (ProgramMsg <| navConfig.onUrlRequest request) model
+         Nothing ->
+          Debug.todo "No navigation config defined!"
     
     ( Running runModel, StoreEffect message ) ->
       ( Running { runModel | effects = message :: runModel.effects }
