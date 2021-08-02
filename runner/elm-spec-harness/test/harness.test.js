@@ -20,8 +20,11 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it observes that the initial location was processed", "a test passes that sets an initial location")
     expectPassingTest(t, testOutput, "the updated location was processed", "a test passes that changes the location")
     expectPassingTest(t, testOutput, "the location change request was processed", "a test passes that depends on a url request")
+    expectPassingTest(t, testOutput, "the app shows it has navigated to an external page", "a test passes that navigates to an external url")
+    expectPassingTest(t, testOutput, "the external location is recorded", "a test passes that observes the location")
+    expectPassingTest(t, testOutput, "the app shows it has navigated to the external page specified by the port", "a test passes that changes the location from a port")
     t.end()
-  })  
+  })
 
 })
 

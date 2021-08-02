@@ -10,6 +10,8 @@ module Harness.Observe exposing
 
 import Spec.Claim as Claim exposing (Verdict)
 import Spec.Step.Context exposing (Context)
+import Spec.Step.Message as Message
+import Harness.Message as Message
 import Spec.Message as Message exposing (Message)
 import Spec.Observer.Message as Message
 import Spec.Observer.Internal exposing (Judgment(..))
@@ -20,15 +22,18 @@ import Json.Decode as Json
 
 type alias Model model =
   { inquiryHandler: Maybe (Message -> Judgment model)
+  , expectation: Maybe (Expectation model)
   }
 
 defaultModel : Model model
 defaultModel =
   { inquiryHandler = Nothing
+  , expectation = Nothing
   }
 
 type Msg
   = ReceivedMessage Message
+  | Continue
 
 type alias Actions msg =
   { send : Message -> Cmd msg
@@ -42,8 +47,8 @@ type alias ExposedExpectationRepository model =
   }
 
 
-init : Actions msg -> ExposedExpectationRepository model -> Context model -> Model model -> Message -> ( Model model, Cmd msg )
-init config expectations context model message =
+init : Actions msg -> ExposedExpectationRepository model -> Model model -> Message -> ( Model model, Cmd msg )
+init actions expectations model message =
   let
     maybeExpectation = Message.decode (Json.field "observer" Json.string) message
       |> Result.toMaybe
@@ -52,20 +57,28 @@ init config expectations context model message =
       |> Result.toMaybe
   in
     case Maybe.map2 (<|) maybeExpectation maybeExpected of
-      Just observation ->
-        observe config context model observation
+      Just expectation ->
+        ( { model | expectation = Just expectation }
+        , actions.send <| Message.prepareHarnessForAction
+        )
       Nothing ->
         Debug.todo "Could not parse the observation!"
 
 
-update : Actions msg -> Msg -> Model model -> ( Model model, Cmd msg )
-update config msg model =
+update : Actions msg -> Context model -> Msg -> Model model -> ( Model model, Cmd msg )
+update actions context msg model =
   case msg of
     ReceivedMessage message ->
       if Message.belongsTo "_observer" message then
-        handleObserveMessage config model message
+        handleObserveMessage actions model message
       else
         ( model, Cmd.none )
+    Continue ->
+      case model.expectation of
+        Just expectation ->
+          observe actions context model expectation
+        Nothing ->
+          ( model, Cmd.none )
 
 
 observe : Actions msg -> Context model -> Model model -> Expectation model -> ( Model model, Cmd msg )
@@ -128,4 +141,13 @@ sendVerdict actions verdict =
 
 subscriptions : Actions msg -> Model model -> Sub msg
 subscriptions actions _ =
-  actions.listen ReceivedMessage
+  actions.listen (\message ->
+    if Message.is "_scenario" "state" message then
+      case Message.decode Json.string message |> Result.withDefault "" of
+        "CONTINUE" ->
+          Continue
+        _ ->
+          Debug.todo "Unknown scenario state message in Exercise state!"
+    else
+      ReceivedMessage message
+  )

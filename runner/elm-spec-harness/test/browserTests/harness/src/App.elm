@@ -49,6 +49,7 @@ type Msg
   | OnUrlChange Url
   | OnUrlRequest UrlRequest
   | NavigateToAwesome
+  | SendToExternalLocation String
 
 
 type alias Stuff =
@@ -117,6 +118,7 @@ view model =
         , Html.hr [] []
         , Html.div []
           [ Html.a [ Attr.id "super-link", Attr.href "/superPage" ] [ Html.text "A Super Link" ]
+          , Html.a [ Attr.id "external-link", Attr.href "http://fun-times.com/fun.html" ] [ Html.text "An External Link" ]
           ]
         ]
     Fun ->
@@ -177,6 +179,8 @@ update msg model =
           ( model, Navigation.pushUrl key <| Url.Builder.absolute [ "awesomePage" ] [] )
         Nothing ->
           ( model, Cmd.none )
+    SendToExternalLocation url ->
+      ( model, Navigation.load url )
 
 
 getFakeStuff =
@@ -199,8 +203,13 @@ type alias TriggerMessage =
 
 
 port triggerStuff : (TriggerMessage -> msg) -> Sub msg
+port triggerLocationChange : (String -> msg) -> Sub msg
 port inform : { attributes: List String } -> Cmd msg
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  triggerStuff Triggered
+  Sub.batch
+  [ triggerLocationChange SendToExternalLocation
+  , triggerStuff Triggered
+  ]

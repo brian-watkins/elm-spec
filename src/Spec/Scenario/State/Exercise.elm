@@ -14,11 +14,10 @@ import Spec.Step.Context as Context
 import Spec.Step.Command as Step
 import Spec.Observer.Message as Message
 import Spec.Report as Report exposing (Report)
-import Spec.Scenario.State.NavigationHelpers exposing (..)
+import Spec.Navigator.Internal exposing (..)
 import Spec.Scenario.State.Interactive as Interactive
 import Spec.Scenario.State.Observe as Observe
 import Browser exposing (Document)
-import Json.Decode as Json
 
 
 type alias Model model msg =
@@ -181,17 +180,11 @@ subscriptions model =
 
 handleLocationAssigned : Model model programMsg -> Message -> ( State.Model msg programMsg, Cmd msg )
 handleLocationAssigned exerciseModel message =
-  case Message.decode Json.string message of
-    Ok location ->
-      case exerciseModel.subject.navigationConfig of
-        Just _ ->
-          ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
-          , Cmd.none
-          )
-        Nothing ->
-          ( exercise { exerciseModel | effects = message :: exerciseModel.effects, subject = navigatedSubject location exerciseModel.subject }
-          , Cmd.none
-          )
+  case Message.decode navigationAssignmentDecoder message of
+    Ok navAssignment ->
+      ( exercise { exerciseModel | effects = message :: exerciseModel.effects, subject = navigatedSubject navAssignment.href exerciseModel.subject }
+      , Cmd.none
+      )
     Err _ ->
       ( exercise { exerciseModel | effects = message :: exerciseModel.effects }
       , Cmd.none

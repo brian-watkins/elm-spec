@@ -1,26 +1,27 @@
-module Spec.Scenario.State.NavigationHelpers exposing
-  ( navigatedSubject
+module Spec.Navigator.Internal exposing
+  ( NavigationAssignment
+  , navigationAssignmentDecoder
+  , navigatedSubject
   , handleUrlRequest
   )
 
 import Spec.Setup.Internal exposing (Subject, ProgramView(..))
+import Json.Decode as Json
+import Html
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation
-import Html
 import Url
 
 
-handleUrlRequest : model -> UrlRequest -> ( model, Cmd msg )
-handleUrlRequest model request =
-  case request of
-    Internal url ->
-      ( model
-      , Browser.Navigation.load <| Url.toString url
-      )
-    External url ->
-      ( model
-      , Browser.Navigation.load url
-      )
+
+type alias NavigationAssignment =
+  { href: String
+  }
+
+
+navigationAssignmentDecoder : Json.Decoder NavigationAssignment
+navigationAssignmentDecoder =
+  Json.map NavigationAssignment Json.string
 
 
 navigatedSubject : String -> Subject model msg -> Subject model msg
@@ -38,3 +39,16 @@ navigatedUpdate : msg -> model -> (model, Cmd msg)
 navigatedUpdate =
   \_ model ->
     ( model, Cmd.none )
+
+
+handleUrlRequest : model -> UrlRequest -> ( model, Cmd msg )
+handleUrlRequest model request =
+  case request of
+    Internal url ->
+      ( model
+      , Browser.Navigation.load <| Url.toString url
+      )
+    External url ->
+      ( model
+      , Browser.Navigation.load url
+      )

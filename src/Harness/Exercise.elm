@@ -14,9 +14,8 @@ import Harness.Types exposing (..)
 import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
-import Json.Decode as Json
-import Spec.Setup.Internal exposing (Subject)
 import Spec.Step.Context exposing (Context)
+import Json.Decode as Json
 
 
 type alias Model model programMsg =
@@ -62,15 +61,19 @@ init actions steps model message =
     case Maybe.map2 (<|) maybeSteps maybeConfig of
       Just stepsToRun ->
         ( { model | stepsToRun = stepsToRun }
-        , actions.sendToSelf Continue
-        )
+        , actions.sendToSelf Continue 
+        ) -- This might need to be _harness prepare
+        -- Doesn't seem to make a different right now; we need a test to prove we need it I guess
+        -- Like, we try to click a button that is revealed only when a port message is received
+        -- , actions.send <| Message.prepareHarnessForAction
+        -- )
       Nothing ->
         Debug.todo "Could not find steps!"
 
 
-initForInitialCommand : Actions msg programMsg -> Subject model programMsg -> ( Model model programMsg, Cmd msg )
-initForInitialCommand actions subject =
-  ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram subject.initialCommand ] }
+initForInitialCommand : Actions msg programMsg -> Cmd programMsg -> ( Model model programMsg, Cmd msg )
+initForInitialCommand actions command =
+  ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram command ] }
   , actions.sendToSelf Continue
   )
 

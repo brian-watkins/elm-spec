@@ -10,6 +10,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Http.Route exposing (get)
 import Spec.Http.Stub as Stub
+import Spec.Navigator as Navigator
 import Extra exposing (equals)
 import Runner
 import Dict
@@ -141,6 +142,12 @@ clickLinkToChangeLocation _ =
   ]
 
 
+clickLinkToLeaveApp _ =
+  [ Markup.target << by [ id "external-link" ]
+  , Event.click
+  ]
+
+
 steps =
   Dict.fromList
     [ ( "click", Harness.exposeSteps Json.int clickMultiple )
@@ -148,6 +155,7 @@ steps =
     , ( "requestStuff", Harness.exposeSteps Json.value requestStuff )
     , ( "gotoAwesome", Harness.exposeSteps Json.value gotoAwesome )
     , ( "clickLinkToChangeLocation", Harness.exposeSteps Json.value clickLinkToChangeLocation )
+    , ( "clickLinkToLeaveApp", Harness.exposeSteps Json.value clickLinkToLeaveApp )
     ]
 
 
@@ -186,6 +194,19 @@ stuffObserver actual =
     |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 actual)
 
 
+locationObserver : String -> Expectation App.Model
+locationObserver expected =
+  Navigator.observe
+    |> expect (Navigator.location <| equals expected)
+
+
+pageText : String -> Expectation App.Model
+pageText expected =
+  Markup.observeElement
+    |> Markup.query << by [ tag "body" ]
+    |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 expected)
+
+
 observers =
   Dict.fromList
     [ ("title", Harness.expose Json.string titleObserver)
@@ -193,6 +214,8 @@ observers =
     , ("attributes", Harness.expose (Json.list Json.string) attributesObserver)
     , ("count", Harness.expose Json.string countObserver)
     , ("stuff", Harness.expose Json.string stuffObserver)
+    , ("location", Harness.expose Json.string locationObserver)
+    , ("pageText", Harness.expose Json.string pageText)
     ]
 
 

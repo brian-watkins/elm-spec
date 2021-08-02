@@ -13,9 +13,7 @@ module Harness.Program exposing
 
 import Spec.Message exposing (Message)
 import Browser exposing (UrlRequest, Document)
-import Spec.Setup.Internal as Setup exposing (Subject)
 import Spec.Step.Command as Step
-import Spec.Step.Context as Context exposing (Context)
 import Spec.Observer.Internal exposing (Judgment(..))
 import Spec.Scenario.Message as Message
 import Spec.Message as Message
@@ -24,6 +22,7 @@ import Harness.Message as Message
 import Harness.Initialize as Initialize
 import Harness.Observe as Observe
 import Harness.Exercise as Exercise
+import Harness.Subject as Subject
 import Harness.Types exposing (..)
 import Url exposing (Url)
 import Html exposing (Html)
@@ -39,16 +38,13 @@ type alias Config msg =
 
 
 type Msg msg
-  = ProgramMsg msg
-  | StoreEffect Message
+  = SubjectMsg (Subject.Msg msg)
   | InitializeMsg Initialize.Msg
   | RunInitialCommand
   | ExerciseMsg (Exercise.Msg msg)
   | ObserveMsg Observe.Msg
   | Finished
   | ReceivedMessage Message
-  | OnUrlRequest UrlRequest
-  | OnUrlChange Url
 
 
 type Model model msg
@@ -62,10 +58,8 @@ type alias WaitingModel =
 
 
 type alias RunModel model msg =
-  { programModel: model
-  , effects: List Message
-  , subject: Subject model msg
-  , state: RunState model msg
+  { state: RunState model msg
+  , subjectModel: Subject.Model model msg 
   , initializeModel: Initialize.Model model msg
   , exerciseModel: Exercise.Model model msg
   , observeModel: Observe.Model model
@@ -78,10 +72,8 @@ generateRunModel maybeKey initializeModel =
   let
     subject = Initialize.harnessSubject initializeModel
   in
-    { programModel = subject.model
-    , effects = []
-    , subject = subject
-    , state = Initializing
+    { state = Initializing
+    , subjectModel = Subject.defaultModel subject
     , initializeModel = initializeModel
     , exerciseModel = Exercise.defaultModel
     , observeModel = Observe.defaultModel
@@ -110,35 +102,10 @@ view model =
   case model of
     Waiting _ ->
       { title = "Harness Program"
-      , body = [ fakeBody ]
+      , body = [ Html.text "" ]
       }
     Running runModel ->
-      programView runModel.subject runModel.programModel
-
-
-programView : (Subject model msg) -> model -> Document (Msg msg)
-programView subject model =
-  case subject.view of
-    Setup.Element v ->
-      { title = "Harness Element Program"
-      , body = [ v model |> Html.map ProgramMsg ]
-      }
-    Setup.Document v ->
-      let
-        doc = v model
-      in
-        { title = doc.title
-        , body =
-            doc.body
-              |> List.map (Html.map ProgramMsg)
-        }
-
-
-fakeBody : Html (Msg msg)
-fakeBody =
-  Html.div []
-    [ Html.text "Waiting ..."
-    ]
+      Subject.view SubjectMsg runModel.subjectModel
 
 
 update : Config msg -> Dict String (ExposedSetup model msg) -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
@@ -153,51 +120,12 @@ update config setups steps expectations msg model =
         -- Note that here we could get _spec start message ... need to not send that for a harness ...
         -- And we want an error here if you try to run steps or observe without having called setup first
         ( model, Cmd.none )
-    
-    ( Running runModel, ProgramMsg programMsg ) ->
-      runModel.subject.update programMsg runModel.programModel
-        |> Tuple.mapFirst (\updated -> Running { runModel | programModel = updated })
-        |> Tuple.mapSecond (sendCommand config)
-    
-    ( Running runModel, OnUrlChange url ) ->
-      case runModel.subject.navigationConfig of
-        Just navConfig ->
-          update config setups steps expectations (ProgramMsg <| navConfig.onUrlChange url) model
-        Nothing ->
-          Debug.todo "No navigation config defined!!"
-    
-    ( Running runModel, OnUrlRequest request ) ->
-      case runModel.subject.navigationConfig of
-         Just navConfig ->
-          update config setups steps expectations (ProgramMsg <| navConfig.onUrlRequest request) model
-         Nothing ->
-          Debug.todo "No navigation config defined!"
-    
-    ( Running runModel, StoreEffect message ) ->
-      ( Running { runModel | effects = message :: runModel.effects }
-      , Cmd.none
-      )
-    
-    ( Running runModel, InitializeMsg initializeMsg ) ->
-      Initialize.update (initializeActions config) initializeMsg runModel.initializeModel
-        |> Tuple.mapFirst (\updated -> { runModel | initializeModel = updated })
-        |> Tuple.mapFirst Running
-    
-    ( Running runModel, ExerciseMsg exerciseMsg ) ->
-      Exercise.update (exerciseActions config) (programContext runModel) exerciseMsg runModel.exerciseModel
-        |> Tuple.mapFirst (\updated -> { runModel | exerciseModel = updated })
-        |> Tuple.mapFirst Running
-    
-    ( Running runModel, ObserveMsg observeMsg ) ->
-      Observe.update (observeActions config) observeMsg runModel.observeModel
-        |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
-        |> Tuple.mapFirst Running
-    
+
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
         update config setups steps expectations (ReceivedMessage message) (Waiting { key = runModel.key })
       else if Message.is "_harness" "observe" message then
-        Observe.init (observeActions config) (expectationsRepo expectations) (programContext runModel) Observe.defaultModel message
+        Observe.init (observeActions config) (expectationsRepo expectations) Observe.defaultModel message
           |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
           |> Tuple.mapFirst Running
       else if Message.is "_harness" "run" message then
@@ -207,25 +135,38 @@ update config setups steps expectations msg model =
       else
         -- Here we are receiving the start scenario message, which we should stop I think ...
         ( model, Cmd.none )
-    
+
+    ( Running runModel, SubjectMsg subjectMsg ) ->
+      Subject.update (subjectActions config) subjectMsg runModel.subjectModel
+        |> Tuple.mapFirst (\updated -> Running { runModel | subjectModel = updated })
+
+    ( Running runModel, InitializeMsg initializeMsg ) ->
+      Initialize.update (initializeActions config) initializeMsg runModel.initializeModel
+        |> Tuple.mapFirst (\updated -> { runModel | initializeModel = updated })
+        |> Tuple.mapFirst Running
+
+    ( Running runModel, ExerciseMsg exerciseMsg ) ->
+      Exercise.update (exerciseActions config) (Subject.programContext runModel.subjectModel) exerciseMsg runModel.exerciseModel
+        |> Tuple.mapFirst (\updated -> { runModel | exerciseModel = updated })
+        |> Tuple.mapFirst Running
+
+    ( Running runModel, ObserveMsg observeMsg ) ->
+      Observe.update (observeActions config) (Subject.programContext runModel.subjectModel) observeMsg runModel.observeModel
+        |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
+        |> Tuple.mapFirst Running
+
     ( Running runModel, RunInitialCommand ) ->
-      Exercise.initForInitialCommand (exerciseActions config) runModel.subject
+      Exercise.initForInitialCommand (exerciseActions config) (Subject.initialCommand runModel.subjectModel)
         |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
         |> Tuple.mapFirst Running
-    
+
     ( Running runModel, Finished ) ->
       ( Running { runModel | state = Ready }
       , config.send Message.harnessActionComplete
       )
-    
+
     _ ->
       ( model, Cmd.none )
-
-
-programContext : RunModel model msg -> Context model
-programContext model =
-  Context.for model.programModel
-    |> Context.withEffects model.effects
 
 
 setupsRepo : Dict String (ExposedSetup model msg) -> Initialize.ExposedSetupRepository model msg
@@ -249,6 +190,19 @@ stepsRepo steps =
   }
 
 
+subjectActions : Config msg -> Subject.Actions (Msg msg) msg
+subjectActions config =
+  { send = config.send
+  , sendCommand = sendCommand config
+  , listen = \messageHandler ->
+      config.listen (\message ->
+        messageHandler message
+          |> SubjectMsg
+      )
+  , sendToSelf = SubjectMsg
+  }
+
+
 initializeActions : Config msg -> Initialize.Actions (Msg msg)
 initializeActions config =
   { send = config.send
@@ -265,7 +219,7 @@ exerciseActions : Config msg -> Exercise.Actions (Msg msg) msg
 exerciseActions config =
   { send = config.send
   , sendProgramCommand = sendCommand config
-  , storeEffect = \message -> sendMessage <| StoreEffect message
+  , storeEffect = \message -> sendMessage <| SubjectMsg <| Subject.storeEffect message
   , sendToSelf = \msg -> sendMessage (ExerciseMsg msg)
   , finished = sendMessage Finished
   , listen = \messageHandler ->
@@ -290,7 +244,7 @@ observeActions config =
 sendCommand : Config msg -> Cmd msg -> Cmd (Msg msg)
 sendCommand config cmd =
   Cmd.batch
-    [ Cmd.map ProgramMsg cmd
+    [ Cmd.map (SubjectMsg << Subject.programMsgTagger) cmd
     , config.send Step.programCommand
     ]
 
@@ -311,16 +265,14 @@ subscriptions config model =
         Ready ->
           Sub.batch
           [ config.listen ReceivedMessage
-          , runModel.subject.subscriptions runModel.programModel
-              |> Sub.map ProgramMsg
+          , Subject.subscriptions (subjectActions config) runModel.subjectModel
           ]
         Initializing ->
           Initialize.subscriptions (initializeActions config) runModel.initializeModel
         Exercising ->
           Sub.batch
           [ Exercise.subscriptions (exerciseActions config) runModel.exerciseModel
-          , runModel.subject.subscriptions runModel.programModel
-              |> Sub.map ProgramMsg
+          , Subject.subscriptions (subjectActions config) runModel.subjectModel
           ]
         Observing ->
           Observe.subscriptions (observeActions config) runModel.observeModel
@@ -328,9 +280,9 @@ subscriptions config model =
 
 onUrlRequest : UrlRequest -> (Msg msg)
 onUrlRequest =
-  OnUrlRequest
+  SubjectMsg << Subject.urlRequestHandler
 
 
 onUrlChange : Url -> (Msg msg)
 onUrlChange =
-  OnUrlChange
+  SubjectMsg << Subject.urlChangeHandler

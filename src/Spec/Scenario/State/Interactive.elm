@@ -6,9 +6,8 @@ import Spec.Setup.Internal as Internal exposing (Subject)
 import Spec.Scenario.State as State exposing (Msg(..), Actions)
 import Spec.Message as Message exposing (Message)
 import Spec.Step.Message as Message
-import Spec.Scenario.State.NavigationHelpers exposing (..)
+import Spec.Navigator.Internal exposing (..)
 import Browser exposing (Document)
-import Json.Decode as Json
 
 
 type alias Model model msg =
@@ -101,14 +100,10 @@ subscriptions model =
 
 handleLocationAssigned : Actions msg programMsg -> Model model programMsg -> Message -> ( State.Model msg programMsg, Cmd msg )
 handleLocationAssigned actions interactiveModel message =
-  case Message.decode Json.string message of
-    Ok location ->
-      case interactiveModel.subject.navigationConfig of
-        Just _ ->
-          ( interactive interactiveModel, Cmd.none )
-        Nothing ->
-          ( interactive { interactiveModel | subject = navigatedSubject location interactiveModel.subject }
-          , doAndRender actions Cmd.none
-          )
+  case Message.decode navigationAssignmentDecoder message of
+    Ok navAssignment ->
+      ( interactive { interactiveModel | subject = navigatedSubject navAssignment.href interactiveModel.subject }
+      , doAndRender actions Cmd.none
+      )
     Err _ ->
       ( interactive interactiveModel, Cmd.none )

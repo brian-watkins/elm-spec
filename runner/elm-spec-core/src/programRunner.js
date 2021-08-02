@@ -119,6 +119,11 @@ module.exports = class ProgramRunner extends EventEmitter {
       case "complete":
         this.emit("complete", true)
         break
+      case "prepare":
+        this.timer.whenStackIsComplete(() => {
+          this.continueToNextStep(out)
+        })
+        break
     }
   }
 
