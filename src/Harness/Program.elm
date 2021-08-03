@@ -48,7 +48,6 @@ type alias Exports model msg =
 type Msg msg
   = SubjectMsg (Subject.Msg msg)
   | InitializeMsg Initialize.Msg
-  | RunInitialCommand
   | ExerciseMsg (Exercise.Msg msg)
   | ObserveMsg Observe.Msg
   | Finished
@@ -132,6 +131,10 @@ update config exports msg model =
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
         update config exports (ReceivedMessage message) (Waiting { key = runModel.key })
+      else if Message.is "_harness" "start" message then
+        Exercise.initForInitialCommand (exerciseActions config) (Subject.initialCommand runModel.subjectModel)
+          |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+          |> Tuple.mapFirst Running
       else if Message.is "_harness" "observe" message then
         Observe.init (observeActions config) (expectationsRepo exports.expectations) Observe.defaultModel message
           |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
@@ -161,11 +164,6 @@ update config exports msg model =
     ( Running runModel, ObserveMsg observeMsg ) ->
       Observe.update (observeActions config) (Subject.programContext runModel.subjectModel) observeMsg runModel.observeModel
         |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
-        |> Tuple.mapFirst Running
-
-    ( Running runModel, RunInitialCommand ) ->
-      Exercise.initForInitialCommand (exerciseActions config) (Subject.initialCommand runModel.subjectModel)
-        |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
         |> Tuple.mapFirst Running
 
     ( Running runModel, Finished ) ->
@@ -214,7 +212,7 @@ subjectActions config =
 initializeActions : Config msg -> Initialize.Actions (Msg msg)
 initializeActions config =
   { send = config.send
-  , finished = sendMessage RunInitialCommand
+  , finished = sendMessage Finished
   , listen = \messageHandler ->
       config.listen (\message ->
         messageHandler message

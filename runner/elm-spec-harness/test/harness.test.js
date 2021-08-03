@@ -11,6 +11,7 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
     expectPassingTest(t, testOutput, "it finds the updated name", "a test passes that involves sending a message to the app")
     expectPassingTest(t, testOutput, "it runs the initial command", "a test passes that runs an initial command")
+    expectPassingTest(t, testOutput, "it receives the initial port command", "a test passes that sends an initial port command")
     expectPassingTest(t, testOutput, "it finds the name updated after the message is received", "a test passes that sends a message to the app in response to receiving one")
     expectPassingTest(t, testOutput, "it observes that the stubbed response was processed", "a test passes that requires the context to be configured")
     t.end()

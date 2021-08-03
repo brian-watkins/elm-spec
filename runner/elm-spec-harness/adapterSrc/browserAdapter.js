@@ -53,6 +53,18 @@ window._elm_spec.startHarness = (options) => {
         })
       })
     },
+    start: async () => {
+      return new Promise((resolve) => {
+        runner.once("complete", function(shouldContinue) {
+          resolve()
+        })
+        sendToProgram({
+          home: "_harness",
+          name: "start",
+          body: null
+        })
+      })
+    },
     observe: async (name, expected) => {
       console.log("Observing", name, expected)
       return new Promise((resolve) => {

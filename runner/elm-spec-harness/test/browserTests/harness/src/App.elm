@@ -72,6 +72,13 @@ init initialAttributes =
   )
 
 
+initWithPort : List String -> ( Model, Cmd Msg )
+initWithPort attributes =
+  ( defaultModel
+  , inform { attributes = attributes }
+  )
+
+
 initForNavigation : Url -> Navigation.Key -> ( Model, Cmd Msg )
 initForNavigation url key =
   let

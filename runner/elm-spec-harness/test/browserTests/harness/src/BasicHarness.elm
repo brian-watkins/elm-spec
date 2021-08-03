@@ -74,6 +74,14 @@ setupWithInitialCommand attributes =
     |> Stub.serve [ stuffStub <| Encode.object [ ("thing", Encode.string <| String.join ", " attributes), ("count", Encode.int <| List.length attributes) ] ]
 
 
+setupWithInitialPortCommand : List String -> Setup App.Model App.Msg
+setupWithInitialPortCommand attributes =
+  Setup.init (App.initWithPort attributes)
+    |> Setup.withUpdate App.update
+    |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
+
+
 setupWithInitialLocation : String -> Setup App.Model App.Msg
 setupWithInitialLocation location =
   Setup.initForApplication App.initForNavigation
@@ -105,6 +113,7 @@ setups =
   , ( "withName", use setupConfigDecoder <| toSetup setupWithName )
   , ( "withStub", use Json.value <| toSetup setupWithStub )
   , ( "withInitialCommand", use (Json.list Json.string) <| toSetup setupWithInitialCommand )
+  , ( "withInitialPortCommand", use (Json.list Json.string) <| toSetup setupWithInitialPortCommand )
   , ( "withLocation", use Json.string <| toSetup setupWithInitialLocation )
   ]
 
