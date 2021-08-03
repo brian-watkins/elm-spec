@@ -1,6 +1,6 @@
 module BasicHarness exposing (..)
 
-import Harness exposing (Expectation, expect)
+import Harness exposing (Expectation, expect, use, run, toRun, observe, toObserve, setup, toSetup)
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step exposing (Step)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining)
@@ -32,8 +32,8 @@ setupConfigDecoder=
     |> Json.map SetupConfiguration
 
 
-defaultSetup : Json.Value -> Setup App.Model App.Msg
-defaultSetup _ =
+defaultSetup : Setup App.Model App.Msg
+defaultSetup =
   Setup.initWithModel App.defaultModel
     |> Setup.withUpdate App.update
     |> Setup.withView App.view
@@ -101,13 +101,12 @@ defaultUrl =
 
 
 setups =
-  Dict.fromList
-    [ ( "default", Harness.exposeSetup Json.value defaultSetup )
-    , ( "withName", Harness.exposeSetup setupConfigDecoder setupWithName )
-    , ( "withStub", Harness.exposeSetup Json.value setupWithStub )
-    , ( "withInitialCommand", Harness.exposeSetup (Json.list Json.string) setupWithInitialCommand )
-    , ( "withLocation", Harness.exposeSetup Json.string setupWithInitialLocation )
-    ]
+  [ ( "default", setup defaultSetup )
+  , ( "withName", use setupConfigDecoder <| toSetup setupWithName )
+  , ( "withStub", use Json.value <| toSetup setupWithStub )
+  , ( "withInitialCommand", use (Json.list Json.string) <| toSetup setupWithInitialCommand )
+  , ( "withLocation", use Json.string <| toSetup setupWithInitialLocation )
+  ]
 
 
 -- Steps
@@ -118,45 +117,44 @@ clickMultiple times =
     ++ (List.repeat times Event.click)
 
 
-inform _ =
+inform =
   [ Markup.target << by [ id "inform-button" ]
   , Event.click
   ]
 
 
-requestStuff _ =
+requestStuff =
   [ Markup.target << by [ id "send-request" ]
   , Event.click
   ]
 
 
-gotoAwesome _ =
+gotoAwesome =
   [ Markup.target << by [ id "awesome-location" ]
   , Event.click
   ]
 
 
-clickLinkToChangeLocation _ =
+clickLinkToChangeLocation =
   [ Markup.target << by [ id "super-link" ]
   , Event.click
   ]
 
 
-clickLinkToLeaveApp _ =
+clickLinkToLeaveApp =
   [ Markup.target << by [ id "external-link" ]
   , Event.click
   ]
 
 
 steps =
-  Dict.fromList
-    [ ( "click", Harness.exposeSteps Json.int clickMultiple )
-    , ( "inform", Harness.exposeSteps Json.value inform )
-    , ( "requestStuff", Harness.exposeSteps Json.value requestStuff )
-    , ( "gotoAwesome", Harness.exposeSteps Json.value gotoAwesome )
-    , ( "clickLinkToChangeLocation", Harness.exposeSteps Json.value clickLinkToChangeLocation )
-    , ( "clickLinkToLeaveApp", Harness.exposeSteps Json.value clickLinkToLeaveApp )
-    ]
+  [ ( "click", use Json.int <| toRun clickMultiple )
+  , ( "inform", run inform )
+  , ( "requestStuff", run requestStuff )
+  , ( "gotoAwesome", run gotoAwesome )
+  , ( "clickLinkToChangeLocation", run clickLinkToChangeLocation )
+  , ( "clickLinkToLeaveApp", run clickLinkToLeaveApp )
+  ]
 
 
 -- Observers
@@ -208,16 +206,15 @@ pageText expected =
 
 
 observers =
-  Dict.fromList
-    [ ("title", Harness.expose Json.string titleObserver)
-    , ("name", Harness.expose Json.string nameObserver)
-    , ("attributes", Harness.expose (Json.list Json.string) attributesObserver)
-    , ("count", Harness.expose Json.string countObserver)
-    , ("stuff", Harness.expose Json.string stuffObserver)
-    , ("location", Harness.expose Json.string locationObserver)
-    , ("pageText", Harness.expose Json.string pageText)
-    ]
+  [ ("title", use Json.string <| toObserve titleObserver)
+  , ("name", use Json.string <| toObserve nameObserver)
+  , ("attributes", use (Json.list Json.string) <| toObserve attributesObserver)
+  , ("count", use Json.string <| toObserve countObserver)
+  , ("stuff", use Json.string <| toObserve stuffObserver)
+  , ("location", use Json.string <| toObserve locationObserver)
+  , ("pageText", use Json.string <| toObserve pageText)
+  ]
 
 
 main =
-  Runner.harness setups steps observers
+  Runner.harness <| setups ++ steps ++ observers

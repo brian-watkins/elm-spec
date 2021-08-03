@@ -6,6 +6,12 @@ import Spec.Step exposing (Step)
 import Spec.Setup exposing (Setup)
 
 
+type HarnessExport model msg
+  = SetupExport (Json.Value -> Setup model msg)
+  | StepsExport (Json.Value -> List (Step model msg))
+  | ExpectationExport (Json.Value -> Expectation model)
+
+
 type alias ExposedExpectation model =
   Json.Value -> Expectation model
 

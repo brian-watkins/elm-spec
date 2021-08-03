@@ -4,6 +4,7 @@ module Harness.Program exposing
   , Model
   , Flags
   , Config
+  , Exports
   , update
   , view
   , subscriptions
@@ -25,15 +26,22 @@ import Harness.Exercise as Exercise
 import Harness.Subject as Subject
 import Harness.Types exposing (..)
 import Url exposing (Url)
-import Html exposing (Html)
-import Dict exposing (Dict)
+import Html
 import Task
+import Dict exposing (Dict)
 import Browser.Navigation as Navigation
 
 
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
+  }
+
+
+type alias Exports model msg =
+  { setups: Dict String (ExposedSetup model msg)
+  , steps: Dict String (ExposedSteps model msg)
+  , expectations: Dict String (ExposedExpectation model)
   }
 
 
@@ -108,12 +116,12 @@ view model =
       Subject.view SubjectMsg runModel.subjectModel
 
 
-update : Config msg -> Dict String (ExposedSetup model msg) -> Dict String (ExposedSteps model msg) -> Dict String (ExposedExpectation model) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-update config setups steps expectations msg model =
+update : Config msg -> Exports model msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update config exports msg model =
   case ( model, msg ) of
     ( Waiting waitingModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
-        Initialize.init (initializeActions config) (setupsRepo setups) waitingModel.key message
+        Initialize.init (initializeActions config) (setupsRepo exports.setups) waitingModel.key message
           |> Tuple.mapFirst (generateRunModel waitingModel.key)
           |> Tuple.mapFirst Running
       else
@@ -123,13 +131,13 @@ update config setups steps expectations msg model =
 
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "setup" message then
-        update config setups steps expectations (ReceivedMessage message) (Waiting { key = runModel.key })
+        update config exports (ReceivedMessage message) (Waiting { key = runModel.key })
       else if Message.is "_harness" "observe" message then
-        Observe.init (observeActions config) (expectationsRepo expectations) Observe.defaultModel message
+        Observe.init (observeActions config) (expectationsRepo exports.expectations) Observe.defaultModel message
           |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
           |> Tuple.mapFirst Running
       else if Message.is "_harness" "run" message then
-        Exercise.init (exerciseActions config) (stepsRepo steps) Exercise.defaultModel message
+        Exercise.init (exerciseActions config) (stepsRepo exports.steps) Exercise.defaultModel message
           |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
           |> Tuple.mapFirst Running
       else
