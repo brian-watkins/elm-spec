@@ -120,7 +120,7 @@ update : Config msg -> Exports model msg -> Msg msg -> Model model msg -> ( Mode
 update config exports msg model =
   case ( model, msg ) of
     ( Waiting waitingModel, ReceivedMessage message ) ->
-      if Message.is "_harness" "setup" message then
+      if Message.is "_harness" "start" message then
         Initialize.init (initializeActions config) (setupsRepo exports.setups) waitingModel.key message
           |> Tuple.mapFirst (generateRunModel waitingModel.key)
           |> Tuple.mapFirst Running
@@ -130,7 +130,7 @@ update config exports msg model =
         ( model, Cmd.none )
 
     ( Running runModel, ReceivedMessage message ) ->
-      if Message.is "_harness" "setup" message then
+      if Message.is "_harness" "start" message then
         update config exports (ReceivedMessage message) (Waiting { key = runModel.key })
       else if Message.is "_harness" "observe" message then
         Observe.init (observeActions config) (expectationsRepo exports.expectations) Observe.defaultModel message

@@ -1,8 +1,8 @@
 
 let wrapper = window._elm_spec.startHarness()
 
-const setup = async (name, config) => {
-  await wrapper.setup(name, config)
+const start = async (name, config) => {
+  await wrapper.start(name, config)
 }
 
 const stop = () => {
@@ -23,7 +23,7 @@ const getElmApp = () => {
 
 module.exports = {
   getElmApp,
-  setup,
+  start,
   stop,
   observe,
   runSteps

@@ -36,15 +36,14 @@ window._elm_spec.startHarness = (options) => {
 
   return {
     app: proxyApp,
-    setup: async (name, config = null) => {
-      console.log("Setup", name)
+    start: async (name, config = null) => {
       return new Promise((resolve) => {
         runner.once("complete", function(shouldContinue) {
           resolve()
         })
         sendToProgram({
           home: "_harness",
-          name: "setup",
+          name: "start",
           body: {
             setup: name,
             config
