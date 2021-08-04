@@ -38,7 +38,6 @@ window._elm_spec.startHarness = (options) => {
     app: proxyApp,
     setup: async (name, config = null) => {
       console.log("Setup", name)
-      proxyApp.resetPorts()
       return new Promise((resolve) => {
         runner.once("complete", function(shouldContinue) {
           resolve()
@@ -53,17 +52,8 @@ window._elm_spec.startHarness = (options) => {
         })
       })
     },
-    start: async () => {
-      return new Promise((resolve) => {
-        runner.once("complete", function(shouldContinue) {
-          resolve()
-        })
-        sendToProgram({
-          home: "_harness",
-          name: "start",
-          body: null
-        })
-      })
+    stop: () => {
+      proxyApp.resetPorts()
     },
     observe: async (name, expected) => {
       console.log("Observing", name, expected)

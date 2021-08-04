@@ -5,8 +5,8 @@ const setup = async (name, config) => {
   await wrapper.setup(name, config)
 }
 
-const start = async () => {
-  await wrapper.start()
+const stop = () => {
+  wrapper.stop()
 }
 
 const observe = async (name, expected) => {
@@ -24,7 +24,7 @@ const getElmApp = () => {
 module.exports = {
   getElmApp,
   setup,
-  start,
+  stop,
   observe,
   runSteps
 }
