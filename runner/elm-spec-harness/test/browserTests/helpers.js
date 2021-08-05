@@ -1,10 +1,9 @@
 import { onFinish } from "tape"
-import * as runner from "../../src/HarnessRunner"
 import test from "tape"
-import * as harness from "../../src/HarnessRunner"
+import { startHarness } from "../../src/HarnessRunner"
 
-export async function observe(t, name, actual, message) {
-  const observer = await runner.observe(name, actual)
+export async function observe(t, harness, name, actual, message) {
+  const observer = await harness.observe(name, actual)
   if (observer.summary === "ACCEPTED") {
     t.pass(message)
   } else {
@@ -13,23 +12,31 @@ export async function observe(t, name, actual, message) {
   }
 }
 
-export async function harnessTest(name, testHandler) {
-  test(name, async function(t) {
-    t.teardown(() => {
-      harness.stop()
+
+export function harnessTestGenerator(harnessModule) {
+  const harnessTest = (name, testHandler) => {
+    test(name, async function (t) {
+      const harness = startHarness(harnessModule)
+      t.teardown(() => {
+        harness.stop()
+      })
+      await testHandler(harness, t)
     })
-    await testHandler(t)
-  })
+  }
+
+  harnessTest.only = (name, testHandler) => {
+    test.only(name, async function (t) {
+      const harness = startHarness(harnessModule)
+      t.teardown(() => {
+        harness.stop()
+      })
+      await testHandler(harness, t)
+    })
+  }
+  
+  return harnessTest
 }
 
-harnessTest.only = (name, testHandler) => {
-  test.only(name, async function(t) {
-    t.teardown(() => {
-      harness.stop()
-    })
-    await testHandler(t)
-  })
-}
 
 onFinish(() => {
   console.log("END")

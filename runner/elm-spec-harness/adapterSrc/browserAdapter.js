@@ -9,12 +9,17 @@ window.document.head.appendChild(base)
 
 const elmContext = new ElmContext(window)
 
-window._elm_spec.startHarness = (options) => {
-  // Maybe we need to specify which harness to run somehow?
+window._elm_spec.startHarness = (name) => {
   const programReferences = ProgramReference.findAll(Elm)
 
+  const programReference = programReferences.find((ref) => ref.moduleName.join(".") === name)
+
+  // NOTE: the programReference could be undefined ...
+
   // here we need to initialize the harness program
-  const program = programReferences[0].program
+  elmContext.timer.reset()
+  const program = programReference.program
+
   app = program.init({
     flags: {}
   })
@@ -35,7 +40,7 @@ window._elm_spec.startHarness = (options) => {
   const proxyApp = createProxyApp(app)
 
   return {
-    app: proxyApp,
+    getElmApp: () => proxyApp,
     start: async (name, config = null) => {
       return new Promise((resolve) => {
         runner.once("complete", function(shouldContinue) {
@@ -55,7 +60,6 @@ window._elm_spec.startHarness = (options) => {
       proxyApp.resetPorts()
     },
     observe: async (name, expected) => {
-      console.log("Observing", name, expected)
       return new Promise((resolve) => {
         let observation
         runner.once("observation", function(obs) {
@@ -75,7 +79,6 @@ window._elm_spec.startHarness = (options) => {
       })
     },
     runSteps: async (name, config = null) => {
-      console.log("Running steps", name)
       return new Promise((resolve) => {
         runner.once("complete", function(shouldContinue) {
           resolve()

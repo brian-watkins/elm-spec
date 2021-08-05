@@ -1,4 +1,4 @@
-module BasicHarness exposing (..)
+module Basic.Harness exposing (..)
 
 import Harness exposing (Expectation, expect, use, run, toRun, observe, toObserve, setup, toSetup)
 import Spec.Setup as Setup exposing (Setup)
@@ -10,14 +10,12 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Http.Route exposing (get)
 import Spec.Http.Stub as Stub
-import Spec.Navigator as Navigator
 import Extra exposing (equals)
 import Runner
 import Dict
 import Json.Decode as Json
 import Json.Encode as Encode
-import Url exposing (Url)
-import App
+import Basic.App as App
 
 -- Setup
 
@@ -82,39 +80,12 @@ setupWithInitialPortCommand attributes =
     |> Setup.withSubscriptions App.subscriptions
 
 
-setupWithInitialLocation : String -> Setup App.Model App.Msg
-setupWithInitialLocation location =
-  Setup.initForApplication App.initForNavigation
-    |> Setup.withUpdate App.update
-    |> Setup.withView App.view
-    |> Setup.withSubscriptions App.subscriptions
-    |> Setup.forNavigation { onUrlRequest = App.OnUrlRequest, onUrlChange = App.OnUrlChange }
-    |> Setup.withLocation (urlFrom location)
-
-
-urlFrom : String -> Url
-urlFrom location =
-  Url.fromString location
-    |> Maybe.withDefault defaultUrl
-
-
-defaultUrl =
-  { protocol = Url.Http
-  , host = "blah.com"
-  , port_ = Nothing
-  , path = "/"
-  , query = Nothing
-  , fragment = Nothing
-  }
-
-
 setups =
   [ ( "default", setup defaultSetup )
   , ( "withName", use setupConfigDecoder <| toSetup setupWithName )
   , ( "withStub", use Json.value <| toSetup setupWithStub )
   , ( "withInitialCommand", use (Json.list Json.string) <| toSetup setupWithInitialCommand )
   , ( "withInitialPortCommand", use (Json.list Json.string) <| toSetup setupWithInitialPortCommand )
-  , ( "withLocation", use Json.string <| toSetup setupWithInitialLocation )
   ]
 
 
@@ -138,31 +109,10 @@ requestStuff =
   ]
 
 
-gotoAwesome =
-  [ Markup.target << by [ id "awesome-location" ]
-  , Event.click
-  ]
-
-
-clickLinkToChangeLocation =
-  [ Markup.target << by [ id "super-link" ]
-  , Event.click
-  ]
-
-
-clickLinkToLeaveApp =
-  [ Markup.target << by [ id "external-link" ]
-  , Event.click
-  ]
-
-
 steps =
   [ ( "click", use Json.int <| toRun clickMultiple )
   , ( "inform", run inform )
   , ( "requestStuff", run requestStuff )
-  , ( "gotoAwesome", run gotoAwesome )
-  , ( "clickLinkToChangeLocation", run clickLinkToChangeLocation )
-  , ( "clickLinkToLeaveApp", run clickLinkToLeaveApp )
   ]
 
 
@@ -201,27 +151,12 @@ stuffObserver actual =
     |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 actual)
 
 
-locationObserver : String -> Expectation App.Model
-locationObserver expected =
-  Navigator.observe
-    |> expect (Navigator.location <| equals expected)
-
-
-pageText : String -> Expectation App.Model
-pageText expected =
-  Markup.observeElement
-    |> Markup.query << by [ tag "body" ]
-    |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 expected)
-
-
 observers =
   [ ("title", use Json.string <| toObserve titleObserver)
   , ("name", use Json.string <| toObserve nameObserver)
   , ("attributes", use (Json.list Json.string) <| toObserve attributesObserver)
   , ("count", use Json.string <| toObserve countObserver)
   , ("stuff", use Json.string <| toObserve stuffObserver)
-  , ("location", use Json.string <| toObserve locationObserver)
-  , ("pageText", use Json.string <| toObserve pageText)
   ]
 
 

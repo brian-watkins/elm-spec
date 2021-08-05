@@ -114,7 +114,7 @@ subscriptions actions model =
             _ ->
               Debug.todo "Unexpected scenario state message in Harness Program!"
         else
-          Debug.todo "Unknown message received in Initialize state!"
+          Debug.todo <| "Unknown message received in Initialize state!" ++ message.home ++ "/" ++ message.name
       )
     Configure _ ->
       actions.listen (\message -> 
