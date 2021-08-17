@@ -28,7 +28,7 @@ const runTestInBrowser = async () => {
 
   // then load the compiled js (also loads the browser adapter)
   const harness = new Harness()
-  const compiledHarness = harness.compile("./src/**/*Harness.elm")
+  const compiledHarness = harness.compile("./src/**/Harness.elm")
   await page.evaluate(compiledHarness)
 
   // load/start the test in playwright

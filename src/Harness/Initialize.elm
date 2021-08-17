@@ -12,6 +12,7 @@ module Harness.Initialize exposing
 import Spec.Setup.Internal exposing (Subject, initializeSubject)
 import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
+import Spec.Step.Message as Message
 import Harness.Types exposing (ExposedSetup)
 import Json.Decode as Json
 import Browser.Navigation as Navigation
@@ -41,6 +42,7 @@ harnessSubject model =
 type Msg
   = ResetComplete
   | ConfigureComplete
+  | ReceivedMessage Message
 
 -- This has to do several things
 -- 1. (DONE) call startScenario to reset the context
@@ -82,6 +84,13 @@ init actions setups maybeKey message =
 update : Actions msg -> Msg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
 update actions msg model =
   case ( model, msg ) of
+    ( ResetContext _, ReceivedMessage message ) ->
+      if Message.is "start" "flush-animation-tasks" message then
+        ( model
+        , actions.send Message.runToNextAnimationFrame
+        )
+      else
+        ( model, Cmd.none )
     ( ResetContext subject, ResetComplete ) ->
       ( Configure subject
       , configureWith actions subject.configureEnvironment
@@ -114,12 +123,12 @@ subscriptions actions model =
             _ ->
               Debug.todo "Unexpected scenario state message in Harness Program!"
         else
-          Debug.todo <| "Unknown message received in Initialize state!" ++ message.home ++ "/" ++ message.name
+          ReceivedMessage message
       )
     Configure _ ->
       actions.listen (\message -> 
         if Message.is "_configure" "complete" message then
           ConfigureComplete
         else
-          Debug.todo "Unknown message received in Initialize state!"
+          Debug.todo <| "Unknown message received in Initialize state! " ++ message.home ++ "/" ++ message.name
       )

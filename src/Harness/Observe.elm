@@ -39,6 +39,7 @@ type alias Actions msg =
   { send : Message -> Cmd msg
   , finished: Cmd msg
   , listen: (Message -> Msg) -> Sub msg
+  , sendToSelf: Msg -> Cmd msg
   }
 
 
@@ -59,7 +60,7 @@ init actions expectations model message =
     case Maybe.map2 (<|) maybeExpectation maybeExpected of
       Just expectation ->
         ( { model | expectation = Just expectation }
-        , actions.send <| Message.prepareHarnessForAction
+        , actions.sendToSelf Continue
         )
       Nothing ->
         Debug.todo "Could not parse the observation!"

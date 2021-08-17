@@ -17,7 +17,6 @@ window._elm_spec.startHarness = (name) => {
   // NOTE: the programReference could be undefined ...
 
   // here we need to initialize the harness program
-  elmContext.timer.reset()
   const program = programReference.program
 
   app = program.init({
@@ -42,6 +41,7 @@ window._elm_spec.startHarness = (name) => {
   return {
     getElmApp: () => proxyApp,
     start: async (name, config = null) => {
+      elmContext.timer.reset()
       return new Promise((resolve) => {
         runner.once("complete", function(shouldContinue) {
           resolve()

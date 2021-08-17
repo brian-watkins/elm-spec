@@ -142,6 +142,7 @@ update config exports msg model =
           |> Tuple.mapFirst Running
       else
         -- Here we are receiving the start scenario message, which we should stop I think ...
+        -- Note that we are getting other messages too if things are triggered by a port from the JS side ...
         ( model, Cmd.none )
 
     ( Running runModel, SubjectMsg subjectMsg ) ->
@@ -246,6 +247,7 @@ observeActions config =
         messageHandler message
           |> ObserveMsg
       )
+  , sendToSelf = \msg -> sendMessage (ObserveMsg msg)
   }
 
 
