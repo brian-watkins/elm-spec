@@ -21,6 +21,9 @@ const runTestInBrowser = async () => {
       if (message.text() === "END") {
         resolve()
       } else {
+        if (process.env["DEBUG"]) {
+          console.log(message.text())
+        }
         output.push(message.text())
       }
     })
@@ -60,5 +63,10 @@ const serveTests = async () => {
 
 export async function runTests(outputHandler) {
   const testOutput = await runTestInBrowser()
+
+  if (process.env["DEBUG"]) {
+    return
+  }
+
   outputHandler(testOutput)
 }
