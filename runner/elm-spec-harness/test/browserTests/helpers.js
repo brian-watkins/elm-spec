@@ -7,7 +7,7 @@ export async function observe(t, harness, name, actual, message) {
   if (observer.summary === "ACCEPTED") {
     t.pass(message)
   } else {
-    console.log("report", observer.report)
+    console.log("report", JSON.stringify(observer.report))
     t.fail(message)
   }
 }
