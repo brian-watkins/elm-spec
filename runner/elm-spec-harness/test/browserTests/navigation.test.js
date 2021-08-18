@@ -29,5 +29,6 @@ harnessTest("loading an external url", async function(harness, t) {
 harnessTest("loading an external url from a port", async function(harness, t) {
   await harness.start("withLocation", "http://test.com/")
   harness.getElmApp().ports.triggerLocationChange.send("http://fun-place.com/cool.html")
+  await harness.wait()
   await observe(t, harness, "pageText", "http://fun-place.com/cool.html", "the app shows it has navigated to the external page specified by the port")
 })
