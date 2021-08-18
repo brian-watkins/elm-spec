@@ -137,7 +137,11 @@ update config exports msg model =
           |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
           |> Tuple.mapFirst Running
       else if Message.is "_harness" "run" message then
-        Exercise.init (exerciseActions config) (stepsRepo exports.steps) Exercise.defaultModel message
+        Exercise.init (exerciseActions config) (stepsRepo exports.steps) message
+          |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+          |> Tuple.mapFirst Running
+      else if Message.is "_harness" "wait" message then
+        Exercise.wait (exerciseActions config)
           |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
           |> Tuple.mapFirst Running
       else

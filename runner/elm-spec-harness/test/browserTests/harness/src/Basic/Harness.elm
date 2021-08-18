@@ -36,6 +36,12 @@ defaultSetup =
     |> Setup.withUpdate App.update
     |> Setup.withView App.view
     |> Setup.withSubscriptions App.subscriptions
+    |> Stub.serve
+      [ stuffStub <| Encode.object
+        [ ( "thing", Encode.string "apples")
+        , ("count", Encode.int 91)
+        ]
+      ]
 
 
 setupWithName : SetupConfiguration -> Setup App.Model App.Msg

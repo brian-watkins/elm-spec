@@ -5,12 +5,14 @@ module Harness.Exercise exposing
   , defaultModel
   , init
   , initForInitialCommand
+  , wait
   , update
   , subscriptions
   )
 
 import Spec.Message as Message exposing (Message)
 import Harness.Types exposing (..)
+import Harness.Message as Message
 import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
@@ -49,8 +51,8 @@ type alias ExposedStepsRepository model msg =
   }
 
 
-init : Actions msg programMsg -> ExposedStepsRepository model programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )
-init actions steps model message =
+init : Actions msg programMsg -> ExposedStepsRepository model programMsg -> Message -> ( Model model programMsg, Cmd msg )
+init actions steps message =
   let
     maybeSteps = Message.decode (Json.field "steps" Json.string) message
       |> Result.toMaybe
@@ -60,7 +62,7 @@ init actions steps model message =
   in
     case Maybe.map2 (<|) maybeSteps maybeConfig of
       Just stepsToRun ->
-        ( { model | stepsToRun = stepsToRun }
+        ( { defaultModel | stepsToRun = stepsToRun }
         , actions.sendToSelf Continue 
         ) -- This might need to be _harness prepare
         -- Doesn't seem to make a different right now; we need a test to prove we need it I guess
@@ -75,6 +77,13 @@ initForInitialCommand : Actions msg programMsg -> Cmd programMsg -> ( Model mode
 initForInitialCommand actions command =
   ( { defaultModel | stepsToRun = [ \_ -> Step.sendToProgram command ] }
   , actions.sendToSelf Continue
+  )
+
+
+wait : Actions msg programMsg -> ( Model model programMsg, Cmd msg )
+wait actions =
+  ( defaultModel
+  , actions.send Message.waitForActionsToComplete
   )
 
 

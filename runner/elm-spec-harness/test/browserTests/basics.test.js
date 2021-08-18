@@ -21,10 +21,12 @@ harnessTest("the app is reset", async function(harness, t) {
   await observe(t, harness, "count", "0 clicks!", "it resets the app at the beginning of each test")
 })
 
-harnessTest("a message is sent to the app", async function(harness, t) {
+harnessTest("a message is sent to the app that updates the model and runs a command", async function(harness, t) {
   await harness.start("default")
   harness.getElmApp().ports.triggerStuff.send({ name: "Super cool dude" })
+  await harness.wait()
   await observe(t, harness, "name", "Super cool dude", "it finds the updated name")
+  await observe(t, harness, "stuff", "Got apples (91)", "it observes that the request triggered by the port message was processed")
 })
 
 harnessTest("the iniial command sends an HTTP request", async function(harness, t) {

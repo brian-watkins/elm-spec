@@ -43,9 +43,7 @@ window._elm_spec.startHarness = (name) => {
     start: async (name, config = null) => {
       elmContext.timer.reset()
       return new Promise((resolve) => {
-        runner.once("complete", function(shouldContinue) {
-          resolve()
-        })
+        runner.once("complete", resolve)
         sendToProgram({
           home: "_harness",
           name: "start",
@@ -58,6 +56,16 @@ window._elm_spec.startHarness = (name) => {
     },
     stop: () => {
       proxyApp.resetPorts()
+    },
+    wait: async () => {
+      return new Promise((resolve) => {
+        runner.once("complete", resolve)
+        sendToProgram({
+          home: "_harness",
+          name: "wait",
+          body: null
+        })
+      })
     },
     observe: async (name, expected) => {
       return new Promise((resolve) => {
@@ -80,9 +88,7 @@ window._elm_spec.startHarness = (name) => {
     },
     runSteps: async (name, config = null) => {
       return new Promise((resolve) => {
-        runner.once("complete", function(shouldContinue) {
-          resolve()
-        })
+        runner.once("complete", resolve)
         sendToProgram({
           home: "_harness",
           name: "run",

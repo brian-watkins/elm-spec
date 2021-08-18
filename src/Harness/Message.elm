@@ -1,6 +1,6 @@
 module Harness.Message exposing
   ( harnessActionComplete
-  , prepareHarnessForAction
+  , waitForActionsToComplete
   )
 
 import Spec.Message as Message exposing (Message)
@@ -11,6 +11,6 @@ harnessActionComplete =
   Message.for "_harness" "complete"
 
 
-prepareHarnessForAction : Message
-prepareHarnessForAction =
-  Message.for "_harness" "prepare"
+waitForActionsToComplete : Message
+waitForActionsToComplete =
+  Message.for "_harness" "wait"

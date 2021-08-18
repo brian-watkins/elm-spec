@@ -91,7 +91,7 @@ update msg model =
     CounterClicked ->
       ( { model | clicks = model.clicks + 1 }, Cmd.none )
     Triggered message ->
-      ( { model | name = message.name }, Cmd.none )
+      ( { model | name = message.name }, getFakeStuff )
     InformClicked ->
       ( model, inform { attributes = "awesome" :: model.attributes } )
     SendRequest ->
