@@ -44,16 +44,6 @@ type Msg
   | ConfigureComplete
   | ReceivedMessage Message
 
--- This has to do several things
--- 1. (DONE) call startScenario to reset the context
--- 2. do something with flushing animation tasks I think
--- 3. (DONE) Initialize the setup
--- 4. Report on failure if necessary
--- 4. (DONE) Configure the context for the setup
--- 5. Send and wait for the initial command (this is done in the exercise state, called after this is finished)
-
--- Basically we will need a kind of state machine inside this state, since sending Continue is
--- how we know to go to the next step each time
 
 type alias ExposedSetupRepository model programMsg =
   { get: String -> Maybe (ExposedSetup model programMsg)
