@@ -1,5 +1,5 @@
 const EventEmitter = require('events')
-const ProgramRunner = require('./programRunner')
+const SpecRunner = require('./specRunner')
 const ProgramReference = require('./programReference')
 const { report, line } = require('./report')
 
@@ -89,7 +89,7 @@ class SuiteRunner extends EventEmitter {
       return null
     }
 
-    const error = ProgramRunner.hasElmSpecPorts(app)
+    const error = SpecRunner.hasElmSpecPorts(app)
     if (error) {
       this.reporter.error(error)
       return null
@@ -99,7 +99,7 @@ class SuiteRunner extends EventEmitter {
   }
 
   runApp(app, modulePath, runNextSpec) {
-    new ProgramRunner(app, this.context, this.options)
+    new SpecRunner(app, this.context, this.options)
       .on("observation", (obs) => {
         const observation = Object.assign(obs, { modulePath })
         this.updateSummary(observation)

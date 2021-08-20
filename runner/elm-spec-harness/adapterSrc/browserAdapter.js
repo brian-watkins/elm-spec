@@ -1,5 +1,5 @@
 const ElmContext = require('elm-spec-core/src/elmContext')
-const ProgramRunner = require('elm-spec-core/src/programRunner')
+const HarnessRunner = require('elm-spec-core/src/harnessRunner')
 const ProgramReference = require('elm-spec-core/src/programReference')
 const { createProxyApp } = require('./ProxyApp')
 
@@ -24,7 +24,7 @@ window._elm_spec.startHarness = (name) => {
   })
 
   // then call the program runner with the app
-  const runner = new ProgramRunner(app, elmContext, {})
+  const runner = new HarnessRunner(app, elmContext, {})
   runner
     .on("error", (error) => {
       console.log("Error", error)

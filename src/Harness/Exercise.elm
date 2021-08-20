@@ -12,7 +12,6 @@ module Harness.Exercise exposing
 
 import Spec.Message as Message exposing (Message)
 import Harness.Types exposing (..)
-import Harness.Message as Message
 import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
@@ -83,7 +82,7 @@ initForInitialCommand actions command =
 wait : Actions msg programMsg -> ( Model model programMsg, Cmd msg )
 wait actions =
   ( defaultModel
-  , actions.send Message.waitForActionsToComplete
+  , actions.send Message.stepComplete
   )
 
 

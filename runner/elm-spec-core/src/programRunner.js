@@ -9,7 +9,6 @@ const { report, line } = require('./report')
 
 const ELM_SPEC_OUT = "elmSpecOut"
 const ELM_SPEC_IN = "elmSpecIn"
-const ELM_SPEC_PICK = "elmSpecPick"
 
 module.exports = class ProgramRunner extends EventEmitter {
   static hasElmSpecPorts(app) {
@@ -68,23 +67,11 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
 
     this.app.ports[ELM_SPEC_OUT].subscribe(messageHandler)
-    this.stopHandlingMessages = () => { this.app.ports[ELM_SPEC_OUT].unsubscribe(messageHandler) }
-
-    setTimeout(() => {
-      this.startSuite()
-    }, 0)
-  }
-
-  startSuite() {
-    const tags = this.app.ports[ELM_SPEC_PICK] ? [ "_elm_spec_pick" ] : []
-    this.app.ports[ELM_SPEC_IN].send(this.specStateMessage("start", { tags }))
+    return () => { this.app.ports[ELM_SPEC_OUT].unsubscribe(messageHandler) }
   }
 
   handleMessage(specMessage, out) {
     switch (specMessage.home) {
-      case "_spec":
-        this.handleSpecEvent(specMessage)
-        break
       case "_scenario":
         this.handleScenarioEvent(specMessage, out)
         break
@@ -93,9 +80,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         break
       case "_observer":
         this.handleObserverEvent(specMessage, out)
-        break
-      case "_harness":
-        this.handleHarnessEvent(specMessage, out)
         break
       default:
         const plugin = this.plugins[specMessage.home]
@@ -111,19 +95,6 @@ module.exports = class ProgramRunner extends EventEmitter {
   sendAbortMessage(out) {
     return (reason) => {
       out(this.abort(reason))
-    }
-  }
-
-  handleHarnessEvent(specMessage, out) {
-    switch (specMessage.name) {
-      case "complete":
-        this.emit("complete", true)
-        break
-      case "wait":
-        this.timer.whenStackIsComplete(() => {
-          this.continueToNextStep(out)
-        })
-        break
     }
   }
 
@@ -223,30 +194,6 @@ module.exports = class ProgramRunner extends EventEmitter {
       line("See the documentation for Spec.Time.nextAnimationFrame for more details."),
       line("Set up this scenario with Spec.Time.allowExtraAnimationFrames to ignore this warning.")
     )))
-  }
-
-  handleSpecEvent(specMessage) {
-    switch (specMessage.name) {
-      case "state": {
-        switch (specMessage.body) {
-          case "COMPLETE": {
-            this.context.clearElementMappers()
-            this.emit('complete', true)
-            break
-          }
-          case "FINISHED": {
-            this.emit('complete', false)
-            break
-          }
-        }
-        break    
-      }
-      case "error": {
-        this.stopHandlingMessages()
-        this.emit('error', specMessage.body)
-        break
-      }
-    }
   }
 
   handleScenarioEvent(specMessage, out) {

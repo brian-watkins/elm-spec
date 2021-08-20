@@ -1,5 +1,5 @@
 const SuiteRunner = require('elm-spec-core/src/suiteRunner')
-const ProgramRunner = require('elm-spec-core/src/programRunner')
+const SpecRunner = require('elm-spec-core/src/specRunner')
 const ElmContext = require('elm-spec-core/src/elmContext')
 const ProgramReference = require('elm-spec-core/src/programReference')
 const TestReporter = require('./testReporter')
@@ -62,7 +62,7 @@ const runProgram = (app, context, options, resolve, reject) => {
   let error = null
   let logs = []
 
-  new ProgramRunner(app, context, options || { endOnFailure: false })
+  new SpecRunner(app, context, options || { endOnFailure: false })
       .on('observation', (observation) => {
         observations.push(observation)
       })
