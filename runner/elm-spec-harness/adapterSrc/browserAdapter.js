@@ -18,9 +18,10 @@ window._elm_spec.startHarness = (name) => {
 
   const programReference = programReferences.find((ref) => ref.moduleName.join(".") === name)
 
-  // NOTE: the programReference could be undefined ...
+  if (programReference === undefined) {
+    throw new Error(`Module ${name} does not exist!`)
+  }
 
-  // here we need to initialize the harness program
   const program = programReference.program
 
   app = program.init({

@@ -39,6 +39,11 @@ runTests((testOutput) => {
     t.end()
   })
 
+  test("failures", function(t) {
+    expectPassingTest(t, testOutput, "it throws an exception when the module does not exist", "startHarness throws an Error if the module does not exist")
+    t.end()
+  })
+
 })
 
 const skipTest = (t, output, testName, message) => {
