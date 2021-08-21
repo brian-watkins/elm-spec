@@ -34,6 +34,11 @@ runTests((testOutput) => {
     t.end()
   })
 
+  test('handlers', function(t) {
+    expectPassingTest(t, testOutput, "it handles the rejected observation", "observations are handled")
+    t.end()
+  })
+
 })
 
 const skipTest = (t, output, testName, message) => {

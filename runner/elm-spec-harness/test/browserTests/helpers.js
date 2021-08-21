@@ -1,21 +1,17 @@
 import { onFinish } from "tape"
 import test from "tape"
-import { startHarness } from "../../src/HarnessRunner"
+import { startHarness, onObservation } from "../../src/HarnessRunner"
 
-export async function observe(t, harness, name, actual, message) {
-  const observer = await harness.observe(name, actual)
-  if (observer.summary === "ACCEPTED") {
-    t.pass(message)
-  } else {
-    console.log("report", JSON.stringify(observer.report))
-    t.fail(message)
-  }
+export async function observe(t, harness, name, expected, message) {
+  await harness.observe(name, expected, { t, message })
 }
 
+let rejectedObservations = []
 
 export function harnessTestGenerator(harnessModule) {
   const harnessTest = (name, testHandler) => {
     test(name, async function (t) {
+      rejectedObservations = []
       const harness = startHarness(harnessModule)
       t.teardown(() => {
         harness.stop()
@@ -26,6 +22,7 @@ export function harnessTestGenerator(harnessModule) {
 
   harnessTest.only = (name, testHandler) => {
     test.only(name, async function (t) {
+      rejectedObservations = []
       const harness = startHarness(harnessModule)
       t.teardown(() => {
         harness.stop()
@@ -37,7 +34,18 @@ export function harnessTestGenerator(harnessModule) {
   return harnessTest
 }
 
+onObservation((observation, data) => {
+  if (observation.summary === "ACCEPTED") {
+    data.t.pass(data.message)
+  } else {
+    rejectedObservations.push(observation)
+  }
+})
 
 onFinish(() => {
   console.log("END")
 })
+
+export function getRejectedObservations() {
+  return rejectedObservations
+}

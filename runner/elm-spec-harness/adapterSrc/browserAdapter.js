@@ -9,6 +9,10 @@ window.document.head.appendChild(base)
 
 const elmContext = new ElmContext(window)
 
+window._elm_spec.observationHandler = (observation) => {
+  // do nothing by default
+}
+
 window._elm_spec.startHarness = (name) => {
   const programReferences = ProgramReference.findAll(Elm)
 
@@ -67,13 +71,14 @@ window._elm_spec.startHarness = (name) => {
         })
       })
     },
-    observe: async (name, expected) => {
+    observe: async (name, expected, handlerData) => {
       return new Promise((resolve) => {
         let observation
         runner.once("observation", function(obs) {
           observation = obs
         })
         runner.once("complete", function() {
+          window._elm_spec.observationHandler(observation, handlerData)
           resolve(observation)
         })
         sendToProgram({
