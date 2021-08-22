@@ -155,11 +155,16 @@ update config exports msg model =
             ( waiting runModel
             , config.send <| Message.abortHarness report
             )
-
       else if Message.is "_harness" "run" message then
-        Exercise.init (exerciseActions config) (stepsRepo exports.steps) message
-          |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
-          |> Tuple.mapFirst Running
+        case Exercise.generateSteps (stepsRepo exports.steps) message of
+          Ok steps ->
+            Exercise.init (exerciseActions config) steps
+              |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
+              |> Tuple.mapFirst Running
+          Err report ->
+            ( waiting runModel
+            , config.send <| Message.abortHarness report
+            )
       else if Message.is "_harness" "wait" message then
         Exercise.wait (exerciseActions config)
           |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })

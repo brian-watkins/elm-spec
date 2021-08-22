@@ -15,6 +15,13 @@ harnessTest("setup doesn't exist", async function(harness, t) {
   })
 })
 
+harnessTest("steps don't exist", async function(harness, t) {
+  const scenario = await harness.start("default")
+  await expectRejection(t, () => scenario.runSteps("some-steps-that-do-not-exist"), (message) => {
+    t.equals(message, "No steps have been exposed with the name some-steps-that-do-not-exist", "it rejects the runSteps promise with an error")
+  })
+})
+
 harnessTest("expectation doesn't exist", async function(harness, t) {
   const scenario = await harness.start("default")
   await expectRejection(t, () => scenario.observe("some-expectation-that-does-not-exist"), (message) => {

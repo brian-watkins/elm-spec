@@ -3,6 +3,7 @@ module Harness.Exercise exposing
   , Actions
   , ExposedStepsRepository
   , defaultModel
+  , generateSteps
   , init
   , initForInitialCommand
   , wait
@@ -16,6 +17,7 @@ import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
 import Spec.Message.Internal as Message
+import Spec.Report as Report exposing (Report)
 import Spec.Step.Context exposing (Context)
 import Json.Decode as Json
 
@@ -53,26 +55,26 @@ type alias ExposedStepsRepository model msg =
   }
 
 
-init : Actions msg programMsg -> ExposedStepsRepository model programMsg -> Message -> ( Model model programMsg, Cmd msg )
-init actions steps message =
-  let
-    maybeSteps = Message.decode (Json.field "steps" Json.string) message
-      |> Result.toMaybe
-      |> Maybe.andThen (\observerName -> steps.get observerName)
-    maybeConfig = Message.decode (Json.field "config" Json.value) message
-      |> Result.toMaybe
-  in
-    case Maybe.map2 (<|) maybeSteps maybeConfig of
-      Just stepsToRun ->
-        ( { defaultModel | stepsToRun = stepsToRun }
-        , actions.sendToSelf Continue 
-        ) -- This might need to be _harness prepare
-        -- Doesn't seem to make a different right now; we need a test to prove we need it I guess
-        -- Like, we try to click a button that is revealed only when a port message is received
-        -- , actions.send <| Message.prepareHarnessForAction
-        -- )
-      Nothing ->
-        Debug.todo "Could not find steps!"
+generateSteps : ExposedStepsRepository model programMsg -> Message -> Result Report (List (Step model programMsg))
+generateSteps steps message =
+  Result.map2 Tuple.pair
+    (Message.decode (Json.field "steps" Json.string) message)
+    (Message.decode (Json.field "config" Json.value) message)
+    |> Result.mapError Report.note
+    |> Result.andThen (\(stepName, config) ->
+      case steps.get stepName of
+        Just stepGenerator ->
+          Ok <| stepGenerator config
+        Nothing ->
+          Err <| Report.note <| "No steps have been exposed with the name " ++ stepName
+    )
+
+
+init : Actions msg programMsg -> List (Step model programMsg) -> ( Model model programMsg, Cmd msg )
+init actions steps =
+  ( { defaultModel | stepsToRun = steps }
+  , actions.sendToSelf Continue
+  )
 
 
 initForInitialCommand : Actions msg programMsg -> Cmd programMsg -> ( Model model programMsg, Cmd msg )
