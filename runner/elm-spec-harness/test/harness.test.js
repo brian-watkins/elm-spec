@@ -41,6 +41,7 @@ runTests((testOutput) => {
 
   test("failures", function(t) {
     expectPassingTest(t, testOutput, "it throws an exception when the module does not exist", "startHarness throws an Error if the module does not exist")
+    expectPassingTest(t, testOutput, "it rejects the promise with an error", "harness.start rejects if the setup does not exist")
     t.end()
   })
 

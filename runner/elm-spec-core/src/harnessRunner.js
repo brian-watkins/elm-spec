@@ -21,6 +21,9 @@ module.exports = class HarnessRunner extends ProgramRunner {
       case "complete":
         this.emit("complete", true)
         break
+      case "abort":
+        this.emit("error", specMessage.body)
+        break
     }
   }
 }

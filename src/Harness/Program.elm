@@ -121,11 +121,16 @@ update config exports msg model =
   case ( model, msg ) of
     ( Waiting waitingModel, ReceivedMessage message ) ->
       if Message.is "_harness" "start" message then
-        Initialize.init (initializeActions config) (setupsRepo exports.setups) waitingModel.key message
-          |> Tuple.mapFirst (generateRunModel waitingModel.key)
-          |> Tuple.mapFirst Running
+        case Initialize.generateSubject (setupsRepo exports.setups) waitingModel.key message of
+          Ok subject ->
+            Initialize.init (initializeActions config) subject
+              |> Tuple.mapFirst (generateRunModel waitingModel.key)
+              |> Tuple.mapFirst Running
+          Err report ->
+            ( model
+            , config.send <| Message.abortHarness report
+            )
       else
-        -- Note that here we could get _spec start message ... need to not send that for a harness ...
         -- And we want an error here if you try to run steps or observe without having called setup first
         ( model, Cmd.none )
 

@@ -31,9 +31,6 @@ window._elm_spec.startHarness = (name) => {
   // then call the program runner with the app
   const runner = new HarnessRunner(app, elmContext, {})
   runner
-    .on("error", (error) => {
-      console.log("Error", error)
-    })
     .on("log", (report) => {
       console.log("Log", report)
     })
@@ -47,8 +44,15 @@ window._elm_spec.startHarness = (name) => {
     getElmApp: () => proxyApp,
     start: async (name, config = null) => {
       elmContext.timer.reset()
-      return new Promise((resolve) => {
-        runner.once("complete", resolve)
+      return new Promise((resolve, reject) => {
+        runner.once("complete", () => {
+          runner.removeAllListeners("error")
+          resolve()
+        })
+        runner.once("error", report => {
+          runner.removeAllListeners("complete")
+          reject(report[0].statement)
+        })
         sendToProgram({
           home: "_harness",
           name: "start",

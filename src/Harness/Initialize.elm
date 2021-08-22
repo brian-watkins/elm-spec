@@ -3,16 +3,18 @@ module Harness.Initialize exposing
   , Msg(..)
   , ExposedSetupRepository
   , Actions
+  , generateSubject
   , init
   , update
   , subscriptions
   , harnessSubject
   )
 
-import Spec.Setup.Internal exposing (Subject, initializeSubject)
+import Spec.Setup.Internal exposing (Setup, Subject, initializeSubject)
 import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Step.Message as Message
+import Spec.Report as Report exposing (Report)
 import Harness.Types exposing (ExposedSetup)
 import Json.Decode as Json
 import Browser.Navigation as Navigation
@@ -25,18 +27,20 @@ type alias Actions msg =
   }
 
 
-type Model model msg
-  = ResetContext (Subject model msg)
-  | Configure (Subject model msg)
+type alias Model model msg =
+  { subject: Subject model msg
+  , mode: InitializeMode
+  }
+
+
+type InitializeMode
+  = ResetContext
+  | Configure
 
 
 harnessSubject : Model model msg -> Subject model msg
 harnessSubject model =
-  case model of
-    ResetContext subject ->
-      subject
-    Configure subject ->
-      subject
+  model.subject
 
 
 type Msg
@@ -50,42 +54,53 @@ type alias ExposedSetupRepository model programMsg =
   }
 
 
-init : Actions msg -> ExposedSetupRepository model programMsg -> Maybe Navigation.Key -> Message -> ( Model model programMsg, Cmd msg )
-init actions setups maybeKey message =
-  let
-    maybeSetup = Message.decode (Json.field "setup" Json.string) message
-      |> Result.toMaybe
-      |> Maybe.andThen setups.get
-    maybeConfig = Message.decode (Json.field "config" Json.value) message
-      |> Result.toMaybe
-  in
-    case Maybe.map2 (<|) maybeSetup maybeConfig of
-      Just setup ->
-        case initializeSubject setup maybeKey of
-          Ok subject ->
-            -- note: Is this the best message to send out? Maybe 'configure'? or something?
-            ( ResetContext subject, actions.send Message.startScenario )
-          Err error ->
-            Debug.todo <| "Could not initialize subject: " ++ error
-      Nothing ->
-        Debug.todo "Could not decode setup config!"
+generateSubject : ExposedSetupRepository model programMsg -> Maybe Navigation.Key -> Message -> Result Report (Subject model programMsg)
+generateSubject setups maybeKey message =
+  Result.map2 Tuple.pair
+    ( Message.decode (Json.field "setup" Json.string) message )
+    ( Message.decode (Json.field "config" Json.value) message )
+    |> Result.mapError Report.note
+    |> Result.andThen (tryToGenerateSetup setups)
+    |> Result.andThen (tryToInitializeSubject maybeKey)
+
+
+tryToGenerateSetup : ExposedSetupRepository model msg -> ( String, Json.Value ) -> Result Report (Setup model msg)
+tryToGenerateSetup setups ( setupName, config ) =
+  case setups.get setupName of
+    Just setupGenerator ->
+      Ok <| setupGenerator config
+    Nothing ->
+      Err <| Report.note <| "No setup has been exposed with the name " ++ setupName
+
+
+tryToInitializeSubject : Maybe Navigation.Key -> Setup model msg -> Result Report (Subject model msg)
+tryToInitializeSubject maybeKey setup =
+  initializeSubject setup maybeKey
+    |> Result.mapError Report.note
+
+
+init : Actions msg -> Subject model programMsg -> ( Model model programMsg, Cmd msg )
+init actions subject =
+  ( { subject = subject, mode = ResetContext }
+  , actions.send Message.startScenario
+  )
 
 
 update : Actions msg -> Msg -> Model model programMsg -> ( Model model programMsg, Cmd msg )
 update actions msg model =
-  case ( model, msg ) of
-    ( ResetContext _, ReceivedMessage message ) ->
+  case ( model.mode, msg ) of
+    ( ResetContext, ReceivedMessage message ) ->
       if Message.is "start" "flush-animation-tasks" message then
         ( model
         , actions.send Message.runToNextAnimationFrame
         )
       else
         ( model, Cmd.none )
-    ( ResetContext subject, ResetComplete ) ->
-      ( Configure subject
-      , configureWith actions subject.configureEnvironment
+    ( ResetContext, ResetComplete ) ->
+      ( { model | mode = Configure }
+      , configureWith actions model.subject.configureEnvironment
       )
-    ( Configure _, ConfigureComplete ) ->
+    ( Configure, ConfigureComplete ) ->
       ( model, actions.finished )
     _ ->
       ( model, Cmd.none )
@@ -103,8 +118,8 @@ configureWith actions configMessages =
 
 subscriptions : Actions msg -> Model model programMsg -> Sub msg
 subscriptions actions model =
-  case model of
-    ResetContext _ ->
+  case model.mode of
+    ResetContext ->
       actions.listen (\message -> 
         if Message.is "_scenario" "state" message then
           case Message.decode Json.string message |> Result.withDefault "" of
@@ -115,7 +130,7 @@ subscriptions actions model =
         else
           ReceivedMessage message
       )
-    Configure _ ->
+    Configure ->
       actions.listen (\message -> 
         if Message.is "_configure" "complete" message then
           ConfigureComplete
