@@ -135,11 +135,11 @@ update config exports msg model =
               |> Tuple.mapFirst Running
           Err report ->
             ( model
-            , config.send <| Message.abortHarness report
+            , abortWith config report
             )
       else
         ( model
-        , config.send <| Message.abortHarness <| unknownMessageReport message
+        , abortWith config <| unknownMessageReport message
         )
 
     ( Running runModel, ReceivedMessage message ) ->
@@ -153,7 +153,7 @@ update config exports msg model =
               |> Tuple.mapFirst Running
           Err report ->
             ( waiting runModel
-            , config.send <| Message.abortHarness report
+            , abortWith config report
             )
       else if Message.is "_harness" "run" message then
         case Exercise.generateSteps (stepsRepo exports.steps) message of
@@ -163,7 +163,7 @@ update config exports msg model =
               |> Tuple.mapFirst Running
           Err report ->
             ( waiting runModel
-            , config.send <| Message.abortHarness report
+            , abortWith config report
             )
       else if Message.is "_harness" "wait" message then
         Exercise.wait (exerciseActions config)
@@ -204,11 +204,17 @@ update config exports msg model =
 
     ( Running runModel, Error report ) ->
       ( waiting runModel
-      , config.send <| Message.abortHarness report
+      , abortWith config report
       )
 
     _ ->
       ( model, Cmd.none )
+
+
+abortWith : Config msg -> Report -> Cmd (Msg msg)
+abortWith config report =
+  Message.abortHarness report
+    |> config.send
 
 
 unknownMessageReport : Message -> Report
