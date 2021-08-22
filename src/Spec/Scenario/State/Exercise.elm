@@ -167,12 +167,6 @@ sendComplete actions =
   State.send actions <| Message.stepComplete
 
 
-stepRequest : Message -> Message
-stepRequest message =
-  Message.for "_step" "request"
-    |> Message.withBody (Message.encode message)
-
-
 subscriptions : Model model msg -> Sub msg
 subscriptions model =
   model.subject.subscriptions model.programModel
@@ -220,7 +214,7 @@ handleStepCommand actions exerciseModel command =
       )
     Step.SendRequest message responseHandler ->
       ( exercise { exerciseModel | responseHandler = Just responseHandler }
-      , State.send actions <| stepRequest message
+      , State.send actions <| Message.stepRequest message
       )
     Step.SendCommand cmd ->
       ( exercise exerciseModel

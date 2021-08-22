@@ -153,7 +153,6 @@ update config exports msg model =
           |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
           |> Tuple.mapFirst Running
       else
-        -- Here we are receiving the start scenario message, which we should stop I think ...
         -- Note that we are getting other messages too if things are triggered by a port from the JS side ...
         ( model, Cmd.none )
 

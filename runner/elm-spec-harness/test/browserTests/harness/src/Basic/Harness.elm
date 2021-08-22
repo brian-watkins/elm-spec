@@ -114,11 +114,16 @@ requestStuff =
   , Event.click
   ]
 
+logTitle =
+  [ Markup.log << by [ id "title" ]
+  ]
+
 
 steps =
   [ ( "click", use Json.int <| toRun clickMultiple )
   , ( "inform", run inform )
   , ( "requestStuff", run requestStuff )
+  , ( "logTitle", run logTitle )
   ]
 
 

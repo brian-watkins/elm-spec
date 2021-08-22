@@ -1,6 +1,7 @@
 module Spec.Step.Message exposing
   ( stepMessage
   , stepComplete
+  , stepRequest
   , runToNextAnimationFrame
   )
 
@@ -29,3 +30,7 @@ runToNextAnimationFrame =
   Message.for "_step" "nextAnimationFrame"
 
 
+stepRequest : Message -> Message
+stepRequest message =
+  Message.for "_step" "request"
+    |> Message.withBody (Message.encode message)

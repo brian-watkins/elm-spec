@@ -15,18 +15,21 @@ import Harness.Types exposing (..)
 import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
+import Spec.Message.Internal as Message
 import Spec.Step.Context exposing (Context)
 import Json.Decode as Json
 
 
 type alias Model model programMsg =
   { stepsToRun: List (Step model programMsg)
+  , responseHandler: Maybe (Message -> Step.Command programMsg)
   }
 
 
 defaultModel : Model model programMsg
 defaultModel =
   { stepsToRun = []
+  , responseHandler = Nothing
   }
 
 
@@ -90,12 +93,15 @@ update : Actions msg programMsg -> Context model -> Msg programMsg -> Model mode
 update actions context msg model =
   case msg of
     ReceivedMessage message ->
-      ( model
-      , Cmd.batch
-        [ actions.storeEffect message
-        , actions.send Message.stepComplete
-        ]
-      )
+      if Message.is "_step" "response" message then
+        handleStepResponse actions model message
+      else
+        ( model
+        , Cmd.batch
+          [ actions.storeEffect message
+          , actions.send Message.stepComplete
+          ]
+        )
     Continue ->
       case model.stepsToRun of
         [] -> 
@@ -116,8 +122,35 @@ handleStepCommand actions model command =
       ( model
       , actions.sendProgramCommand cmd
       )
+    Step.SendRequest message responseHandler ->
+      ( { model | responseHandler = Just responseHandler }
+      , actions.send <| Message.stepRequest message
+      )
     _ ->
+      -- Note that we don't need the 'recordConditons' step command
+      -- BUT File loading does seem to utilize the DoNothing step command to deal with some kind of error case ...
       Debug.todo "Try to handle a command we can't yet handle!"
+
+
+handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )
+handleStepResponse actions model message =
+  case Message.decode Message.decoder message of
+    Ok responseMessage ->
+      -- Looks like a request to upload a file could fail and we could abort for that reason
+      -- if Message.is "_scenario" "abort" responseMessage then
+        -- Message.decode Report.decoder responseMessage
+          -- |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
+          -- |> Abort
+          -- |> update exerciseModel actions
+      -- else
+        case model.responseHandler of
+          Just responseHandler ->
+            responseHandler responseMessage
+              |> handleStepCommand actions { model | responseHandler = Nothing }
+          Nothing ->
+            ( model, Cmd.none )
+    Err _ ->
+      ( model, Cmd.none )
 
 
 subscriptions : Actions msg programMsg -> Model model programMsg -> Sub msg

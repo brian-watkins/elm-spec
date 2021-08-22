@@ -38,6 +38,7 @@ runTests((testOutput) => {
 
   test('handlers', function(t) {
     expectPassingTest(t, testOutput, "it handles the rejected observation", "observations are handled")
+    expectPassingTest(t, testOutput, "it handles the expected log", "logs are handled")
     t.end()
   })
 

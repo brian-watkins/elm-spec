@@ -14,6 +14,10 @@ window._elm_spec.observationHandler = (observation) => {
   // do nothing by default
 }
 
+window._elm_spec.logHandler = (log) => {
+  console.log("LOG", JSON.stringify(log))
+}
+
 window._elm_spec.startHarness = (name) => {
   const programReferences = ProgramReference.findAll(Elm)
 
@@ -33,7 +37,7 @@ window._elm_spec.startHarness = (name) => {
   const runner = new HarnessRunner(app, elmContext, {})
   runner
     .on("log", (report) => {
-      console.log("Log", report)
+      window._elm_spec.logHandler(report)
     })
     .run()
 
