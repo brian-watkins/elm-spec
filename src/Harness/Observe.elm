@@ -2,6 +2,7 @@ module Harness.Observe exposing
   ( Model, defaultModel
   , Msg(..)
   , Actions
+  , generateExpectation
   , init
   , update
   , ExposedExpectationRepository
@@ -16,7 +17,7 @@ import Spec.Message as Message exposing (Message)
 import Spec.Observer.Message as Message
 import Spec.Observer.Internal exposing (Judgment(..))
 import Harness.Types exposing (..)
-import Spec.Report as Report
+import Spec.Report as Report exposing (Report)
 import Json.Decode as Json
 
 
@@ -48,22 +49,29 @@ type alias ExposedExpectationRepository model =
   }
 
 
-init : Actions msg -> ExposedExpectationRepository model -> Model model -> Message -> ( Model model, Cmd msg )
-init actions expectations model message =
-  let
-    maybeExpectation = Message.decode (Json.field "observer" Json.string) message
-      |> Result.toMaybe
-      |> Maybe.andThen (\observerName -> expectations.get observerName)
-    maybeExpected = Message.decode (Json.field "expected" Json.value) message
-      |> Result.toMaybe
-  in
-    case Maybe.map2 (<|) maybeExpectation maybeExpected of
-      Just expectation ->
-        ( { model | expectation = Just expectation }
-        , actions.sendToSelf Continue
-        )
-      Nothing ->
-        Debug.todo "Could not parse the observation!"
+generateExpectation : ExposedExpectationRepository model -> Message -> Result Report (Expectation model)
+generateExpectation expectations message =
+  Result.map2 Tuple.pair
+    (Message.decode (Json.field "observer" Json.string) message)
+    (Message.decode (Json.field "expected" Json.value) message)
+    |> Result.mapError Report.note
+    |> Result.andThen (tryToGenerateExpectation expectations)
+
+
+tryToGenerateExpectation : ExposedExpectationRepository model -> (String, Json.Value) -> Result Report (Expectation model)
+tryToGenerateExpectation expectations (name, expected) =
+  case expectations.get name of
+    Just expectationGenerator ->
+      Ok <| expectationGenerator expected
+    Nothing ->
+      Err <| Report.note <| "No expectation has been exposed with the name " ++ name
+
+
+init : Actions msg -> Expectation model -> ( Model model, Cmd msg )
+init actions expectation =
+  ( { defaultModel | expectation = Just expectation }
+  , actions.sendToSelf Continue
+  )
 
 
 update : Actions msg -> Context model -> Msg -> Model model -> ( Model model, Cmd msg )

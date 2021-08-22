@@ -107,6 +107,11 @@ init maybeKey =
   ( Waiting { key = maybeKey }, Cmd.none )
 
 
+waiting : RunModel model msg -> Model model msg
+waiting runModel =
+  Waiting { key = runModel.key }
+
+
 view : Model model msg -> Document (Msg msg)
 view model =
   case model of
@@ -139,11 +144,18 @@ update config exports msg model =
 
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "start" message then
-        update config exports (ReceivedMessage message) (Waiting { key = runModel.key })
+        update config exports (ReceivedMessage message) (waiting runModel)
       else if Message.is "_harness" "observe" message then
-        Observe.init (observeActions config) (expectationsRepo exports.expectations) Observe.defaultModel message
-          |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
-          |> Tuple.mapFirst Running
+        case Observe.generateExpectation (expectationsRepo exports.expectations) message of
+          Ok expectation ->
+            Observe.init (observeActions config) expectation
+              |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
+              |> Tuple.mapFirst Running
+          Err report ->
+            ( waiting runModel
+            , config.send <| Message.abortHarness report
+            )
+
       else if Message.is "_harness" "run" message then
         Exercise.init (exerciseActions config) (stepsRepo exports.steps) message
           |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
@@ -186,7 +198,7 @@ update config exports msg model =
       )
 
     ( Running runModel, Error report ) ->
-      ( Waiting { key = runModel.key }
+      ( waiting runModel
       , config.send <| Message.abortHarness report
       )
 
