@@ -54,6 +54,7 @@ type Msg msg
   | ObserveMsg Observe.Msg
   | Finished
   | ReceivedMessage Message
+  | Error Report
 
 
 type Model model msg
@@ -185,6 +186,11 @@ update config exports msg model =
       , config.send Message.harnessActionComplete
       )
 
+    ( Running runModel, Error report ) ->
+      ( Waiting { key = runModel.key }
+      , config.send <| Message.abortHarness report
+      )
+
     _ ->
       ( model, Cmd.none )
 
@@ -226,6 +232,7 @@ subjectActions config =
           |> SubjectMsg
       )
   , sendToSelf = SubjectMsg
+  , abort = sendMessage << Error
   }
 
 

@@ -25,6 +25,8 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "the app shows it has navigated to an external page", "a test passes that navigates to an external url")
     expectPassingTest(t, testOutput, "the external location is recorded", "a test passes that observes the location")
     expectPassingTest(t, testOutput, "the app shows it has navigated to the external page specified by the port", "a test passes that changes the location from a port")
+    expectPassingTest(t, testOutput, "it rejects the url request runSteps promise with an error", "a test fails if a url request is made without setting navigation config")
+    expectPassingTest(t, testOutput, "it rejects the url change runSteps promise with an error", "a test fails if a url change occurs without setting navigation config")
     t.end()
   })
 

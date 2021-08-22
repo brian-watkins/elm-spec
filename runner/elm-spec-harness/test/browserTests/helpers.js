@@ -6,6 +6,17 @@ export async function observe(t, scenario, name, expected, message) {
   await scenario.observe(name, expected, { t, message })
 }
 
+export async function expectRejection(t, promiseGenerator, handler) {
+  return new Promise(resolve => {
+    promiseGenerator()
+      .then(() => t.fail("should not resolve!"))
+      .catch((message) => {
+        handler(message)
+      })
+      .finally(resolve)
+  })
+}
+
 let rejectedObservations = []
 
 export function harnessTestGenerator(harnessModule) {

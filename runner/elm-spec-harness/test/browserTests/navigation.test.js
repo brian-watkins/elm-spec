@@ -1,4 +1,4 @@
-import { harnessTestGenerator, observe } from "./helpers"
+import { harnessTestGenerator, expectRejection, observe } from "./helpers"
 
 const harnessTest = harnessTestGenerator("Navigation.Harness")
 
@@ -31,4 +31,20 @@ harnessTest("loading an external url from a port", async function(harness, t) {
   harness.getElmApp().ports.triggerLocationChange.send("http://fun-place.com/cool.html")
   await scenario.wait()
   await observe(t, scenario, "pageText", "http://fun-place.com/cool.html", "the app shows it has navigated to the external page specified by the port")
+})
+
+harnessTest("request url change without setting up navigation", async function(harness, t) {
+  const scenario = await harness.start("withNoNavigation")
+  
+  await expectRejection(t, () => scenario.runSteps("clickLinkToChangeLocation"), (message) => {
+    t.equals(message, "A URL request occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url request runSteps promise with an error")
+  })
+})
+
+harnessTest("change url without setting up navigation", async function(harness, t) {
+  const scenario = await harness.start("withNoNavigation")
+  
+  await expectRejection(t, () => scenario.runSteps("gotoAwesome"), (message) => {
+    t.equals(message, "A URL change occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url change runSteps promise with an error")
+  })
 })

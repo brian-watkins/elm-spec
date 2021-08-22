@@ -20,6 +20,14 @@ import Navigation.App as App
 
 -- Setups
 
+withNoNavigation : Setup App.Model App.Msg
+withNoNavigation =
+  Setup.initForApplication App.init
+    |> Setup.withUpdate App.update
+    |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
+
+
 setupWithInitialLocation : String -> Setup App.Model App.Msg
 setupWithInitialLocation location =
   Setup.initForApplication App.init
@@ -48,6 +56,7 @@ defaultUrl =
 
 setups =
   [ ( "withLocation", use Json.string <| toSetup setupWithInitialLocation )
+  , ( "withNoNavigation", setup withNoNavigation )
   ]
 
 

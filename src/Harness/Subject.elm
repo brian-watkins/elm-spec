@@ -16,6 +16,7 @@ import Spec.Setup.Internal as Setup exposing (Subject)
 import Spec.Message as Message exposing (Message)
 import Spec.Step.Context as Context exposing (Context)
 import Spec.Step.Message as Message
+import Spec.Report as Report exposing (Report)
 import Browser exposing (Document, UrlRequest)
 import Html
 import Browser exposing (UrlRequest)
@@ -100,6 +101,7 @@ type alias Actions msg programMsg =
   , sendCommand: Cmd programMsg -> Cmd msg
   , listen: (Message -> Msg programMsg) -> Sub msg
   , sendToSelf: Msg programMsg -> msg
+  , abort: Report -> Cmd msg
   }
 
 
@@ -115,13 +117,17 @@ update actions msg model =
         Just navConfig ->
           update actions (ProgramMsg <| navConfig.onUrlChange url) model
         Nothing ->
-          Debug.todo "No navigation config defined!!"
+          ( model
+          , actions.abort <| Report.note "A URL change occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler."
+          )
     OnUrlRequest request ->
       case model.subject.navigationConfig of
          Just navConfig ->
           update actions (ProgramMsg <| navConfig.onUrlRequest request) model
          Nothing ->
-          Debug.todo "No navigation config defined!"
+          ( model
+          , actions.abort <| Report.note "A URL request occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler."
+          )
     ReceivedMessage message ->
       if Message.is "_navigation" "assign" message then
         Message.decode navigationAssignmentDecoder message
