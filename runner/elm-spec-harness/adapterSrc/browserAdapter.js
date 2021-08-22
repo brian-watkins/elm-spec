@@ -1,6 +1,7 @@
 const ElmContext = require('elm-spec-core/src/elmContext')
 const HarnessRunner = require('elm-spec-core/src/harnessRunner')
 const ProgramReference = require('elm-spec-core/src/programReference')
+const HarnessScenario = require('./HarnessScenario')
 const { createProxyApp } = require('./ProxyApp')
 
 const base = document.createElement("base")
@@ -47,7 +48,7 @@ window._elm_spec.startHarness = (name) => {
       return new Promise((resolve, reject) => {
         runner.once("complete", () => {
           runner.removeAllListeners("error")
-          resolve()
+          resolve(new HarnessScenario(runner, sendToProgram))
         })
         runner.once("error", report => {
           runner.removeAllListeners("complete")
@@ -66,48 +67,5 @@ window._elm_spec.startHarness = (name) => {
     stop: () => {
       proxyApp.resetPorts()
     },
-    wait: async () => {
-      return new Promise((resolve) => {
-        runner.once("complete", resolve)
-        sendToProgram({
-          home: "_harness",
-          name: "wait",
-          body: null
-        })
-      })
-    },
-    observe: async (name, expected, handlerData) => {
-      return new Promise((resolve) => {
-        let observation
-        runner.once("observation", function(obs) {
-          observation = obs
-        })
-        runner.once("complete", function() {
-          window._elm_spec.observationHandler(observation, handlerData)
-          resolve(observation)
-        })
-        sendToProgram({
-          home: "_harness",
-          name: "observe",
-          body: {
-            observer: name,
-            expected
-          }
-        })
-      })
-    },
-    runSteps: async (name, config = null) => {
-      return new Promise((resolve) => {
-        runner.once("complete", resolve)
-        sendToProgram({
-          home: "_harness",
-          name: "run",
-          body: {
-            steps: name,
-            config
-          }
-        })
-      })
-    }
   }
 }

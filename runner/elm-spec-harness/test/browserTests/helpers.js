@@ -2,8 +2,8 @@ import { onFinish } from "tape"
 import test from "tape"
 import { startHarness, onObservation } from "../../src/HarnessRunner"
 
-export async function observe(t, harness, name, expected, message) {
-  await harness.observe(name, expected, { t, message })
+export async function observe(t, scenario, name, expected, message) {
+  await scenario.observe(name, expected, { t, message })
 }
 
 let rejectedObservations = []

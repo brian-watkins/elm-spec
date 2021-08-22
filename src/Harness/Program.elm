@@ -19,6 +19,7 @@ import Spec.Observer.Internal exposing (Judgment(..))
 import Spec.Scenario.Message as Message
 import Spec.Message as Message
 import Spec.Observer.Message as Message
+import Spec.Report as Report exposing (Report)
 import Harness.Message as Message
 import Harness.Initialize as Initialize
 import Harness.Observe as Observe
@@ -131,8 +132,9 @@ update config exports msg model =
             , config.send <| Message.abortHarness report
             )
       else
-        -- And we want an error here if you try to run steps or observe without having called setup first
-        ( model, Cmd.none )
+        ( model
+        , config.send <| Message.abortHarness <| unknownMessageReport message
+        )
 
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "start" message then
@@ -185,6 +187,12 @@ update config exports msg model =
 
     _ ->
       ( model, Cmd.none )
+
+
+unknownMessageReport : Message -> Report
+unknownMessageReport message =
+  "Unknown message received while waiting to start a scenario: " ++ message.home ++ "/" ++ message.name
+    |> Report.note
 
 
 setupsRepo : Dict String (ExposedSetup model msg) -> Initialize.ExposedSetupRepository model msg
