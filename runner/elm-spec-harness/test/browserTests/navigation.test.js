@@ -1,4 +1,4 @@
-import { harnessTestGenerator, expectRejection, observe } from "./helpers"
+import { harnessTestGenerator, expectError, observe } from "./helpers"
 
 const harnessTest = harnessTestGenerator("Navigation.Harness")
 
@@ -36,7 +36,7 @@ harnessTest("loading an external url from a port", async function(harness, t) {
 harnessTest("request url change without setting up navigation", async function(harness, t) {
   const scenario = await harness.start("withNoNavigation")
   
-  await expectRejection(t, () => scenario.runSteps("clickLinkToChangeLocation"), (message) => {
+  await expectError(t, () => scenario.runSteps("clickLinkToChangeLocation"), (message) => {
     t.equals(message, "A URL request occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url request runSteps promise with an error")
   })
 })
@@ -44,7 +44,7 @@ harnessTest("request url change without setting up navigation", async function(h
 harnessTest("change url without setting up navigation", async function(harness, t) {
   const scenario = await harness.start("withNoNavigation")
   
-  await expectRejection(t, () => scenario.runSteps("gotoAwesome"), (message) => {
+  await expectError(t, () => scenario.runSteps("gotoAwesome"), (message) => {
     t.equals(message, "A URL change occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url change runSteps promise with an error")
   })
 })

@@ -6,7 +6,7 @@ export async function observe(t, scenario, name, expected, message) {
   await scenario.observe(name, expected, message)
 }
 
-export async function expectRejection(t, promiseGenerator, handler) {
+export async function expectError(t, promiseGenerator, handler) {
   return new Promise(resolve => {
     promiseGenerator()
       .then(() => t.fail("should not resolve!"))
