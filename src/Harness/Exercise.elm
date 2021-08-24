@@ -13,9 +13,11 @@ module Harness.Exercise exposing
 
 import Spec.Message as Message exposing (Message)
 import Harness.Types exposing (..)
+import Spec.Claim as Claim
 import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Step.Message as Message
+import Spec.Observer.Message as Message
 import Spec.Message.Internal as Message
 import Spec.Report as Report exposing (Report)
 import Spec.Step.Context exposing (Context)
@@ -38,6 +40,7 @@ defaultModel =
 type Msg programMsg
   = Continue
   | ReceivedMessage Message
+  | Error Report
 
 
 type alias Actions msg programMsg =
@@ -111,6 +114,10 @@ update actions context msg model =
         step :: remaining ->
           step context
             |> handleStepCommand actions { model | stepsToRun = remaining }
+    Error report ->
+      ( { model | stepsToRun = [] }
+      , actions.send <| Message.observation [] "A Spec step failed" <| Claim.Reject report
+      )
 
 
 handleStepCommand : Actions msg programMsg -> Model model programMsg -> Step.Command programMsg -> ( Model model programMsg, Cmd msg)
@@ -164,6 +171,12 @@ subscriptions actions _ =
           Continue
         _ ->
           Debug.todo "Unknown scenario state message in Exercise state!"
+    else if Message.is "_scenario" "abort" message then
+      case Message.decode Report.decoder message of
+        Ok report ->
+          Error report
+        Err error ->
+          Error <| Report.fact "Could not decode a Step abort message" error
     else
       ReceivedMessage message
   )

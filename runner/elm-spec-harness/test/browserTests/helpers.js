@@ -3,7 +3,7 @@ import test from "tape"
 import { startHarness, onObservation, onLog } from "../../src/HarnessRunner"
 
 export async function observe(t, scenario, name, expected, message) {
-  await scenario.observe(name, expected, { t, message })
+  await scenario.observe(name, expected, message)
 }
 
 export async function expectRejection(t, promiseGenerator, handler) {
@@ -23,6 +23,15 @@ let logs = []
 export function harnessTestGenerator(harnessModule) {
   const harnessTest = (name, testHandler) => {
     test(name, async function (t) {
+
+      onObservation((observation, message) => {
+        if (observation.summary === "ACCEPTED") {
+          t.pass(message)
+        } else {
+          rejectedObservations.push(observation)
+        }
+      })
+
       rejectedObservations = []
       logs = []
       const harness = startHarness(harnessModule)
@@ -35,6 +44,14 @@ export function harnessTestGenerator(harnessModule) {
 
   harnessTest.only = (name, testHandler) => {
     test.only(name, async function (t) {
+      onObservation((observation, message) => {
+        if (observation.summary === "ACCEPTED") {
+          t.pass(message)
+        } else {
+          rejectedObservations.push(observation)
+        }
+      })
+
       rejectedObservations = []
       logs = []
       const harness = startHarness(harnessModule)
@@ -47,14 +64,6 @@ export function harnessTestGenerator(harnessModule) {
   
   return harnessTest
 }
-
-onObservation((observation, data) => {
-  if (observation.summary === "ACCEPTED") {
-    data.t.pass(data.message)
-  } else {
-    rejectedObservations.push(observation)
-  }
-})
 
 onLog((report) => {
   logs.push(report)

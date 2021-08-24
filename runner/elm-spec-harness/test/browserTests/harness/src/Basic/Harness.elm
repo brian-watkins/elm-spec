@@ -118,12 +118,17 @@ logTitle =
   [ Markup.log << by [ id "title" ]
   ]
 
+badSteps =
+  [ Markup.target << by [ id "some-element-that-does-not-exist" ]
+  , Event.click
+  ]
 
 steps =
   [ ( "click", use Json.int <| toRun clickMultiple )
   , ( "inform", run inform )
   , ( "requestStuff", run requestStuff )
   , ( "logTitle", run logTitle )
+  , ( "badSteps", run badSteps )
   ]
 
 

@@ -44,14 +44,19 @@ module.exports = class HarnessScenario {
   }
   
   runSteps(name, config = null) {
+    const theRunner = this.runner
     return new Promise((resolve, reject) => {
-      const theRunner = this.runner
+      let observation = null
       this.runner.once("complete", () => {
-        theRunner.removeAllListeners("error")
+        if (observation) {
+          window._elm_spec.observationHandler(observation)
+        }
         resolve()
       })
+      this.runner.once("observation", (obs) => {
+        observation = obs
+      })
       this.runner.once("error", (report) => {
-        theRunner.removeAllListeners("complete")
         reject(report[0].statement)
       })
       this.sendToProgram({
@@ -62,6 +67,11 @@ module.exports = class HarnessScenario {
           config
         }
       })
+    }).then((value) => {
+      theRunner.removeAllListeners("complete")
+      theRunner.removeAllListeners("observation")
+      theRunner.removeAllListeners("error")
+      return value
     })
   }
 

@@ -47,6 +47,7 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it rejects the start promise with an error", "harness.start rejects if the setup does not exist")
     expectPassingTest(t, testOutput, "it rejects the runSteps promise with an error", "scenario.runSteps rejects if the steps do not exist")
     expectPassingTest(t, testOutput, "it rejects the observe promise with an error", "scenario.oberve rejects if the expectation does not exist")
+    expectPassingTest(t, testOutput, "it explains that the step failed", "scenario.runSteps emits a rejected expectation if a step aborts")
     t.end()
   })
 
