@@ -17,66 +17,63 @@ export async function expectError(t, promiseGenerator, handler) {
   })
 }
 
-let rejectedObservations = []
-let logs = []
+export async function captureObservations(generator) {
+  let observations = []
+  onObservation((observation) => {
+    observations.push(observation)
+  })
+
+  await generator()
+
+  return observations
+}
+
+export async function captureLogs(generator) {
+  let logs = []
+
+  onLog((report) => {
+    logs.push(report)
+  })
+
+  await generator()
+
+  return logs
+}
 
 export function harnessTestGenerator(harnessModule) {
   const harnessTest = (name, testHandler) => {
-    test(name, async function (t) {
-
-      onObservation((observation, message) => {
-        if (observation.summary === "ACCEPTED") {
-          t.pass(message)
-        } else {
-          rejectedObservations.push(observation)
-        }
-      })
-
-      rejectedObservations = []
-      logs = []
-      const harness = startHarness(harnessModule)
-      t.teardown(() => {
-        harness.stop()
-      })
-      await testHandler(harness, t)
-    })
+    test(name, generateTestHandler(harnessModule, testHandler))
   }
 
   harnessTest.only = (name, testHandler) => {
-    test.only(name, async function (t) {
-      onObservation((observation, message) => {
-        if (observation.summary === "ACCEPTED") {
-          t.pass(message)
-        } else {
-          rejectedObservations.push(observation)
-        }
-      })
-
-      rejectedObservations = []
-      logs = []
-      const harness = startHarness(harnessModule)
-      t.teardown(() => {
-        harness.stop()
-      })
-      await testHandler(harness, t)
-    })
+    test.only(name, generateTestHandler(harnessModule, testHandler))
   }
   
   return harnessTest
 }
 
-onLog((report) => {
-  logs.push(report)
-})
+function generateTestHandler(harnessModule, testHandler) {
+  return async function (t) {
+    setupDefaultHandlers(t)
+
+    const harness = startHarness(harnessModule)
+    t.teardown(() => {
+      harness.stop()
+    })
+    await testHandler(harness, t)
+  }
+}
+
+function setupDefaultHandlers(t) {
+  onObservation((observation, message) => {
+    if (observation.summary === "ACCEPTED") {
+      t.pass(message)
+    }
+  })
+
+  onLog(() => {})
+}
 
 onFinish(() => {
   console.log("END")
 })
-
-export function getRejectedObservations() {
-  return rejectedObservations
-}
-
-export function getLogs() {
-  return logs
-}

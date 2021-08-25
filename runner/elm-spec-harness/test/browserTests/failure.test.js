@@ -1,6 +1,6 @@
-import { startHarness, onObservation } from "../../src/HarnessRunner"
+import { startHarness } from "../../src/HarnessRunner"
 import test from "tape"
-import { expectError, getRejectedObservations, harnessTestGenerator } from "./helpers"
+import { expectError, captureObservations, harnessTestGenerator } from "./helpers"
 
 test("harness module does not exist", function(t) {
   t.throws(() => { startHarness("No.Module.That.Exists") }, /Module No.Module.That.Exists does not exist!/, "it throws an exception when the module does not exist")
@@ -30,14 +30,22 @@ harnessTest("expectation doesn't exist", async function(harness, t) {
 })
 
 harnessTest("a step aborts", async function(harness, t) {
-  let observations = []
-  onObservation((observation) => {
-    observations.push(observation)
+  const observations = await captureObservations(async () => {
+    const scenario = await harness.start("default")
+    await scenario.runSteps("badSteps")
   })
-
-  const scenario = await harness.start("default")
-  await scenario.runSteps("badSteps")
 
   t.equal(observations.length, 1, "it emits a rejected expectation")
   t.equal(observations[0].report[0].statement, "No match for selector", "it explains that the step failed")
+})
+
+const fileHarnessTest = harnessTestGenerator("File.Harness")
+
+fileHarnessTest("a step request fails", async function(harness, t) {
+  const observations = await captureObservations(async () => {
+    const scenario = await harness.start("default")
+    await scenario.runSteps("selectFile", "some-non-existent-file.txt")
+  })
+
+  t.equal(observations.length, 1, "it emits an observation that the step request failed")
 })

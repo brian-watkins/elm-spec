@@ -145,13 +145,14 @@ handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message
 handleStepResponse actions model message =
   case Message.decode Message.decoder message of
     Ok responseMessage ->
-      -- Looks like a request to upload a file could fail and we could abort for that reason
-      -- if Message.is "_scenario" "abort" responseMessage then
-        -- Message.decode Report.decoder responseMessage
-          -- |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
-          -- |> Abort
-          -- |> update exerciseModel actions
-      -- else
+      if Message.is "_scenario" "abort" responseMessage then
+        ( model
+        , Message.decode Report.decoder responseMessage
+            |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
+            |> Error
+            |> actions.sendToSelf
+        )
+      else
         case model.responseHandler of
           Just responseHandler ->
             responseHandler responseMessage
