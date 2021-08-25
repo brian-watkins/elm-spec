@@ -3,12 +3,13 @@ module Basic.Harness exposing (..)
 import Harness exposing (Expectation, expect, use, run, toRun, observe, toObserve, setup, toSetup)
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step exposing (Step)
-import Spec.Claim exposing (isSomethingWhere, isStringContaining)
+import Spec.Claim exposing (isSomethingWhere, isStringContaining, isListWithLength)
 import Spec.Observer as Observer
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
-import Spec.Http.Route exposing (get)
+import Spec.Http
+import Spec.Http.Route exposing (get, route, UrlDescriptor(..))
 import Spec.Http.Stub as Stub
 import Extra exposing (equals)
 import Runner
@@ -167,12 +168,32 @@ stuffObserver actual =
     |> expect (isSomethingWhere <| Markup.text <| isStringContaining 1 actual)
 
 
+requestsMatching : ExpectedRequestsMatching -> Expectation App.Model
+requestsMatching expected =
+  Spec.Http.observeRequests (route "GET" <| Matching expected.regex)
+    |> expect (isListWithLength expected.count)
+
+
+type alias ExpectedRequestsMatching =
+  { regex: String
+  , count: Int
+  }
+
+
+requestsMatchingDecoder : Json.Decoder ExpectedRequestsMatching
+requestsMatchingDecoder =
+  Json.map2 ExpectedRequestsMatching
+    ( Json.field "regex" Json.string )
+    ( Json.field "count" Json.int )
+
+
 observers =
   [ ("title", use Json.string <| toObserve titleObserver)
   , ("name", use Json.string <| toObserve nameObserver)
   , ("attributes", use (Json.list Json.string) <| toObserve attributesObserver)
   , ("count", use Json.string <| toObserve countObserver)
   , ("stuff", use Json.string <| toObserve stuffObserver)
+  , ("requestsMatching", use requestsMatchingDecoder <| toObserve requestsMatching)
   ]
 
 

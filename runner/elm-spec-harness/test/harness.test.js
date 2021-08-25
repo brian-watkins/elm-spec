@@ -49,6 +49,7 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it rejects the observe promise with an error", "scenario.oberve rejects if the expectation does not exist")
     expectPassingTest(t, testOutput, "it explains that the step failed", "scenario.runSteps emits a rejected expectation if a step aborts")
     expectPassingTest(t, testOutput, "it emits an observation that the step request failed", "scenario.runSteps emits a rejected expectation if a step request aborts")
+    expectPassingTest(t, testOutput, "it explains that the observer failed", "scenario.observe emits a rejected expectation if an observer inquiry aborts")
     t.end()
   })
 

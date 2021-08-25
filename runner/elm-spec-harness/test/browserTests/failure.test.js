@@ -39,6 +39,17 @@ harnessTest("a step aborts", async function(harness, t) {
   t.equal(observations[0].report[0].statement, "No match for selector", "it explains that the step failed")
 })
 
+harnessTest("an observer aborts", async function(harness, t) {
+  const observations = await captureObservations(async () => {
+    const scenario = await harness.start("withStub", { thing: "apples", count: 4 })
+    await scenario.runSteps("requestStuff")
+    await scenario.observe("requestsMatching", { regex: "[2", count: 1 })
+  })
+
+  t.equal(observations[0].summary, "REJECTED", "it emits a rejected expectation")
+  t.equal(observations[0].report[0].statement, "Unable to parse regular expression used to observe requests", "it explains that the observer failed")
+})
+
 const fileHarnessTest = harnessTestGenerator("File.Harness")
 
 fileHarnessTest("a step request fails", async function(harness, t) {

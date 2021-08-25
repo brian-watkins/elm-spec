@@ -26,15 +26,18 @@ type alias Model model =
   , expectation: Maybe (Expectation model)
   }
 
+
 defaultModel : Model model
 defaultModel =
   { inquiryHandler = Nothing
   , expectation = Nothing
   }
 
+
 type Msg
   = ReceivedMessage Message
   | Continue
+
 
 type alias Actions msg =
   { send : Message -> Cmd msg
@@ -104,22 +107,29 @@ observe config context model (Expectation expectation) =
 
 
 handleObserveMessage : Actions msg -> Model model -> Message -> ( Model model, Cmd msg )
-handleObserveMessage config model message =
+handleObserveMessage actions model message =
   Message.decode Message.inquiryDecoder message
     |> Result.map .message
-    |> Result.map (processInquiryMessage config model)
-    |> Result.withDefault ( model, Cmd.none )
-      -- (abortObservation actions observeModel <| Report.note "Unable to decode inquiry result!")
+    |> Result.map (processInquiryMessage actions model)
+    |> Result.withDefault
+      ( model
+      , sendVerdict actions <| Claim.Reject <| Report.note "Unable to decode inquiry result!"
+      )
 
 
 processInquiryMessage : Actions msg -> Model model -> Message -> ( Model model, Cmd msg )
-processInquiryMessage config model message =
+processInquiryMessage actions model message =
   if Message.is "_scenario" "abort" message then
-    Debug.todo "Abort while processing inquiry message!"
+    ( model
+    , Message.decode Report.decoder message
+        |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
+        |> Claim.Reject
+        |> sendVerdict actions
+    )
   else
     ( { model | inquiryHandler = Nothing }
     , handleInquiry message model.inquiryHandler
-        |> sendVerdict config
+        |> sendVerdict actions
     )
 
 
