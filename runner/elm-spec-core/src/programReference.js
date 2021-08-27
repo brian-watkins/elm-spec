@@ -15,6 +15,11 @@ module.exports = class ProgramReference {
     }, [])
   }
 
+  static find(Elm, moduleName) {
+    return ProgramReference.findAll(Elm)
+      .find((ref) => ref.moduleName.join(".") === moduleName)
+  }
+
   constructor(program, moduleName) {
     this.moduleName = moduleName
     this.program = program

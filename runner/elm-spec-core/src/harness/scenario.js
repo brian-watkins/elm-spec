@@ -1,5 +1,6 @@
 module.exports = class HarnessScenario {
-  constructor (runner, sendToProgram) {
+  constructor(context, runner, sendToProgram) {
+    this.context = context
     this.runner = runner
     this.sendToProgram = sendToProgram
   }
@@ -19,15 +20,15 @@ module.exports = class HarnessScenario {
     return new Promise((resolve, reject) => {
       let theRunner = this.runner
       let observation
-      this.runner.once("observation", function(obs) {
+      this.runner.once("observation", function (obs) {
         observation = obs
       })
-      this.runner.once("complete", function() {
+      this.runner.once("complete", function () {
         theRunner.removeAllListeners("error")
-        window._elm_spec.observationHandler(observation, handlerData)
+        this.context.get("harnessObservationHandler")(observation, handlerData)
         resolve(observation)
       })
-      this.runner.once("error", function(report) {
+      this.runner.once("error", function (report) {
         theRunner.removeAllListeners("observation")
         theRunner.removeAllListeners("complete")
         reject(report[0].statement)
@@ -42,14 +43,14 @@ module.exports = class HarnessScenario {
       })
     })
   }
-  
+
   runSteps(name, config = null) {
     const theRunner = this.runner
     return new Promise((resolve, reject) => {
       let observation = null
       this.runner.once("complete", () => {
         if (observation) {
-          window._elm_spec.observationHandler(observation)
+          this.context.get("harnessObservationHandler")(observation)
         }
         resolve()
       })
@@ -74,5 +75,5 @@ module.exports = class HarnessScenario {
       return value
     })
   }
-
 }
+

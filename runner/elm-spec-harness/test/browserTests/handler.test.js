@@ -4,7 +4,7 @@ const harnessTest = harnessTestGenerator("Basic.Harness")
 
 harnessTest("handling an observation", async function(harness, t) {
   const observations = await captureObservations(async () => {
-    const scenario = await harness.start("default")
+    const scenario = await harness.startScenario("default")
     await scenario.runSteps("click", 5)
     await scenario.observe("count", "15 clicks!", { t, message: "this should fail" })
   })
@@ -14,7 +14,7 @@ harnessTest("handling an observation", async function(harness, t) {
 
 harnessTest("handling logs", async function(harness, t) {
   const logs = await captureLogs(async () => {
-    const scenario = await harness.start("default")
+    const scenario = await harness.startScenario("default")
     await scenario.runSteps("logTitle")
   })
   

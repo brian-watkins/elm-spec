@@ -1,6 +1,6 @@
 import { onFinish } from "tape"
 import test from "tape"
-import { startHarness, onObservation, onLog } from "../../src/HarnessRunner"
+import { onObservation, onLog, prepareHarness } from "../../src/HarnessRunner"
 
 export async function observe(t, scenario, name, expected, message) {
   await scenario.observe(name, expected, message)
@@ -56,9 +56,9 @@ function generateTestHandler(harnessModule, testHandler) {
   return async function (t) {
     setupDefaultHandlers(t)
 
-    const harness = startHarness(harnessModule)
+    const harness = prepareHarness(harnessModule)
     t.teardown(() => {
-      harness.stop()
+      harness.stopScenario()
     })
     await testHandler(harness, t)
   }

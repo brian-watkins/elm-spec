@@ -59,7 +59,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
   }
 
-  run() {
+  subscribe() {
     const messageHandler = (specMessage) => {
       this.handleMessage(specMessage, (outMessage) => {
         this.app.ports[ELM_SPEC_IN].send(outMessage)

@@ -70,7 +70,7 @@ window._elm_spec.compiler = {
   }
 
   evaluate(evaluator) {
-    evaluator(this.window.Elm)
+    return evaluator(this.window.Elm)
   }
 
   static registerFileLoadingCapability(winwdowDecorator, capability) {
@@ -112,6 +112,14 @@ window._elm_spec.compiler = {
     return (msg) => {
       this.window._elm_spec.app.ports.elmSpecIn.send(msg)
     }
+  }
+
+  set(key, value) {
+    this.window._elm_spec[key] = value
+  }
+
+  get(key) {
+    return this.window._elm_spec[key]
   }
 
   fileInputForOpenFileSelector() {

@@ -4,7 +4,7 @@ const ELM_SPEC_PICK = "elmSpecPick"
 
 module.exports = class SpecRunner extends ProgramRunner {
   run() {
-    this.stopHandlingMessages = super.run()
+    this.stopHandlingMessages = super.subscribe()
 
     setTimeout(() => {
       this.startSpecs()

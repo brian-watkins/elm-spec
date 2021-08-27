@@ -1,10 +1,6 @@
-const ProgramRunner = require('./programRunner')
+const ProgramRunner = require('../programRunner')
 
 module.exports = class HarnessRunner extends ProgramRunner {
-  run() {
-    super.run()
-  }
-
   handleMessage(specMessage, out) {
     switch (specMessage.home) {
       case "_harness":
