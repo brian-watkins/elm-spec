@@ -1,4 +1,4 @@
-const ProgramRunner = require('../programRunner')
+const ProgramRunner = require('elm-spec-core/src/programRunner')
 
 module.exports = class HarnessRunner extends ProgramRunner {
   handleMessage(specMessage, out) {

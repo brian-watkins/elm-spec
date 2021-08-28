@@ -1,4 +1,4 @@
-const ProgramReference = require('../programReference')
+const ProgramReference = require('elm-spec-core/src/programReference')
 const Harness = require('./harness')
 
 module.exports = class HarnessController {

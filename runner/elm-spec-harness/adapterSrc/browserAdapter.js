@@ -1,5 +1,5 @@
 const ElmContext = require('elm-spec-core/src/elmContext')
-const HarnessController = require('elm-spec-core/src/harness/controller')
+const HarnessController = require('./controller')
 
 const base = document.createElement("base")
 base.setAttribute("href", "http://elm-spec")
