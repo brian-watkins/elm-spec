@@ -330,12 +330,15 @@ const expectScenariosAt = (compilerOptions, options, shouldReadFiles, done, matc
   const compiledCode = compiler.compile()
   dom.window.eval(compiledCode)
 
-  dom.window._elm_spec.run(options, version)
+  dom.window._elm_spec_run(options, version)
     .then(({ result, reporter }) => {
       setTimeout(() => {
         matcher(result, reporter)
         done()
       }, 0)
+    })
+    .catch((err) => {
+      console.log("Error running spec:", err)
     })
 }
 

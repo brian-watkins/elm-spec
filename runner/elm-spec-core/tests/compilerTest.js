@@ -20,9 +20,9 @@ describe("compiler", () => {
     it("lists no files", () => {
       const { compiler, window } = compileSpecsAt("./tests/somePlace", "dsfsd/d///_")
       expect(compiler.status()).to.equal(Compiler.STATUS.NO_FILES)
-      expect(window._elm_spec.compiler.files).to.have.length(0)
-      expect(window._elm_spec.compiler.cwd).to.equal("./tests/somePlace")
-      expect(window._elm_spec.compiler.specPath).to.equal("dsfsd/d///_")
+      expect(window._elm_spec_compiler.files).to.have.length(0)
+      expect(window._elm_spec_compiler.cwd).to.equal("./tests/somePlace")
+      expect(window._elm_spec_compiler.specPath).to.equal("dsfsd/d///_")
     })
   })
 
@@ -30,9 +30,9 @@ describe("compiler", () => {
     it("lists no files", () => {
       const { compiler, window } = compileSpecsAt("./tests/sample", "./specs/NoFiles/*Spec.elm")
       expect(compiler.status()).to.equal(Compiler.STATUS.NO_FILES)
-      expect(window._elm_spec.compiler.files).to.have.length(0)
-      expect(window._elm_spec.compiler.cwd).to.equal("./tests/sample")
-      expect(window._elm_spec.compiler.specPath).to.equal("./specs/NoFiles/*Spec.elm")
+      expect(window._elm_spec_compiler.files).to.have.length(0)
+      expect(window._elm_spec_compiler.cwd).to.equal("./tests/sample")
+      expect(window._elm_spec_compiler.specPath).to.equal("./specs/NoFiles/*Spec.elm")
     })
   })
 
@@ -44,9 +44,9 @@ describe("compiler", () => {
 
       const fullPathOne = path.resolve("./tests/sample/specs/WithCompilationError/ClickSpec.elm")
       const fullPathTwo = path.resolve("./tests/sample/specs/WithCompilationError/MoreBehaviors/AnotherSpec.elm")
-      expect(window._elm_spec.compiler.files).to.deep.equal([fullPathOne, fullPathTwo])
-      expect(window._elm_spec.compiler.cwd).to.equal("./tests/sample")
-      expect(window._elm_spec.compiler.specPath).to.equal("./specs/WithCompilationError/**/*Spec.elm")
+      expect(window._elm_spec_compiler.files).to.deep.equal([fullPathOne, fullPathTwo])
+      expect(window._elm_spec_compiler.cwd).to.equal("./tests/sample")
+      expect(window._elm_spec_compiler.specPath).to.equal("./specs/WithCompilationError/**/*Spec.elm")
     })
   })
 

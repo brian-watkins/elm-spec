@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { join } from "path";
-import Harness from "../src/Harness";
 import { serve } from "esbuild";
+import Compiler from "elm-spec-core/src/compiler"
 import NodeModulesPolyfill from "@esbuild-plugins/node-modules-polyfill";
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 
@@ -29,9 +29,13 @@ const runTestInBrowser = async () => {
     })
   })
 
-  // then load the compiled js (also loads the browser adapter)
-  const harness = new Harness()
-  const compiledHarness = harness.compile("./src/**/Harness.elm")
+  // load the compiled elm
+  const compiler = new Compiler({
+    cwd: "./test/browserTests/harness",
+    specPath: "./src/**/Harness.elm",
+    logLevel: Compiler.LOG_LEVEL.QUIET
+  })
+  const compiledHarness = compiler.compile()
   await page.evaluate(compiledHarness)
 
   // load/start the test in playwright

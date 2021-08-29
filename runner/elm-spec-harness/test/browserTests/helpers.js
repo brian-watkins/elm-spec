@@ -1,6 +1,6 @@
 import { onFinish } from "tape"
 import test from "tape"
-import { onObservation, onLog, prepareHarness } from "../../src/HarnessRunner"
+import { onObservation, onLog, prepareHarness } from "../../src"
 
 export async function observe(t, scenario, name, expected, message) {
   await scenario.observe(name, expected, message)

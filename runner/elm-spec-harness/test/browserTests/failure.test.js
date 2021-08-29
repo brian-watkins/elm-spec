@@ -1,4 +1,4 @@
-import { prepareHarness } from "../../src/HarnessRunner"
+import { prepareHarness } from "../../src"
 import test from "tape"
 import { expectError, captureObservations, harnessTestGenerator } from "./helpers"
 

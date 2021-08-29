@@ -60,7 +60,7 @@ function at the right time during a test. But it depends on the test writer real
 to wait on this function to fix things.
 
 
-### Decision
+## Decision
 
 We will add a `wait` function to the harness object so that a test writer can wait for any actions
 triggered by the JS code (by sending a port message into the program) to complete. This seems like the most

@@ -13,7 +13,7 @@ module.exports = class HtmlPlugin {
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
       case "query-window": {
-        out(this.selected(this.window._elm_spec.window))
+        out(this.selected(this.context.fakes.window.proxy))
         break;
       }
       case "query": {

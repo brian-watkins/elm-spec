@@ -15,45 +15,53 @@ css.type = 'text/css';
 css.innerHTML = 'body { margin: 0px; padding: 0px; }';
 window.document.head.appendChild(css)
 
-window._elm_spec.runProgram = (specProgram, version) => {
+window._elm_spec_runProgram = (specProgram, version) => {
   return new Promise((resolve, reject) => {
-    if (!window.Elm) {
-      return Promise.reject("Elm not compiled!")
-    }
+    elmContext.evaluate((Elm) => {
+      if (!Elm) {
+        reject("Elm not compiled!")
+        return
+      }
 
-    const program = Elm.Specs[specProgram]
-    const reporter = new TestReporter()
-    const options = {
-      endOnFailure: false
-    }
-    
-    new SuiteRunner(elmContext, reporter, options, version)
-      .on('complete', () => {
-        resolve({
-          observations: reporter.observations,
-          error: reporter.specError
+      const program = Elm.Specs[specProgram]
+      const reporter = new TestReporter()
+      const options = {
+        endOnFailure: false
+      }
+      
+      new SuiteRunner(elmContext, reporter, options, version)
+        .on('complete', () => {
+          resolve({
+            observations: reporter.observations,
+            error: reporter.specError
+          })
         })
-      })
-      .run([new ProgramReference(program, ['Specs', specProgram])])
+        .run([new ProgramReference(program, ['Specs', specProgram])])
+    })
   })
 }
 
-window._elm_spec.runSpec = (specProgram, specName, options) => {
-  if (!window.Elm) {
-    return Promise.reject("Elm not compiled!")
-  }
-
-  if (!Elm.Specs[specProgram]) {
-    return Promise.reject("No spec program found for: " + specProgram)
-  }
-
+window._elm_spec_runSpec = (specProgram, specName, options) => {
   elmContext.timer.reset()
-  var app = Elm.Specs[specProgram].init({
-    flags: { specName }
-  })
 
   return new Promise((resolve, reject) => {
-    runProgram(app, elmContext, options, resolve, reject)
+    elmContext.evaluate((Elm) => {
+      if (!Elm) {
+        reject("Elm not compiled!")
+        return
+      }
+  
+      if (!Elm.Specs[specProgram]) {
+        reject("No spec program found for: " + specProgram)
+        return
+      }
+    
+      const app = Elm.Specs[specProgram].init({
+        flags: { specName }
+      })
+      
+      runProgram(app, elmContext, options, resolve, reject)
+    })
   })
 }
 

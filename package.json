@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Describe the Behavior of Elm Applications",
   "scripts": {
-    "test": "run-s test:elm test:elm:browser test:core build:runner test:runner build:karma test:karma build:harness test:harness build:docs",
+    "test": "run-s test:elm test:elm:browser test:core build:runner test:runner build:karma test:karma test:harness build:docs",
     "test:elm": "npm run test:elm:jsdom --prefix tests",
     "test:elm:browser": "npm run test:elm:browser --prefix tests",
     "test:core": "npm test --prefix runner/elm-spec-core",
@@ -13,7 +13,6 @@
     "build:karma": "npm run build --prefix runner/karma-elm-spec-framework",
     "start:karma": "npm start --prefix runner/karma-elm-spec-framework",
     "test:karma": "npm test --prefix runner/karma-elm-spec-framework",
-    "build:harness": "npm run build --prefix runner/elm-spec-harness",
     "test:harness": "npm test --prefix runner/elm-spec-harness",
     "build:docs": "elm make --docs=docs.json",
     "preview:docs": "elm-doc-preview"

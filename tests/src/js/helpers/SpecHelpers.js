@@ -64,7 +64,7 @@ exports.reportLine = (statement, detail = null) => ({
 })
 
 const runProgramInJsdom = (specProgram, version, done, matcher) => {
-  page.window._elm_spec.runProgram(specProgram, version)
+  page.window._elm_spec_runProgram(specProgram, version)
     .then(({ observations, error }) => {
       matcher(observations, error)
       done()
@@ -80,7 +80,7 @@ const runProgramInJsdom = (specProgram, version, done, matcher) => {
 
 const runProgramInBrowser = (specProgram, version, done, matcher) => {
   page.evaluate(({ program, version }) => {
-    return _elm_spec.runProgram(program, version)
+    return _elm_spec_runProgram(program, version)
   }, { program: specProgram, version }).then(({ observations, error }) => {
     matcher(observations, error)
     done()
@@ -96,7 +96,7 @@ const runProgramInBrowser = (specProgram, version, done, matcher) => {
 
 const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
   page.evaluate(({ program, name, options }) => {
-    return _elm_spec.runSpec(program, name, options)
+    return _elm_spec_runSpec(program, name, options)
   }, { program: specProgram, name: specName, options }).then(({ observations, error, logs }) => {
     matcher(observations, error, logs)
     done()
@@ -111,7 +111,7 @@ const runSpecInBrowser = (specProgram, specName, done, matcher, options) => {
 }
 
 const runSpecInJsdom = (specProgram, specName, done, matcher, options) => {
-  page.window._elm_spec.runSpec(specProgram, specName, options)
+  page.window._elm_spec_runSpec(specProgram, specName, options)
     .then(({ observations, error, logs }) => {
       matcher(observations, error, logs)
       done()

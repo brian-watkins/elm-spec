@@ -1,13 +1,15 @@
+const ElmContext = require('elm-spec-core/src/elmContext')
 const ProgramReference = require('elm-spec-core/src/programReference')
 const Harness = require('./harness')
 
 module.exports = class HarnessController {
-  constructor(context) {
-    this.context = context
+  constructor() {
+    this.context = new ElmContext(window)
   }
 
-  prepareHarness(moduleName) {
+  prepareHarness(moduleName) {    
     const harnessApp = this.context.evaluate((Elm) => {
+      // what if Elm is undefined (due to compilation error?)
       return this.initHarnessProgram(Elm, moduleName)
     })
     
@@ -36,6 +38,4 @@ module.exports = class HarnessController {
   setLogHandler(handler) {
     this.context.set("harnessLogHandler", handler)
   }
-
 }
-

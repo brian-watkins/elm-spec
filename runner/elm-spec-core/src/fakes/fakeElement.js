@@ -1,9 +1,9 @@
 
-exports.fakeElement = (theWindow, element) => {
+exports.fakeElement = (browser, element) => {
   return new Proxy(element, {
     get: (target, prop) => {
       if (prop === 'getBoundingClientRect') {
-        return customGetBoundingClientRect(theWindow, target)
+        return customGetBoundingClientRect(browser, target)
       }
       const val = target[prop]
       return typeof val === "function"
@@ -13,12 +13,12 @@ exports.fakeElement = (theWindow, element) => {
   })
 }
 
-const customGetBoundingClientRect = (theWindow, target) => () => {
+const customGetBoundingClientRect = (browser, target) => () => {
   const rect = target.getBoundingClientRect()
   if (typeof DOMRect === "undefined") return rect
 
   const fakeRect = DOMRect.fromRect(rect)
-  fakeRect.x = rect.x - theWindow._elm_spec.viewportOffset.x
-  fakeRect.y = rect.y - theWindow._elm_spec.viewportOffset.y
+  fakeRect.x = rect.x - browser.viewportOffset.x
+  fakeRect.y = rect.y - browser.viewportOffset.y
   return fakeRect
 }

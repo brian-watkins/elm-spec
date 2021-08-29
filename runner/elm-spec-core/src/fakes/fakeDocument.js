@@ -1,11 +1,17 @@
 const { fakeElement } = require('./fakeElement')
 
 module.exports = class FakeDocument {
-  constructor(theWindow, fakeLocation) {
+  constructor(theWindow, browser, fakeLocation) {
     this.window = theWindow
+    this.browser = browser
     this.location = fakeLocation
     this.elementMappers = []
     this.proxy = this.createProxy()
+    this.eventListeners = {}
+  }
+
+  clearEventListeners() {
+    this.eventListeners = {}
   }
 
   addElementMapper(mapper) {
@@ -64,7 +70,7 @@ module.exports = class FakeDocument {
     return (elementId) => {
       const element = target.getElementById(elementId)
       if (!element) return null
-      return fakeElement(this.window, element)
+      return fakeElement(this.browser, element)
     }
   }
 
@@ -72,10 +78,10 @@ module.exports = class FakeDocument {
     return new Proxy(documentElement, {
       get: (target, prop) => {
         if (prop === 'clientWidth') {
-          return this.window._elm_spec.innerWidth
+          return this.browser.innerWidth
         }
         if (prop === 'clientHeight') {
-          return this.window._elm_spec.innerHeight
+          return this.browser.innerHeight
         }
         const val = target[prop]
         return typeof val === "function"
@@ -91,10 +97,10 @@ module.exports = class FakeDocument {
         ? this.visibilityChangeListener(handler)
         : handler
       
-      if (this.window._elm_spec.documentEventListeners[type] === undefined) {
-        this.window._elm_spec.documentEventListeners[type] = []
+      if (this.eventListeners[type] === undefined) {
+        this.eventListeners[type] = []
       }
-      this.window._elm_spec.documentEventListeners[type].push(listener)
+      this.eventListeners[type].push(listener)
       target.addEventListener(type, listener)
     }
   }  
@@ -102,7 +108,7 @@ module.exports = class FakeDocument {
   customRemoveEventListener(target)  {
     return (type, fun) => {
       if (type === 'visibilitychange') {
-        target.removeEventListener(type, this.window._elm_spec.documentEventListeners['visibilitychange'].pop())
+        target.removeEventListener(type, this.eventListeners['visibilitychange'].pop())
       } else {
         target.removeEventListener(type, fun)
       }
@@ -111,7 +117,11 @@ module.exports = class FakeDocument {
   
   visibilityChangeListener(handler) {
     return (e) => {
-      handler({ target: { hidden: !this.window._elm_spec.isVisible } })
+      handler({
+        target: {
+          hidden: !this.browser.isVisible
+        }
+      })
     }
   }
 }

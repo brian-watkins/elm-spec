@@ -1,65 +1,89 @@
 
-exports.fakeWindow = (theWindow, location) => {
-  return new Proxy(theWindow, {
-    get: (target, prop) => {
-      if (prop === 'addEventListener') {
-        return customAddEventListener(theWindow, target)
-      }
-      if (prop === 'removeEventListener') {
-        return customRemoveEventListener(theWindow, target)
-      }
-      if (prop === 'location') {
-        return location
-      }
-      if (prop === 'scroll') {
-        return (x, y) => {
-          theWindow._elm_spec.viewportOffset.x = x
-          theWindow._elm_spec.viewportOffset.y = y
+module.exports = class FakeWindow {
+
+  constructor(theWindow, browser, location) {
+    this.location = location
+    this.browser = browser
+    this.eventListeners = {}
+    this.proxy = this.createProxy(theWindow)
+  }
+
+  clearEventListeners() {
+    this.eventListeners = {}
+  }
+
+  createProxy(theWindow) {
+    return new Proxy(theWindow, {
+      get: (target, prop) => {
+        if (prop === 'addEventListener') {
+          return this.customAddEventListener(target)
         }
+        if (prop === 'removeEventListener') {
+          return this.customRemoveEventListener(target)
+        }
+        if (prop === 'location') {
+          return this.location
+        }
+        if (prop === 'scroll') {
+          return (x, y) => {
+            this.browser.viewportOffset = { x, y }
+          }
+        }
+        if (prop === 'pageXOffset') {
+          return this.browser.viewportOffset.x
+        }
+        if (prop === 'pageYOffset') {
+          return this.browser.viewportOffset.y
+        }
+        const val = target[prop]
+        return typeof val === "function"
+          ? (...args) => val.apply(target, args)
+          : val;
+      },
+      set: (target, prop, value) => {
+        if (prop === 'location') {
+          this.location.assign(value)
+        } else {
+          target[prop] = value
+        }
+        return true
       }
-      if (prop === 'pageXOffset') {
-        return theWindow._elm_spec.viewportOffset.x
+    })
+  }
+
+  customAddEventListener(target) {
+    return (type, handler) => {
+      const listener = (type === "resize")
+        ? this.resizeListener(handler)
+        : handler
+
+      if (this.eventListeners[type] === undefined) {
+        this.eventListeners[type] = []
       }
-      if (prop === 'pageYOffset') {
-        return theWindow._elm_spec.viewportOffset.y
-      }
-      const val = target[prop]
-      return typeof val === "function"
-        ? (...args) => val.apply(target, args)
-        : val;
-    },
-    set: (target, prop, value) => {
-      if (prop === 'location') {
-        location.assign(value)
-      } else {
-        target[prop] = value
-      }
-      return true
+      this.eventListeners[type].push(listener)
+
+      target.addEventListener(type, listener)
     }
-  })
-}
-
-const customAddEventListener = (theWindow, target) => (type, handler) => {
-  const listener = (type === "resize")
-    ? resizeListener(theWindow, handler)
-    : handler
-  
-  if (theWindow._elm_spec.windowEventListeners[type] === undefined) {
-    theWindow._elm_spec.windowEventListeners[type] = []
   }
-  theWindow._elm_spec.windowEventListeners[type].push(listener)
 
-  target.addEventListener(type, listener)
-}
-
-const customRemoveEventListener = (theWindow, target) => (type, fun) => {
-  if (type === 'resize') {
-    target.removeEventListener(type, theWindow._elm_spec.windowEventListeners['resize'].pop())
-  } else {
-    target.removeEventListener(type, fun)
+  customRemoveEventListener(target) {
+    return (type, fun) => {
+      if (type === 'resize') {
+        target.removeEventListener(type, this.eventListeners['resize'].pop())
+      } else {
+        target.removeEventListener(type, fun)
+      }
+    }
   }
-}
 
-const resizeListener = (theWindow, handler) => (e) => {
-  handler({ target: { innerWidth: theWindow._elm_spec.innerWidth, innerHeight: theWindow._elm_spec.innerHeight }})
+  resizeListener(handler) {
+    return (e) => {
+      handler({
+        target: {
+          innerWidth: this.browser.innerWidth,
+          innerHeight: this.browser.innerHeight
+        }
+      })
+    }
+  }
 }

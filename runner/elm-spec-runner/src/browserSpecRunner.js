@@ -37,7 +37,7 @@ module.exports = class BrowserSpecRunner {
   runSpecInBrowser(runnerOptions) {
     return (browser, index) => {
       return browser.evaluate((options) => {
-        return window._elm_spec.run(options.runnerOptions, options.segment)
+        return window._elm_spec_run(options.runnerOptions, options.segment)
       }, { runnerOptions, segment: index })
     }
   }

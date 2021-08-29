@@ -11,9 +11,7 @@
     "url": "git+https://github.com/brian-watkins/elm-spec.git"
   },
   "scripts": {
-    "prepublish": "npm run build",
-    "test": "tape -r esm test/harness.test.js | tap-difflet",
-    "build": "esbuild ./adapterSrc/browserAdapter.js --bundle --outfile=./src/browserAdapter.js"
+    "test": "tape -r esm test/harness.test.js | tap-difflet"
   },
   "bugs": {
     "url": "https://github.com/brian-watkins/elm-spec/issues"

@@ -8,7 +8,7 @@ window.document.head.appendChild(base)
 
 const elmContext = new ElmContext(window)
 
-window._elm_spec.run = (options, segment) => {
+window._elm_spec_run = (options, segment) => {
   return new Promise((resolve) => {
     const reporter = new BrowserReporter()
   

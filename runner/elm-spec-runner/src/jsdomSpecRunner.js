@@ -18,7 +18,7 @@ module.exports = class JSDOMSpecRunner {
 
   runSpecInBrowser(runnerOptions) {
     return async (browser, index) => {
-      return browser.window._elm_spec.run(runnerOptions, index)
+      return browser.window._elm_spec_run(runnerOptions, index)
     }
   }
 
