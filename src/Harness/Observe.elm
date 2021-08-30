@@ -65,7 +65,7 @@ tryToGenerateExpectation : ExposedExpectationRepository model -> (String, Json.V
 tryToGenerateExpectation expectations (name, expected) =
   case expectations.get name of
     Just expectationGenerator ->
-      Ok <| expectationGenerator expected
+      expectationGenerator expected
     Nothing ->
       Err <| Report.note <| "No expectation has been exposed with the name " ++ name
 

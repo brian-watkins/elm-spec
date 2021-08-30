@@ -43,6 +43,13 @@ harnessTest("expectation doesn't exist", async function(harness, t) {
   })
 })
 
+harnessTest("expectation config cannot be decoded", async function(harness, t) {
+  const scenario = await harness.startScenario("default")
+  await expectError(t, () => scenario.observe("title", 32), (message) => {
+    t.true(message.startsWith("Unable to configure expectation:"), "it rejects the observe config json with an error")
+  })
+})
+
 harnessTest("a step aborts", async function(harness, t) {
   const observations = await captureObservations(async () => {
     const scenario = await harness.startScenario("default")
