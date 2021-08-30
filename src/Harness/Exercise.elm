@@ -67,7 +67,7 @@ generateSteps steps message =
     |> Result.andThen (\(stepName, config) ->
       case steps.get stepName of
         Just stepGenerator ->
-          Ok <| stepGenerator config
+          stepGenerator config
         Nothing ->
           Err <| Report.note <| "No steps have been exposed with the name " ++ stepName
     )

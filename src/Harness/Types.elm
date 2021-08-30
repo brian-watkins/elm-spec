@@ -9,7 +9,7 @@ import Spec.Report exposing (Report)
 
 type HarnessExport model msg
   = SetupExport (Json.Value -> Result Report (Setup model msg))
-  | StepsExport (Json.Value -> List (Step model msg))
+  | StepsExport (Json.Value -> Result Report (List (Step model msg)))
   | ExpectationExport (Json.Value -> Expectation model)
 
 
@@ -18,7 +18,7 @@ type alias ExposedExpectation model =
 
 
 type alias ExposedSteps model msg
-  = Json.Value -> List (Step model msg)
+  = Json.Value -> Result Report (List (Step model msg))
 
 
 type alias ExposedSetup model msg =

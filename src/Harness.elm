@@ -69,7 +69,7 @@ expect claim observer =
 
 run : List (Step model msg) -> HarnessExport model msg
 run steps =
-  Harness.Types.StepsExport <| \_ -> steps
+  Harness.Types.StepsExport <| \_ -> Ok steps
 
 
 toRun : (a -> List (Step model msg)) -> (Json.Decoder a -> HarnessExport model msg)
@@ -78,9 +78,9 @@ toRun generator =
     Harness.Types.StepsExport <| \value ->
       case Json.decodeValue decoder value of
         Ok config ->
-          generator config
+          Ok <| generator config
         Err message ->
-          Debug.todo <| "Could not configure setup! " ++ Json.errorToString message
+          Err <| Report.note <| "Unable to configure steps: " ++ Json.errorToString message
 
 
 use : Json.Decoder a -> (Json.Decoder a -> HarnessExport model msg) -> HarnessExport model msg
