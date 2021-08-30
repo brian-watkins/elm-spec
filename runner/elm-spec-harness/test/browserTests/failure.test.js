@@ -15,6 +15,12 @@ harnessTest("setup doesn't exist", async function(harness, t) {
   })
 })
 
+harnessTest("setup configured with bad json", async function(harness, t) {
+  await expectError(t, () => harness.startScenario("withName", 27), (message) => {
+    t.true(message.startsWith("Unable to configure setup:"), "it rejects the start config json with an error")
+  })
+})
+
 harnessTest("steps don't exist", async function(harness, t) {
   const scenario = await harness.startScenario("default")
   await expectError(t, () => scenario.runSteps("some-steps-that-do-not-exist"), (message) => {

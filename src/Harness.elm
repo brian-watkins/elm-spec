@@ -19,6 +19,7 @@ import Spec.Setup exposing (Setup)
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim exposing (Claim, Verdict(..))
 import Spec.Observer.Internal as Observer
+import Spec.Report as Report
 import Dict
 import Json.Decode as Json
 import Browser
@@ -105,7 +106,7 @@ toObserve generator =
 
 setup : Setup model msg -> HarnessExport model msg
 setup theSetup =
-  Harness.Types.SetupExport <| \_ -> theSetup
+  Harness.Types.SetupExport <| \_ -> Ok theSetup
 
 
 toSetup : (a -> Setup model msg) -> (Json.Decoder a -> HarnessExport model msg)
@@ -114,9 +115,9 @@ toSetup generator =
     Harness.Types.SetupExport <| \value ->
       case Json.decodeValue decoder value of
         Ok config ->
-          generator config
+          Ok <| generator config
         Err message ->
-          Debug.todo <| "Could not configure setup! " ++ Json.errorToString message
+          Err <| Report.note <| "Unable to configure setup: " ++ Json.errorToString message
 
 
 type alias HarnessExport model msg

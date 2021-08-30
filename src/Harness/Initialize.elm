@@ -68,7 +68,7 @@ tryToGenerateSetup : ExposedSetupRepository model msg -> ( String, Json.Value ) 
 tryToGenerateSetup setups ( setupName, config ) =
   case setups.get setupName of
     Just setupGenerator ->
-      Ok <| setupGenerator config
+      setupGenerator config
     Nothing ->
       Err <| Report.note <| "No setup has been exposed with the name " ++ setupName
 
