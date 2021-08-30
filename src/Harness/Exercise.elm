@@ -169,7 +169,7 @@ subscriptions actions _ =
         "CONTINUE" ->
           Continue
         _ ->
-          Debug.todo "Unknown scenario state message in Exercise state!"
+          ReceivedMessage message
     else if Message.is "_scenario" "abort" message then
       case Message.decode Report.decoder message of
         Ok report ->

@@ -166,7 +166,7 @@ subscriptions actions _ =
         "CONTINUE" ->
           Continue
         _ ->
-          Debug.todo "Unknown scenario state message in Exercise state!"
+          ReceivedMessage message
     else
       ReceivedMessage message
   )

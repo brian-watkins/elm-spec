@@ -126,7 +126,7 @@ subscriptions actions model =
             "CONTINUE" ->
               ResetComplete
             _ ->
-              Debug.todo "Unexpected scenario state message in Harness Program!"
+              ReceivedMessage message
         else
           ReceivedMessage message
       )
@@ -135,5 +135,5 @@ subscriptions actions model =
         if Message.is "_configure" "complete" message then
           ConfigureComplete
         else
-          Debug.todo <| "Unknown message received in Initialize state! " ++ message.home ++ "/" ++ message.name
+          ReceivedMessage message
       )
