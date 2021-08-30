@@ -226,5 +226,3 @@ handleStepCommand actions exerciseModel command =
       )
     Step.RecordCondition condition ->
       update { exerciseModel | conditionsApplied = exerciseModel.conditionsApplied ++ [ condition ] } actions Continue
-    Step.DoNothing ->
-      update exerciseModel actions Continue

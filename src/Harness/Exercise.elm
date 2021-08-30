@@ -135,10 +135,8 @@ handleStepCommand actions model command =
       ( { model | responseHandler = Just responseHandler }
       , actions.send <| Message.stepRequest message
       )
-    _ ->
-      -- Note that we don't need the 'recordConditons' step command
-      -- BUT File loading does seem to utilize the DoNothing step command to deal with some kind of error case ...
-      Debug.todo "Try to handle a command we can't yet handle!"
+    Step.RecordCondition _ ->
+      ( model, Cmd.none )
 
 
 handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )

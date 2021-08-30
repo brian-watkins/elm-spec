@@ -19,7 +19,6 @@ type Command msg
   | SendRequest Message (Message -> Command msg)
   | SendCommand (Cmd msg)
   | RecordCondition String
-  | DoNothing
 
 
 sendToProgram : Cmd msg -> Command msg
@@ -56,4 +55,4 @@ programCommand =
 
 nothing : Command msg
 nothing =
-  DoNothing
+  SendCommand Cmd.none
