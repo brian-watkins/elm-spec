@@ -115,9 +115,11 @@ requestStuff =
   , Event.click
   ]
 
+
 logTitle =
   [ Markup.log << by [ id "title" ]
   ]
+
 
 badSteps =
   [ Markup.target << by [ id "some-element-that-does-not-exist" ]
