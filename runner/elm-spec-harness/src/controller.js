@@ -1,6 +1,8 @@
 const ElmContext = require('elm-spec-core/src/elmContext')
 const ProgramReference = require('elm-spec-core/src/programReference')
 const Harness = require('./harness')
+const HarnessRunner = require('./runner')
+const { createProxyApp } = require('./proxyApp')
 
 module.exports = class HarnessController {
   constructor() {
@@ -13,7 +15,19 @@ module.exports = class HarnessController {
       return this.initHarnessProgram(Elm, moduleName)
     })
     
-    return new Harness(this.context, harnessApp)
+    const runner = new HarnessRunner(harnessApp, this.context, {})
+    runner
+      .on("log", (report) => {
+        this.logHandler(report)
+      })
+      .on("observation", (observation) => {
+        this.observationHandler(observation)
+      })
+      .subscribe()
+
+    const proxyApp = createProxyApp(harnessApp)
+
+    return new Harness(this.context, runner, proxyApp)
   }
 
   initHarnessProgram(Elm, moduleName) {
@@ -32,10 +46,10 @@ module.exports = class HarnessController {
   }
 
   setObservationHandler(handler) {
-    this.context.set("harnessObservationHandler", handler)
+    this.observationHandler = handler
   }
 
   setLogHandler(handler) {
-    this.context.set("harnessLogHandler", handler)
+    this.logHandler = handler
   }
 }

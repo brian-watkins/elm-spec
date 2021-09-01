@@ -6,7 +6,7 @@ harnessTest("handling an observation", async function(harness, t) {
   const observations = await captureObservations(async () => {
     const scenario = await harness.startScenario("default")
     await scenario.runSteps("click", 5)
-    await scenario.observe("count", "15 clicks!", { t, message: "this should fail" })
+    await scenario.observe("count", "15 clicks!", "this should fail")
   })
   
   t.true(observations.length === 1 && observations[0].summary === "REJECTED", "it handles the rejected observation")

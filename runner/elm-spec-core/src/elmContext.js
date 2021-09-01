@@ -115,14 +115,6 @@ window._elm_spec_load_elm = (context) => {
     }
   }
 
-  set(key, value) {
-    this.fakes[key] = value
-  }
-
-  get(key) {
-    return this.fakes[key]
-  }
-
   fileInputForOpenFileSelector() {
     return this.fileInput
   }

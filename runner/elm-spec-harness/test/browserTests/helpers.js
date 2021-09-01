@@ -65,9 +65,9 @@ function generateTestHandler(harnessModule, testHandler) {
 }
 
 function setupDefaultHandlers(t) {
-  onObservation((observation, message) => {
+  onObservation((observation) => {
     if (observation.summary === "ACCEPTED") {
-      t.pass(message)
+      t.pass(observation.description)
     }
   })
 

@@ -1,19 +1,11 @@
-const { createProxyApp } = require('./proxyApp')
-const HarnessRunner = require('./runner')
 const HarnessScenario = require('./scenario')
 
 module.exports = class Harness {
 
-  constructor(context, harnessApp) {
+  constructor(context, runner, proxyApp) {
     this.context = context
-    this.runner = new HarnessRunner(harnessApp, context, {})
-      
-    this.runner.on("log", (report) => {
-      this.context.get("harnessLogHandler")(report)
-    })
-      .subscribe()
-
-    this.proxyApp = createProxyApp(harnessApp)
+    this.runner = runner
+    this.proxyApp = proxyApp
   }
 
   getElmApp() {
@@ -26,11 +18,10 @@ module.exports = class Harness {
 
     return new Promise((resolve, reject) => {
       this.runner.once("complete", () => {
-        this.runner.removeAllListeners("error")
-        resolve(new HarnessScenario(this.context, this.runner, sendToProgram))
+        const scenario = new HarnessScenario(this.context, this.runner, sendToProgram)
+        resolve(scenario)
       })
       this.runner.once("error", report => {
-        this.runner.removeAllListeners("complete")
         reject(report[0].statement)
       })
       sendToProgram({
@@ -41,6 +32,10 @@ module.exports = class Harness {
           config
         }
       })
+    })
+    .finally(() => {
+      this.runner.removeAllListeners("error")
+      this.runner.removeAllListeners("complete")
     })
   }
 

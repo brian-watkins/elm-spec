@@ -146,9 +146,9 @@ update config exports msg model =
       if Message.is "_harness" "start" message then
         update config exports (ReceivedMessage message) (waiting runModel)
       else if Message.is "_harness" "observe" message then
-        case Observe.generateExpectation (expectationsRepo exports.expectations) message of
-          Ok expectation ->
-            Observe.init (observeActions config) expectation
+        case Observe.generateModel (expectationsRepo exports.expectations) message of
+          Ok observeModel ->
+            Observe.init (observeActions config) observeModel
               |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
               |> Tuple.mapFirst Running
           Err report ->

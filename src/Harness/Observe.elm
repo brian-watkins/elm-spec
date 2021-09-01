@@ -2,7 +2,7 @@ module Harness.Observe exposing
   ( Model, defaultModel
   , Msg(..)
   , Actions
-  , generateExpectation
+  , generateModel
   , init
   , update
   , ExposedExpectationRepository
@@ -24,6 +24,7 @@ import Json.Decode as Json
 type alias Model model =
   { inquiryHandler: Maybe (Message -> Judgment model)
   , expectation: Maybe (Expectation model)
+  , description: String
   }
 
 
@@ -31,6 +32,15 @@ defaultModel : Model model
 defaultModel =
   { inquiryHandler = Nothing
   , expectation = Nothing
+  , description = ""
+  }
+
+
+toModel : String -> Expectation model -> Model model
+toModel description expectation =
+  { defaultModel
+  | expectation = Just expectation
+  , description = description
   }
 
 
@@ -52,27 +62,37 @@ type alias ExposedExpectationRepository model =
   }
 
 
-generateExpectation : ExposedExpectationRepository model -> Message -> Result Report (Expectation model)
-generateExpectation expectations message =
-  Result.map2 Tuple.pair
+type alias ObserverConfig =
+  { name: String
+  , expected: Json.Value
+  , description: String
+  }
+
+generateModel : ExposedExpectationRepository model -> Message -> Result Report (Model model)
+generateModel expectations message =
+  Result.map3 ObserverConfig
     (Message.decode (Json.field "observer" Json.string) message)
     (Message.decode (Json.field "expected" Json.value) message)
+    (Message.decode (Json.field "description" Json.string) message)
     |> Result.mapError Report.note
-    |> Result.andThen (tryToGenerateExpectation expectations)
+    |> Result.andThen (\config ->
+      tryToGenerateExpectation expectations config
+        |> Result.map (toModel config.description)
+    )
 
 
-tryToGenerateExpectation : ExposedExpectationRepository model -> (String, Json.Value) -> Result Report (Expectation model)
-tryToGenerateExpectation expectations (name, expected) =
-  case expectations.get name of
+tryToGenerateExpectation : ExposedExpectationRepository model -> ObserverConfig -> Result Report (Expectation model)
+tryToGenerateExpectation expectations config =
+  case expectations.get config.name of
     Just expectationGenerator ->
-      expectationGenerator expected
+      expectationGenerator config.expected
     Nothing ->
-      Err <| Report.note <| "No expectation has been exposed with the name " ++ name
+      Err <| Report.note <| "No expectation has been exposed with the name " ++ config.name
 
 
-init : Actions msg -> Expectation model -> ( Model model, Cmd msg )
-init actions expectation =
-  ( { defaultModel | expectation = Just expectation }
+init : Actions msg -> Model model -> ( Model model, Cmd msg )
+init actions model =
+  ( model
   , actions.sendToSelf Continue
   )
 
@@ -98,7 +118,7 @@ observe config context model (Expectation expectation) =
   case expectation context of
     Complete verdict ->
       ( model
-      , sendVerdict config verdict 
+      , sendVerdict config model.description verdict
       )
     Inquire message handler ->
       ( { model | inquiryHandler = Just handler }
@@ -113,7 +133,7 @@ handleObserveMessage actions model message =
     |> Result.map (processInquiryMessage actions model)
     |> Result.withDefault
       ( model
-      , sendVerdict actions <| Claim.Reject <| Report.note "Unable to decode inquiry result!"
+      , sendVerdict actions model.description <| Claim.Reject <| Report.note "Unable to decode inquiry result!"
       )
 
 
@@ -124,12 +144,12 @@ processInquiryMessage actions model message =
     , Message.decode Report.decoder message
         |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
         |> Claim.Reject
-        |> sendVerdict actions
+        |> sendVerdict actions model.description
     )
   else
     ( { model | inquiryHandler = Nothing }
     , handleInquiry message model.inquiryHandler
-        |> sendVerdict actions
+        |> sendVerdict actions model.description
     )
 
 
@@ -149,10 +169,10 @@ inquiryResult message handler =
       Claim.Reject <| Report.note "Recursive Inquiry not supported!"
 
 
-sendVerdict : Actions msg -> Verdict -> Cmd msg
-sendVerdict actions verdict =
+sendVerdict : Actions msg -> String -> Verdict -> Cmd msg
+sendVerdict actions message verdict =
   Cmd.batch
-    [ Message.observation [] "harness observation" verdict
+    [ Message.observation [] message verdict
         |> actions.send
     , actions.finished
     ]
