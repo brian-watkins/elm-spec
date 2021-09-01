@@ -1,6 +1,6 @@
 module File.Harness exposing (..)
 
-import Harness exposing (use, toRun, setup)
+import Harness exposing (setup, stepsFrom)
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -31,7 +31,7 @@ selectFile path =
   ]
 
 steps =
-  [ ( "selectFile", use Json.string <| toRun selectFile )
+  [ ( "selectFile", stepsFrom Json.string selectFile )
   ]
 
 

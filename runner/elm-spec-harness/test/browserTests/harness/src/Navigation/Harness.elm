@@ -1,6 +1,6 @@
 module Navigation.Harness exposing (..)
 
-import Harness exposing (Expectation, expect, use, run, toRun, observe, toObserve, setup, toSetup)
+import Harness exposing (Expectation, expect, steps, expectationFrom, setup, setupFrom)
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step exposing (Step)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining)
@@ -55,7 +55,7 @@ defaultUrl =
 
 
 setups =
-  [ ( "withLocation", use Json.string <| toSetup setupWithInitialLocation )
+  [ ( "withLocation", setupFrom Json.string setupWithInitialLocation )
   , ( "withNoNavigation", setup withNoNavigation )
   ]
 
@@ -81,10 +81,10 @@ clickLinkToLeaveApp =
   ]
 
 
-steps =
-  [ ( "gotoAwesome", run gotoAwesome )
-  , ( "clickLinkToChangeLocation", run clickLinkToChangeLocation )
-  , ( "clickLinkToLeaveApp", run clickLinkToLeaveApp )
+stepsToExpose =
+  [ ( "gotoAwesome", steps gotoAwesome )
+  , ( "clickLinkToChangeLocation", steps clickLinkToChangeLocation )
+  , ( "clickLinkToLeaveApp", steps clickLinkToLeaveApp )
   ]
 
 
@@ -111,11 +111,11 @@ pageText expected =
 
 
 observers =
-  [ ("title", use Json.string <| toObserve titleObserver)
-  , ("location", use Json.string <| toObserve locationObserver)
-  , ("pageText", use Json.string <| toObserve pageText)
+  [ ("title", expectationFrom Json.string titleObserver)
+  , ("location", expectationFrom Json.string locationObserver)
+  , ("pageText", expectationFrom Json.string pageText)
   ]
 
 
 main =
-  Runner.harness <| setups ++ steps ++ observers
+  Runner.harness <| setups ++ stepsToExpose ++ observers

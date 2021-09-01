@@ -1,6 +1,6 @@
 module Basic.Harness exposing (..)
 
-import Harness exposing (Expectation, expect, use, run, toRun, observe, toObserve, setup, toSetup)
+import Harness exposing (Expectation, expect, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom)
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step exposing (Step)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining, isListWithLength)
@@ -89,10 +89,10 @@ setupWithInitialPortCommand attributes =
 
 setups =
   [ ( "default", setup defaultSetup )
-  , ( "withName", use setupConfigDecoder <| toSetup setupWithName )
-  , ( "withStub", use Json.value <| toSetup setupWithStub )
-  , ( "withInitialCommand", use (Json.list Json.string) <| toSetup setupWithInitialCommand )
-  , ( "withInitialPortCommand", use (Json.list Json.string) <| toSetup setupWithInitialPortCommand )
+  , ( "withName", setupFrom setupConfigDecoder setupWithName )
+  , ( "withStub", setupFrom Json.value setupWithStub )
+  , ( "withInitialCommand", setupFrom (Json.list Json.string) setupWithInitialCommand )
+  , ( "withInitialPortCommand", setupFrom (Json.list Json.string) setupWithInitialPortCommand )
   ]
 
 
@@ -126,16 +126,16 @@ badSteps =
   , Event.click
   ]
 
-steps =
-  [ ( "click", use Json.int <| toRun clickMultiple )
-  , ( "inform", run inform )
-  , ( "requestStuff", run requestStuff )
-  , ( "logTitle", run logTitle )
-  , ( "badSteps", run badSteps )
+stepsToExpose =
+  [ ( "click", stepsFrom Json.int clickMultiple )
+  , ( "inform", steps inform )
+  , ( "requestStuff", steps requestStuff )
+  , ( "logTitle", steps logTitle )
+  , ( "badSteps", steps badSteps )
   ]
 
 
--- Observers
+-- Expectations
 
 titleObserver : String -> Expectation App.Model
 titleObserver actual =
@@ -189,15 +189,15 @@ requestsMatchingDecoder =
     ( Json.field "count" Json.int )
 
 
-observers =
-  [ ("title", use Json.string <| toObserve titleObserver)
-  , ("name", use Json.string <| toObserve nameObserver)
-  , ("attributes", use (Json.list Json.string) <| toObserve attributesObserver)
-  , ("count", use Json.string <| toObserve countObserver)
-  , ("stuff", use Json.string <| toObserve stuffObserver)
-  , ("requestsMatching", use requestsMatchingDecoder <| toObserve requestsMatching)
+expectations =
+  [ ("title", expectationFrom Json.string titleObserver)
+  , ("name", expectationFrom Json.string nameObserver)
+  , ("attributes", expectationFrom (Json.list Json.string) attributesObserver)
+  , ("count", expectationFrom Json.string countObserver)
+  , ("stuff", expectationFrom Json.string stuffObserver)
+  , ("requestsMatching", expectationFrom requestsMatchingDecoder requestsMatching)
   ]
 
 
 main =
-  Runner.harness <| setups ++ steps ++ observers
+  Runner.harness <| setups ++ stepsToExpose ++ expectations

@@ -2,7 +2,7 @@ module Harness exposing
   ( expect, Expectation
   , browserHarness
   , Message, Msg, Model, Config, Flags
-  , HarnessExport, use, run, toRun, observe, toObserve, setup, toSetup
+  , HarnessFunction, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom
   )
 
 {-| Functions for writing a harness.
@@ -11,8 +11,24 @@ A harness is a collection of functions that can be exposed to a test on the Java
 using the `elm-spec-harness` package. See the README for that package for details on how to
 get started.
 
+For example:
+
+    typeStuff : String -> List (Step Model Msg)
+    typeStuff textToType =
+      [ Spec.Markup.target << by [ id "input-field" ]
+      , Spec.Markup.Event.input textToType
+      ]
+
+
+    Runner.browserHarness
+      [ ( "typeStuff"
+        , Harness.stepsFrom Json.string typeStuff
+        )
+      ]
+
+
 # Expose Harness Functions
-@docs HarnessExport, use, setup, toSetup, run, toRun, observe, toObserve
+@docs HarnessFunction, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom
 
 # Create an Expectation
 @docs Expectation, expect 
@@ -106,106 +122,83 @@ expect claim observer =
 
 {-| Expose a list of steps to run.
 -}
-run : List (Step model msg) -> HarnessExport model msg
-run steps =
-  Harness.Types.StepsExport <| \_ -> Ok steps
+steps : List (Step model msg) -> HarnessFunction model msg
+steps stepsToExpose =
+  stepsFrom Json.value (\_ -> stepsToExpose)
 
 
-{-| Expose a function that produces a list of steps to run based on some argument.
+{-| Expose a function that produces a list of steps to run based on some argument
+passed in from the Javascript side.
 
-Compose this function with [Harness.use](#use) to provide a decoder for the argument.
+Provide a decoder for the argument.
 -}
-toRun : (a -> List (Step model msg)) -> (Json.Decoder a -> HarnessExport model msg)
-toRun generator =
-  \decoder ->
-    Harness.Types.StepsExport <| \value ->
-      case Json.decodeValue decoder value of
-        Ok config ->
-          Ok <| generator config
-        Err message ->
-          Err <| Report.note <| "Unable to configure steps: " ++ Json.errorToString message
-
-
-{-| Provide a decoder for JSON data that will be used to configure some exported function.
-
-For example:
-
-    typeStuff : String -> List (Step Model Msg)
-    typeStuff textToType =
-      [ Spec.Markup.target << by [ id "input-field" ]
-      , Spec.Markup.Event.input textToType
-      ]
-
-
-    Runner.browserHarness
-      [ ( "typeStuff"
-        , Harness.use Json.string <| Harness.toRun typeStuff
-        )
-      ]
-
--}
-use : Json.Decoder a -> (Json.Decoder a -> HarnessExport model msg) -> HarnessExport model msg
-use decoder generator =
-  generator decoder
+stepsFrom : Json.Decoder a -> (a -> List (Step model msg)) -> HarnessFunction model msg
+stepsFrom decoder generator =
+  Harness.Types.StepsFunction <| \value ->
+    case Json.decodeValue decoder value of
+      Ok config ->
+        Ok <| generator config
+      Err message ->
+        Err <| Report.note <| "Unable to configure steps: " ++ Json.errorToString message
 
 
 {-| Expose an expectation to observe.
 -}
-observe : Expectation model -> HarnessExport model msg
-observe expectation =
-  Harness.Types.ExpectationExport <| \_ -> Ok expectation
+expectation : Expectation model -> HarnessFunction model msg
+expectation expectationToExpose =
+  expectationFrom Json.value (\_ -> expectationToExpose)
 
 
-{-| Expose a function that produces an expectation to observe based on some argument.
+{-| Expose a function that produces an expectation to observe based on some argument
+passed in from the Javascript side.
 
-Compose this function with [Harness.use](#use) to provide a decoder for the argument.
+Provide a decoder for the argument.
 -}
-toObserve : (a -> Expectation model) -> (Json.Decoder a -> HarnessExport model msg)
-toObserve generator =
-  \decoder ->
-    Harness.Types.ExpectationExport <| \value ->
-      case Json.decodeValue decoder value of
-        Ok config ->
-          Ok <| generator config
-        Err message ->
-          Err <| Report.note <| "Unable to configure expectation: " ++ Json.errorToString message
+expectationFrom : Json.Decoder a -> (a -> Expectation model) -> HarnessFunction model msg
+expectationFrom decoder generator =
+  Harness.Types.ExpectationFunction <| \value ->
+    case Json.decodeValue decoder value of
+      Ok config ->
+        Ok <| generator config
+      Err message ->
+        Err <| Report.note <| "Unable to configure expectation: " ++ Json.errorToString message
 
 
 {-| Expose a `Setup` for a scenario.
 -}
-setup : Setup model msg -> HarnessExport model msg
+setup : Setup model msg -> HarnessFunction model msg
 setup theSetup =
-  Harness.Types.SetupExport <| \_ -> Ok theSetup
+  setupFrom Json.value (\_ -> theSetup)
 
 
-{-| Expose a function that produces a `Setup` for a scenario based on some argument.
+{-| Expose a function that produces a `Setup` for a scenario based on some argument
+passed in from the Javascript side.
 
-Compose this function with [Harness.use](#use) to provide a decoder for the argument.
+Provide a decoder for the argument.
 -}
-toSetup : (a -> Setup model msg) -> (Json.Decoder a -> HarnessExport model msg)
-toSetup generator =
-  \decoder ->
-    Harness.Types.SetupExport <| \value ->
-      case Json.decodeValue decoder value of
-        Ok config ->
-          Ok <| generator config
-        Err message ->
-          Err <| Report.note <| "Unable to configure setup: " ++ Json.errorToString message
+setupFrom : Json.Decoder a -> (a -> Setup model msg) -> HarnessFunction model msg
+setupFrom decoder generator =
+  Harness.Types.SetupFunction <| \value ->
+    case Json.decodeValue decoder value of
+      Ok config ->
+        Ok <| generator config
+      Err message ->
+        Err <| Report.note <| "Unable to configure setup: " ++ Json.errorToString message
 
 
 {-| Represents an exposed function that can be executed from the Javascript side.
 -}
-type alias HarnessExport model msg
-  = Harness.Types.HarnessExport model msg
+type alias HarnessFunction model msg
+  = Harness.Types.HarnessFunction model msg
 
 
-collateExports : List (String, HarnessExport model msg) -> Program.Exports model msg
+collateExports : List (String, HarnessFunction model msg) -> Program.Exports model msg
 collateExports exports =
   { setups = 
       exports
         |> List.filterMap (\(name, export) ->
           case export of
-            Harness.Types.SetupExport setupExport ->
+            Harness.Types.SetupFunction setupExport ->
               Just (name, setupExport)
             _ ->
               Nothing
@@ -215,7 +208,7 @@ collateExports exports =
       exports
         |> List.filterMap (\(name, export) ->
           case export of
-            Harness.Types.StepsExport stepsExport ->
+            Harness.Types.StepsFunction stepsExport ->
               Just (name, stepsExport)
             _ ->
               Nothing
@@ -225,7 +218,7 @@ collateExports exports =
       exports
         |> List.filterMap (\(name, export) ->
           case export of
-            Harness.Types.ExpectationExport expectationExport ->
+            Harness.Types.ExpectationFunction expectationExport ->
               Just (name, expectationExport)
             _ ->
               Nothing
@@ -239,7 +232,7 @@ the `elm-spec-harness` package.
 
 Once you've created the `Config` value, I suggest adding a function like so:
 
-    browserHarness : List (String, HarnessExport model msg) -> Program Flags (Model model msg) (Msg msg)
+    browserHarness : List (String, HarnessFunction model msg) -> Program Flags (Model model msg) (Msg msg)
     browserHarness =
       Harness.browserHarness config
 
@@ -253,7 +246,7 @@ Then, each of your harness modules can implement their own `main` function:
 Then use the `elm-spec-harness` package to call the exposed functions as necessary.
 
 -}
-browserHarness : Config msg -> List (String, HarnessExport model msg) -> Program Flags (Model model msg) (Msg msg)
+browserHarness : Config msg -> List (String, HarnessFunction model msg) -> Program Flags (Model model msg) (Msg msg)
 browserHarness config exports =
   Browser.application
     { init = \_ _ key ->
