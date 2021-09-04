@@ -9,6 +9,7 @@ const { report, line } = require('./report')
 
 const ELM_SPEC_OUT = "elmSpecOut"
 const ELM_SPEC_IN = "elmSpecIn"
+const ELM_SPEC_CORE_VERSION = 7
 
 module.exports = class ProgramRunner extends EventEmitter {
   static hasElmSpecPorts(app) {
@@ -27,6 +28,10 @@ module.exports = class ProgramRunner extends EventEmitter {
     }
 
     return null
+  }
+
+  static version() {
+    return ELM_SPEC_CORE_VERSION
   }
 
   constructor(app, context, options) {

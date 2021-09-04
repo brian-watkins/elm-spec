@@ -9,10 +9,10 @@ module.exports = class HarnessController {
     this.context = new ElmContext(window)
   }
 
-  prepareHarness(moduleName) {    
+  prepareHarness(moduleName, version) {
     const harnessApp = this.context.evaluate((Elm) => {
       // what if Elm is undefined (due to compilation error?)
-      return this.initHarnessProgram(Elm, moduleName)
+      return this.initHarnessProgram(Elm, moduleName, version || HarnessRunner.version())
     })
     
     const runner = new HarnessRunner(harnessApp, this.context, {})
@@ -30,7 +30,7 @@ module.exports = class HarnessController {
     return new Harness(this.context, runner, proxyApp)
   }
 
-  initHarnessProgram(Elm, moduleName) {
+  initHarnessProgram(Elm, moduleName, version) {
     const programReference = ProgramReference.find(Elm, moduleName)
 
     if (programReference === undefined) {
@@ -39,9 +39,10 @@ module.exports = class HarnessController {
 
     const program = programReference.program
 
-    // Need to pass in the version at some point
     return program.init({
-      flags: {}
+      flags: {
+        version
+      }
     })
   }
 

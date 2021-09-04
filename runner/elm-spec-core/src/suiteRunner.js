@@ -3,8 +3,6 @@ const SpecRunner = require('./specRunner')
 const ProgramReference = require('./programReference')
 const { report, line } = require('./report')
 
-const ELM_SPEC_CORE_VERSION = 7
-
 const RESULT_STATUS = Object.freeze({ OK: "Ok", ERROR: "Error" })
 
 class SuiteRunner extends EventEmitter {
@@ -13,7 +11,7 @@ class SuiteRunner extends EventEmitter {
     this.context = context
     this.reporter = reporter
     this.options = options
-    this.version = version || ELM_SPEC_CORE_VERSION
+    this.version = version || SpecRunner.version()
     this.segment = { id: 0, count: 1 }
   }
 

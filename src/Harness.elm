@@ -50,6 +50,7 @@ import Spec.Observer as Observer exposing (Observer)
 import Spec.Claim exposing (Claim, Verdict(..))
 import Spec.Observer.Internal as Observer
 import Spec.Report as Report
+import Spec.Version as Version
 import Dict
 import Json.Decode as Json
 import Browser
@@ -249,8 +250,8 @@ Then use the `elm-spec-harness` package to call the exposed functions as necessa
 browserHarness : Config msg -> List (String, HarnessFunction model msg) -> Program Flags (Model model msg) (Msg msg)
 browserHarness config exports =
   Browser.application
-    { init = \_ _ key ->
-        Program.init (Just key)
+    { init = \flags _ key ->
+        Program.init Version.core flags (Just key)
     , view = Program.view
     , update = Program.update config <| collateExports exports
     , subscriptions = Program.subscriptions config

@@ -73,12 +73,9 @@ import Spec.Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
 import Spec.Program as Program
 import Spec.Message as Message
+import Spec.Version as Version
 import Spec.Claim exposing (Claim)
 import Browser
-
-
-requiredElmSpecCoreVersion : number
-requiredElmSpecCoreVersion = 7
 
 
 {-| Represents the spec.
@@ -285,7 +282,7 @@ The elm-spec runner will find each spec module and run it as its own program.
 program : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
 program config specs =
   Platform.worker
-    { init = \flags -> Program.init (\_ -> specs) requiredElmSpecCoreVersion config flags Nothing
+    { init = \flags -> Program.init (\_ -> specs) Version.core config flags Nothing
     , update = Program.update config
     , subscriptions = Program.subscriptions config
     }
@@ -312,7 +309,7 @@ The elm-spec runner will find each spec module and run it as its own program.
 browserProgram : Config msg -> List (Spec model msg) -> Program Flags (Model model msg) (Msg msg)
 browserProgram config specs =
   Browser.application
-    { init = \flags _ key -> Program.init (\_ -> specs) requiredElmSpecCoreVersion config flags (Just key)
+    { init = \flags _ key -> Program.init (\_ -> specs) Version.core config flags (Just key)
     , view = Program.view
     , update = Program.update config
     , subscriptions = Program.subscriptions config

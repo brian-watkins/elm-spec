@@ -1,14 +1,15 @@
+const { writeReport } = require('./report')
+
 module.exports = class HarnessScenario {
-  constructor(context, runner, sendToProgram) {
+  constructor(context, runner) {
     this.context = context
     this.runner = runner
-    this.sendToProgram = sendToProgram
   }
 
   wait() {
     return new Promise((resolve) => {
       this.runner.once("complete", resolve)
-      this.sendToProgram({
+      this.context.sendToProgram({
         home: "_harness",
         name: "wait",
         body: null
@@ -45,9 +46,9 @@ module.exports = class HarnessScenario {
         resolve()
       })
       this.runner.once("error", (report) => {
-        reject(report[0].statement)
+        reject(writeReport(report))
       })
-      this.sendToProgram(message)
+      this.context.sendToProgram(message)
     }).finally(() => {
       this.runner.removeAllListeners("complete")
       this.runner.removeAllListeners("error")

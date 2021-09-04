@@ -31,6 +31,7 @@ import Html
 import Task
 import Dict exposing (Dict)
 import Browser.Navigation as Navigation
+import Spec.Version as Version exposing (Version)
 
 
 type alias Config msg =
@@ -60,6 +61,7 @@ type Msg msg
 type Model model msg
   = Waiting WaitingModel
   | Running (RunModel model msg)
+  | Failed Report
 
 
 type alias WaitingModel =
@@ -99,12 +101,18 @@ type RunState model msg
 
 
 type alias Flags =
-  { }
+  { version: Version
+  }
 
 
-init : Maybe Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
-init maybeKey =
-  ( Waiting { key = maybeKey }, Cmd.none )
+init : Version -> Flags -> Maybe Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
+init requiredVersion flags maybeKey =
+  if Version.isOk { required = requiredVersion, actual = flags.version } then
+    ( Waiting { key = maybeKey }, Cmd.none )
+  else
+    ( Failed <| Version.error { required = requiredVersion, actual = flags.version }
+    , Cmd.none
+    )
 
 
 waiting : RunModel model msg -> Model model msg
@@ -121,6 +129,10 @@ view model =
       }
     Running runModel ->
       Subject.view SubjectMsg runModel.subjectModel
+    Failed _ ->
+      { title = "Harness Program"
+      , body = [ Html.text "" ]
+      }
 
 
 update : Config msg -> Exports model msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
@@ -204,6 +216,11 @@ update config exports msg model =
 
     ( Running runModel, Error report ) ->
       ( waiting runModel
+      , abortWith config report
+      )
+
+    ( Failed report, _ ) ->
+      ( model
       , abortWith config report
       )
 
@@ -315,6 +332,8 @@ subscriptions : Config msg -> Model model msg -> Sub (Msg msg)
 subscriptions config model =
   case model of
     Waiting _ ->
+      config.listen ReceivedMessage
+    Failed _ ->
       config.listen ReceivedMessage
     Running runModel ->
       case runModel.state of

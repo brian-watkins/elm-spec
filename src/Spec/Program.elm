@@ -9,7 +9,8 @@ import Spec.Scenario.State as ScenarioProgram
 import Spec.Scenario.Internal as Internal
 import Spec.Message as Message exposing (Message)
 import Spec.Helpers exposing (mapDocument)
-import Spec.Report as Report
+import Spec.Version as Version exposing (Version)
+import Spec.Report as Report exposing (Report)
 import Browser.Navigation exposing (Key)
 import Browser exposing (UrlRequest, Document)
 import Json.Decode as Json
@@ -19,7 +20,7 @@ import Url exposing (Url)
 
 
 type alias Flags =
-  { version: Int
+  { version: Version
   , segment: Int
   , segmentCount: Int
   }
@@ -53,9 +54,9 @@ type alias Model model msg =
   }
 
 
-init : (() -> List (Internal.Spec model msg)) -> Int -> Config msg -> Flags -> Maybe Key -> ( Model model msg, Cmd (Msg msg) )
-init specProvider requiredElmSpecCoreVersion config flags maybeKey =
-  if requiredElmSpecCoreVersion == flags.version then
+init : (() -> List (Internal.Spec model msg)) -> Version -> Config msg -> Flags -> Maybe Key -> ( Model model msg, Cmd (Msg msg) )
+init specProvider requiredVersion config flags maybeKey =
+  if Version.isOk { required = requiredVersion, actual = flags.version } then
     ( { scenarios = specProvider () |> gatherScenarios
       , scenarioModel = ScenarioProgram.init
       , key = maybeKey
@@ -71,7 +72,8 @@ init specProvider requiredElmSpecCoreVersion config flags maybeKey =
       , tags = []
       , segment = { id = 0, total = 1 }
       }
-    , versionMismatchErrorMessage requiredElmSpecCoreVersion flags.version
+    , Version.error { required = requiredVersion, actual = flags.version }
+        |> errorMessage
         |> config.send
     )
 
@@ -205,13 +207,9 @@ gatherScenarios specs =
     |> List.concat
 
 
-versionMismatchErrorMessage : Int -> Int -> Message
-versionMismatchErrorMessage elmSpecCoreRequiredVersion elmSpecCoreActualVersion =
+errorMessage : Report -> Message
+errorMessage report =
   Message.for "_spec" "error"
     |> Message.withBody (
-      Report.encode <| Report.batch
-        [ Report.fact "elm-spec requires elm-spec-core at version" <| String.fromInt elmSpecCoreRequiredVersion ++ ".x"
-        , Report.fact "but your elm-spec-core version is" <| String.fromInt elmSpecCoreActualVersion ++ ".x"
-        , Report.note "Check your JavaScript runner and upgrade to make the versions match."
-        ]
+      Report.encode <| report
     )

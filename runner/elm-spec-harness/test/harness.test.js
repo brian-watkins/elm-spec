@@ -44,6 +44,7 @@ runTests((testOutput) => {
 
   test("failures", function(t) {
     expectPassingTest(t, testOutput, "it throws an exception when the module does not exist", "startHarness throws an Error if the module does not exist")
+    expectPassingTest(t, testOutput, "it rejects the start promise with an error when the versions are out of sync", "harness.start rejects if the elm-spec core version is wrong")
     expectPassingTest(t, testOutput, "it rejects the start promise with an error", "harness.start rejects if the setup does not exist")
     expectPassingTest(t, testOutput, "it rejects the start config json with an error", "harness.start rejects if the config cannot be decoded")
     expectPassingTest(t, testOutput, "it rejects the runSteps promise with an error", "scenario.runSteps rejects if the steps do not exist")

@@ -49,7 +49,7 @@ window._elm_spec_load_elm = (context) => {
   registerFakes() {
     this.fakes = {}
     this.fakes.blobStore = new BlobStore()
-    const fakeLocation = new FakeLocation(this.sendToProgram())
+    const fakeLocation = new FakeLocation((msg) => { this.sendToProgram(msg) })
     this.fakes.requestAnimationFrame = this.timer.clock.requestAnimationFrame
     this.fakes.cancelAnimationFrame = this.timer.clock.cancelAnimationFrame
     this.fakes.date = fakeDate(this.timer.clock)
@@ -102,17 +102,15 @@ window._elm_spec_load_elm = (context) => {
 
   openFileSelector(inputElement) {
     this.fileInput = inputElement
-    this.sendToProgram()({home: "_html", name: "file-selector-open", body: null})
+    this.sendToProgram({home: "_html", name: "file-selector-open", body: null})
   }
 
   registerApp(app) {
     this.app = app
   }
 
-  sendToProgram() {
-    return (msg) => {
-      this.app.ports.elmSpecIn.send(msg)
-    }
+  sendToProgram(msg) {
+    this.app.ports.elmSpecIn.send(msg)
   }
 
   fileInputForOpenFileSelector() {

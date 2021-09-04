@@ -5,7 +5,7 @@ module.exports = class FilePlugin {
   constructor(context) {
     this.window = context.window
     this.context = context
-    this.out = this.context.sendToProgram()
+    this.out = (msg) => { this.context.sendToProgram(msg) }
     this.reset()
   }
 
