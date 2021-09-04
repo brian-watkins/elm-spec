@@ -1,9 +1,5 @@
 const HarnessController = require('./controller')
 
-const base = document.createElement("base")
-base.setAttribute("href", "http://elm-spec")
-window.document.head.appendChild(base)
-
 const harnessController = new HarnessController()
 
 function prepareHarness(name) {
