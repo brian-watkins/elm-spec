@@ -14,6 +14,7 @@
     "start:karma": "npm start --prefix runner/karma-elm-spec-framework",
     "test:karma": "npm test --prefix runner/karma-elm-spec-framework",
     "test:harness": "npm test --prefix runner/elm-spec-harness",
+    "test:harness:only": "npm run test:harness --prefix runner/elm-spec-harness",
     "build:docs": "elm make --docs=docs.json",
     "preview:docs": "elm-doc-preview"
   },
