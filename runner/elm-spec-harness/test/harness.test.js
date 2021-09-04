@@ -1,5 +1,5 @@
 import test from "tape";
-import { runTests } from "./runTests"
+import { runTests, expectPassingTest } from "./runTests"
 
 runTests((testOutput) => {
 
@@ -17,8 +17,8 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it observes that the stubbed response was processed", "a test passes that requires the context to be configured")
     t.end()
   })
-  
-  test('navigation', function(t) {
+
+  test('navigation', function (t) {
     expectPassingTest(t, testOutput, "it observes that the initial location was processed", "a test passes that sets an initial location")
     expectPassingTest(t, testOutput, "the updated location was processed", "a test passes that changes the location")
     expectPassingTest(t, testOutput, "the location change request was processed", "a test passes that depends on a url request")
@@ -30,20 +30,20 @@ runTests((testOutput) => {
     t.end()
   })
 
-  test('animation', function(t) {
+  test('animation', function (t) {
     expectPassingTest(t, testOutput, "it finds one element after an animation frame", "a test passes that subscribes to animation frames")
     expectPassingTest(t, testOutput, "it finds one element after an animation frame on the next setup", "lingering animation frames are reset between setups")
     t.end()
   })
 
-  test('handlers', function(t) {
+  test('handlers', function (t) {
     expectPassingTest(t, testOutput, "it handles the rejected observation", "observations are handled")
     expectPassingTest(t, testOutput, "it handles the expected log", "logs are handled")
     t.end()
   })
 
-  test("failures", function(t) {
-    expectPassingTest(t, testOutput, "it throws an exception when the module does not exist", "startHarness throws an Error if the module does not exist")
+  test("failures", function (t) {
+    expectPassingTest(t, testOutput, "it throws an exception when the module does not exist", "prepareHarness throws an Error if the module does not exist")
     expectPassingTest(t, testOutput, "it rejects the start promise with an error when the versions are out of sync", "harness.start rejects if the elm-spec core version is wrong")
     expectPassingTest(t, testOutput, "it rejects the start promise with an error", "harness.start rejects if the setup does not exist")
     expectPassingTest(t, testOutput, "it rejects the start config json with an error", "harness.start rejects if the config cannot be decoded")
@@ -58,19 +58,3 @@ runTests((testOutput) => {
   })
 
 })
-
-const skipTest = (t, output, testName, message) => {
-  t.skip(message)
-}
-
-const expectPassingTest = (t, output, testName, message) => {
-  expectListItemMatches(t, output, `^ok \\d+ ${testName}$`, message)
-}
-
-const expectListItemMatches = (t, list, regex, success) => {
-  if (list.find(element => element.match(regex))) {
-    t.pass(success)
-  } else {
-    t.fail(`Expected [ ${list} ] to have an item matching: ${regex}`)
-  }
-}

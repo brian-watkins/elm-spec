@@ -11,7 +11,9 @@
     "url": "git+https://github.com/brian-watkins/elm-spec.git"
   },
   "scripts": {
-    "test": "tape -r esm test/harness.test.js | tap-difflet"
+    "test": "npm run test:harness && npm run test:compilation",
+    "test:harness": "tape -r esm test/harness.test.js | tap-difflet",
+    "test:compilation": "tape -r esm test/harnessCompilation.test.js | tap-difflet"
   },
   "bugs": {
     "url": "https://github.com/brian-watkins/elm-spec/issues"

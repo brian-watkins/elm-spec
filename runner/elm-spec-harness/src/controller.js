@@ -11,10 +11,17 @@ module.exports = class HarnessController {
 
   prepareHarness(moduleName, version) {
     const harnessApp = this.context.evaluate((Elm) => {
-      // what if Elm is undefined (due to compilation error?)
+      if (!Elm) {
+        return undefined
+      }
+
       return this.initHarnessProgram(Elm, moduleName, version || HarnessRunner.version())
     })
     
+    if (!harnessApp) {
+      throw new Error("Compilation error!")
+    }
+
     const runner = new HarnessRunner(harnessApp, this.context, {})
     runner
       .on("log", (report) => {

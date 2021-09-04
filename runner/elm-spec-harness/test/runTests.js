@@ -6,8 +6,8 @@ import NodeModulesPolyfill from "@esbuild-plugins/node-modules-polyfill";
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 
 
-const runTestInBrowser = async () => {
-  const serveResult = await serveTests()
+const runTestInBrowser = async (compilerOptions, testEntry) => {
+  const serveResult = await serveTests(testEntry)
 
   const browser = await chromium.launch({
     headless: false
@@ -15,7 +15,7 @@ const runTestInBrowser = async () => {
   const page = await browser.newPage()
 
   let output = []
-  
+
   const waitForTestsToComplete = new Promise((resolve) => {
     page.on("console", (message) => {
       if (message.text() === "END") {
@@ -30,16 +30,12 @@ const runTestInBrowser = async () => {
   })
 
   // load the compiled elm
-  const compiler = new Compiler({
-    cwd: "./test/browserTests/harness",
-    specPath: "./src/**/Harness.elm",
-    logLevel: Compiler.LOG_LEVEL.QUIET
-  })
+  const compiler = new Compiler(compilerOptions)
   const compiledHarness = compiler.compile()
   await page.evaluate(compiledHarness)
 
   // load/start the test in playwright
-  await Promise.all([waitForTestsToComplete, page.addScriptTag({ url: "http://localhost:8888/tests.js" }) ])
+  await Promise.all([waitForTestsToComplete, page.addScriptTag({ url: "http://localhost:8888/tests.js" })])
 
   await browser.close()
 
@@ -48,11 +44,11 @@ const runTestInBrowser = async () => {
   return output
 }
 
-const serveTests = async () => {
+const serveTests = async (testEntry) => {
   return serve({
     port: 8888
   }, {
-    entryPoints: [ join(__dirname, "browserTests", "index.js") ],
+    entryPoints: [join(__dirname, "browserTests", testEntry)],
     bundle: true,
     outfile: "tests.js",
     define: { global: 'window', "__dirname": `"${__dirname}"` },
@@ -66,11 +62,45 @@ const serveTests = async () => {
 }
 
 export async function runTests(outputHandler) {
-  const testOutput = await runTestInBrowser()
+  const testOutput = await runTestInBrowser({
+    cwd: "./test/browserTests/harness",
+    specPath: "./src/**/Harness.elm",
+    logLevel: Compiler.LOG_LEVEL.QUIET
+  }, "index.js")
 
+  handleOutput(outputHandler, testOutput)
+}
+
+export async function runCompilationTests(outputHandler) {
+  const testOutput = await runTestInBrowser({
+    cwd: "./test/browserTests/harness",
+    specPath: "./src/CompilationError/BadHarness.elm",
+    logLevel: Compiler.LOG_LEVEL.SILENT
+  }, "compilation.test.js")
+
+  handleOutput(outputHandler, testOutput)
+}
+
+function handleOutput(outputHandler, testOutput) {
   if (process.env["DEBUG"]) {
     return
   }
 
   outputHandler(testOutput)
+}
+
+export function skipTest(t, output, testName, message) {
+  t.skip(message)
+}
+
+export function expectPassingTest(t, output, testName, message) {
+  expectListItemMatches(t, output, `^ok \\d+ ${testName}$`, message)
+}
+
+const expectListItemMatches = (t, list, regex, success) => {
+  if (list.find(element => element.match(regex))) {
+    t.pass(success)
+  } else {
+    t.fail(`Expected [ ${list} ] to have an item matching: ${regex}`)
+  }
 }
