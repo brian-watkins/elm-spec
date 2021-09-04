@@ -42,6 +42,7 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.plugins = this.generatePlugins(this.context)
 
     this.portPlugin = new PortPlugin(app)
+    this.portPlugin.subscribe({ ignore: [ ELM_SPEC_OUT ]})
     this.plugins["_port"] = this.portPlugin
 
     this.httpPlugin = new HttpPlugin(this.context)
@@ -118,6 +119,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         const observation = specMessage.body
         this.emit('observation', observation)
         if (this.options.endOnFailure && observation.summary === "REJECTED") {
+          // this might not actually be used anywhere?
           out(this.specStateMessage("finish"))
         } else {
           out(this.continue())
@@ -275,7 +277,6 @@ module.exports = class ProgramRunner extends EventEmitter {
   }
 
   configureComplete(out) {
-    this.portPlugin.subscribe({ ignore: [ ELM_SPEC_OUT ]})
     out({
       home: "_configure",
       name: "complete",
@@ -289,7 +290,6 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   detachProgram() {
     this.timer.stopWaitingForStack()
-    this.portPlugin.unsubscribe()
   }
 
   continue () {

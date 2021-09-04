@@ -3,7 +3,6 @@ const { report, line } = require('../report')
 module.exports = class PortPlugin {
   constructor(app) {
     this.app = app
-    this.subscriptions = []
   }
 
   handle(specMessage, out, next, abort) {
@@ -44,7 +43,6 @@ module.exports = class PortPlugin {
   subscribeToPort(name) {
     const port = { cmd: name }
     port.listener = this.portListener(port)
-    this.subscriptions.push(port)
     this.app.ports[port.cmd].subscribe(port.listener)
   }
 
@@ -61,13 +59,5 @@ module.exports = class PortPlugin {
       }
       app.ports.elmSpecIn.send(record)
     }
-  }
-
-  unsubscribe() {
-    for (let i = 0; i < this.subscriptions.length; i++) {
-      const port = this.subscriptions[i]
-      this.app.ports[port.cmd].unsubscribe(port.listener)
-    }
-    this.subscriptions = []
   }
 }
