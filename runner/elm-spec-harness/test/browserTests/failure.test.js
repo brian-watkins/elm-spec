@@ -1,5 +1,5 @@
 import { prepareHarness } from "../../src"
-import test from "tape"
+import test from "fresh-tape"
 import { expectError, captureObservations, harnessTestGenerator } from "./helpers"
 
 test("harness module does not exist", function(t) {

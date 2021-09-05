@@ -1,5 +1,5 @@
 import { prepareHarness } from "../../src";
-import { test } from "tape"
+import test from "fresh-tape"
 import "./helpers"
 
 test("compilation error", function(t) {

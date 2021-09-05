@@ -12,20 +12,20 @@
   },
   "scripts": {
     "test": "npm run test:harness && npm run test:compilation",
-    "test:harness": "tape -r esm test/harness.test.js | tap-difflet",
-    "test:compilation": "tape -r esm test/harnessCompilation.test.js | tap-difflet"
+    "test:harness": "fresh-tape -r esm test/harness.test.js | tap-difflet",
+    "test:compilation": "fresh-tape -r esm test/harnessCompilation.test.js | tap-difflet"
   },
   "bugs": {
     "url": "https://github.com/brian-watkins/elm-spec/issues"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.1.0",
-    "@esbuild-plugins/node-modules-polyfill": "^0.1.1",
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "@esbuild-plugins/node-modules-polyfill": "^0.1.2",
     "esbuild": "^0.12.15",
     "esm": "^3.2.25",
+    "fresh-tape": "^5.3.1",
     "playwright": "^1.12.3",
-    "tap-difflet": "^0.7.2",
-    "tape": "^5.2.2"
+    "tap-difflet": "^0.7.2"
   },
   "dependencies": {
     "elm-spec-core": "^7.2.0"

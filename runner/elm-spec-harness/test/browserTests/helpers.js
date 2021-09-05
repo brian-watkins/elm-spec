@@ -1,5 +1,5 @@
-import { onFinish } from "tape"
-import test from "tape"
+import { onFinish } from "fresh-tape"
+import test from "fresh-tape"
 import { onObservation, onLog, prepareHarness } from "../../src"
 
 export async function observe(t, scenario, name, expected, message) {

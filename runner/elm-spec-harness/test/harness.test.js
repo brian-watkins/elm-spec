@@ -1,5 +1,6 @@
-import test from "tape";
-import { runTests, expectPassingTest } from "./runTests"
+import test from "fresh-tape";
+import { runTests } from "./runTests"
+import { expectPassingTest } from "./helpers"
 
 runTests((testOutput) => {
 

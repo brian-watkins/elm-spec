@@ -1,4 +1,4 @@
-import test from "tape"
+import test from "fresh-tape"
 import HarnessController from "../../src/controller"
 import { expectError } from "./helpers"
 

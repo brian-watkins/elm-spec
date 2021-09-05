@@ -1,5 +1,6 @@
-import test from "tape";
-import { runCompilationTests, expectPassingTest } from "./runTests"
+import test from "fresh-tape";
+import { runCompilationTests } from "./runTests"
+import { expectPassingTest } from "./helpers"
 
 runCompilationTests((testOutput) => {
   test("compilation error", function (t) {
