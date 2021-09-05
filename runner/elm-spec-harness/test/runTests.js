@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { join } from "path";
 import { serve } from "esbuild";
-import Compiler from "elm-spec-core/compiler"
+import Compiler from "../compiler"
 import NodeModulesPolyfill from "@esbuild-plugins/node-modules-polyfill";
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 
@@ -64,7 +64,7 @@ const serveTests = async (testEntry) => {
 export async function runTests(outputHandler) {
   const testOutput = await runTestInBrowser({
     cwd: "./test/browserTests/harness",
-    specPath: "./src/**/Harness.elm",
+    harnessPath: "./src/**/Harness.elm",
     logLevel: Compiler.LOG_LEVEL.QUIET
   }, "index.js")
 
@@ -74,7 +74,7 @@ export async function runTests(outputHandler) {
 export async function runCompilationTests(outputHandler) {
   const testOutput = await runTestInBrowser({
     cwd: "./test/browserTests/harness",
-    specPath: "./src/CompilationError/BadHarness.elm",
+    harnessPath: "./src/CompilationError/BadHarness.elm",
     logLevel: Compiler.LOG_LEVEL.SILENT
   }, "compilation.test.js")
 
