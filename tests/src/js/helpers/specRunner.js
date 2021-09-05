@@ -1,7 +1,4 @@
-const SuiteRunner = require('elm-spec-core/src/suiteRunner')
-const SpecRunner = require('elm-spec-core/src/specRunner')
-const ElmContext = require('elm-spec-core/src/elmContext')
-const ProgramReference = require('elm-spec-core/src/programReference')
+const { SpecRunner, SuiteRunner, ElmContext, ProgramReference } = require('elm-spec-core')
 const TestReporter = require('./testReporter')
 
 const elmContext = new ElmContext(window)

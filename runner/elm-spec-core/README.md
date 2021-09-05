@@ -27,11 +27,12 @@ You may import these modules from elm-spec-core:
 
 ```
 const {
-  Compiler,
   ElmContext,
   SuiteRunner,
   ProgramRunner
 } = require('elm-spec-core')
+
+const Compiler = require('elm-spec-core/compiler')
 ```
 
 ## Compiler

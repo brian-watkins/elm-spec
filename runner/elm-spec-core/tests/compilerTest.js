@@ -1,4 +1,4 @@
-const Compiler = require('../src/compiler')
+const Compiler = require('../compiler')
 const chai = require('chai')
 const expect = chai.expect
 const path = require('path')

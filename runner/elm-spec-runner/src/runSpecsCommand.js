@@ -1,6 +1,5 @@
-const path = require('path')
-const fs = require('fs')
-const { Compiler, SuiteRunner } = require('elm-spec-core')
+const { SuiteRunner } = require('elm-spec-core')
+const Compiler = require('elm-spec-core/compiler')
 
 
 module.exports = class RunSpecsCommand {

@@ -2,7 +2,8 @@ const chai = require('chai')
 chai.use(require('chai-things'));
 const expect = chai.expect
 const RunSpecsCommand = require("../src/runSpecsCommand")
-const { Compiler, SuiteRunner } = require("elm-spec-core")
+const { SuiteRunner } = require("elm-spec-core")
+const Compiler = require('elm-spec-core/compiler')
 
 describe("Run Specs Command", () => {
   let testReporter, testRunner, testFileWatcher, testCompiler, subject, executionResult

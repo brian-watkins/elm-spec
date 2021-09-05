@@ -1,5 +1,5 @@
 const { bundleRunnerCode } = require('./bundleHelpers')
-const { Compiler } = require('elm-spec-core')
+const Compiler = require('elm-spec-core/compiler')
 const BrowserSpecRunner = require('../../../../runner/elm-spec-runner/src/browserSpecRunner')
 const FileLoader = require('../../../../runner/elm-spec-runner/src/fileLoader')
 const path = require('path')

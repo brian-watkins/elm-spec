@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { join } from "path";
 import { serve } from "esbuild";
-import Compiler from "elm-spec-core/src/compiler"
+import Compiler from "elm-spec-core/compiler"
 import NodeModulesPolyfill from "@esbuild-plugins/node-modules-polyfill";
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill'
 

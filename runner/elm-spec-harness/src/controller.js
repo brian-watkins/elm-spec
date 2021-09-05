@@ -1,5 +1,4 @@
-const ElmContext = require('elm-spec-core/src/elmContext')
-const ProgramReference = require('elm-spec-core/src/programReference')
+const { ProgramReference, ElmContext } = require('elm-spec-core')
 const Harness = require('./harness')
 const HarnessRunner = require('./runner')
 const { createProxyApp } = require('./proxyApp')

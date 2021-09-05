@@ -4,7 +4,7 @@ const esbuild = require('esbuild')
 const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
 const JSDOMSpecRunner = require('../../elm-spec-runner/src/jsdomSpecRunner')
 const FileLoader = require('../../elm-spec-runner/src/fileLoader')
-const Compiler = require('../src/compiler')
+const Compiler = require('../compiler')
 const path = require('path')
 const { SuiteRunner } = require('../src')
 

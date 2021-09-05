@@ -1,4 +1,4 @@
-const ElmContext = require('./elmContext')
+const ElmContext = require('../src/elmContext')
 const compiler = require("node-elm-compiler")
 const glob = require('glob')
 const path = require('path')

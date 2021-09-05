@@ -3,7 +3,8 @@ const expect = chai.expect
 const JSDOMSpecRunner = require('../src/jsdomSpecRunner')
 const BrowserSpecSunner = require('../src/browserSpecRunner')
 const FileLoader = require('../src/fileLoader')
-const { Compiler, SuiteRunner } = require('elm-spec-core')
+const { SuiteRunner } = require('elm-spec-core')
+const Compiler = require('elm-spec-core/compiler')
 
 const expectBehaviorFor = (browserName, runner) => {
   describe(browserName, () => {
