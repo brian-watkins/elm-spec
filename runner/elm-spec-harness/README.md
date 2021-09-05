@@ -11,7 +11,8 @@ this order:
 3. Bundle and load your tests into the browser
 4. Run your tests
 
-For an example of how to accomplish this using Playwright and esbuild, see [./test/runTest.js].
+For an example of how to accomplish this using Playwright and esbuild, see
+[runTest.js](https://github.com/brian-watkins/elm-spec/tree/master/runner/elm-spec-harness/test/runTest.js).
 
 ### Compiling
 
