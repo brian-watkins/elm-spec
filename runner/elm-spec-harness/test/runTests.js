@@ -10,7 +10,7 @@ const runTestInBrowser = async (compilerOptions, testEntry) => {
   const serveResult = await serveTests(testEntry)
 
   const browser = await chromium.launch({
-    headless: false
+    headless: !process.env["DEBUG"]
   })
   const page = await browser.newPage()
 
