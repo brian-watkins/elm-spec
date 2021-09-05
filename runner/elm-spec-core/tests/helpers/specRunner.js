@@ -1,4 +1,5 @@
-const { ElmContext, SuiteRunner } = require('../../src/index')
+const ElmContext = require("../../src/elmContext")
+const SuiteRunner = require("../../src/suiteRunner")
 const TestReporter = require('./testReporter')
 
 const elmContext = new ElmContext(window)

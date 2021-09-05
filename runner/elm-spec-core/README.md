@@ -13,7 +13,7 @@ On the Node side:
 
 1. Create a browser somehow (using JSDOM or Playwright or Puppeteer etc)
 2. Prepare some JS that instantiates an ElmContext and a Reporter and uses those to create a SuiteRunner.
-3. Bundle this JS (using Browserify etc) and evaluate it in the DOM window.
+3. Bundle this JS (using Browserify, esbuild etc) and evaluate it in the DOM window.
 3. Use the Compiler to compile the code and evaluate it in the DOM window.
 
 On the Browser side:

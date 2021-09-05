@@ -1,6 +1,7 @@
 const chai = require('chai')
 const expect = chai.expect
-const browserify = require('browserify')
+const esbuild = require('esbuild')
+const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
 const JSDOMSpecRunner = require('../../elm-spec-runner/src/jsdomSpecRunner')
 const FileLoader = require('../../elm-spec-runner/src/fileLoader')
 const Compiler = require('../src/compiler')
@@ -342,20 +343,21 @@ const expectScenariosAt = (compilerOptions, options, shouldReadFiles, done, matc
     })
 }
 
-const bundleRunnerCode = () => {
-  const b = browserify();
-  b.add(path.join(__dirname, "helpers", "specRunner.js"));
-  
-  return new Promise((resolve, reject) => {  
-    let bundle = ''
-    const stream = b.bundle()
-    stream.on('data', function(data) {
-      bundle += data.toString()
-    })
-    stream.on('end', function() {
-      resolve(bundle)
-    })
+const bundleRunnerCode = async () => {
+  const result = await esbuild.build({
+    entryPoints: [ path.join(__dirname, "helpers", "specRunner.js") ],
+    bundle: true,
+    write: false,
+    outdir: 'out',
+    define: { global: 'window' },
+    plugins: [
+      NodeModulesPolyfillPlugin()
+    ]
   })
+
+  const out = result.outputFiles[0]
+
+  return Buffer.from(out.contents).toString('utf-8')
 }
 
 const expectOkResult = (result, accepted, rejected, skipped) => {

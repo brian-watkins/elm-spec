@@ -1,18 +1,20 @@
-const browserify = require('browserify');
 const path = require('path')
+const esbuild = require('esbuild')
+const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
 
-exports.bundleRunnerCode = () => {
-  const b = browserify();
-  b.add(path.join(__dirname, "specRunner.js"));
-  
-  return new Promise((resolve, reject) => {  
-    let bundle = ''
-    const stream = b.bundle()
-    stream.on('data', function(data) {
-      bundle += data.toString()
-    })
-    stream.on('end', function() {
-      resolve(bundle)
-    })
+exports.bundleRunnerCode = async () => {
+  const result = await esbuild.build({
+    entryPoints: [ path.join(__dirname, "specRunner.js") ],
+    bundle: true,
+    write: false,
+    outdir: 'out',
+    define: { global: 'window' },
+    plugins: [
+      NodeModulesPolyfillPlugin()
+    ]
   })
+
+  const out = result.outputFiles[0]
+
+  return Buffer.from(out.contents).toString('utf-8')
 }
