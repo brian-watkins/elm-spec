@@ -5,12 +5,15 @@
   "author": "Brian Watkins <brian.watkins@gmail.com>",
   "homepage": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-harness#readme",
   "license": "MIT",
-  "main": "lib/elm-spec-harness.js",
+  "main": "dist/index.js",
+  "files": [ "dist" ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/brian-watkins/elm-spec.git"
   },
   "scripts": {
+    "prepublish": "npm run build",
+    "build": "node build.mjs",
     "test": "npm run test:harness && npm run test:compilation",
     "test:harness": "fresh-tape -r esm test/harness.test.js | tap-difflet",
     "test:compilation": "fresh-tape -r esm test/harnessCompilation.test.js | tap-difflet"
