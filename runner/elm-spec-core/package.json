@@ -11,6 +11,7 @@
     "url": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-core"
   },
   "files": [
+    "compiler/",
     "src/"
   ],
   "main": "src/index.js",
