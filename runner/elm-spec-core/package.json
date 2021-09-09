@@ -16,7 +16,8 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha './tests/*Test.js'"
+    "test": "mocha './tests/*Test.js'",
+    "publish:local": "npm publish --registry http://localhost:4873"
   },
   "author": "Brian Watkins",
   "license": "MIT",

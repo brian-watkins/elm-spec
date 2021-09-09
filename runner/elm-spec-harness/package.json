@@ -17,6 +17,7 @@
   },
   "scripts": {
     "prepublish": "npm run build",
+    "publish:local": "npm publish --registry http://localhost:4873",
     "build": "node build.mjs",
     "test": "npm run test:harness && npm run test:compilation",
     "test:harness": "fresh-tape -r esm test/harness.test.js | tap-difflet",
