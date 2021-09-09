@@ -193,7 +193,7 @@ window._elm_spec_load_elm = (context) => {
 }
 
 const forEachListener = (list, handler) => {
-  for (key in list) {
+  for (const key in list) {
     list[key].forEach((fun) => {
       handler(key, fun)
     })
