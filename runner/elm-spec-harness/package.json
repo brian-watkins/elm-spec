@@ -5,8 +5,12 @@
   "author": "Brian Watkins <brian.watkins@gmail.com>",
   "homepage": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-harness#readme",
   "license": "MIT",
-  "main": "dist/index.js",
-  "files": [ "dist" ],
+  "main": "./src/index.js",
+  "files": [
+    "elmSpecHarness.js",
+    "src",
+    "compiler"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/brian-watkins/elm-spec.git"

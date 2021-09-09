@@ -2,12 +2,11 @@ import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfil
 import esbuild from 'esbuild'
 
 esbuild.build({
-  entryPoints: [ "./src/index.js" ],
-  outfile: "./dist/index.js",
+  entryPoints: [ "./entry.js" ],
+  outfile: "./elmSpecHarness.js",
   bundle: true,
   minify: true,
   logLevel: 'info',
-  format: 'cjs',
   plugins: [
     NodeModulesPolyfillPlugin()
   ],
