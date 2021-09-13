@@ -14,8 +14,6 @@ module.exports = class Harness {
   }
 
   async startScenario(name, config = null) {
-    this.context.timer.reset()
-
     return new Promise((resolve, reject) => {
       this.runner.once("complete", () => {
         const scenario = new HarnessScenario(this.context, this.runner)

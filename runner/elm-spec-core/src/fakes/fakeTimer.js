@@ -48,6 +48,8 @@ module.exports = class FakeTimer {
   }
 
   clearTimers() {
+    if (!this.clock.timers) return
+
     Object.values(this.clock.timers)
       .filter(t => t.type === "Timeout")
       .forEach(t => {

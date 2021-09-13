@@ -9,6 +9,8 @@ module.exports = class HarnessController {
   }
 
   prepareHarness(moduleName, version) {
+    this.context.timer.reset()
+
     const harnessApp = this.context.evaluate((Elm) => {
       if (!Elm) {
         return undefined

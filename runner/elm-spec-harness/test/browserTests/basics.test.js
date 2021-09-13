@@ -18,7 +18,10 @@ harnessTest("the view updates", async function(harness, t) {
 
 harnessTest("the app is reset", async function(harness, t) {
   const scenario = await harness.startScenario("default")
-  await observe(t, scenario, "count", "0 clicks!", "it resets the app at the beginning of each test")
+  await scenario.runSteps("click", 5)
+  harness.stopScenario()
+  const nextScenario = await harness.startScenario("default")
+  await observe(t, nextScenario, "count", "0 clicks!", "it resets the app at the beginning of each scenario")
 })
 
 harnessTest("a message is sent to the app that updates the model and runs a command", async function(harness, t) {

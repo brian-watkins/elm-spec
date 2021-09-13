@@ -9,7 +9,7 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it finds the configured default name", "a test passes that configures the setup")
     expectPassingTest(t, testOutput, "it counts the number of clicks", "a test passes that runs steps and changes the model")
     expectPassingTest(t, testOutput, "it counts the number of clicks again", "a test passes that runs steps and changes the model again after an observation")
-    expectPassingTest(t, testOutput, "it resets the app at the beginning of each test", "a test passes that depends on the app model being reset")
+    expectPassingTest(t, testOutput, "it resets the app at the beginning of each scenario", "a test passes that depends on the app model being reset")
     expectPassingTest(t, testOutput, "it finds the updated name", "a test passes that involves sending a message to the app")
     expectPassingTest(t, testOutput, "it observes that the request triggered by the port message was processed", "a test passes where a port message triggers a command")
     expectPassingTest(t, testOutput, "it runs the initial command", "a test passes that runs an initial command")

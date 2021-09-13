@@ -17,6 +17,7 @@ import Browser exposing (UrlRequest, Document)
 import Spec.Step.Command as Step
 import Spec.Observer.Internal exposing (Judgment(..))
 import Spec.Scenario.Message as Message
+import Spec.Step.Message as Message
 import Spec.Message as Message
 import Spec.Observer.Message as Message
 import Spec.Report as Report exposing (Report)
@@ -186,8 +187,11 @@ update config exports msg model =
         ( model, Cmd.none )
 
     ( Running runModel, SubjectMsg subjectMsg ) ->
-      Subject.update (subjectActions config) subjectMsg runModel.subjectModel
-        |> Tuple.mapFirst (\updated -> Running { runModel | subjectModel = updated })
+      if runModel.state == Initializing then
+        ( model, config.send Message.stepComplete )
+      else
+        Subject.update (subjectActions config) subjectMsg runModel.subjectModel
+          |> Tuple.mapFirst (\updated -> Running { runModel | subjectModel = updated })
 
     ( Running runModel, InitializeMsg initializeMsg ) ->
       Initialize.update (initializeActions config) initializeMsg runModel.initializeModel
