@@ -46,7 +46,7 @@ module.exports = class HarnessScenario {
         resolve()
       })
       this.runner.once("error", (report) => {
-        reject(writeReport(report))
+        reject(new Error(writeReport(report)))
       })
       this.context.sendToProgram(message)
     }).finally(() => {

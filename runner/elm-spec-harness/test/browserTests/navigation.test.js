@@ -36,15 +36,15 @@ harnessTest("loading an external url from a port", async function(harness, t) {
 harnessTest("request url change without setting up navigation", async function(harness, t) {
   const scenario = await harness.startScenario("withNoNavigation")
   
-  await expectError(t, () => scenario.runSteps("clickLinkToChangeLocation"), (message) => {
-    t.equals(message, "A URL request occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url request runSteps promise with an error")
+  await expectError(t, () => scenario.runSteps("clickLinkToChangeLocation"), (error) => {
+    t.equals(error.message, "A URL request occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url request runSteps promise with an error")
   })
 })
 
 harnessTest("change url without setting up navigation", async function(harness, t) {
   const scenario = await harness.startScenario("withNoNavigation")
   
-  await expectError(t, () => scenario.runSteps("gotoAwesome"), (message) => {
-    t.equals(message, "A URL change occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url change runSteps promise with an error")
+  await expectError(t, () => scenario.runSteps("gotoAwesome"), (error) => {
+    t.equals(error.message, "A URL change occurred for an application, but no handler has been provided. Use Spec.Setup.forNavigation to set a handler.", "it rejects the url change runSteps promise with an error")
   })
 })

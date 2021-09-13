@@ -10,43 +10,43 @@ test("harness module does not exist", function(t) {
 const harnessTest = harnessTestGenerator("Basic.Harness")
 
 harnessTest("setup doesn't exist", async function(harness, t) {
-  await expectError(t, () => harness.startScenario("some-setup-that-does-not-exist"), (message) => {
-    t.equals(message, "No setup has been exposed with the name some-setup-that-does-not-exist", "it rejects the start promise with an error")
+  await expectError(t, () => harness.startScenario("some-setup-that-does-not-exist"), (error) => {
+    t.equals(error.message, "No setup has been exposed with the name some-setup-that-does-not-exist", "it rejects the start promise with an error")
   })
 })
 
 harnessTest("setup configured with bad json", async function(harness, t) {
-  await expectError(t, () => harness.startScenario("withName", 27), (message) => {
-    t.true(message.startsWith("Unable to configure setup:"), "it rejects the start config json with an error")
+  await expectError(t, () => harness.startScenario("withName", 27), (error) => {
+    t.true(error.message.startsWith("Unable to configure setup:"), "it rejects the start config json with an error")
   })
 })
 
 harnessTest("steps don't exist", async function(harness, t) {
   const scenario = await harness.startScenario("default")
-  await expectError(t, () => scenario.runSteps("some-steps-that-do-not-exist"), (message) => {
-    t.equals(message, "No steps have been exposed with the name some-steps-that-do-not-exist", "it rejects the runSteps promise with an error")
+  await expectError(t, () => scenario.runSteps("some-steps-that-do-not-exist"), (error) => {
+    t.equals(error.message, "No steps have been exposed with the name some-steps-that-do-not-exist", "it rejects the runSteps promise with an error")
   })
 })
 
 harnessTest("steps configured with bad json", async function(harness, t) {
   const scenario = await harness.startScenario("default")
-  await expectError(t, () => scenario.runSteps("click", "should-be-a-number"), (message) => {
-    t.true(message.startsWith("Unable to configure steps:"), "it rejects the steps config json with an error")
+  await expectError(t, () => scenario.runSteps("click", "should-be-a-number"), (error) => {
+    t.true(error.message.startsWith("Unable to configure steps:"), "it rejects the steps config json with an error")
   })
 })
 
 
 harnessTest("expectation doesn't exist", async function(harness, t) {
   const scenario = await harness.startScenario("default")
-  await expectError(t, () => scenario.observe("some-expectation-that-does-not-exist"), (message) => {
-    t.equals(message, "No expectation has been exposed with the name some-expectation-that-does-not-exist", "it rejects the observe promise with an error")
+  await expectError(t, () => scenario.observe("some-expectation-that-does-not-exist"), (error) => {
+    t.equals(error.message, "No expectation has been exposed with the name some-expectation-that-does-not-exist", "it rejects the observe promise with an error")
   })
 })
 
 harnessTest("expectation config cannot be decoded", async function(harness, t) {
   const scenario = await harness.startScenario("default")
-  await expectError(t, () => scenario.observe("title", 32), (message) => {
-    t.true(message.startsWith("Unable to configure expectation:"), "it rejects the observe config json with an error")
+  await expectError(t, () => scenario.observe("title", 32), (error) => {
+    t.true(error.message.startsWith("Unable to configure expectation:"), "it rejects the observe config json with an error")
   })
 })
 
