@@ -68,6 +68,9 @@ function setupDefaultHandlers(t) {
   onObservation((observation) => {
     if (observation.summary === "ACCEPTED") {
       t.pass(observation.description)
+    } else {
+      console.log("rejected observation", JSON.stringify(observation))
+      t.fail(observation.description)
     }
   })
 
