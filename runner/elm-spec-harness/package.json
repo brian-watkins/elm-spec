@@ -6,6 +6,7 @@
   "homepage": "https://github.com/brian-watkins/elm-spec/runner/elm-spec-harness#readme",
   "license": "MIT",
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "files": [
     "elmSpecHarness.js",
     "src",
