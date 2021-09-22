@@ -23,7 +23,7 @@ subSetup =
 
 
 setups =
-  [ ( "default", setup subSetup )
+  [ Harness.export "default" <| setup subSetup
   ]
 
 
@@ -37,7 +37,7 @@ nextAnimationFrame =
 
 
 stepsToExpose =
-  [ ( "nextAnimationFrame", steps nextAnimationFrame )
+  [ Harness.export "nextAnimationFrame" <| steps nextAnimationFrame
   ]
 
 
@@ -51,7 +51,7 @@ elements expected =
 
 
 claims =
-  [ ( "elements", expectationFrom Json.int elements )
+  [ Harness.export "elements" <| expectationFrom Json.int elements
   ]
 
 

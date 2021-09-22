@@ -88,11 +88,11 @@ setupWithInitialPortCommand attributes =
 
 
 setups =
-  [ ( "default", setup defaultSetup )
-  , ( "withName", setupFrom setupConfigDecoder setupWithName )
-  , ( "withStub", setupFrom Json.value setupWithStub )
-  , ( "withInitialCommand", setupFrom (Json.list Json.string) setupWithInitialCommand )
-  , ( "withInitialPortCommand", setupFrom (Json.list Json.string) setupWithInitialPortCommand )
+  [ Harness.export "default" <| setup defaultSetup
+  , Harness.export "withName" <| setupFrom setupConfigDecoder setupWithName
+  , Harness.export "withStub" <| setupFrom Json.value setupWithStub
+  , Harness.export "withInitialCommand" <| setupFrom (Json.list Json.string) setupWithInitialCommand
+  , Harness.export "withInitialPortCommand" <| setupFrom (Json.list Json.string) setupWithInitialPortCommand
   ]
 
 
@@ -127,11 +127,11 @@ badSteps =
   ]
 
 stepsToExpose =
-  [ ( "click", stepsFrom Json.int clickMultiple )
-  , ( "inform", steps inform )
-  , ( "requestStuff", steps requestStuff )
-  , ( "logTitle", steps logTitle )
-  , ( "badSteps", steps badSteps )
+  [ Harness.export "click" <| stepsFrom Json.int clickMultiple
+  , Harness.export "inform" <| steps inform
+  , Harness.export "requestStuff" <| steps requestStuff
+  , Harness.export "logTitle" <| steps logTitle
+  , Harness.export "badSteps" <| steps badSteps
   ]
 
 
@@ -190,12 +190,12 @@ requestsMatchingDecoder =
 
 
 expectations =
-  [ ("title", expectationFrom Json.string titleObserver)
-  , ("name", expectationFrom Json.string nameObserver)
-  , ("attributes", expectationFrom (Json.list Json.string) attributesObserver)
-  , ("count", expectationFrom Json.string countObserver)
-  , ("stuff", expectationFrom Json.string stuffObserver)
-  , ("requestsMatching", expectationFrom requestsMatchingDecoder requestsMatching)
+  [ Harness.export "title" <| expectationFrom Json.string titleObserver
+  , Harness.export "name" <| expectationFrom Json.string nameObserver
+  , Harness.export "attributes" <| expectationFrom (Json.list Json.string) attributesObserver
+  , Harness.export "count" <| expectationFrom Json.string countObserver
+  , Harness.export "stuff" <| expectationFrom Json.string stuffObserver
+  , Harness.export "requestsMatching" <| expectationFrom requestsMatchingDecoder requestsMatching
   ]
 
 

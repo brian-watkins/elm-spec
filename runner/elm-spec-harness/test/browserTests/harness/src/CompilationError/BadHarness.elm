@@ -11,7 +11,7 @@ defaultSetup =
 
 
 setups =
-  [ ( "default", setupssss defaultSetup )
+  [ Harness.export "default" <| setupssss defaultSetup
   ]
 
 

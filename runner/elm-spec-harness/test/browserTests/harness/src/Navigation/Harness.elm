@@ -55,8 +55,8 @@ defaultUrl =
 
 
 setups =
-  [ ( "withLocation", setupFrom Json.string setupWithInitialLocation )
-  , ( "withNoNavigation", setup withNoNavigation )
+  [ Harness.export "withLocation" <| setupFrom Json.string setupWithInitialLocation
+  , Harness.export "withNoNavigation" <| setup withNoNavigation
   ]
 
 
@@ -82,9 +82,9 @@ clickLinkToLeaveApp =
 
 
 stepsToExpose =
-  [ ( "gotoAwesome", steps gotoAwesome )
-  , ( "clickLinkToChangeLocation", steps clickLinkToChangeLocation )
-  , ( "clickLinkToLeaveApp", steps clickLinkToLeaveApp )
+  [ Harness.export "gotoAwesome" <| steps gotoAwesome
+  , Harness.export "clickLinkToChangeLocation" <| steps clickLinkToChangeLocation
+  , Harness.export "clickLinkToLeaveApp" <| steps clickLinkToLeaveApp
   ]
 
 
@@ -111,9 +111,9 @@ pageText expected =
 
 
 observers =
-  [ ("title", expectationFrom Json.string titleObserver)
-  , ("location", expectationFrom Json.string locationObserver)
-  , ("pageText", expectationFrom Json.string pageText)
+  [ Harness.export "title" <| expectationFrom Json.string titleObserver
+  , Harness.export "location" <| expectationFrom Json.string locationObserver
+  , Harness.export "pageText" <| expectationFrom Json.string pageText
   ]
 
 

@@ -2,6 +2,7 @@ module Harness exposing
   ( expect, Expectation
   , browserHarness
   , Message, Msg, Model, Config, Flags
+  , HarnessExport, export
   , HarnessFunction, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom
   )
 
@@ -21,13 +22,13 @@ For example:
 
 
     Runner.browserHarness
-      [ ( "typeStuff"
-        , Harness.stepsFrom Json.string typeStuff
-        )
+      [ Harness.stepsFrom Json.string typeStuff
+          |> Harness.export "typeStuff"
       ]
 
 
 # Expose Harness Functions
+@docs HarnessExport, export
 @docs HarnessFunction, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom
 
 # Create an Expectation
@@ -101,10 +102,6 @@ type alias Flags =
   Program.Flags
 
 
--- requiredElmSpecCoreVersion : number
--- requiredElmSpecCoreVersion = 7
-
-
 {-| Represents what should be the case about some part of the world.
 
 Expectations are checked at the end of the scenario, after all steps of the
@@ -121,14 +118,14 @@ expect claim observer =
   Harness.Types.Expectation <| Observer.expect claim observer
 
 
-{-| Expose a list of steps to run.
+{-| Create a HarnessFunction that runs a list of steps.
 -}
 steps : List (Step model msg) -> HarnessFunction model msg
 steps stepsToExpose =
   stepsFrom Json.value (\_ -> stepsToExpose)
 
 
-{-| Expose a function that produces a list of steps to run based on some argument
+{-| Create a Harnessfunction that runs a list of steps based on some argument
 passed in from the Javascript side.
 
 Provide a decoder for the argument.
@@ -143,14 +140,14 @@ stepsFrom decoder generator =
         Err <| Report.note <| "Unable to configure steps: " ++ Json.errorToString message
 
 
-{-| Expose an expectation to observe.
+{-| Create a HarnessFunction that evaluates an expectation.
 -}
 expectation : Expectation model -> HarnessFunction model msg
 expectation expectationToExpose =
   expectationFrom Json.value (\_ -> expectationToExpose)
 
 
-{-| Expose a function that produces an expectation to observe based on some argument
+{-| Create a HarnessFunction that evaluates an expectation that is generated based on some argument
 passed in from the Javascript side.
 
 Provide a decoder for the argument.
@@ -165,14 +162,14 @@ expectationFrom decoder generator =
         Err <| Report.note <| "Unable to configure expectation: " ++ Json.errorToString message
 
 
-{-| Expose a `Setup` for a scenario.
+{-| Create a HarnessFunction that executes a `Setup` for a scenario.
 -}
 setup : Setup model msg -> HarnessFunction model msg
 setup theSetup =
   setupFrom Json.value (\_ -> theSetup)
 
 
-{-| Expose a function that produces a `Setup` for a scenario based on some argument
+{-| Create a HarnessFunction that executes a `Setup` for a scenario based on some argument
 passed in from the Javascript side.
 
 Provide a decoder for the argument.
@@ -187,40 +184,55 @@ setupFrom decoder generator =
         Err <| Report.note <| "Unable to configure setup: " ++ Json.errorToString message
 
 
-{-| Represents an exposed function that can be executed from the Javascript side.
+{-| Represents a function that can be exported.
 -}
 type alias HarnessFunction model msg
   = Harness.Types.HarnessFunction model msg
 
 
-collateExports : List (String, HarnessFunction model msg) -> Program.Exports model msg
+{-| Associates a HarnessFunction with a name by which it can be referenced
+from the JavaScript side.
+-}
+type HarnessExport model msg
+  = HarnessExport String (HarnessFunction model msg)
+
+
+{-| Specify a name by which a HarnessFunction can be referenced from the
+JavaScript side.
+-}
+export : String -> HarnessFunction model msg -> HarnessExport model msg
+export name function =
+  HarnessExport name function
+
+
+collateExports : List (HarnessExport model msg) -> Program.Exports model msg
 collateExports exports =
   { setups = 
       exports
-        |> List.filterMap (\(name, export) ->
-          case export of
-            Harness.Types.SetupFunction setupExport ->
-              Just (name, setupExport)
+        |> List.filterMap (\(HarnessExport name function) ->
+          case function of
+            Harness.Types.SetupFunction generator ->
+              Just (name, generator)
             _ ->
               Nothing
         )
         |> Dict.fromList
   , steps = 
       exports
-        |> List.filterMap (\(name, export) ->
-          case export of
-            Harness.Types.StepsFunction stepsExport ->
-              Just (name, stepsExport)
+        |> List.filterMap (\(HarnessExport name function) ->
+          case function of
+            Harness.Types.StepsFunction generator ->
+              Just (name, generator)
             _ ->
               Nothing
         )
         |> Dict.fromList
   , expectations =
       exports
-        |> List.filterMap (\(name, export) ->
-          case export of
-            Harness.Types.ExpectationFunction expectationExport ->
-              Just (name, expectationExport)
+        |> List.filterMap (\(HarnessExport name function) ->
+          case function of
+            Harness.Types.ExpectationFunction generator ->
+              Just (name, generator)
             _ ->
               Nothing
         )
@@ -233,7 +245,7 @@ the `elm-spec-harness` package.
 
 Once you've created the `Config` value, I suggest adding a function like so:
 
-    browserHarness : List (String, HarnessFunction model msg) -> Program Flags (Model model msg) (Msg msg)
+    browserHarness : List (HarnessExport model msg) -> Program Flags (Model model msg) (Msg msg)
     browserHarness =
       Harness.browserHarness config
 
@@ -247,7 +259,7 @@ Then, each of your harness modules can implement their own `main` function:
 Then use the `elm-spec-harness` package to call the exposed functions as necessary.
 
 -}
-browserHarness : Config msg -> List (String, HarnessFunction model msg) -> Program Flags (Model model msg) (Msg msg)
+browserHarness : Config msg -> List (HarnessExport model msg) -> Program Flags (Model model msg) (Msg msg)
 browserHarness config exports =
   Browser.application
     { init = \flags _ key ->

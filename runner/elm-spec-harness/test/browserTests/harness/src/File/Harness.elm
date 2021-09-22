@@ -19,7 +19,7 @@ default =
     |> Setup.withUpdate App.update
 
 setups =
-  [ ( "default", setup default )
+  [ Harness.export "default" <| setup default
   ]
 
 -- Steps
@@ -31,7 +31,7 @@ selectFile path =
   ]
 
 steps =
-  [ ( "selectFile", stepsFrom Json.string selectFile )
+  [ Harness.export "selectFile" <| stepsFrom Json.string selectFile
   ]
 
 
