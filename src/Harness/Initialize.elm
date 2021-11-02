@@ -15,9 +15,10 @@ import Spec.Message as Message exposing (Message)
 import Spec.Scenario.Message as Message
 import Spec.Step.Message as Message
 import Spec.Report as Report exposing (Report)
-import Harness.Types exposing (ExposedSetup)
+import Harness.Errors as Errors
 import Json.Decode as Json
 import Browser.Navigation as Navigation
+import Harness.Types exposing (HarnessFunction)
 
 
 type alias Actions msg =
@@ -50,7 +51,7 @@ type Msg
 
 
 type alias ExposedSetupRepository model programMsg =
-  { get: String -> Maybe (ExposedSetup model programMsg)
+  { get: String -> Maybe (HarnessFunction (Setup model programMsg))
   }
 
 
@@ -69,8 +70,9 @@ tryToGenerateSetup setups ( setupName, config ) =
   case setups.get setupName of
     Just setupGenerator ->
       setupGenerator config
+        |> Result.mapError (Errors.configurationError "initial state" setupName)
     Nothing ->
-      Err <| Report.note <| "No setup has been exposed with the name " ++ setupName
+      Err <| Errors.notFoundError "initial state" setupName
 
 
 tryToInitializeSubject : Maybe Navigation.Key -> Setup model msg -> Result Report (Subject model msg)

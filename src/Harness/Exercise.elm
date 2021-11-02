@@ -13,6 +13,7 @@ module Harness.Exercise exposing
 
 import Spec.Message as Message exposing (Message)
 import Harness.Types exposing (..)
+import Harness.Errors as Errors
 import Spec.Claim as Claim
 import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
@@ -54,7 +55,7 @@ type alias Actions msg programMsg =
 
 
 type alias ExposedStepsRepository model msg =
-  { get: String -> Maybe (ExposedSteps model msg)
+  { get: String -> Maybe (HarnessFunction (List (Step model msg)))
   }
 
 
@@ -68,8 +69,9 @@ generateSteps steps message =
       case steps.get stepName of
         Just stepGenerator ->
           stepGenerator config
+            |> Result.mapError (Errors.configurationError "script" stepName)
         Nothing ->
-          Err <| Report.note <| "No steps have been exposed with the name " ++ stepName
+          Err <| Errors.notFoundError "script" stepName
     )
 
 

@@ -4,7 +4,6 @@ module Harness.Program exposing
   , Model
   , Flags
   , Config
-  , Exports
   , update
   , view
   , subscriptions
@@ -14,6 +13,8 @@ module Harness.Program exposing
 
 import Spec.Message exposing (Message)
 import Browser exposing (UrlRequest, Document)
+import Spec.Setup exposing (Setup)
+import Spec.Step exposing (Step)
 import Spec.Step.Command as Step
 import Spec.Observer.Internal exposing (Judgment(..))
 import Spec.Scenario.Message as Message
@@ -30,7 +31,6 @@ import Harness.Types exposing (..)
 import Url exposing (Url)
 import Html
 import Task
-import Dict exposing (Dict)
 import Browser.Navigation as Navigation
 import Spec.Version as Version exposing (Version)
 
@@ -38,13 +38,6 @@ import Spec.Version as Version exposing (Version)
 type alias Config msg =
   { send: Message -> Cmd (Msg msg)
   , listen: (Message -> Msg msg) -> Sub (Msg msg)
-  }
-
-
-type alias Exports model msg =
-  { setups: Dict String (ExposedSetup model msg)
-  , steps: Dict String (ExposedSteps model msg)
-  , expectations: Dict String (ExposedExpectation model)
   }
 
 
@@ -136,12 +129,12 @@ view model =
       }
 
 
-update : Config msg -> Exports model msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-update config exports msg model =
+update : Config msg -> Harness model msg -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update config harness msg model =
   case ( model, msg ) of
     ( Waiting waitingModel, ReceivedMessage message ) ->
       if Message.is "_harness" "start" message then
-        case Initialize.generateSubject (setupsRepo exports.setups) waitingModel.key message of
+        case Initialize.generateSubject (setupsRepo harness.initialStates) waitingModel.key message of
           Ok subject ->
             Initialize.init (initializeActions config) subject
               |> Tuple.mapFirst (generateRunModel waitingModel.key)
@@ -157,9 +150,9 @@ update config exports msg model =
 
     ( Running runModel, ReceivedMessage message ) ->
       if Message.is "_harness" "start" message then
-        update config exports (ReceivedMessage message) (waiting runModel)
+        update config harness (ReceivedMessage message) (waiting runModel)
       else if Message.is "_harness" "observe" message then
-        case Observe.generateModel (expectationsRepo exports.expectations) message of
+        case Observe.generateModel (expectationsRepo harness.expectations) message of
           Ok observeModel ->
             Observe.init (observeActions config) observeModel
               |> Tuple.mapFirst (\updated -> { runModel | state = Observing, observeModel = updated })
@@ -169,7 +162,7 @@ update config exports msg model =
             , abortWith config report
             )
       else if Message.is "_harness" "run" message then
-        case Exercise.generateSteps (stepsRepo exports.steps) message of
+        case Exercise.generateSteps (stepsRepo harness.scripts) message of
           Ok steps ->
             Exercise.init (exerciseActions config) steps
               |> Tuple.mapFirst (\updated -> { runModel | state = Exercising, exerciseModel = updated })
@@ -244,25 +237,29 @@ unknownMessageReport message =
     |> Report.note
 
 
-setupsRepo : Dict String (ExposedSetup model msg) -> Initialize.ExposedSetupRepository model msg
-setupsRepo setups =
-  { get = \name ->
-      Dict.get name setups
+setupsRepo : List (Definition (Setup model msg)) -> Initialize.ExposedSetupRepository model msg
+setupsRepo definitions =
+  { get = getMatchingDefinition definitions
   }
 
 
-expectationsRepo : Dict String (ExposedExpectation model) -> Observe.ExposedExpectationRepository model
-expectationsRepo expectations =
-  { get = \name ->
-      Dict.get name expectations
+expectationsRepo : List (Definition (Expectation model)) -> Observe.ExposedExpectationRepository model
+expectationsRepo definitions =
+  { get = getMatchingDefinition definitions
   }
 
 
-stepsRepo : Dict String (ExposedSteps model msg) -> Exercise.ExposedStepsRepository model msg
-stepsRepo steps =
-  { get = \name ->
-      Dict.get name steps
+stepsRepo : List (Definition (List (Step model msg))) -> Exercise.ExposedStepsRepository model msg
+stepsRepo definitions =
+  { get = getMatchingDefinition definitions
   }
+
+
+getMatchingDefinition : List (Definition a) -> String -> Maybe (HarnessFunction a)
+getMatchingDefinition definitions name =
+  List.filter (\(Definition harnessName _) -> harnessName == name) definitions
+    |> List.head
+    |> Maybe.map (\(Definition _ fun) -> fun)
 
 
 subjectActions : Config msg -> Subject.Actions (Msg msg) msg

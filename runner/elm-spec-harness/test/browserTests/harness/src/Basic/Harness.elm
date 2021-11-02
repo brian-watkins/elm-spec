@@ -1,6 +1,6 @@
 module Basic.Harness exposing (..)
 
-import Harness exposing (Expectation, expect, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom)
+import Harness exposing (Expectation, expect)
 import Spec.Setup as Setup exposing (Setup)
 import Spec.Step exposing (Step)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining, isListWithLength)
@@ -88,11 +88,11 @@ setupWithInitialPortCommand attributes =
 
 
 setups =
-  [ Harness.export "default" <| setup defaultSetup
-  , Harness.export "withName" <| setupFrom setupConfigDecoder setupWithName
-  , Harness.export "withStub" <| setupFrom Json.value setupWithStub
-  , Harness.export "withInitialCommand" <| setupFrom (Json.list Json.string) setupWithInitialCommand
-  , Harness.export "withInitialPortCommand" <| setupFrom (Json.list Json.string) setupWithInitialPortCommand
+  [ Harness.assign "default" defaultSetup
+  , Harness.define "withName" setupConfigDecoder setupWithName
+  , Harness.define "withStub" Json.value setupWithStub
+  , Harness.define "withInitialCommand" (Json.list Json.string) setupWithInitialCommand
+  , Harness.define "withInitialPortCommand" (Json.list Json.string) setupWithInitialPortCommand
   ]
 
 
@@ -127,11 +127,11 @@ badSteps =
   ]
 
 stepsToExpose =
-  [ Harness.export "click" <| stepsFrom Json.int clickMultiple
-  , Harness.export "inform" <| steps inform
-  , Harness.export "requestStuff" <| steps requestStuff
-  , Harness.export "logTitle" <| steps logTitle
-  , Harness.export "badSteps" <| steps badSteps
+  [ Harness.assign "inform" inform
+  , Harness.define "click" Json.int clickMultiple
+  , Harness.assign "requestStuff" requestStuff
+  , Harness.assign "logTitle" logTitle
+  , Harness.assign "badSteps" badSteps
   ]
 
 
@@ -190,14 +190,18 @@ requestsMatchingDecoder =
 
 
 expectations =
-  [ Harness.export "title" <| expectationFrom Json.string titleObserver
-  , Harness.export "name" <| expectationFrom Json.string nameObserver
-  , Harness.export "attributes" <| expectationFrom (Json.list Json.string) attributesObserver
-  , Harness.export "count" <| expectationFrom Json.string countObserver
-  , Harness.export "stuff" <| expectationFrom Json.string stuffObserver
-  , Harness.export "requestsMatching" <| expectationFrom requestsMatchingDecoder requestsMatching
+  [ Harness.define "title" Json.string titleObserver
+  , Harness.define "name" Json.string nameObserver
+  , Harness.define "attributes" (Json.list Json.string) attributesObserver
+  , Harness.define "count" Json.string countObserver
+  , Harness.define "stuff" Json.string stuffObserver
+  , Harness.define "requestsMatching" requestsMatchingDecoder requestsMatching
   ]
 
 
 main =
-  Runner.harness <| setups ++ stepsToExpose ++ expectations
+  Runner.harness
+    { initialStates = setups
+    , scripts = stepsToExpose
+    , expectations = expectations
+    }

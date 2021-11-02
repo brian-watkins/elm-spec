@@ -13,6 +13,7 @@ import Spec.Claim as Claim exposing (Verdict)
 import Spec.Step.Context exposing (Context)
 import Spec.Step.Message as Message
 import Harness.Message as Message
+import Harness.Errors as Errors
 import Spec.Message as Message exposing (Message)
 import Spec.Observer.Message as Message
 import Spec.Observer.Internal exposing (Judgment(..))
@@ -58,7 +59,7 @@ type alias Actions msg =
 
 
 type alias ExposedExpectationRepository model =
-  { get: String -> Maybe (ExposedExpectation model)
+  { get: String -> Maybe (HarnessFunction (Expectation model))
   }
 
 
@@ -84,10 +85,11 @@ generateModel expectations message =
 tryToGenerateExpectation : ExposedExpectationRepository model -> ObserverConfig -> Result Report (Expectation model)
 tryToGenerateExpectation expectations config =
   case expectations.get config.name of
-    Just expectationGenerator ->
-      expectationGenerator config.expected
+    Just generator ->
+      generator config.expected
+        |> Result.mapError (Errors.configurationError "expectation" config.name)
     Nothing ->
-      Err <| Report.note <| "No expectation has been exposed with the name " ++ config.name
+      Err <| Errors.notFoundError "expectation" config.name
 
 
 init : Actions msg -> Model model -> ( Model model, Cmd msg )

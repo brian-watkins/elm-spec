@@ -1,6 +1,6 @@
 module File.Harness exposing (..)
 
-import Harness exposing (setup, stepsFrom)
+import Harness
 import Spec.Markup as Markup
 import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
@@ -19,7 +19,7 @@ default =
     |> Setup.withUpdate App.update
 
 setups =
-  [ Harness.export "default" <| setup default
+  [ Harness.assign "default" default
   ]
 
 -- Steps
@@ -31,9 +31,13 @@ selectFile path =
   ]
 
 steps =
-  [ Harness.export "selectFile" <| stepsFrom Json.string selectFile
+  [ Harness.define "selectFile" Json.string selectFile
   ]
 
 
 main =
-  Runner.harness <| setups ++ steps
+  Runner.harness
+    { initialStates = setups
+    , scripts = steps
+    , expectations = []
+    }

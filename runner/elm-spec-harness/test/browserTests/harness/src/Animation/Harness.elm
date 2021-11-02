@@ -1,6 +1,6 @@
 module Animation.Harness exposing (main)
 
-import Harness exposing (Expectation, expect, steps, stepsFrom, expectation, expectationFrom, setup, setupFrom)
+import Harness exposing (Expectation, expect)
 import Spec.Setup as Setup
 import Spec.Time
 import Spec.Observer as Observer
@@ -23,7 +23,7 @@ subSetup =
 
 
 setups =
-  [ Harness.export "default" <| setup subSetup
+  [ Harness.assign "default" subSetup
   ]
 
 
@@ -37,7 +37,7 @@ nextAnimationFrame =
 
 
 stepsToExpose =
-  [ Harness.export "nextAnimationFrame" <| steps nextAnimationFrame
+  [ Harness.assign "nextAnimationFrame" nextAnimationFrame
   ]
 
 
@@ -51,9 +51,13 @@ elements expected =
 
 
 claims =
-  [ Harness.export "elements" <| expectationFrom Json.int elements
+  [ Harness.define "elements" Json.int elements
   ]
 
 
 main =
-  Runner.harness <| setups ++ stepsToExpose ++ claims
+  Runner.harness
+    { initialStates = setups
+    , scripts = stepsToExpose
+    , expectations = claims
+    }
