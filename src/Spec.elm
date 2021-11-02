@@ -16,7 +16,7 @@ the same basic plan:
 
 1. Configure the initial state of the world (and your program).
 2. Perform a sequence of steps.
-3. Check your xpectations about the new state of the world after the steps have been performed.
+3. Validate your expectations about the new state of the world after the steps have been performed.
 
 Here's a sample spec for a browser program called `App`:
 
