@@ -32,7 +32,7 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenARequestIsSent
       |> observeThat
         [ it "recorded the request" (
-            Spec.Http.observeRequests (get validGetUrl)
+            Spec.Http.observeRequests (get <| validGetUrl ++ validQuery)
               |> expect (isListWithLength 1)
           )
         , it "handles the response" (
@@ -42,7 +42,7 @@ openAPISpecScenarios label openApiSpecPath =
           )
         ]
     )
-    , scenario "A request with invalid path param is sent" (
+  , scenario "A request with invalid path param is sent" (
       given (
         validGetRequest
           |> withUrl "http://fake-api.com/my/messages/bad" 
@@ -53,10 +53,21 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenARequestIsSent
       |> itShouldHaveFailedAlready
     )
-    , scenario "A request with invalid value for required header is sent" (
+  , scenario "A request with invalid value for required header is sent" (
       given (
         validGetRequest
           |> withHeaders [ Http.header "X-Fun-Times" "blah" ]
+          |> testSetup
+          |> Stub.serve [ validResponse "nothing" ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenARequestIsSent
+      |> itShouldHaveFailedAlready
+    )
+  , scenario "A request with invalid value for required query param is sent" (
+      given (
+        validGetRequest
+          |> withQuery "?someValue=39"
           |> testSetup
           |> Stub.serve [ validResponse "nothing" ]
           |> Stub.validate openApiSpecPath
@@ -121,7 +132,7 @@ testUpdate msg model =
       , Http.request
           { method = model.request.method
           , headers =  model.request.headers
-          , url = model.request.url
+          , url = model.request.url ++ model.request.query
           , body = model.request.body
           , expect = Http.expectJson ReceivedResponse responseDecoder
           , timeout = Nothing
@@ -140,6 +151,7 @@ type alias RequestParams =
   { method: String
   , headers: List Http.Header
   , url: String
+  , query: String
   , body: Http.Body
   }
 
@@ -148,11 +160,16 @@ validGetRequest =
   { method = "GET"
   , headers =  [ Http.header "X-Fun-Times" "31" ]
   , url = validGetUrl
+  , query = validQuery
   , body = Http.emptyBody
   }
 
 validGetUrl =
   "http://fake-api.com/my/messages/27"
+
+
+validQuery =
+  "?someValue=12"
 
 withUrl : String -> RequestParams -> RequestParams
 withUrl url params =
@@ -161,6 +178,10 @@ withUrl url params =
 withHeaders : List Http.Header -> RequestParams -> RequestParams
 withHeaders headers params =
   { params | headers = headers }
+
+withQuery : String -> RequestParams -> RequestParams
+withQuery query params =
+  { params | query = query }
 
 responseDecoder : Json.Decoder String
 responseDecoder =

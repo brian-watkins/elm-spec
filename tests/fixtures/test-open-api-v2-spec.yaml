@@ -39,6 +39,13 @@ paths:
           name: X-Fun-Times
           description: How many times to have fun?
           required: true
+        - type: integer
+          in: query
+          name: someValue
+          description: Some value
+          required: true
+          minimum: 10
+          maximum: 20
 definitions:
   Message:
     title: Message

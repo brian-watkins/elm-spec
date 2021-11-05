@@ -47,6 +47,14 @@ paths:
           name: X-Fun-Times
           description: How many times to have fun?
           required: true
+        - schema:
+            type: integer
+            minimum: 10
+            maximum: 20
+          in: query
+          name: someValue
+          description: Some value
+          required: true
 components:
   schemas:
     Message:

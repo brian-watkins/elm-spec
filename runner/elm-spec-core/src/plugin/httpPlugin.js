@@ -5,6 +5,7 @@ const yaml = require('js-yaml')
 const OpenAPIRequestValidator = require('openapi-request-validator').default
 const OpenapiRequestCoercer = require('openapi-request-coercer').default
 const Route = require('route-parser')
+const queryString = require('query-string');
 
 const createMockXhrRequestClass = function(context) {
   const MockXHRClass = MockXHR.newMockXhr()
@@ -277,16 +278,19 @@ module.exports = class HttpPlugin {
         const routeParameters = this.schema.paths[routeData.path].parameters
         const methodParameters = this.schema.paths[routeData.path][requestMethod].parameters
         const parameters = routeParameters.concat(methodParameters)
-
+        
+        const query = queryString.parse(url.search)
         const requestHeaders = request.requestHeaders.getHash()
 
         const coercer = new OpenapiRequestCoercer({ parameters })
         coercer.coerce({
           params,
-          headers: requestHeaders
+          headers: requestHeaders,
+          query
         })
 
         console.log("Typed params", params)
+        console.log("Types query", query)
         console.log("Typed Headers", requestHeaders)
 
         const requestValidator = new OpenAPIRequestValidator({
@@ -296,7 +300,7 @@ module.exports = class HttpPlugin {
           headers: requestHeaders,
           body: null,
           params: params,
-          query: null
+          query: query
         })
         console.log("Validation errors:", errors)
         if (errors) {
@@ -369,15 +373,18 @@ const reportValidationError = (routeData, request, error) => {
   switch (error.location) {
     case 'path':
       lines = lines.concat([
-        line("The request did not match the path", routeData.path),
-        line("because", `${error.path} ${error.message}`)
+        line("Problem with path parameter", `${error.path} ${error.message}`)
       ])
       break
     case 'headers':
       lines = lines.concat([
-        line("The request did not have the required header", `${error.path} ${error.message}`)
+        line("Problem with headers", `${error.path} ${error.message}`)
       ])
       break
+    case 'query':
+      lines = lines.concat([
+        line("Problem with query", `${error.path} ${error.message}`)
+      ])
   }
 
   return report(...lines)
