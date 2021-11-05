@@ -95,13 +95,17 @@ update exerciseModel actions msg =
         )
 
     ProgramMsg programMsg ->
-      let
-        ( updatedExerciseModel, nextCommand ) =
-          exerciseModel.subject.update programMsg exerciseModel.programModel
-            |> Tuple.mapFirst (\updated -> { exerciseModel | programModel = updated })
-      in
-        Step.SendCommand nextCommand
-          |> handleStepCommand actions updatedExerciseModel
+      case exerciseModel.abortWith of
+        Just _ ->
+          ( exercise exerciseModel, Cmd.none )
+        Nothing ->
+          let
+            ( updatedExerciseModel, nextCommand ) =
+              exerciseModel.subject.update programMsg exerciseModel.programModel
+                |> Tuple.mapFirst (\updated -> { exerciseModel | programModel = updated })
+          in
+            Step.SendCommand nextCommand
+              |> handleStepCommand actions updatedExerciseModel
 
     Continue ->
       case exerciseModel.abortWith of

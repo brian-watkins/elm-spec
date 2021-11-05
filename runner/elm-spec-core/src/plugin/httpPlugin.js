@@ -1,6 +1,10 @@
 const MockXHR = require('mock-xmlhttprequest')
 const BlobReader = require('../blobReader')
 const { report, line } = require('../report')
+const yaml = require('js-yaml')
+const OpenAPIRequestValidator = require('openapi-request-validator').default
+const OpenapiRequestCoercer = require('openapi-request-coercer').default
+const Route = require('route-parser')
 
 const createMockXhrRequestClass = function(context) {
   const MockXHRClass = MockXHR.newMockXhr()
@@ -58,6 +62,7 @@ module.exports = class HttpPlugin {
   reset() {
     this.resetHistory()
     this.resetStubs()
+    // should set schema to null here, but probably need a test ...
   }
 
   resetHistory() {
@@ -67,6 +72,28 @@ module.exports = class HttpPlugin {
   resetStubs() {
     this.server._routes = {}
   }
+
+  // would need to add a new message here that is sent from the setup to
+  // load an openapi spec file from disk. We can use the file loading capability I guess
+  // then we cache it until reset() is called above I guess?
+  // But when do we validate? We can register a global onSend handler ...
+  // But how do we abort? If worse comes to worse we can use this.context.sendToProgram()
+  // like filePlugin uses
+
+  // Try using openapi-enforcer
+  // or openapi-request-validator and openapi-response-validator
+
+  // so to use openapi-request-validator I need to:
+  // Create Route objects for each route in the openAPI doc (see route-parser library)
+  // and to do that we will need to convert paths to :param form
+  // When a request comes in, try to match it against the routes
+  // if it matches then look up the path in the OpenApi doc via route.spec
+  // get the params (if it has them) and request body if it has them
+  // then pass to OpenApiRequestValidator along with the params from the matching route
+  // headers from the request and any query params.
+  // Then validate.
+
+  // Might need to use query-string module to parse and decode the query string
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
@@ -126,6 +153,43 @@ module.exports = class HttpPlugin {
 
         break
       }
+      case "validate": {
+        console.log("Got a contract to use:", specMessage.body.path)
+
+        // This needs to do something like request a timer hold
+        // Or, we need to call complete when done with configuring each thing and
+        // go through the configuration steps one at a time.
+        // Also, maybe configuration messages should be separate from other messages?
+        // Alternatively, we load the openApiDoc the first time we need it in the
+        // validate method.
+        // But doing this here would allow us to check to make sure the doc really
+        // exists before running any of the test
+        // And that it's a valid document?
+
+        this.context.readTextFromFile(specMessage.body.path)
+          .then(openApiDoc => {
+            return yaml.load(openApiDoc.text)
+          })
+          .then(schema => {
+            console.log("Got the contract", schema)
+            this.schema = schema
+            this.routes = Object.keys(this.schema.paths)
+              .map(path => {
+                const easyPath = path.replace("{", ":").replace("}", "")
+                const route = new Route(easyPath)
+                return {
+                  path: path,
+                  route: route
+                }
+              })
+              
+          })
+          .catch(err => {
+            console.log("error", err)
+          })
+
+        break
+      }
       default:
         console.log("Unknown Http message", specMessage)
     }
@@ -152,6 +216,11 @@ module.exports = class HttpPlugin {
 
   setupStub(stub, uriDescriptor, out, abort) {
     this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
+
+      if (this.schema) {
+        this.validateRequest(xhr, abort)
+      }
+
       if (stub.error === "network") {
         xhr.setNetworkError()
         this.context.timer.releaseHold()
@@ -189,6 +258,53 @@ module.exports = class HttpPlugin {
         }
       }
     })
+  }
+
+  // Note may need to use query-string npm module to parse the query string
+
+  validateRequest(request, abort) {
+    console.log("Validating request", request.method, request.url)
+    const url = new URL(request.url)
+    const requestMethod = request.method.toLowerCase()
+    console.log("Path", url.pathname)
+    console.log("Routes", this.routes.length)
+    for (const routeData of this.routes) {
+      const route = routeData.route
+      console.log("Checking route", route.spec)
+      const params = route.match(url.pathname)
+      if (params) {
+        console.log("Found a matching openapi route with params", params)
+        const routeParameters = this.schema.paths[routeData.path].parameters
+        const methodParameters = this.schema.paths[routeData.path][requestMethod].parameters
+        const parameters = routeParameters.concat(methodParameters)
+
+        const requestHeaders = request.requestHeaders.getHash()
+
+        const coercer = new OpenapiRequestCoercer({ parameters })
+        coercer.coerce({
+          params,
+          headers: requestHeaders
+        })
+
+        console.log("Typed params", params)
+        console.log("Typed Headers", requestHeaders)
+
+        const requestValidator = new OpenAPIRequestValidator({
+          parameters: parameters
+        })
+        const errors = requestValidator.validateRequest({
+          headers: requestHeaders,
+          body: null,
+          params: params,
+          query: null
+        })
+        console.log("Validation errors:", errors)
+        if (errors) {
+          abort(reportValidationError(routeData, request, errors.errors[0]))
+        }
+        break
+      }
+    }
   }
 
   handleFileLoadError(abort, error) {
@@ -245,6 +361,26 @@ module.exports = class HttpPlugin {
       })
       .map(buildRequest)
   }
+}
+
+const reportValidationError = (routeData, request, error) => {
+  let lines = [ line("An invalid request was made", `${request.method} ${request.url}`) ]
+
+  switch (error.location) {
+    case 'path':
+      lines = lines.concat([
+        line("The request did not match the path", routeData.path),
+        line("because", `${error.path} ${error.message}`)
+      ])
+      break
+    case 'headers':
+      lines = lines.concat([
+        line("The request did not have the required header", `${error.path} ${error.message}`)
+      ])
+      break
+  }
+
+  return report(...lines)
 }
 
 const fileError = (path) => {

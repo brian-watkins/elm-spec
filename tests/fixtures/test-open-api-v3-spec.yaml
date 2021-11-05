@@ -1,0 +1,62 @@
+openapi: 3.0.0
+info:
+  title: test open v3 api spec
+  version: '1.0'
+  contact:
+    name: Brian Watkins
+    email: brian@watkins.com
+servers:
+  - url: 'http://my-fun-api.com'
+paths:
+  '/my/messages/{messageId}':
+    parameters:
+      - schema:
+          type: number
+        name: messageId
+        in: path
+        required: true
+    get:
+      summary: Get User Info by User ID
+      tags: []
+      responses:
+        '200':
+          description: User Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                Get Message:
+                  value:
+                    id: 142
+                    message: Funny message
+        '404':
+          description: Message Not Found
+        '':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+      operationId: get-users-userId
+      description: Retrieve the message with the matching ID.
+      parameters:
+        - schema:
+            type: integer
+          in: header
+          name: X-Fun-Times
+          description: How many times to have fun?
+          required: true
+components:
+  schemas:
+    Message:
+      title: Message
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+      required:
+        - id
+        - message
