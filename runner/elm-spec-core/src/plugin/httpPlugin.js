@@ -2,11 +2,7 @@ const MockXHR = require('mock-xmlhttprequest')
 const BlobReader = require('../blobReader')
 const { report, line } = require('../report')
 const yaml = require('js-yaml')
-const OpenAPIRequestValidator = require('openapi-request-validator').default
-const OpenapiRequestCoercer = require('openapi-request-coercer').default
-const OpenApiResponseValidator = require('openapi-response-validator').default
-const Route = require('route-parser')
-const queryString = require('query-string');
+const OpenApiValidator = require('./openApiValidator')
 
 const createMockXhrRequestClass = function(context) {
   const MockXHRClass = MockXHR.newMockXhr()
@@ -74,28 +70,6 @@ module.exports = class HttpPlugin {
   resetStubs() {
     this.server._routes = {}
   }
-
-  // would need to add a new message here that is sent from the setup to
-  // load an openapi spec file from disk. We can use the file loading capability I guess
-  // then we cache it until reset() is called above I guess?
-  // But when do we validate? We can register a global onSend handler ...
-  // But how do we abort? If worse comes to worse we can use this.context.sendToProgram()
-  // like filePlugin uses
-
-  // Try using openapi-enforcer
-  // or openapi-request-validator and openapi-response-validator
-
-  // so to use openapi-request-validator I need to:
-  // Create Route objects for each route in the openAPI doc (see route-parser library)
-  // and to do that we will need to convert paths to :param form
-  // When a request comes in, try to match it against the routes
-  // if it matches then look up the path in the OpenApi doc via route.spec
-  // get the params (if it has them) and request body if it has them
-  // then pass to OpenApiRequestValidator along with the params from the matching route
-  // headers from the request and any query params.
-  // Then validate.
-
-  // Might need to use query-string module to parse and decode the query string
 
   handle(specMessage, out, next, abort) {
     switch (specMessage.name) {
@@ -174,17 +148,7 @@ module.exports = class HttpPlugin {
           })
           .then(schema => {
             console.log("Got the contract", schema)
-            this.schema = schema
-            this.routes = Object.keys(this.schema.paths)
-              .map(path => {
-                const easyPath = path.replace("{", ":").replace("}", "")
-                const route = new Route(easyPath)
-                return {
-                  path: path,
-                  route: route
-                }
-              })
-              
+            this.validator = new OpenApiValidator(schema)
           })
           .catch(err => {
             console.log("error", err)
@@ -219,8 +183,8 @@ module.exports = class HttpPlugin {
   setupStub(stub, uriDescriptor, out, abort) {
     this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
 
-      if (this.schema) {
-        this.validateRequest(xhr, abort)
+      if (this.validator) {
+        this.validator.validateRequest(xhr, abort)
       }
 
       if (stub.error === "network") {
@@ -253,13 +217,8 @@ module.exports = class HttpPlugin {
             this.responseBody(stub.body)
               .then(body => {
 
-                if (this.schema) {
-                  try {
-                    this.validateResponse(xhr, stub.status, body, abort)
-                  }
-                  catch (err) {
-                    console.log("Problem validating response", err)
-                  }
+                if (this.validator) {
+                  this.validator.validateResponse(xhr, stub.status, body, abort)
                 }
 
                 xhr.respond(stub.status, stub.headers, body)
@@ -270,88 +229,6 @@ module.exports = class HttpPlugin {
         }
       }
     })
-  }
-
-  // Note may need to use query-string npm module to parse the query string
-
-  validateRequest(request, abort) {
-    console.log("Validating request", request.method, request.url)
-    const url = new URL(request.url)
-    const requestMethod = request.method.toLowerCase()
-    console.log("Path", url.pathname)
-    console.log("Routes", this.routes.length)
-    for (const routeData of this.routes) {
-      const route = routeData.route
-      console.log("Checking route", route.spec)
-      const params = route.match(url.pathname)
-      if (params) {
-        console.log("Found a matching openapi route with params", params)
-        const routeParameters = this.schema.paths[routeData.path].parameters
-        const methodParameters = this.schema.paths[routeData.path][requestMethod].parameters
-        const parameters = routeParameters.concat(methodParameters)
-        
-        const query = queryString.parse(url.search)
-        const requestHeaders = request.requestHeaders.getHash()
-
-        const coercer = new OpenapiRequestCoercer({ parameters })
-        coercer.coerce({
-          params,
-          headers: requestHeaders,
-          query
-        })
-
-        console.log("Typed params", params)
-        console.log("Types query", query)
-        console.log("Typed Headers", requestHeaders)
-
-        const requestValidator = new OpenAPIRequestValidator({
-          parameters: parameters
-        })
-        const errors = requestValidator.validateRequest({
-          headers: requestHeaders,
-          body: null,
-          params: params,
-          query: query
-        })
-        console.log("Validation errors:", errors)
-        if (errors) {
-          abort(reportRequestValidationError(request, errors.errors))
-        }
-        break
-      }
-    }
-  }
-
-  validateResponse(request, statusCode, body, abort) {
-    console.log("Validating response", request.method, request.url, body)
-    const url = new URL(request.url)
-    const requestMethod = request.method.toLowerCase()
-    console.log("Path", url.pathname)
-    console.log("Routes", this.routes.length)
-    for (const routeData of this.routes) {
-      const route = routeData.route
-      console.log("Checking route", route.spec)
-      const params = route.match(url.pathname)
-      if (params) {
-        console.log("Found a matching openapi route")
-        const responses = this.schema.paths[routeData.path][requestMethod].responses
-
-        const responseValidator = new OpenApiResponseValidator({
-          responses,
-          definitions: this.schema.definitions,
-          components: this.schema.components
-        })
-
-        const errors = responseValidator.validateResponse(statusCode, JSON.parse(body))
-
-        console.log("Validation errors:", errors)
-        if (errors) {
-          abort(reportResponseValidationError(request, errors.errors))
-        }
-
-        break
-      }
-    }
   }
 
   handleFileLoadError(abort, error) {
@@ -408,48 +285,6 @@ module.exports = class HttpPlugin {
       })
       .map(buildRequest)
   }
-}
-
-const reportResponseValidationError = (request, errors) => {
-  let lines = [ line("An invalid response was returned for", `${request.method} ${request.url}`) ]
-
-  for (const error of errors) {
-    lines = lines.concat([
-      line("Problem with body", `${error.path} ${error.message}`)
-    ])
-  }
-
-  return lines
-}
-
-const reportRequestValidationError = (request, errors) => {
-  let lines = [ line("An invalid request was made", `${request.method} ${request.url}`) ]
-
-  for (const error of errors) {
-    let message = `${error.path} ${error.message}`
-    if (error.errorCode === "required.openapi.requestValidation") {
-      message = error.message
-    }
-    
-    switch (error.location) {
-      case 'path':
-        lines = lines.concat([
-          line("Problem with path parameter", message)
-        ])
-        break
-      case 'headers':
-        lines = lines.concat([
-          line("Problem with headers", message)
-        ])
-        break
-      case 'query':
-        lines = lines.concat([
-          line("Problem with query", message)
-        ])
-    }
-  }
-
-  return report(...lines)
 }
 
 const fileError = (path) => {
