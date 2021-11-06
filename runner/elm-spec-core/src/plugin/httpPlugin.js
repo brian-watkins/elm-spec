@@ -246,7 +246,7 @@ module.exports = class HttpPlugin {
   responseBody(body) {
     switch (body.type) {
       case "empty":
-        return Promise.resolve("")
+        return Promise.resolve(null)
       case "text":
         return Promise.resolve(body.content)
       case "binary":
