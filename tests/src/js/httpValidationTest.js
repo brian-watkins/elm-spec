@@ -30,4 +30,9 @@ const openApiScenarios = (observations) => {
     reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=39"),
     reportLine("Problem with query", "someValue must be <= 20"),
   ])
+  expectRejected(observations[5], [
+    reportLine("An invalid response was returned for", "GET http://fake-api.com/my/messages/27?someValue=12"),
+    reportLine("Problem with body", "response must have required property 'message'"),
+    reportLine("Problem with body", "id must be integer"),
+  ])
 }

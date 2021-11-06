@@ -4,6 +4,7 @@ const { report, line } = require('../report')
 const yaml = require('js-yaml')
 const OpenAPIRequestValidator = require('openapi-request-validator').default
 const OpenapiRequestCoercer = require('openapi-request-coercer').default
+const OpenApiResponseValidator = require('openapi-response-validator').default
 const Route = require('route-parser')
 const queryString = require('query-string');
 
@@ -251,6 +252,16 @@ module.exports = class HttpPlugin {
           case "complete":
             this.responseBody(stub.body)
               .then(body => {
+
+                if (this.schema) {
+                  try {
+                    this.validateResponse(xhr, stub.status, body, abort)
+                  }
+                  catch (err) {
+                    console.log("Problem validating response", err)
+                  }
+                }
+
                 xhr.respond(stub.status, stub.headers, body)
                 this.context.timer.releaseHold()
               })
@@ -304,8 +315,40 @@ module.exports = class HttpPlugin {
         })
         console.log("Validation errors:", errors)
         if (errors) {
-          abort(reportValidationError(routeData, request, errors.errors[0]))
+          abort(reportValidationError(request, errors.errors[0]))
         }
+        break
+      }
+    }
+  }
+
+  validateResponse(request, statusCode, body, abort) {
+    console.log("Validating response", request.method, request.url, body)
+    const url = new URL(request.url)
+    const requestMethod = request.method.toLowerCase()
+    console.log("Path", url.pathname)
+    console.log("Routes", this.routes.length)
+    for (const routeData of this.routes) {
+      const route = routeData.route
+      console.log("Checking route", route.spec)
+      const params = route.match(url.pathname)
+      if (params) {
+        console.log("Found a matching openapi route")
+        const responses = this.schema.paths[routeData.path][requestMethod].responses
+
+        const responseValidator = new OpenApiResponseValidator({
+          responses,
+          definitions: this.schema.definitions,
+          components: this.schema.components
+        })
+
+        const errors = responseValidator.validateResponse(statusCode, JSON.parse(body))
+
+        console.log("Validation errors:", errors)
+        if (errors) {
+          abort(reportResponseValidationError(request, errors.errors))
+        }
+
         break
       }
     }
@@ -367,7 +410,19 @@ module.exports = class HttpPlugin {
   }
 }
 
-const reportValidationError = (routeData, request, error) => {
+const reportResponseValidationError = (request, errors) => {
+  let lines = [ line("An invalid response was returned for", `${request.method} ${request.url}`) ]
+
+  for (const error of errors) {
+    lines = lines.concat([
+      line("Problem with body", `${error.path} ${error.message}`)
+    ])
+  }
+
+  return lines
+}
+
+const reportValidationError = (request, error) => {
   let lines = [ line("An invalid request was made", `${request.method} ${request.url}`) ]
 
   switch (error.location) {

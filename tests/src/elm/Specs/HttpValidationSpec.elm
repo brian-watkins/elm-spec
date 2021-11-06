@@ -75,6 +75,16 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenARequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "An invalid response is stubbed for a valid request" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve [ invalidResponse ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenARequestIsSent
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
@@ -93,7 +103,19 @@ whenARequestIsSent =
 
 validResponse message =
   Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
-    |> Stub.withBody (Stub.withJson <| Encode.object [ ("message", Encode.string message) ])
+    |> Stub.withBody (Stub.withJson <| Encode.object
+      [ ("id", Encode.int 1)
+      , ("message", Encode.string message)
+      ]
+    )
+
+invalidResponse =
+  Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
+    |> Stub.withBody (Stub.withJson <| Encode.object
+      [ ("id", Encode.string "should be a number")
+      , ("blerg", Encode.string "")
+      ]
+    )
 
 
 type alias Model =
