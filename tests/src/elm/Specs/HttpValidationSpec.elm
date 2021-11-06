@@ -75,6 +75,18 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenARequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "A request with multiple validation errors is sent" (
+      given (
+        validGetRequest
+          |> withHeaders [ Http.header "X-Cool-Times" "blah" ]
+          |> withQuery "?someValue=6"
+          |> testSetup
+          |> Stub.serve [ validResponse "nothing" ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenARequestIsSent
+      |> itShouldHaveFailedAlready
+    )
   , scenario "An invalid response is stubbed for a valid request" (
       given (
         validGetRequest

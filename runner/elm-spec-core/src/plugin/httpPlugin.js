@@ -315,7 +315,7 @@ module.exports = class HttpPlugin {
         })
         console.log("Validation errors:", errors)
         if (errors) {
-          abort(reportValidationError(request, errors.errors[0]))
+          abort(reportRequestValidationError(request, errors.errors))
         }
         break
       }
@@ -422,24 +422,31 @@ const reportResponseValidationError = (request, errors) => {
   return lines
 }
 
-const reportValidationError = (request, error) => {
+const reportRequestValidationError = (request, errors) => {
   let lines = [ line("An invalid request was made", `${request.method} ${request.url}`) ]
 
-  switch (error.location) {
-    case 'path':
-      lines = lines.concat([
-        line("Problem with path parameter", `${error.path} ${error.message}`)
-      ])
-      break
-    case 'headers':
-      lines = lines.concat([
-        line("Problem with headers", `${error.path} ${error.message}`)
-      ])
-      break
-    case 'query':
-      lines = lines.concat([
-        line("Problem with query", `${error.path} ${error.message}`)
-      ])
+  for (const error of errors) {
+    let message = `${error.path} ${error.message}`
+    if (error.errorCode === "required.openapi.requestValidation") {
+      message = error.message
+    }
+    
+    switch (error.location) {
+      case 'path':
+        lines = lines.concat([
+          line("Problem with path parameter", message)
+        ])
+        break
+      case 'headers':
+        lines = lines.concat([
+          line("Problem with headers", message)
+        ])
+        break
+      case 'query':
+        lines = lines.concat([
+          line("Problem with query", message)
+        ])
+    }
   }
 
   return report(...lines)
