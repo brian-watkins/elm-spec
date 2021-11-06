@@ -55,6 +55,25 @@ paths:
           name: someValue
           description: Some value
           required: true
+  /my/messages:
+    post:
+      summary: ''
+      operationId: post-my-messages
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL for created message
+      description: Create a message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+        description: Message
 components:
   schemas:
     Message:
@@ -67,4 +86,12 @@ components:
           type: string
       required:
         - id
+        - message
+    MessageRequest:
+      title: MessageRequest
+      type: object
+      properties:
+        message:
+          type: string
+      required:
         - message

@@ -8,7 +8,7 @@ const { report, line } = require('../report')
 module.exports = class OpenApiValidator {
   constructor(schema) {
     this.requestValidators = Object.keys(schema.paths).map(path => {
-      return new RequestValidator(path, schema.paths[path])
+      return new RequestValidator(path, schema.paths[path], schema.definitions, schema.components)
     })
     this.responseValidators = Object.keys(schema.paths).map(path => {
       return new ResponseValidator(path, schema.paths[path], schema.definitions, schema.components)
@@ -34,8 +34,10 @@ module.exports = class OpenApiValidator {
 }
 
 class RequestValidator {
-  constructor (path, pathData) {
+  constructor (path, pathData, definitions, components) {
     this.openApiPath = new OpenApiPath(path, pathData)
+    this.definitions = definitions
+    this.components = components
   }
 
   validate({ request }) {
@@ -44,37 +46,50 @@ class RequestValidator {
     const path = this.openApiPath.match(url)
     if (path.matches) {
       console.log("Found a matching openapi route with params", path.params)
-        const parameters = this.parameters(request)
-        const typedRequest = this.typedRequest(parameters, url, path.params, request)
+      const parameters = this.parameters(request)
+      const typedRequest = this.typedRequest(parameters, url, path.params, request)
 
-        const errors = new OpenAPIRequestValidator({
-          parameters
-        })
-        .validateRequest({
-          headers: typedRequest.headers,
-          body: null,
-          params: typedRequest.pathParams,
-          query: typedRequest.query
-        })
-        
-        console.log("Validation errors:", errors)
-        if (errors) {
-          return reportRequestValidationError(request, errors.errors)
-        }
+      const errors = new OpenAPIRequestValidator({
+        parameters,
+        requestBody: this.requestBody(request),
+        schemas: this.schemas()
+      })
+      .validateRequest({
+        headers: typedRequest.headers,
+        params: typedRequest.pathParams,
+        query: typedRequest.query,
+        body: typedRequest.body
+      })
+      
+      console.log("Validation errors:", errors)
+      if (errors) {
+        return reportRequestValidationError(request, errors.errors)
+      }
     }
     return null
   }
 
-  pathParameters() {
-    return this.openApiPath.data.parameters
+  schemas() {
+    if (this.components) {
+      return this.components.schemas
+    }
+    return this.definitions
   }
 
-  methodParameters(requestMethod) {
-    return this.openApiPath.operation(requestMethod).parameters
+  pathParameters() {
+    return this.openApiPath.data.parameters || []
+  }
+
+  methodParameters(request) {
+    return this.openApiPath.operation(request).parameters || []
   }
 
   parameters(request) {
-    return this.pathParameters().concat(this.methodParameters(request.method))
+    return this.pathParameters().concat(this.methodParameters(request))
+  }
+
+  requestBody(request) {
+    return this.openApiPath.operation(request).requestBody
   }
 
   typedRequest(parameters, url, pathParams, request) {
@@ -95,7 +110,8 @@ class RequestValidator {
     return {
       pathParams,
       headers,
-      query
+      query,
+      body: tryToParse(request.body)
     }
   }
 }
@@ -113,14 +129,14 @@ class ResponseValidator {
     const path = this.openApiPath.match(url)
     if (path.matches) {
       console.log("Found a matching openapi route")
-      const responses = this.responses(request.method)
+      const responses = this.responses(request)
 
       const errors = new OpenApiResponseValidator({
         responses,
         definitions: this.definitions,
         components: this.components
       })
-      .validateResponse(statusCode, JSON.parse(body))
+      .validateResponse(statusCode, tryToParse(body))
 
       console.log("Validation errors:", errors)
       if (errors) {
@@ -130,8 +146,8 @@ class ResponseValidator {
     return null
   }
 
-  responses(requestMethod) {
-    return this.openApiPath.operation(requestMethod).responses
+  responses(request) {
+    return this.openApiPath.operation(request).responses
   }
 }
 
@@ -142,8 +158,8 @@ class OpenApiPath {
     this.route = new Route(path.replace("{", ":").replace("}", ""))
   }
 
-  operation(requestMethod) {
-    return this.data[requestMethod.toLowerCase()]
+  operation(request) {
+    return this.data[request.method.toLowerCase()]
   }
 
   match(url) {
@@ -153,6 +169,15 @@ class OpenApiPath {
       params: pathParams
     }
   }
+}
+
+const tryToParse = (message) => {
+  let result = message
+  try {
+    result = JSON.parse(message)
+  } catch (err) {}
+
+  return result
 }
 
 const reportRequestValidationError = (request, errors) => {
@@ -179,6 +204,12 @@ const reportRequestValidationError = (request, errors) => {
         lines = lines.concat([
           line("Problem with query", message)
         ])
+        break
+      case 'body':
+        lines = lines.concat([
+          line("Problem with body", message)
+        ])
+        break
     }
   }
 

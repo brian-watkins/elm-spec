@@ -46,6 +46,24 @@ paths:
           required: true
           minimum: 10
           maximum: 20
+  /my/messages:
+    post:
+      summary: ''
+      operationId: post-my-messages
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              type: string
+              description: URL for created message
+      description: Create a message
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/MessageRequest'
+          description: Message
 definitions:
   Message:
     title: Message
@@ -57,4 +75,12 @@ definitions:
         type: string
     required:
       - id
+      - message
+  MessageRequest:
+    title: MessageRequest
+    type: object
+    properties:
+      message:
+        type: string
+    required:
       - message

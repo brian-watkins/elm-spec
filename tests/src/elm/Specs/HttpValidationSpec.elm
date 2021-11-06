@@ -16,6 +16,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as Json
 import Json.Encode as Encode
+import Dict
 import Runner
 
 
@@ -26,10 +27,10 @@ openAPISpecScenarios label openApiSpecPath =
       given (
         validGetRequest
           |> testSetup 
-          |> Stub.serve [ validResponse "Super cool!" ]
+          |> Stub.serve [ validGetResponse "Super cool!" ]
           |> Stub.validate openApiSpecPath
       )
-      |> whenARequestIsSent
+      |> whenAGetRequestIsSent
       |> observeThat
         [ it "recorded the request" (
             Spec.Http.observeRequests (get <| validGetUrl ++ validQuery)
@@ -47,10 +48,10 @@ openAPISpecScenarios label openApiSpecPath =
         validGetRequest
           |> withUrl "http://fake-api.com/my/messages/bad" 
           |> testSetup
-          |> Stub.serve [ validResponse "nothing" ]
+          |> Stub.serve [ validGetResponse "nothing" ]
           |> Stub.validate openApiSpecPath
       )
-      |> whenARequestIsSent
+      |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
   , scenario "A request with invalid value for required header is sent" (
@@ -58,10 +59,10 @@ openAPISpecScenarios label openApiSpecPath =
         validGetRequest
           |> withHeaders [ Http.header "X-Fun-Times" "blah" ]
           |> testSetup
-          |> Stub.serve [ validResponse "nothing" ]
+          |> Stub.serve [ validGetResponse "nothing" ]
           |> Stub.validate openApiSpecPath
       )
-      |> whenARequestIsSent
+      |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
   , scenario "A request with invalid value for required query param is sent" (
@@ -69,10 +70,10 @@ openAPISpecScenarios label openApiSpecPath =
         validGetRequest
           |> withQuery "?someValue=39"
           |> testSetup
-          |> Stub.serve [ validResponse "nothing" ]
+          |> Stub.serve [ validGetResponse "nothing" ]
           |> Stub.validate openApiSpecPath
       )
-      |> whenARequestIsSent
+      |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
   , scenario "A request with multiple validation errors is sent" (
@@ -81,20 +82,51 @@ openAPISpecScenarios label openApiSpecPath =
           |> withHeaders [ Http.header "X-Cool-Times" "blah" ]
           |> withQuery "?someValue=6"
           |> testSetup
-          |> Stub.serve [ validResponse "nothing" ]
+          |> Stub.serve [ validGetResponse "nothing" ]
           |> Stub.validate openApiSpecPath
       )
-      |> whenARequestIsSent
+      |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
   , scenario "An invalid response is stubbed for a valid request" (
       given (
         validGetRequest
           |> testSetup
-          |> Stub.serve [ invalidResponse ]
+          |> Stub.serve [ invalidGetResponse ]
           |> Stub.validate openApiSpecPath
       )
-      |> whenARequestIsSent
+      |> whenAGetRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
+  , scenario "A request with valid request body is sent and valid response is received" (
+      given (
+        validPostRequest
+          |> testSetup
+          |> Stub.serve [ validPostResponse ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenAPostRequestIsSent
+      |> observeThat
+        [ it "recorded the request" (
+            Spec.Http.observeRequests (post <| validPostUrl)
+              |> expect (isListWithLength 1)
+          )
+        , it "handles the response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "post-response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "http://fake-api.com/my/messages/2")
+          )
+        ]
+    )
+  , scenario "A request with invalid request body is sent" (
+      given (
+        validPostRequest
+          |> withBody invalidPostBody
+          |> testSetup
+          |> Stub.serve [ validPostResponse ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
     )
   ]
@@ -106,14 +138,21 @@ testSetup requestCommand =
     |> Setup.withUpdate testUpdate
 
 
-whenARequestIsSent =
-  when "a request is sent"
-    [ Markup.target << by [ id "send-request-button" ]
+whenAGetRequestIsSent =
+  when "a get request is sent"
+    [ Markup.target << by [ id "request-message-button" ]
     , Event.click
     ]
 
 
-validResponse message =
+whenAPostRequestIsSent =
+  when "a post request is sent"
+    [ Markup.target << by [ id "create-message-button" ]
+    , Event.click
+    ]
+
+
+validGetResponse message =
   Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
     |> Stub.withBody (Stub.withJson <| Encode.object
       [ ("id", Encode.int 1)
@@ -121,7 +160,8 @@ validResponse message =
       ]
     )
 
-invalidResponse =
+
+invalidGetResponse =
   Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
     |> Stub.withBody (Stub.withJson <| Encode.object
       [ ("id", Encode.string "should be a number")
@@ -130,28 +170,41 @@ invalidResponse =
     )
 
 
+validPostResponse =
+  Stub.for (post "http://fake-api.com/my/messages")
+    |> Stub.withHeader ( "Location", "http://fake-api.com/my/messages/2" )
+    |> Stub.withStatus 201
+
+
 type alias Model =
   { request: RequestParams
   , message: String
+  , location: String
   }
 
 defaultModel requestParams =
   { request = requestParams
   , message = "Request not sent yet!"
+  , location = "Unknown"
   }
 
 
 type Msg
-  = SendRequest
-  | ReceivedResponse (Result Http.Error String)
+  = RequestMessage
+  | CreateMessage
+  | GotMessage (Result Http.Error String)
+  | CreatedMessage (Result () String)
 
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.button [ Attr.id "send-request-button", Events.onClick SendRequest ] [ Html.text "Send Request!" ]
+  [ Html.button [ Attr.id "request-message-button", Events.onClick RequestMessage ] [ Html.text "Request message!" ]
   , Html.div [ Attr.id "response" ]
     [ Html.text model.message ]
+  , Html.button [ Attr.id "create-message-button", Events.onClick CreateMessage ] [ Html.text "Create message!" ]
+  , Html.div [ Attr.id "post-response" ]
+    [ Html.text model.location ]
   ]
 
 
@@ -161,24 +214,53 @@ testUpdate msg model =
     d = Debug.log "update" msg
   in
   case msg of
-    SendRequest ->
+    RequestMessage ->
       ( model
       , Http.request
           { method = model.request.method
           , headers =  model.request.headers
           , url = model.request.url ++ model.request.query
           , body = model.request.body
-          , expect = Http.expectJson ReceivedResponse responseDecoder
+          , expect = Http.expectJson GotMessage responseDecoder
           , timeout = Nothing
           , tracker = Nothing
           }
       )
-    ReceivedResponse result ->
+    CreateMessage ->
+      ( model
+      , Http.request
+          { method = model.request.method
+          , headers =  model.request.headers
+          , url = model.request.url ++ model.request.query
+          , body = model.request.body
+          , expect = Http.expectStringResponse CreatedMessage getLocationHeader
+          , timeout = Nothing
+          , tracker = Nothing
+          }
+      )
+    GotMessage result ->
       case result of
         Ok message ->
           ( { model | message = message }, Cmd.none )
         Err _ ->
           ( { model | message = "ERROR" }, Cmd.none )
+    CreatedMessage result ->
+      case result of
+        Ok location ->
+          ( { model | location = location }, Cmd.none )
+        Err _ ->
+          ( { model | location = "ERROR" }, Cmd.none )
+
+
+getLocationHeader : Http.Response String -> Result () String
+getLocationHeader response =
+  case response of
+    Http.GoodStatus_ metadata _ ->
+      Dict.get "location" metadata.headers
+        |> Maybe.withDefault "No Location Specified"
+        |> Ok
+    _ ->
+      Err ()
 
 
 type alias RequestParams =
@@ -192,7 +274,7 @@ type alias RequestParams =
 validGetRequest : RequestParams
 validGetRequest =
   { method = "GET"
-  , headers =  [ Http.header "X-Fun-Times" "31" ]
+  , headers = [ Http.header "X-Fun-Times" "31" ]
   , url = validGetUrl
   , query = validQuery
   , body = Http.emptyBody
@@ -205,6 +287,35 @@ validGetUrl =
 validQuery =
   "?someValue=12"
 
+
+validPostRequest : RequestParams
+validPostRequest =
+  { method = "POST"
+  , headers = []
+  , url = validPostUrl
+  , query = ""
+  , body = validPostBody
+  }
+
+
+validPostUrl =
+  "http://fake-api.com/my/messages"
+
+
+validPostBody : Http.Body
+validPostBody =
+  Http.jsonBody <| Encode.object
+    [ ( "message", Encode.string "A new cool message!" )
+    ]
+
+
+invalidPostBody : Http.Body
+invalidPostBody =
+  Http.jsonBody <| Encode.object
+    [ ("blerg", Encode.int 17)
+    ]
+
+
 withUrl : String -> RequestParams -> RequestParams
 withUrl url params =
   { params | url = url }
@@ -216,6 +327,10 @@ withHeaders headers params =
 withQuery : String -> RequestParams -> RequestParams
 withQuery query params =
   { params | query = query }
+
+withBody : Http.Body -> RequestParams -> RequestParams
+withBody body params =
+  { params | body = body }
 
 responseDecoder : Json.Decoder String
 responseDecoder =
