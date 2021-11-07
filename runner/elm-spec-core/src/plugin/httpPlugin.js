@@ -2,7 +2,7 @@ const MockXHR = require('mock-xmlhttprequest')
 const BlobReader = require('../blobReader')
 const { report, line } = require('../report')
 const yaml = require('js-yaml')
-const OpenApiValidator = require('./openApiValidator')
+const OpenApiValidator = require('./openApi/validator')
 
 const createMockXhrRequestClass = function(context) {
   const MockXHRClass = MockXHR.newMockXhr()
