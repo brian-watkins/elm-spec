@@ -283,9 +283,15 @@ const reportResponseValidationError = (request, errors) => {
         ])
         break
       default:
-        lines = lines.concat([
-          line("Problem with body", `${error.path} ${error.message}`)
-        ])
+        if (error.path) {
+          lines = lines.concat([
+            line("Problem with body", `${error.path} ${error.message}`)
+          ])  
+        } else {
+          lines = lines.concat([
+            line(error.message)
+          ])
+        }
     }
   }
 

@@ -50,4 +50,8 @@ const openApiScenarios = (observations) => {
     reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
     reportLine("Problem with header", "Location must NOT have fewer than 5 characters")
   ])
+  expectRejected(observations[11], [
+    reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
+    reportLine("An unknown status code was used and no default was provided.")
+  ])
 }

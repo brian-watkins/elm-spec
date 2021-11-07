@@ -139,6 +139,16 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "A response with unknown status code is sent" (
+      given (
+        validPostRequest
+          |> testSetup
+          |> Stub.serve [ validPostResponse |> Stub.withStatus 500 ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenAPostRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
