@@ -18,6 +18,10 @@ module.exports = class RequestValidator {
     console.log("Validating request", url.pathname)
     const path = this.openApiPath.match(url)
     if (path.matches) {
+      if (!this.openApiPath.hasOperationFor(request)) {
+        return invalid(missingOperationError(request))
+      }
+
       console.log("Found a matching openapi route with params", path.params)
       const parameters = this.parameters(request)
       const typedRequest = this.typedRequest(parameters, url, path.params, request)
@@ -57,7 +61,7 @@ module.exports = class RequestValidator {
   }
 
   methodParameters(request) {
-    return this.openApiPath.operation(request).parameters || []
+    return this.openApiPath.operationFor(request).parameters || []
   }
 
   parameters(request) {
@@ -65,7 +69,7 @@ module.exports = class RequestValidator {
   }
 
   requestBody(request) {
-    return this.openApiPath.operation(request).requestBody
+    return this.openApiPath.operationFor(request).requestBody
   }
 
   typedRequest(parameters, url, pathParams, request) {
@@ -93,7 +97,7 @@ module.exports = class RequestValidator {
 }
 
 const errorReport = (request, errors) => {
-  let lines = [ line("An invalid request was made", `${request.method} ${request.url}`) ]
+  let lines = [ invalidRequestLine(request) ]
 
   for (const error of errors) {
     let message = `${error.path} ${error.message}`
@@ -126,4 +130,15 @@ const errorReport = (request, errors) => {
   }
 
   return report(...lines)
+}
+
+const missingOperationError = (request) => {
+  return report(
+    invalidRequestLine(request),
+    line("The OpenAPI document contains no matching operation for this request.")
+  )
+}
+
+const invalidRequestLine = (request) => {
+  return line("An invalid request was made", `${request.method} ${request.url}`)
 }

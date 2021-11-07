@@ -7,7 +7,11 @@ module.exports = class OpenApiPath {
     this.route = new Route(path.replace("{", ":").replace("}", ""))
   }
 
-  operation(request) {
+  hasOperationFor(request) {
+    return this.data[request.method.toLowerCase()] !== undefined
+  }
+
+  operationFor(request) {
     return this.data[request.method.toLowerCase()]
   }
 

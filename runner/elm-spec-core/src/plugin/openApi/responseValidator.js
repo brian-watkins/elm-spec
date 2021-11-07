@@ -21,6 +21,10 @@ module.exports = class ResponseValidator {
     const path = this.openApiPath.match(url)
     if (path.matches) {
       console.log("Found a matching openapi route")
+      if (!this.openApiPath.hasOperationFor(request)) {
+        return invalid(missingOperationError(request))
+      }
+
       const responses = this.responses(request)
 
       let errors = []
@@ -54,11 +58,11 @@ module.exports = class ResponseValidator {
   }
 
   responses(request) {
-    return this.openApiPath.operation(request).responses
+    return this.openApiPath.operationFor(request).responses
   }
 
   headerSchema(request, statusCode) {
-    const response = this.openApiPath.operation(request).responses[statusCode]
+    const response = this.openApiPath.operationFor(request).responses[statusCode]
     let headers = {}
     if (response) {
       let responseHeaders = response.headers || {}
@@ -149,4 +153,11 @@ const errorReport = (request, errors) => {
   }
 
   return report(...lines)
+}
+
+const missingOperationError = (request) => {
+  return report(
+    line("An invalid request was made", `${request.method} ${request.url}`),
+    line("The OpenAPI document contains no matching operation for this request.")
+  )
 }

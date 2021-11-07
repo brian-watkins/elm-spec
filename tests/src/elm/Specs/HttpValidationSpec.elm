@@ -159,6 +159,16 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "A request with undocumented method is sent" (
+      given (
+        unknownMethodRequest
+          |> testSetup
+          |> Stub.serve [ unknownMethodResponse ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenAGetRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
@@ -193,6 +203,8 @@ validGetResponse message =
 unknownGetResponse =
   Stub.for (route "GET" <| Matching "http://fake-api.com/some/unknown/path")
 
+unknownMethodResponse =
+  Stub.for (route "PATCH" <| Matching "http://fake-api.com/my/messages/.*")
 
 invalidGetResponse =
   Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
@@ -317,6 +329,15 @@ unknownGetRequest =
   { method = "GET"
   , headers = []
   , url = "http://fake-api.com/some/unknown/path"
+  , query = ""
+  , body = Http.emptyBody
+  }
+
+unknownMethodRequest : RequestParams
+unknownMethodRequest =
+  { method = "PATCH"
+  , headers = []
+  , url = "http://fake-api.com/my/messages/18"
   , query = ""
   , body = Http.emptyBody
   }
