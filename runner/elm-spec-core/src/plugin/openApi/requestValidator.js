@@ -4,6 +4,7 @@ const OpenapiRequestCoercer = require('openapi-request-coercer').default
 const OpenApiPath = require('./path')
 const { report, line } = require('../../report')
 const { tryToParse } = require('./body')
+const { valid, invalid, noMatch } = require('./validationResult')
 
 module.exports = class RequestValidator {
   constructor (path, pathData, definitions, components) {
@@ -35,10 +36,13 @@ module.exports = class RequestValidator {
       
       console.log("Validation errors:", errors)
       if (errors) {
-        return errorReport(request, errors.errors)
+        return invalid(errorReport(request, errors.errors))
+      } else {
+        return valid()
       }
     }
-    return null
+
+    return noMatch()
   }
 
   schemas() {

@@ -54,4 +54,8 @@ const openApiScenarios = (observations) => {
     reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
     reportLine("An unknown status code was used and no default was provided.")
   ])
+  expectRejected(observations[12], [
+    reportLine("An invalid request was made", "GET http://fake-api.com/some/unknown/path"),
+    reportLine("The OpenAPI document contains no path that matches this request.")
+  ])
 }

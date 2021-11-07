@@ -3,6 +3,7 @@ const Ajv = require("ajv")
 const OpenApiPath = require('./path')
 const { tryToParse } = require('./body')
 const { report, line } = require('../../report')
+const { valid, invalid, noMatch } = require('./validationResult')
 
 const ajv = new Ajv()
 
@@ -42,10 +43,13 @@ module.exports = class ResponseValidator {
 
       console.log("Validation errors:", errors)
       if (errors.length > 0) {
-        return errorReport(request, errors)
+        return invalid(errorReport(request, errors))
+      } else {
+        return valid()
       }
     }
-    return null
+
+    return noMatch()
   }
 
   responses(request) {

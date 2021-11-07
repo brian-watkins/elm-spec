@@ -1,5 +1,6 @@
 const RequestValidator = require('./requestValidator')
 const ResponseValidator = require('./responseValidator')
+const { report, line } = require('../../report')
 
 module.exports = class OpenApiValidator {
   constructor(schema) {
@@ -21,10 +22,20 @@ module.exports = class OpenApiValidator {
 
   validate(validators, details, abort) {
     for (const validator of validators) {
-      const validationError = validator.validate(details)
-      if (validationError) {
-        abort(validationError)
+      const result = validator.validate(details)
+      switch (result.type) {
+        case 'valid':
+          return
+        case 'invalid':
+          abort(result.errorReport)
+          return
+        case 'no-match':
       }
     }
+
+    abort(report(
+      line("An invalid request was made", `${details.request.method} ${details.request.url}`),
+      line("The OpenAPI document contains no path that matches this request.")
+    ))
   }
 }

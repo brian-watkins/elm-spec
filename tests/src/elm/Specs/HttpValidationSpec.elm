@@ -149,6 +149,16 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "A request with undocumented path is sent" (
+      given (
+        unknownGetRequest
+          |> testSetup
+          |> Stub.serve [ unknownGetResponse ]
+          |> Stub.validate openApiSpecPath
+      )
+      |> whenAGetRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
@@ -179,6 +189,9 @@ validGetResponse message =
       , ("message", Encode.string message)
       ]
     )
+
+unknownGetResponse =
+  Stub.for (route "GET" <| Matching "http://fake-api.com/some/unknown/path")
 
 
 invalidGetResponse =
@@ -295,6 +308,15 @@ type alias RequestParams =
   , url: String
   , query: String
   , body: Http.Body
+  }
+
+unknownGetRequest : RequestParams
+unknownGetRequest =
+  { method = "GET"
+  , headers = []
+  , url = "http://fake-api.com/some/unknown/path"
+  , query = ""
+  , body = Http.emptyBody
   }
 
 validGetRequest : RequestParams
