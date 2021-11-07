@@ -1,11 +1,12 @@
 const OpenApiResponseValidator = require('openapi-response-validator').default
+const OpenapiRequestCoercer = require('openapi-request-coercer').default
 const Ajv = require("ajv")
 const OpenApiPath = require('./path')
 const { tryToParse } = require('./body')
 const { report, line } = require('../../report')
 const { valid, invalid, noMatch } = require('./validationResult')
 
-const ajv = new Ajv()
+const ajv = new Ajv({ allErrors: true })
 
 module.exports = class ResponseValidator {
   constructor (path, pathData, definitions, components) {
@@ -60,10 +61,12 @@ module.exports = class ResponseValidator {
     const response = this.openApiPath.operation(request).responses[statusCode]
     let headers = {}
     if (response) {
-      headers = response.headers || {}
-      for (const name in headers) {
-        if (headers[name].schema) {
-          headers[name] = headers[name].schema
+      let responseHeaders = response.headers || {}
+      for (const name in responseHeaders) {
+        if (responseHeaders[name].schema) {
+          headers[name.toLowerCase()] = responseHeaders[name].schema
+        } else {
+          headers[name.toLowerCase()] = responseHeaders[name]
         }
       }
     }
@@ -76,16 +79,41 @@ module.exports = class ResponseValidator {
   validateHeaders(request, statusCode, headers) {
     const headerSchema = this.headerSchema(request, statusCode)
     console.log("Header Schema", headerSchema)
-    console.log("Response headers", headers)
+    const typedHeaders = this.typedHeaders(headerSchema, headers)
+    console.log("Response headers", typedHeaders)
 
     const validate = ajv.compile(headerSchema)
-    const valid = validate(headers)
+    const valid = validate(typedHeaders)
 
     if (!valid) {
       return validate.errors.map(toOpenApiHeaderError)
     }
 
     return null
+  }
+
+  typedHeaders(schema, headers) {
+    const parameters = Object.keys(schema.properties).map((headerName) => {
+      return {
+        in: 'header',
+        name: headerName,
+        ...schema.properties[headerName],
+      }
+    })
+
+    console.log("Parameters for typing headers", parameters)
+
+    let normalizedHeaders = {}
+    for (const name in headers) {
+      normalizedHeaders[name.toLowerCase()] = headers[name]
+    }
+
+    new OpenapiRequestCoercer({ parameters })
+      .coerce({
+        headers: normalizedHeaders
+      })
+
+    return normalizedHeaders
   }
 }
 
@@ -104,7 +132,7 @@ const errorReport = (request, errors) => {
     switch (error.location) {
       case 'headers':
         lines = lines.concat([
-          line("Problem with header", `${error.path} ${error.message}`)
+          line("Problem with headers", `${error.path} ${error.message}`)
         ])
         break
       default:

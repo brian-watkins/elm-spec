@@ -129,7 +129,7 @@ openAPISpecScenarios label openApiSpecPath =
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
     )
-  , scenario "A response with an invalid response header is sent" (
+  , scenario "A response with an invalid header is sent" (
       given (
         validPostRequest
           |> testSetup
@@ -206,12 +206,14 @@ invalidGetResponse =
 validPostResponse =
   Stub.for (post "http://fake-api.com/my/messages")
     |> Stub.withHeader ( "Location", "http://fake-api.com/my/messages/2" )
+    |> Stub.withHeader ( "X-Fun-Times", "27" )
     |> Stub.withStatus 201
 
 
 invalidPostResponse =
   Stub.for (post "http://fake-api.com/my/messages")
     |> Stub.withHeader ( "Location", "" )
+    |> Stub.withHeader ( "X-Fun-Times", "blerg" )
     |> Stub.withStatus 201
 
 

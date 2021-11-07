@@ -58,6 +58,9 @@ paths:
               type: string
               description: URL for created message
               minLength: 5
+            X-Fun-Times:
+              type: integer
+              description: Number of fun times
       description: Create a message
       parameters:
         - in: body

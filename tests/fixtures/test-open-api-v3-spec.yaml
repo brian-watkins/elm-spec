@@ -62,6 +62,10 @@ paths:
                 type: string
                 minLength: 5
               description: URL for created message
+            X-Fun-Times:
+              schema:
+                type: integer
+              description: Number of Fun Times
       description: Create a message
       requestBody:
         content:

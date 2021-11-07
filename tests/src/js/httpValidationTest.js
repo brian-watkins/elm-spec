@@ -1,5 +1,3 @@
-const chai = require('chai')
-const expect = chai.expect
 const { expectSpec, expectAccepted, reportLine, expectRejected } = require("./helpers/SpecHelpers")
 
 describe.only("validate http requests", () => {
@@ -48,7 +46,8 @@ const openApiScenarios = (observations) => {
   ])
   expectRejected(observations[10], [
     reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
-    reportLine("Problem with header", "Location must NOT have fewer than 5 characters")
+    reportLine("Problem with headers", "location must NOT have fewer than 5 characters"),
+    reportLine("Problem with headers", "x-fun-times must be integer")
   ])
   expectRejected(observations[11], [
     reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
