@@ -130,8 +130,6 @@ module.exports = class HttpPlugin {
         break
       }
       case "validate": {
-        console.log("Got a contract to use:", specMessage.body.path)
-
         // This needs to do something like request a timer hold
         // Or, we need to call complete when done with configuring each thing and
         // go through the configuration steps one at a time.
@@ -147,7 +145,6 @@ module.exports = class HttpPlugin {
             return yaml.load(openApiDoc.text)
           })
           .then(schema => {
-            console.log("Got the contract", schema)
             this.validator = new OpenApiValidator(schema)
           })
           .catch(err => {

@@ -15,14 +15,12 @@ module.exports = class RequestValidator {
 
   validate({ request }) {
     const url = new URL(request.url)
-    console.log("Validating request", url.pathname)
     const path = this.openApiPath.match(url)
     if (path.matches) {
       if (!this.openApiPath.hasOperationFor(request)) {
         return invalid(missingOperationError(request))
       }
 
-      console.log("Found a matching openapi route with params", path.params)
       const parameters = this.parameters(request)
       const typedRequest = this.typedRequest(parameters, url, path.params, request)
 
@@ -38,7 +36,6 @@ module.exports = class RequestValidator {
         body: typedRequest.body
       })
       
-      console.log("Validation errors:", errors)
       if (errors) {
         return invalid(errorReport(request, errors.errors))
       } else {
@@ -82,10 +79,6 @@ module.exports = class RequestValidator {
         headers,
         query
       })
-
-    console.log("Typed params", pathParams)
-    console.log("Types query", query)
-    console.log("Typed Headers", headers)
 
     return {
       pathParams,

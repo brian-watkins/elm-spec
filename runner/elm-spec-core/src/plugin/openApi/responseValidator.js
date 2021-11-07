@@ -17,10 +17,8 @@ module.exports = class ResponseValidator {
 
   validate({ request, statusCode, headers, body }) {
     const url = new URL(request.url)
-    console.log("Validating response", url.pathname)
     const path = this.openApiPath.match(url)
     if (path.matches) {
-      console.log("Found a matching openapi route")
       if (!this.openApiPath.hasOperationFor(request)) {
         return invalid(missingOperationError(request))
       }
@@ -46,7 +44,6 @@ module.exports = class ResponseValidator {
         errors = errors.concat(headerErrors)
       }
 
-      console.log("Validation errors:", errors)
       if (errors.length > 0) {
         return invalid(errorReport(request, errors))
       } else {
@@ -82,9 +79,7 @@ module.exports = class ResponseValidator {
 
   validateHeaders(request, statusCode, headers) {
     const headerSchema = this.headerSchema(request, statusCode)
-    console.log("Header Schema", headerSchema)
     const typedHeaders = this.typedHeaders(headerSchema, headers)
-    console.log("Response headers", typedHeaders)
 
     const validate = ajv.compile(headerSchema)
     const valid = validate(typedHeaders)
@@ -104,8 +99,6 @@ module.exports = class ResponseValidator {
         ...schema.properties[headerName],
       }
     })
-
-    console.log("Parameters for typing headers", parameters)
 
     let normalizedHeaders = {}
     for (const name in headers) {

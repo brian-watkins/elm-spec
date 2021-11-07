@@ -263,9 +263,6 @@ testView model =
 
 testUpdate : Msg -> Model -> ( Model, Cmd Msg )
 testUpdate msg model =
-  let
-    d = Debug.log "update" msg
-  in
   case msg of
     RequestMessage ->
       ( model
