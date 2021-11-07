@@ -46,4 +46,8 @@ const openApiScenarios = (observations) => {
     reportLine("An invalid request was made", "POST http://fake-api.com/my/messages"),
     reportLine("Problem with body", "must have required property 'message'")
   ])
+  expectRejected(observations[10], [
+    reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
+    reportLine("Problem with header", "Location must NOT have fewer than 5 characters")
+  ])
 }

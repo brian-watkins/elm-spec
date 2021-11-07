@@ -57,6 +57,7 @@ paths:
             Location:
               type: string
               description: URL for created message
+              minLength: 5
       description: Create a message
       parameters:
         - in: body

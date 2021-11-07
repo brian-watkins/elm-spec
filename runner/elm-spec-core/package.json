@@ -23,6 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@sinonjs/fake-timers": "^6.0.1",
+    "ajv": "^8.6.3",
     "glob": "^7.1.6",
     "js-yaml": "^4.1.0",
     "mock-xmlhttprequest": "^6.0.0",

@@ -218,7 +218,11 @@ module.exports = class HttpPlugin {
               .then(body => {
 
                 if (this.validator) {
-                  this.validator.validateResponse(xhr, stub.status, body, abort)
+                  try {
+                    this.validator.validateResponse(xhr, stub.status, stub.headers, body, abort)
+                  } catch (err) {
+                    console.log(err)
+                  }
                 }
 
                 xhr.respond(stub.status, stub.headers, body)

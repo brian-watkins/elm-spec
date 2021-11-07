@@ -66,6 +66,7 @@ paths:
             Location:
               schema:
                 type: string
+                minLength: 5
               description: URL for created message
       description: Create a message
       requestBody:
