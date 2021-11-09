@@ -29,6 +29,8 @@ type Msg
   | DownloadBytes
   | GotBytesResponse (Result String Bytes)
   | GotProgress Http.Progress
+  | GetMessages
+  | GotMessages (Result Http.Error (List String))
 
 
 type alias Model =
@@ -40,6 +42,7 @@ type alias Model =
   , uploadedFileContents: Maybe String
   , downloadContents: Maybe String
   , progress: Maybe Http.Progress
+  , messages: List String
   }
 
 
@@ -53,6 +56,7 @@ defaultModel =
   , uploadedFileContents = Nothing
   , downloadContents = Nothing
   , progress = Nothing
+  , messages = []
   }
 
 
@@ -75,6 +79,7 @@ view model =
         |> Maybe.withDefault "No request"
         |> Html.text
     ]
+  , Html.button [ Attr.id "get-messages", Events.onClick GetMessages ] [ Html.text "Get Messages" ]
   ]
 
 
@@ -169,6 +174,19 @@ update msg model =
           ( model, Cmd.none )
     GotProgress progress ->
       ( { model | progress = Just progress }, Cmd.none )
+    GetMessages ->
+      ( model
+      , Http.get
+        { url = "http://fake-fun.com/api/messages"
+        , expect = Http.expectJson GotMessages (Json.list <| Json.field "text" Json.string)
+        }
+      )
+    GotMessages result ->
+      case result of
+        Ok texts ->
+          ( { model | messages = texts }, Cmd.none )
+        Err _ ->
+          ( { model | messages = [] }, Cmd.none )
 
 
 handleBytesResponse : Http.Response Bytes -> Result String Bytes

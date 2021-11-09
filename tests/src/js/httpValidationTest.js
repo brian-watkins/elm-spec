@@ -20,7 +20,7 @@ describe("validate http requests", () => {
         "Errors with the OpenApi spec file",
         "Scenario: Bad path to OpenApi spec file",
       ])
-      expect(observations[0].report[0].statement).to.equal("OpenApi document not found at")
+      expect(observations[0].report[0].statement).to.equal("Unable to read file at")
       expect(observations[0].report[0].detail).to.contain("fixtures/aFileThatDoesNotExist.yaml")
 
       expect(observations[1].report[0].statement).to.equal("Unable to parse OpenApi document at")

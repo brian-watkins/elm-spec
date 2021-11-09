@@ -13,6 +13,7 @@ import Spec.File
 import Runner
 import Main as App
 import File
+import Json.Encode as Encode
 
 
 fileSpec =
@@ -128,9 +129,37 @@ downloadProgressSpec =
   ]
 
 
+contractSpec =
+  describe "validating http requests"
+  [ scenario "a valid request" (
+      given (
+        Setup.initWithModel App.defaultModel
+          |> Setup.withUpdate App.update
+          |> Setup.withView App.view
+          |> Stub.validate "./specs/fixtures/reference/simple-api.yaml"
+          |> Stub.serve
+            [ Stub.for (get "http://fake-fun.com/api/messages")
+                |> Stub.withBody (Stub.withJson <| Encode.list (\(id, text) ->
+                    Encode.object [ ("id", Encode.string id), ("text", Encode.string text) ]
+                  ) [ ("1", "hello"), ("2", "cool!") ]
+                )
+            ]
+      )
+      |> when "a file is requested"
+        [ Markup.target << by [ id "get-messages" ]
+        , Event.click
+        ]
+      |> it "gets the messages" (
+        Observer.observeModel .messages
+          |> expect (isListWithLength 2)
+      )
+    )
+  ]
+
 main =
   Runner.program
     [ fileSpec
     , downloadSpec
     , downloadProgressSpec
+    , contractSpec
     ]

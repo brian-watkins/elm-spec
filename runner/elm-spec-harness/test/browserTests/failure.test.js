@@ -56,7 +56,7 @@ harnessTest("a setup aborts", async function(harness, t) {
   })
 
   t.equal(observations.length, 1, "it emits a rejected expectation")
-  t.equal(observations[0].report[0].statement, "OpenApi document not found at", "it explains that the setup failed")
+  t.equal(observations[0].report[0].statement, "Unable to read file at", "it explains that the setup failed")
 })
 
 harnessTest("a step aborts", async function(harness, t) {

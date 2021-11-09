@@ -1,0 +1,34 @@
+openapi: 3.0.0
+info:
+  title: simple-api
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /api/messages:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+      operationId: get-api-messages
+components:
+  schemas:
+    Message:
+      title: Message
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+      required:
+        - id
+        - text

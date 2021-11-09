@@ -56,12 +56,13 @@ describe("Suite Runner", () => {
   context("when the runner supports loading files", () => {
     it("handles all the file loading specs as expected", (done) => {
       expectScenarios("WithFileSpecs",  standardOptions, done, (result, observations) => {
-        expectOkResult(result, 5, 0, 0)
+        expectOkResult(result, 6, 0, 0)
         expectAccepted(observations[0])
         expectAccepted(observations[1])
         expectAccepted(observations[2])
         expectAccepted(observations[3])        
         expectAccepted(observations[4])
+        expectAccepted(observations[5])
       })
     })
   })
@@ -69,7 +70,7 @@ describe("Suite Runner", () => {
   context("when the runner does not support loading files", () => {
     it("presents an error when a scenario attempts to load a file", (done) => {
       expectSpecWithNoBrowserCapabilities('./specs/WithFileSpecs/FileSpec.elm', standardOptions, done, (result, observations) => {
-        expectOkResult(result, 0, 5, 0)
+        expectOkResult(result, 0, 6, 0)
         expectRejected(observations[0], [
           reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
           reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
@@ -87,6 +88,10 @@ describe("Suite Runner", () => {
           reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
         ])
         expectRejected(observations[4], [
+          reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
+          reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
+        ])
+        expectRejected(observations[5], [
           reportLine("An attempt was made to load a file from disk, but this runner does not support that capability."),
           reportLine("If you need to load a file from disk, consider using the standard elm-spec runner.")
         ])

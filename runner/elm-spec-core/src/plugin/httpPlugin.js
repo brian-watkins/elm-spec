@@ -155,9 +155,7 @@ module.exports = class HttpPlugin {
             next()
           })
           .catch(err => {
-            abort(report(
-              line("OpenApi document not found at", err.path)
-            ))
+            this.handleFileLoadError(abort, err)
           })
 
         break
