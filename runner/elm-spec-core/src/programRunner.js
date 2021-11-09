@@ -208,10 +208,23 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.handleStateChange(specMessage.body, out)
         break
       case "configure":
-        this.handleMessage(specMessage.body.message, out)
-        this.timer.whenStackIsComplete(() => {
-          this.configureComplete(out)
-        })
+        switch (specMessage.body.type) {
+          case "command":
+            this.handleMessage(specMessage.body.message, out)
+            this.timer.whenStackIsComplete(() => {
+              out(this.continue())
+            })
+            break              
+          case "request":
+            this.handleMessage(specMessage.body.message, (message) => {
+              if (message.home === "_scenario" && message.name === "abort") {
+                out(message)
+              } else {
+                out(this.continue())
+              }
+            })
+            break
+        }
         break
       case "step":
         this.handleMessage(specMessage.body.message, out)
@@ -240,9 +253,6 @@ module.exports = class ProgramRunner extends EventEmitter {
         } else {
           out(this.continue())
         }
-        break
-      case "CONFIGURE_COMPLETE":
-        this.configureComplete(out)
         break
       case "OBSERVATION_START":
         this.scenarioExerciseComplete()
@@ -273,14 +283,6 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.context.closeFileSelector()
     this.runAnimationFrame = true
     this.warnOnExtraAnimationFrames = true
-  }
-
-  configureComplete(out) {
-    out({
-      home: "_configure",
-      name: "complete",
-      body: null
-    })
   }
 
   scenarioExerciseComplete() {

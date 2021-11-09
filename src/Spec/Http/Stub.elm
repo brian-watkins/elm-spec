@@ -268,7 +268,7 @@ When a matching HTTP request is made, the relevant stubbed response will be retu
 -}
 serve : List HttpResponseStub -> Setup model msg -> Setup model msg
 serve stubs =
-  Setup.configure <| httpStubMessage stubs
+  Setup.configurationCommand <| httpStubMessage stubs
 
 
 {-| A step that reconfigures the fake HTTP server to serve the given `HttpResponseStubs`.
@@ -311,7 +311,7 @@ nowServe stubs =
 
 validate : String -> Setup model msg -> Setup model msg
 validate pathToContract =
-  Setup.configure <| httpValidateMessage pathToContract
+  Setup.configurationRequest <| httpValidateMessage pathToContract
 
 
 httpValidateMessage : String -> Message

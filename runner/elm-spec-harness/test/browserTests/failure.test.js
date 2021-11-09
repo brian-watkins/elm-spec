@@ -50,6 +50,15 @@ harnessTest("expectation config cannot be decoded", async function(harness, t) {
   })
 })
 
+harnessTest("a setup aborts", async function(harness, t) {
+  const observations = await captureObservations(async () => {
+    const scenario = await harness.startScenario("withHttpContract", "./some/bad/path.yaml")
+  })
+
+  t.equal(observations.length, 1, "it emits a rejected expectation")
+  t.equal(observations[0].report[0].statement, "OpenApi document not found at", "it explains that the setup failed")
+})
+
 harnessTest("a step aborts", async function(harness, t) {
   const observations = await captureObservations(async () => {
     const scenario = await harness.startScenario("default")

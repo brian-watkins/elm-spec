@@ -279,6 +279,7 @@ subjectActions config =
 initializeActions : Config msg -> Initialize.Actions (Msg msg)
 initializeActions config =
   { send = config.send
+  , sendToSelf = \msg -> sendMessage (InitializeMsg msg)
   , finished = sendMessage RunInitialCommand
   , listen = \messageHandler ->
       config.listen (\message ->

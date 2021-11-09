@@ -5,7 +5,9 @@ module Spec.Setup.Internal exposing
   , NavigationConfig
   , mapSubject
   , initializeSubject
-  , configure
+  , configurationCommand
+  , configurationRequest
+  , Configuration(..)
   )
 
 import Spec.Message exposing (Message)
@@ -28,10 +30,15 @@ type alias Subject model msg =
   , update: msg -> model -> ( model, Cmd msg )
   , view: ProgramView model msg
   , subscriptions: model -> Sub msg
-  , configureEnvironment: List Message
+  , configurations: List Configuration
   , isApplication: Bool
   , navigationConfig: Maybe (NavigationConfig msg)
   }
+
+
+type Configuration
+  = ConfigCommand Message
+  | ConfigRequest Message
 
 
 type alias NavigationConfig msg =
@@ -45,10 +52,16 @@ type ProgramView model msg
   | Document (model -> Document msg)
 
 
-configure : Message -> Setup model msg -> Setup model msg
-configure message =
+configurationCommand : Message -> Setup model msg -> Setup model msg
+configurationCommand message =
   mapSubject <| \subject ->
-    { subject | configureEnvironment = message :: subject.configureEnvironment }
+    { subject | configurations = ConfigCommand message :: subject.configurations }
+
+
+configurationRequest : Message -> Setup model msg -> Setup model msg
+configurationRequest message =
+  mapSubject <| \subject ->
+    { subject | configurations = ConfigRequest message :: subject.configurations }
 
 
 mapSubject : (Subject model msg -> Subject model msg) -> Setup model msg -> Setup model msg

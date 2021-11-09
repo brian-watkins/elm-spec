@@ -1,8 +1,6 @@
 module Spec.Scenario.Message exposing
   ( isScenarioMessage
   , startScenario
-  , configureComplete
-  , configMessage
   , startObservation
   , abortScenario
   )
@@ -15,21 +13,6 @@ import Json.Encode as Encode
 isScenarioMessage : Message -> Bool
 isScenarioMessage =
   Message.belongsTo "_scenario"
-
-
-configureComplete : Message
-configureComplete =
-  scenarioStateMessage "CONFIGURE_COMPLETE"
-
-
-configMessage : Message -> Message
-configMessage message =
-  Message.for "_scenario" "configure"
-    |> Message.withBody (
-      Encode.object
-        [ ("message", Message.encode message)
-        ]
-    )
 
 
 startObservation : Message

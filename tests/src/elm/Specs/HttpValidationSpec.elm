@@ -172,6 +172,29 @@ openAPISpecScenarios label openApiSpecPath =
   ]
 
 
+openApiErrorSpec : Spec Model Msg
+openApiErrorSpec =
+  describe "Errors with the OpenApi spec file"
+  [ scenario "Bad path to OpenApi spec file" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve [ validGetResponse "hello" ]
+          |> Stub.validate "./fixtures/aFileThatDoesNotExist.yaml"
+      )
+      |> itShouldHaveFailedAlready
+    )
+  , scenario "Bad YAML in OpenApi spec file" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve [ validGetResponse "hello" ]
+          |> Stub.validate "./fixtures/specWithBadYaml.yaml"
+      )
+      |> itShouldHaveFailedAlready
+    )
+  ]
+
 testSetup requestCommand =
   Setup.initWithModel (defaultModel requestCommand)
     |> Setup.withView testView
@@ -412,6 +435,8 @@ selectSpec name =
       Just <| openAPISpecScenarios "OpenApi v2" "./fixtures/test-open-api-v2-spec.yaml"
     "validateOpenApi_v3" ->
       Just <| openAPISpecScenarios "OpenApi v3" "./fixtures/test-open-api-v3-spec.yaml"
+    "openApiErrors" ->
+      Just openApiErrorSpec
     _ -> Nothing
 
 

@@ -120,7 +120,7 @@ initializeSubject isApplication ( model, initialCommand ) =
   , update = \_ m -> (m, Cmd.none)
   , view = Internal.Document <| \_ -> { title = "", body = [ Html.text "" ] }
   , subscriptions = \_ -> Sub.none
-  , configureEnvironment = []
+  , configurations = []
   , isApplication = isApplication
   , navigationConfig = Nothing
   }
@@ -192,7 +192,7 @@ By default, the scenario begins with the location `http://elm-spec/`
 withLocation : Url -> Setup model msg -> Setup model msg
 withLocation url (Internal.Setup generator) =
   Internal.Setup { generator | location = url }
-    |> Internal.configure (setLocationMessage url)
+    |> Internal.configurationCommand (setLocationMessage url)
 
 
 setLocationMessage : Url -> Message

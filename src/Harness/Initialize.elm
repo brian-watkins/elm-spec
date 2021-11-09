@@ -10,8 +10,11 @@ module Harness.Initialize exposing
   , harnessSubject
   )
 
-import Spec.Setup.Internal exposing (Setup, Subject, initializeSubject)
+import Spec.Setup.Internal exposing (Setup, Subject, Configuration(..), initializeSubject)
+import Spec.Claim as Claim
+import Spec.Setup.Message as Message
 import Spec.Message as Message exposing (Message)
+import Spec.Observer.Message as Message
 import Spec.Scenario.Message as Message
 import Spec.Step.Message as Message
 import Spec.Report as Report exposing (Report)
@@ -23,6 +26,7 @@ import Harness.Types exposing (HarnessFunction)
 
 type alias Actions msg =
   { send: Message -> Cmd msg
+  , sendToSelf: Msg -> Cmd msg
   , finished: Cmd msg
   , listen: (Message -> Msg) -> Sub msg
   }
@@ -36,7 +40,7 @@ type alias Model model msg =
 
 type InitializeMode
   = ResetContext
-  | Configure
+  | Configure (List Configuration)
 
 
 harnessSubject : Model model msg -> Subject model msg
@@ -45,9 +49,9 @@ harnessSubject model =
 
 
 type Msg
-  = ResetComplete
-  | ConfigureComplete
+  = Continue
   | ReceivedMessage Message
+  | Error Report
 
 
 type alias ExposedSetupRepository model programMsg =
@@ -98,44 +102,46 @@ update actions msg model =
         )
       else
         ( model, Cmd.none )
-    ( ResetContext, ResetComplete ) ->
-      ( { model | mode = Configure }
-      , configureWith actions model.subject.configureEnvironment
+    ( ResetContext, Continue ) ->
+      ( { model | mode = Configure model.subject.configurations }
+      , actions.sendToSelf Continue
       )
-    ( Configure, ConfigureComplete ) ->
-      ( model, actions.finished )
+    ( Configure configurations, Continue ) ->
+      case configurations of
+        [] ->
+          ( model, actions.finished )
+        configuration :: remaining ->
+          case configuration of
+            ConfigCommand message ->
+              ( { model | mode = Configure remaining }
+              , actions.send <| Message.configCommandMessage message
+              )
+            ConfigRequest message ->
+              ( { model | mode = Configure remaining }
+              , actions.send <| Message.configRequestMessage message
+              )
+    ( _, Error report ) ->
+      ( model
+      , actions.send <| Message.observation [] "Unable to start the scenario" <| Claim.Reject report
+      )
     _ ->
       ( model, Cmd.none )
 
 
-configureWith : Actions msg -> List Message -> Cmd msg
-configureWith actions configMessages =
-  if List.isEmpty configMessages then
-    actions.send Message.configureComplete
-  else
-    List.map Message.configMessage configMessages
-      |> List.map actions.send
-      |> Cmd.batch
-
-
 subscriptions : Actions msg -> Model model programMsg -> Sub msg
-subscriptions actions model =
-  case model.mode of
-    ResetContext ->
-      actions.listen (\message -> 
-        if Message.is "_scenario" "state" message then
-          case Message.decode Json.string message |> Result.withDefault "" of
-            "CONTINUE" ->
-              ResetComplete
-            _ ->
-              ReceivedMessage message
-        else
+subscriptions actions _ =
+  actions.listen <| \message ->
+    if Message.is "_scenario" "state" message then
+      case Message.decode Json.string message |> Result.withDefault "" of
+        "CONTINUE" ->
+          Continue
+        _ ->
           ReceivedMessage message
-      )
-    Configure ->
-      actions.listen (\message -> 
-        if Message.is "_configure" "complete" message then
-          ConfigureComplete
-        else
-          ReceivedMessage message
-      )
+    else if Message.is "_scenario" "abort" message then
+      case Message.decode Report.decoder message of
+        Ok report ->
+          Error report
+        Err error ->
+          Error <| Report.fact "Could not decode a Step abort message" error
+    else
+      ReceivedMessage message

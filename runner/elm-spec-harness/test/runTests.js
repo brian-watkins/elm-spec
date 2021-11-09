@@ -34,6 +34,11 @@ const runTestInBrowser = async (compilerOptions, testEntry) => {
   const compiledHarness = compiler.compile()
   await page.evaluate(compiledHarness)
 
+  // REVISIT: Is this the best way to register the file loading capability?
+  await page.exposeFunction("_elm_spec_load_file", (options) => {
+    return Promise.reject({ type: "file", path: options.path })
+  })
+
   // load/start the test in playwright
   await Promise.all([waitForTestsToComplete, page.addScriptTag({ url: "http://localhost:8888/tests.js" })])
 

@@ -70,6 +70,16 @@ setupWithStub stuff =
     |> Stub.serve [ stuffStub stuff ]
 
 
+setupWithContract : String -> Setup App.Model App.Msg
+setupWithContract contractPath =
+  Setup.initWithModel App.defaultModel
+    |> Setup.withUpdate App.update
+    |> Setup.withView App.view
+    |> Setup.withSubscriptions App.subscriptions
+    |> Stub.serve [ stuffStub <| Encode.object [] ]
+    |> Stub.validate contractPath
+
+
 setupWithInitialCommand : List String -> Setup App.Model App.Msg
 setupWithInitialCommand attributes =
   Setup.init (App.init attributes)
@@ -91,6 +101,7 @@ setups =
   [ Harness.assign "default" defaultSetup
   , Harness.define "withName" setupConfigDecoder setupWithName
   , Harness.define "withStub" Json.value setupWithStub
+  , Harness.define "withHttpContract" Json.string setupWithContract
   , Harness.define "withInitialCommand" (Json.list Json.string) setupWithInitialCommand
   , Harness.define "withInitialPortCommand" (Json.list Json.string) setupWithInitialPortCommand
   ]

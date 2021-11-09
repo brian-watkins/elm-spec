@@ -56,7 +56,7 @@ withTime : Int -> Setup model msg -> Setup model msg
 withTime posix =
   Message.for "_time" "set-time"
     |> Message.withBody (Encode.int posix)
-    |> Setup.configure
+    |> Setup.configurationCommand
 
 
 {-| Set up the scenario at a particular timezone offset.
@@ -67,7 +67,7 @@ withTimezoneOffset : Int -> Setup model msg -> Setup model msg
 withTimezoneOffset zoneOffset =
   Message.for "_time" "set-timezone"
     |> Message.withBody (Encode.int zoneOffset)
-    |> Setup.configure
+    |> Setup.configurationCommand
 
 
 {-| Set up the scenario to allow steps that result in effects that wait on the *next* animation frame.
@@ -85,7 +85,7 @@ allowExtraAnimationFrames : Setup model msg -> Setup model msg
 allowExtraAnimationFrames =
   Message.for "_scenario" "warn-on-extra-animation-frames"
     |> Message.withBody (Encode.bool False)
-    |> Setup.configure
+    |> Setup.configurationCommand
 
 
 {-| A step that simulates waiting for some number of milliseconds to pass.

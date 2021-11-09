@@ -139,16 +139,25 @@ module.exports = class HttpPlugin {
         // But doing this here would allow us to check to make sure the doc really
         // exists before running any of the test
         // And that it's a valid document?
-
         this.context.readTextFromFile(specMessage.body.path)
           .then(openApiDoc => {
-            return yaml.load(openApiDoc.text)
-          })
-          .then(schema => {
+            let schema = null
+            try {
+              schema = yaml.load(openApiDoc.text)
+            } catch (err) {
+              abort(report(
+                line("Unable to parse OpenApi document at", openApiDoc.path),
+                line("YAML is invalid", err.message)
+              ))
+              return
+            }
             this.validator = new OpenApiValidator(schema)
+            next()
           })
           .catch(err => {
-            console.log("error", err)
+            abort(report(
+              line("OpenApi document not found at", err.path)
+            ))
           })
 
         break

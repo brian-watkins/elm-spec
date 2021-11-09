@@ -1,6 +1,7 @@
+const { expect } = require("chai")
 const { expectSpec, expectAccepted, reportLine, expectRejected } = require("./helpers/SpecHelpers")
 
-describe.only("validate http requests", () => {
+describe("validate http requests", () => {
   it("validates requests and responses for OpenApi v2", (done) => {
     expectSpec("HttpValidationSpec", "validateOpenApi_v2", done, (observations) => {
       openApiScenarios(observations)
@@ -11,6 +12,24 @@ describe.only("validate http requests", () => {
       openApiScenarios(observations)
     })
   })
+  it("reports on errors with the open api spec file", (done) => {
+    expectSpec("HttpValidationSpec", "openApiErrors", done, (observations) => {
+      expect(observations[0].summary).to.equal("REJECTED")
+      expect(observations[0].description).to.equal("Unable to configure scenario")
+      expect(observations[0].conditions).to.deep.equal([
+        "Errors with the OpenApi spec file",
+        "Scenario: Bad path to OpenApi spec file",
+      ])
+      expect(observations[0].report[0].statement).to.equal("OpenApi document not found at")
+      expect(observations[0].report[0].detail).to.contain("fixtures/aFileThatDoesNotExist.yaml")
+
+      expect(observations[1].report[0].statement).to.equal("Unable to parse OpenApi document at")
+      expect(observations[1].report[0].detail).to.contain("fixtures/specWithBadYaml.yaml")
+      expect(observations[1].report[1].statement).to.equal("YAML is invalid")
+      expect(observations[1].report[1].detail).to.not.be.null
+    })
+  })
+  // Note: Need to make sure we cover the case where file loading capability is not available!
 })
 
 const openApiScenarios = (observations) => {
@@ -62,3 +81,4 @@ const openApiScenarios = (observations) => {
     reportLine("The OpenAPI document contains no matching operation for this request.")
   ])
 }
+
