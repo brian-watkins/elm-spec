@@ -9,6 +9,7 @@ import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Route exposing (..)
 import Spec.Http.Stub as Stub
+import Spec.Http.Contract as Contract exposing (Contract)
 import Specs.Helpers exposing (..)
 import Http
 import Html exposing (Html)
@@ -20,15 +21,15 @@ import Dict
 import Runner
 
 
-openAPISpecScenarios : String -> String -> Spec Model Msg
-openAPISpecScenarios label openApiSpecPath =
+openAPISpecScenarios : String -> Contract -> Spec Model Msg
+openAPISpecScenarios label openApiContract =
   describe ("Validate against " ++ label)
   [ scenario "A valid request is sent and valid response is returned" (
       given (
         validGetRequest
           |> testSetup 
           |> Stub.serve [ validGetResponse "Super cool!" ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> observeThat
@@ -49,7 +50,7 @@ openAPISpecScenarios label openApiSpecPath =
           |> withUrl "http://fake-api.com/my/messages/bad" 
           |> testSetup
           |> Stub.serve [ validGetResponse "nothing" ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -60,7 +61,7 @@ openAPISpecScenarios label openApiSpecPath =
           |> withHeaders [ Http.header "X-Fun-Times" "blah" ]
           |> testSetup
           |> Stub.serve [ validGetResponse "nothing" ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -71,7 +72,7 @@ openAPISpecScenarios label openApiSpecPath =
           |> withQuery "?someValue=39"
           |> testSetup
           |> Stub.serve [ validGetResponse "nothing" ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -83,7 +84,7 @@ openAPISpecScenarios label openApiSpecPath =
           |> withQuery "?someValue=6"
           |> testSetup
           |> Stub.serve [ validGetResponse "nothing" ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -93,7 +94,7 @@ openAPISpecScenarios label openApiSpecPath =
         validGetRequest
           |> testSetup
           |> Stub.serve [ invalidGetResponse ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -103,7 +104,7 @@ openAPISpecScenarios label openApiSpecPath =
         validPostRequest
           |> testSetup
           |> Stub.serve [ validPostResponse ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> observeThat
@@ -124,7 +125,7 @@ openAPISpecScenarios label openApiSpecPath =
           |> withBody invalidPostBody
           |> testSetup
           |> Stub.serve [ validPostResponse ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
@@ -134,7 +135,7 @@ openAPISpecScenarios label openApiSpecPath =
         validPostRequest
           |> testSetup
           |> Stub.serve [ invalidPostResponse ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
@@ -144,7 +145,7 @@ openAPISpecScenarios label openApiSpecPath =
         validPostRequest
           |> testSetup
           |> Stub.serve [ validPostResponse |> Stub.withStatus 500 ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
@@ -154,7 +155,7 @@ openAPISpecScenarios label openApiSpecPath =
         unknownGetRequest
           |> testSetup
           |> Stub.serve [ unknownGetResponse ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -164,7 +165,7 @@ openAPISpecScenarios label openApiSpecPath =
         unknownMethodRequest
           |> testSetup
           |> Stub.serve [ unknownMethodResponse ]
-          |> Stub.validate openApiSpecPath
+          |> Contract.use [ openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -180,7 +181,7 @@ openApiErrorSpec =
         validGetRequest
           |> testSetup
           |> Stub.serve [ validGetResponse "hello" ]
-          |> Stub.validate "./fixtures/aFileThatDoesNotExist.yaml"
+          |> Contract.use [ Contract.openApiV2 "./fixtures/aFileThatDoesNotExist.yaml" ]
       )
       |> itShouldHaveFailedAlready
     )
@@ -189,7 +190,16 @@ openApiErrorSpec =
         validGetRequest
           |> testSetup
           |> Stub.serve [ validGetResponse "hello" ]
-          |> Stub.validate "./fixtures/specWithBadYaml.yaml"
+          |> Contract.use [ Contract.openApiV3 "./fixtures/specWithBadYaml.yaml" ]
+      )
+      |> itShouldHaveFailedAlready
+    )
+  , scenario "Invalid OpenApi document" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve [ validGetResponse "hello" ]
+          |> Contract.use [ Contract.openApiV2 "./fixtures/badOpenApiSpec.yaml" ]
       )
       |> itShouldHaveFailedAlready
     )
@@ -432,9 +442,9 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "validateOpenApi_v2" ->
-      Just <| openAPISpecScenarios "OpenApi v2" "./fixtures/test-open-api-v2-spec.yaml"
+      Just <| openAPISpecScenarios "OpenApi v2" <| Contract.openApiV2 "./fixtures/test-open-api-v2-spec.yaml"
     "validateOpenApi_v3" ->
-      Just <| openAPISpecScenarios "OpenApi v3" "./fixtures/test-open-api-v3-spec.yaml"
+      Just <| openAPISpecScenarios "OpenApi v3" <| Contract.openApiV3 "./fixtures/test-open-api-v3-spec.yaml"
     "openApiErrors" ->
       Just openApiErrorSpec
     _ -> Nothing

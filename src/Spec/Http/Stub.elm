@@ -2,7 +2,6 @@ module Spec.Http.Stub exposing
   ( HttpResponseStub
   , serve
   , nowServe
-  , validate
   , for
   , HttpResponseBody
   , withBody
@@ -307,17 +306,6 @@ nowServe : List HttpResponseStub -> Step.Step model msg
 nowServe stubs =
   \_ ->
     Command.sendMessage <| httpStubMessage stubs
-
-
-validate : String -> Setup model msg -> Setup model msg
-validate pathToContract =
-  Setup.configurationRequest <| httpValidateMessage pathToContract
-
-
-httpValidateMessage : String -> Message
-httpValidateMessage path =
-  Message.for "_http" "validate"
-    |> Message.withBody (Encode.object [ ("path", Encode.string path) ])
 
 
 httpStubMessage : List HttpResponseStub -> Message

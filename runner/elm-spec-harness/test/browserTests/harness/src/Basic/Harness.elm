@@ -11,6 +11,7 @@ import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Route exposing (get, route, UrlDescriptor(..))
 import Spec.Http.Stub as Stub
+import Spec.Http.Contract as Contract
 import Extra exposing (equals)
 import Runner
 import Dict
@@ -77,7 +78,7 @@ setupWithContract contractPath =
     |> Setup.withView App.view
     |> Setup.withSubscriptions App.subscriptions
     |> Stub.serve [ stuffStub <| Encode.object [] ]
-    |> Stub.validate contractPath
+    |> Contract.use [ Contract.openApiV2 contractPath ]
 
 
 setupWithInitialCommand : List String -> Setup App.Model App.Msg

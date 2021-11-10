@@ -27,9 +27,13 @@ describe("validate http requests", () => {
       expect(observations[1].report[0].detail).to.contain("fixtures/specWithBadYaml.yaml")
       expect(observations[1].report[1].statement).to.equal("YAML is invalid")
       expect(observations[1].report[1].detail).to.not.be.null
+
+      expect(observations[2].report[0].statement).to.equal("Invalid OpenApi document")
+      expect(observations[2].report[0].detail).to.contain("fixtures/badOpenApiSpec.yaml")
+      expect(observations[2].report[1].statement).to.equal("must have required property 'info'")
+      expect(observations[2].report[2].statement).to.equal("/paths must be object")
     })
   })
-  // Note: Need to make sure we cover the case where file loading capability is not available!
 })
 
 const openApiScenarios = (observations) => {

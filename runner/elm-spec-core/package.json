@@ -31,6 +31,7 @@
     "openapi-request-coercer": "^9.3.0",
     "openapi-request-validator": "^9.3.0",
     "openapi-response-validator": "^9.3.0",
+    "openapi-schema-validator": "^9.3.0",
     "query-string": "^7.0.1",
     "route-parser": "^0.0.5"
   },

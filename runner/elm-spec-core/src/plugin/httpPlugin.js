@@ -129,34 +129,36 @@ module.exports = class HttpPlugin {
 
         break
       }
-      case "validate": {
-        // This needs to do something like request a timer hold
-        // Or, we need to call complete when done with configuring each thing and
-        // go through the configuration steps one at a time.
-        // Also, maybe configuration messages should be separate from other messages?
-        // Alternatively, we load the openApiDoc the first time we need it in the
-        // validate method.
-        // But doing this here would allow us to check to make sure the doc really
-        // exists before running any of the test
-        // And that it's a valid document?
-        this.context.readTextFromFile(specMessage.body.path)
-          .then(openApiDoc => {
-            let schema = null
-            try {
-              schema = yaml.load(openApiDoc.text)
-            } catch (err) {
-              abort(report(
-                line("Unable to parse OpenApi document at", openApiDoc.path),
-                line("YAML is invalid", err.message)
-              ))
+      case "contracts": {
+        for (const contract of specMessage.body.contracts) {
+          this.context.readTextFromFile(contract.path)
+            .then(openApiDoc => {
+              let schema = null
+              try {
+                schema = yaml.load(openApiDoc.text)
+              } catch (err) {
+                abort(report(
+                  line("Unable to parse OpenApi document at", openApiDoc.path),
+                  line("YAML is invalid", err.message)
+                ))
+                return
+              }
+
+              const errorReoport = OpenApiValidator.validateSchema(openApiDoc.path, schema, contract.version)
+              if (errorReoport) {
+                abort(errorReoport)
+                return
+              }
+
+              // note we really still only support one contract
+              this.validator = new OpenApiValidator(schema)
+              next()
+            })
+            .catch(err => {
+              this.handleFileLoadError(abort, err)
               return
-            }
-            this.validator = new OpenApiValidator(schema)
-            next()
-          })
-          .catch(err => {
-            this.handleFileLoadError(abort, err)
-          })
+            })
+        }
 
         break
       }
