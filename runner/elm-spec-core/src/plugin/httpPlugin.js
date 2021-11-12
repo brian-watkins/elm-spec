@@ -54,14 +54,13 @@ module.exports = class HttpPlugin {
       this.context.timer.releaseHold()
       request.respond(404)
     })
-    this.contracts = {}
     this.reset()
   }
 
   reset() {
     this.resetHistory()
     this.resetStubs()
-    // should set schema to null here, but probably need a test ...
+    this.contracts = {}
   }
 
   resetHistory() {
