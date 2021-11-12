@@ -12,7 +12,7 @@ type alias Version = Int
 
 
 core : Version
-core = 7
+core = 8
 
 
 isOk : { required: Version, actual: Version } -> Bool
