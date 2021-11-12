@@ -293,8 +293,9 @@ When a matching HTTP request is made, the relevant stubbed response will be retu
 -}
 serve : List HttpResponseStub -> Setup model msg -> Setup model msg
 serve stubs =
-  Setup.configurationRequest (registerContracts <| contractsFor stubs) <| \_ ->
-    Setup.SendMessage (httpStubMessage stubs)
+  contractsFor stubs
+    |> registerContracts
+    |> Setup.configurationRequest (\_ -> Setup.SendMessage <| httpStubMessage stubs)
 
 
 contractsFor : List HttpResponseStub -> List Contract
@@ -346,8 +347,9 @@ register only the ones provided.
 nowServe : List HttpResponseStub -> Step.Step model msg
 nowServe stubs =
   \_ ->
-    -- This probably needs to be sendRequest ...
-    Command.sendMessage <| httpStubMessage stubs
+    contractsFor stubs
+      |> registerContracts
+      |> Command.sendRequest (\_ -> Command.sendMessage <| httpStubMessage stubs)
 
 
 {-| Specify a contract that should be used to validate requests that match this

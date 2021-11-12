@@ -63,8 +63,8 @@ configurationCommand message =
     { subject | configurations = ConfigCommand message :: subject.configurations }
 
 
-configurationRequest : Message -> (Message -> Command) -> Setup model msg -> Setup model msg
-configurationRequest message handler =
+configurationRequest : (Message -> Command) -> Message -> Setup model msg -> Setup model msg
+configurationRequest handler message =
   mapSubject <| \subject ->
     { subject | configurations = ConfigRequest message handler :: subject.configurations }
 

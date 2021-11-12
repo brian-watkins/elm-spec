@@ -59,6 +59,14 @@ describe("validate http requests", () => {
       expect(observations[4].report[1].statement).to.equal("Unable to determine OpenApi version")
     })
   })
+  it("registers contracts when stubs are reset during a spec", (done) => {
+    expectSpec("HttpValidationSpec", "resetStubs", done, (observations) => {
+      expectRejected(observations[0], [
+        reportLine("An invalid request was made", "POST http://fake-api.com/my/messages"),
+        reportLine("Problem with body", "must have required property 'message'")
+      ])
+    })
+  })
 })
 
 const openApiScenarios = (observations) => {

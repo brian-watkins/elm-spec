@@ -161,6 +161,28 @@ openAPISpecScenarios label openApiContract =
   ]
 
 
+resetStubsSpec : Spec Model Msg
+resetStubsSpec =
+  describe "Resetting stubs during a spec"
+  [ scenario "nowServe is used to reset stubs" (
+      given (
+        validPostRequest
+          |> withBody invalidPostBody
+          |> testSetup
+          |> Stub.serve [ validPostResponse ]
+      )
+      |> when "a contract is specified on new stubs"
+        [ Stub.nowServe
+          [ validPostResponse
+              |> Stub.satisfies (Stub.openApiContractAt "./fixtures/test-open-api-v3-spec.yaml")
+          ]
+        ]
+      |> whenAPostRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
+  ]
+
+
 multipleContractsSpec : Spec Model Msg
 multipleContractsSpec =
   describe "Multiple contracts"
@@ -563,6 +585,8 @@ selectSpec name =
       Just openApiErrorSpec
     "multipleContracts" ->
       Just multipleContractsSpec
+    "resetStubs" ->
+      Just resetStubsSpec
     _ -> Nothing
 
 
