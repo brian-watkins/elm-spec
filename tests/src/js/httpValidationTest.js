@@ -12,6 +12,14 @@ describe("validate http requests", () => {
       openApiScenarios(observations)
     })
   })
+  it("validates requests and responses with multiple contracts", (done) => {
+    expectSpec("HttpValidationSpec", "multipleContracts", done, (observations) => {
+      expectAccepted(observations[0])
+      expectAccepted(observations[1])
+      expectAccepted(observations[2])
+      expectAccepted(observations[3])
+    })
+  })
   it("reports on errors with the open api spec file", (done) => {
     expectSpec("HttpValidationSpec", "openApiErrors", done, (observations) => {
       expect(observations[0].summary).to.equal("REJECTED")
@@ -32,6 +40,10 @@ describe("validate http requests", () => {
       expect(observations[2].report[0].detail).to.contain("fixtures/badOpenApiSpec.yaml")
       expect(observations[2].report[1].statement).to.equal("must have required property 'info'")
       expect(observations[2].report[2].statement).to.equal("/paths must be object")
+
+      expect(observations[3].report[0].statement).to.equal("Invalid OpenApi document")
+      expect(observations[3].report[0].detail).to.contain("fixtures/unknownVersionOpenApiSpec.yaml")
+      expect(observations[3].report[1].statement).to.equal("Unable to determine OpenApi version")
     })
   })
 })

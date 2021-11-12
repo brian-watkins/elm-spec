@@ -1,0 +1,43 @@
+openapi: 3.0.0
+info:
+  title: another open api v3 spec
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  '/api/words/{wordId}':
+    parameters:
+      - schema:
+          type: integer
+        name: wordId
+        in: path
+        required: true
+        description: Id of a word
+    get:
+      summary: Get User Info by User ID
+      tags: []
+      responses:
+        '200':
+          description: Message Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples: {}
+        '404':
+          description: User Not Found
+      operationId: get-word
+      description: Retrieve the word.
+components:
+  schemas:
+    Message:
+      title: Message
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+      required:
+        - id
+        - message

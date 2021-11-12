@@ -13,7 +13,9 @@ module Harness.Initialize exposing
 import Spec.Setup.Internal exposing (Setup, Subject, Configuration(..), initializeSubject)
 import Spec.Claim as Claim
 import Spec.Setup.Message as Message
+import Spec.Setup.Internal as Setup
 import Spec.Message as Message exposing (Message)
+import Spec.Message.Internal as Message
 import Spec.Observer.Message as Message
 import Spec.Scenario.Message as Message
 import Spec.Step.Message as Message
@@ -35,6 +37,7 @@ type alias Actions msg =
 type alias Model model msg =
   { subject: Subject model msg
   , mode: InitializeMode
+  , responseHandler: Maybe (Message -> Setup.Command)
   }
 
 
@@ -87,7 +90,10 @@ tryToInitializeSubject maybeKey setup =
 
 init : Actions msg -> Subject model programMsg -> ( Model model programMsg, Cmd msg )
 init actions subject =
-  ( { subject = subject, mode = ResetContext }
+  ( { subject = subject
+    , mode = ResetContext
+    , responseHandler = Nothing
+    }
   , actions.send Message.startScenario
   )
 
@@ -106,6 +112,11 @@ update actions msg model =
       ( { model | mode = Configure model.subject.configurations }
       , actions.sendToSelf Continue
       )
+    ( Configure _, ReceivedMessage message ) ->
+      if Message.is "_configure" "response" message then
+        handleConfigResponse actions model message
+      else
+        ( model, Cmd.none )
     ( Configure configurations, Continue ) ->
       case configurations of
         [] ->
@@ -116,15 +127,45 @@ update actions msg model =
               ( { model | mode = Configure remaining }
               , actions.send <| Message.configCommandMessage message
               )
-            ConfigRequest message ->
-              ( { model | mode = Configure remaining }
+            ConfigRequest message handler ->
+              ( { model | mode = Configure remaining, responseHandler = Just handler }
               , actions.send <| Message.configRequestMessage message
               )
     ( _, Error report ) ->
       ( model
-      , actions.send <| Message.observation [] "Unable to start the scenario" <| Claim.Reject report
+      , abortWith actions report
+      -- , actions.send <| Message.observation [] "Unable to start the scenario" <| Claim.Reject report
       )
-    _ ->
+    -- _ ->
+      -- ( model, Cmd.none )
+
+
+abortWith : Actions msg -> Report -> Cmd msg
+abortWith actions report =
+  actions.send <| Message.observation [] "Unable to start the scenario" <| Claim.Reject report
+
+
+handleConfigResponse : Actions msg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )
+handleConfigResponse actions model message =
+  case Message.decode Message.decoder message of
+    Ok responseMessage ->
+      if Message.is "_scenario" "abort" responseMessage then
+        ( model
+        , Message.decode Report.decoder responseMessage
+          |> Result.withDefault (Report.note "Unable to parse abort scenario event!")
+          |> abortWith actions
+        )
+      else
+        case model.responseHandler of
+          Just handler ->
+            case handler responseMessage of
+              Setup.SendMessage nextMessage ->
+                ( { model | responseHandler = Nothing }
+                , actions.send <| Message.configCommandMessage nextMessage
+                )
+          Nothing ->
+            ( model, Cmd.none )
+    Err _ ->
       ( model, Cmd.none )
 
 

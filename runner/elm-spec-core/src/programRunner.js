@@ -217,11 +217,11 @@ module.exports = class ProgramRunner extends EventEmitter {
             break              
           case "request":
             this.handleMessage(specMessage.body.message, (message) => {
-              if (message.home === "_scenario" && message.name === "abort") {
-                out(message)
-              } else {
-                out(this.continue())
-              }
+              out({
+                home: "_configure",
+                name: "response",
+                body: message
+              })
             })
             break
         }

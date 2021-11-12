@@ -1,0 +1,4 @@
+swagger: '6.0'
+paths:
+  - 'left'
+  - 'right'

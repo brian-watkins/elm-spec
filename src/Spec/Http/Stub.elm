@@ -20,6 +20,9 @@ module Spec.Http.Stub exposing
   , received
   , streamed
   , withProgress
+  , Contract
+  , openApiContractAt
+  , satisfies
   )
 
 {-| Define and set up stubs for HTTP requests made during a spec.
@@ -64,6 +67,7 @@ type HttpResponseStub =
     , response: HttpResponse
     , error: Maybe String
     , progress: HttpResponseProgress
+    , contract: Maybe Contract
     }
 
 
@@ -142,6 +146,7 @@ for route =
         }
     , error = Nothing
     , progress = Complete
+    , contract = Nothing
     }
 
 
@@ -267,7 +272,22 @@ When a matching HTTP request is made, the relevant stubbed response will be retu
 -}
 serve : List HttpResponseStub -> Setup model msg -> Setup model msg
 serve stubs =
-  Setup.configurationCommand <| httpStubMessage stubs
+  Setup.configurationRequest (registerContracts <| contractsFor stubs) <| \_ ->
+    Setup.SendMessage (httpStubMessage stubs)
+
+
+contractsFor : List HttpResponseStub -> List Contract
+contractsFor =
+  List.filterMap (\(HttpResponseStub stub) -> stub.contract)
+
+
+registerContracts : List Contract -> Message
+registerContracts contracts =
+  Message.for "_http" "contracts"
+    |> Message.withBody (Encode.object
+      [ ("contracts", Encode.list encodeContract contracts)
+      ]
+    )
 
 
 {-| A step that reconfigures the fake HTTP server to serve the given `HttpResponseStubs`.
@@ -305,7 +325,34 @@ register only the ones provided.
 nowServe : List HttpResponseStub -> Step.Step model msg
 nowServe stubs =
   \_ ->
+    -- This probably needs to be sendRequest ...
     Command.sendMessage <| httpStubMessage stubs
+
+
+satisfies : Contract -> HttpResponseStub -> HttpResponseStub
+satisfies contract (HttpResponseStub stub) =
+  HttpResponseStub
+    { stub | contract = Just contract }
+
+
+type Contract =
+  Contract
+    { path: String
+    }
+
+
+openApiContractAt : String -> Contract
+openApiContractAt path =
+  Contract
+    { path = path
+    }
+
+
+encodeContract : Contract -> Encode.Value
+encodeContract (Contract contract) =
+  Encode.object
+    [ ( "path", Encode.string contract.path )
+    ]
 
 
 httpStubMessage : List HttpResponseStub -> Message
@@ -321,8 +368,9 @@ encodeStub (HttpResponseStub stub) =
     , ( "status", Encode.int stub.response.status )
     , ( "headers", Encode.dict identity Encode.string stub.response.headers )
     , ( "body", encodeBody stub.response.body )
-    , ( "error", maybeEncodeString stub.error )
+    , ( "error", maybeEncode Encode.string stub.error )
     , ( "progress", encodeProgress stub.progress )
+    , ( "contract", maybeEncode encodeContract stub.contract )
     ]
 
 
@@ -374,7 +422,7 @@ encodeProgressType progressType transmitted =
     ]
 
 
-maybeEncodeString : Maybe String -> Encode.Value
-maybeEncodeString maybeString =
-  Maybe.withDefault "" maybeString
-    |> Encode.string
+maybeEncode : (a -> Encode.Value) -> Maybe a -> Encode.Value
+maybeEncode encoder maybeValue =
+  Maybe.map encoder maybeValue
+    |> Maybe.withDefault Encode.null

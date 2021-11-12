@@ -9,7 +9,6 @@ import Spec.Claim exposing (..)
 import Spec.Observer as Observer
 import Spec.Http.Stub as Stub
 import Spec.Http.Route exposing (..)
-import Spec.Http.Contract as Contract
 import Spec.File
 import Runner
 import Main as App
@@ -137,13 +136,13 @@ contractSpec =
         Setup.initWithModel App.defaultModel
           |> Setup.withUpdate App.update
           |> Setup.withView App.view
-          |> Contract.use [ Contract.openApiV3 "./specs/fixtures/reference/simple-api.yaml" ]
           |> Stub.serve
             [ Stub.for (get "http://fake-fun.com/api/messages")
                 |> Stub.withBody (Stub.withJson <| Encode.list (\(id, text) ->
                     Encode.object [ ("id", Encode.string id), ("text", Encode.string text) ]
                   ) [ ("1", "hello"), ("2", "cool!") ]
                 )
+                |> Stub.satisfies (Stub.openApiContractAt "./specs/fixtures/reference/simple-api.yaml")
             ]
       )
       |> when "a file is requested"

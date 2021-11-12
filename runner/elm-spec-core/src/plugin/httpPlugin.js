@@ -2,7 +2,7 @@ const MockXHR = require('mock-xmlhttprequest')
 const BlobReader = require('../blobReader')
 const { report, line } = require('../report')
 const yaml = require('js-yaml')
-const OpenApiValidator = require('./openApi/validator')
+const OpenApiContract = require('./openApi/contract')
 
 const createMockXhrRequestClass = function(context) {
   const MockXHRClass = MockXHR.newMockXhr()
@@ -54,6 +54,7 @@ module.exports = class HttpPlugin {
       this.context.timer.releaseHold()
       request.respond(404)
     })
+    this.contracts = {}
     this.reset()
   }
 
@@ -130,35 +131,20 @@ module.exports = class HttpPlugin {
         break
       }
       case "contracts": {
-        for (const contract of specMessage.body.contracts) {
-          this.context.readTextFromFile(contract.path)
-            .then(openApiDoc => {
-              let schema = null
-              try {
-                schema = yaml.load(openApiDoc.text)
-              } catch (err) {
-                abort(report(
-                  line("Unable to parse OpenApi document at", openApiDoc.path),
-                  line("YAML is invalid", err.message)
-                ))
-                return
-              }
+        const promises = specMessage.body.contracts.map((contract) => {
+          return this.getContract(contract.path)
+        })
 
-              const errorReoport = OpenApiValidator.validateSchema(openApiDoc.path, schema, contract.version)
-              if (errorReoport) {
-                abort(errorReoport)
-                return
-              }
-
-              // note we really still only support one contract
-              this.validator = new OpenApiValidator(schema)
-              next()
-            })
-            .catch(err => {
-              this.handleFileLoadError(abort, err)
+        Promise.all(promises).then((results) => {
+          for (const result of results) {
+            if (result.error) {
+              abort(result.error)
               return
-            })
-        }
+            }
+            this.contracts[result.path] = result.contract  
+          }
+          next()
+        })
 
         break
       }
@@ -186,11 +172,16 @@ module.exports = class HttpPlugin {
     }
   }
 
-  setupStub(stub, uriDescriptor, out, abort) {
+  async setupStub(stub, uriDescriptor, out, abort) {
+    let contract = null
+    if (stub.contract) {
+      contract = this.contracts[stub.contract.path]
+    }
+
     this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
 
-      if (this.validator) {
-        this.validator.validateRequest(xhr, abort)
+      if (contract) {
+        contract.validateRequest(xhr, abort)
       }
 
       if (stub.error === "network") {
@@ -212,7 +203,10 @@ module.exports = class HttpPlugin {
                 xhr.downloadProgress(stub.progress.transmitted, size)
                 this.context.timer.releaseHold()
               })
-              .catch(error => this.handleFileLoadError(abort, error))
+              .catch(error => {
+                abort(this.fileLoadError(error))
+                this.context.timer.releaseHold()
+              })
             break
           case "streamed":
             xhr.setResponseHeaders(stub.headers)
@@ -223,9 +217,9 @@ module.exports = class HttpPlugin {
             this.responseBody(stub.body)
               .then(body => {
 
-                if (this.validator) {
+                if (contract) {
                   try {
-                    this.validator.validateResponse(xhr, stub.status, stub.headers, body, abort)
+                    contract.validateResponse(xhr, stub.status, stub.headers, body, abort)
                   } catch (err) {
                     console.log(err)
                   }
@@ -234,22 +228,57 @@ module.exports = class HttpPlugin {
                 xhr.respond(stub.status, stub.headers, body)
                 this.context.timer.releaseHold()
               })
-              .catch(error => this.handleFileLoadError(abort, error))
+              .catch(error => {
+                abort(this.fileLoadError(error))
+                this.context.timer.releaseHold()
+              })
             break
         }
       }
     })
   }
 
-  handleFileLoadError(abort, error) {
+  getContract(path) {
+    return this.context.readTextFromFile(path)
+      .then(openApiDoc => {
+        let contractDocument = null
+        try {
+          contractDocument = yaml.load(openApiDoc.text)
+        } catch (err) {
+          return {
+            error: report(
+              line("Unable to parse OpenApi document at", openApiDoc.path),
+              line("YAML is invalid", err.message)
+            )
+          }
+        }
+
+        const errorReoport = OpenApiContract.validateContract(openApiDoc.path, contractDocument)
+        if (errorReoport) {
+          return {
+            error: errorReoport
+          }
+        }
+
+        return {
+          contract: new OpenApiContract(contractDocument),
+          path,
+          error: null
+        }
+      })
+      .catch(err => {
+        return {
+          error: this.fileLoadError(err)
+        }
+      })
+  }
+
+  fileLoadError(error) {
     switch (error.type) {
       case "file":
-        abort(fileError(error.path))
-        this.context.timer.releaseHold()
-        break
+        return fileError(error.path)
       default:
-        abort(missingLoadFileCapabilityError())
-        this.context.timer.releaseHold()
+        return missingLoadFileCapabilityError()
     }
   }
 

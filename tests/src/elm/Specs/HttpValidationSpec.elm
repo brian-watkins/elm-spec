@@ -8,8 +8,7 @@ import Spec.Markup.Selector exposing (..)
 import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Route exposing (..)
-import Spec.Http.Stub as Stub
-import Spec.Http.Contract as Contract exposing (Contract)
+import Spec.Http.Stub as Stub exposing (Contract)
 import Specs.Helpers exposing (..)
 import Http
 import Html exposing (Html)
@@ -28,8 +27,8 @@ openAPISpecScenarios label openApiContract =
       given (
         validGetRequest
           |> testSetup 
-          |> Stub.serve [ validGetResponse "Super cool!" ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve
+            [ validGetResponse "Super cool!" |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> observeThat
@@ -49,8 +48,7 @@ openAPISpecScenarios label openApiContract =
         validGetRequest
           |> withUrl "http://fake-api.com/my/messages/bad" 
           |> testSetup
-          |> Stub.serve [ validGetResponse "nothing" ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validGetResponse "nothing" |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -60,8 +58,7 @@ openAPISpecScenarios label openApiContract =
         validGetRequest
           |> withHeaders [ Http.header "X-Fun-Times" "blah" ]
           |> testSetup
-          |> Stub.serve [ validGetResponse "nothing" ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validGetResponse "nothing" |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -71,8 +68,7 @@ openAPISpecScenarios label openApiContract =
         validGetRequest
           |> withQuery "?someValue=39"
           |> testSetup
-          |> Stub.serve [ validGetResponse "nothing" ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validGetResponse "nothing" |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -83,8 +79,7 @@ openAPISpecScenarios label openApiContract =
           |> withHeaders [ Http.header "X-Cool-Times" "blah" ]
           |> withQuery "?someValue=6"
           |> testSetup
-          |> Stub.serve [ validGetResponse "nothing" ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validGetResponse "nothing" |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -93,8 +88,7 @@ openAPISpecScenarios label openApiContract =
       given (
         validGetRequest
           |> testSetup
-          |> Stub.serve [ invalidGetResponse ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ invalidGetResponse |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -103,8 +97,7 @@ openAPISpecScenarios label openApiContract =
       given (
         validPostRequest
           |> testSetup
-          |> Stub.serve [ validPostResponse ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validPostResponse |> Stub.satisfies openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> observeThat
@@ -124,8 +117,7 @@ openAPISpecScenarios label openApiContract =
         validPostRequest
           |> withBody invalidPostBody
           |> testSetup
-          |> Stub.serve [ validPostResponse ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validPostResponse |> Stub.satisfies openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
@@ -134,8 +126,7 @@ openAPISpecScenarios label openApiContract =
       given (
         validPostRequest
           |> testSetup
-          |> Stub.serve [ invalidPostResponse ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ invalidPostResponse |> Stub.satisfies openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
@@ -144,8 +135,7 @@ openAPISpecScenarios label openApiContract =
       given (
         validPostRequest
           |> testSetup
-          |> Stub.serve [ validPostResponse |> Stub.withStatus 500 ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ validPostResponse |> Stub.withStatus 500 |> Stub.satisfies openApiContract ]
       )
       |> whenAPostRequestIsSent
       |> itShouldHaveFailedAlready
@@ -154,8 +144,7 @@ openAPISpecScenarios label openApiContract =
       given (
         unknownGetRequest
           |> testSetup
-          |> Stub.serve [ unknownGetResponse ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ unknownGetResponse |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
@@ -164,14 +153,53 @@ openAPISpecScenarios label openApiContract =
       given (
         unknownMethodRequest
           |> testSetup
-          |> Stub.serve [ unknownMethodResponse ]
-          |> Contract.use [ openApiContract ]
+          |> Stub.serve [ unknownMethodResponse |> Stub.satisfies openApiContract ]
       )
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
   ]
 
+
+multipleContractsSpec : Spec Model Msg
+multipleContractsSpec =
+  describe "Multiple contracts"
+  [ scenario "Requests to different endpoints each with their own contract" (
+      given (
+        Setup.initWithModel (defaultModel validGetRequest anotherValidGetRequest)
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Stub.serve
+            [ validGetResponse "Very fun!"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/test-open-api-v2-spec.yaml")
+            , anotherValidGetResponse "Totally awesome!"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/another-open-api-v3-spec.yaml")
+            ]
+      )
+      |> whenAGetRequestIsSent
+      |> whenAnotherGetRequestIsSent
+      |> observeThat
+        [ it "recorded the request" (
+            Spec.Http.observeRequests (get <| validGetUrl ++ validQuery)
+              |> expect (isListWithLength 1)
+          )
+        , it "recorded the other request" (
+            Spec.Http.observeRequests (get anotherValidGetUrl)
+              |> expect (isListWithLength 1)
+          )
+        , it "handles the response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "Very fun!")
+          )
+        , it "handles the other response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "another-response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "Totally awesome!")
+          )
+        ]
+    )
+  ]
 
 openApiErrorSpec : Spec Model Msg
 openApiErrorSpec =
@@ -180,8 +208,10 @@ openApiErrorSpec =
       given (
         validGetRequest
           |> testSetup
-          |> Stub.serve [ validGetResponse "hello" ]
-          |> Contract.use [ Contract.openApiV2 "./fixtures/aFileThatDoesNotExist.yaml" ]
+          |> Stub.serve 
+            [ validGetResponse "hello"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/aFileThatDoesNotExist.yaml")
+            ]
       )
       |> itShouldHaveFailedAlready
     )
@@ -189,8 +219,10 @@ openApiErrorSpec =
       given (
         validGetRequest
           |> testSetup
-          |> Stub.serve [ validGetResponse "hello" ]
-          |> Contract.use [ Contract.openApiV3 "./fixtures/specWithBadYaml.yaml" ]
+          |> Stub.serve
+            [ validGetResponse "hello"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/specWithBadYaml.yaml")
+            ]
       )
       |> itShouldHaveFailedAlready
     )
@@ -198,15 +230,28 @@ openApiErrorSpec =
       given (
         validGetRequest
           |> testSetup
-          |> Stub.serve [ validGetResponse "hello" ]
-          |> Contract.use [ Contract.openApiV2 "./fixtures/badOpenApiSpec.yaml" ]
+          |> Stub.serve
+            [ validGetResponse "hello"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/badOpenApiSpec.yaml")
+            ]
+      )
+      |> itShouldHaveFailedAlready
+    )
+  , scenario "Unknown OpenApi version" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve
+            [ validGetResponse "hello"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/unknownVersionOpenApiSpec.yaml")
+            ]
       )
       |> itShouldHaveFailedAlready
     )
   ]
 
 testSetup requestCommand =
-  Setup.initWithModel (defaultModel requestCommand)
+  Setup.initWithModel (defaultModel requestCommand requestCommand)
     |> Setup.withView testView
     |> Setup.withUpdate testUpdate
 
@@ -217,6 +262,11 @@ whenAGetRequestIsSent =
     , Event.click
     ]
 
+whenAnotherGetRequestIsSent =
+  when "another get request is sent"
+    [ Markup.target << by [ id "another-request-button" ]
+    , Event.click
+    ]
 
 whenAPostRequestIsSent =
   when "a post request is sent"
@@ -229,6 +279,14 @@ validGetResponse message =
   Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
     |> Stub.withBody (Stub.withJson <| Encode.object
       [ ("id", Encode.int 1)
+      , ("message", Encode.string message)
+      ]
+    )
+
+anotherValidGetResponse message =
+  Stub.for (route "GET" <| Matching "http://another-api.com/api/words/.*")
+    |> Stub.withBody (Stub.withJson <| Encode.object
+      [ ("id", Encode.int 18)
       , ("message", Encode.string message)
       ]
     )
@@ -264,21 +322,27 @@ invalidPostResponse =
 
 type alias Model =
   { request: RequestParams
+  , anotherRequest: RequestParams
   , message: String
+  , anotherMessage: String
   , location: String
   }
 
-defaultModel requestParams =
+defaultModel requestParams anotherRequestParams =
   { request = requestParams
+  , anotherRequest = anotherRequestParams
   , message = "Request not sent yet!"
+  , anotherMessage = "Another request not sent yet!"
   , location = "Unknown"
   }
 
 
 type Msg
   = RequestMessage
+  | RequestAnotherMessage
   | CreateMessage
   | GotMessage (Result Http.Error String)
+  | GotAnotherMessage (Result Http.Error String)
   | CreatedMessage (Result () String)
 
 
@@ -291,6 +355,9 @@ testView model =
   , Html.button [ Attr.id "create-message-button", Events.onClick CreateMessage ] [ Html.text "Create message!" ]
   , Html.div [ Attr.id "post-response" ]
     [ Html.text model.location ]
+  , Html.button [ Attr.id "another-request-button", Events.onClick RequestAnotherMessage ] [ Html.text "Request another message!" ]
+  , Html.div [ Attr.id "another-response" ]
+    [ Html.text model.anotherMessage ]
   ]
 
 
@@ -305,6 +372,18 @@ testUpdate msg model =
           , url = model.request.url ++ model.request.query
           , body = model.request.body
           , expect = Http.expectJson GotMessage responseDecoder
+          , timeout = Nothing
+          , tracker = Nothing
+          }
+      )
+    RequestAnotherMessage ->
+      ( model
+      , Http.request
+          { method = model.anotherRequest.method
+          , headers =  model.anotherRequest.headers
+          , url = model.anotherRequest.url ++ model.anotherRequest.query
+          , body = model.anotherRequest.body
+          , expect = Http.expectJson GotAnotherMessage responseDecoder
           , timeout = Nothing
           , tracker = Nothing
           }
@@ -327,6 +406,12 @@ testUpdate msg model =
           ( { model | message = message }, Cmd.none )
         Err _ ->
           ( { model | message = "ERROR" }, Cmd.none )
+    GotAnotherMessage result ->
+      case result of
+        Ok message ->
+          ( { model | anotherMessage = message }, Cmd.none )
+        Err _ ->
+          ( { model | anotherMessage = "ERROR" }, Cmd.none )
     CreatedMessage result ->
       case result of
         Ok location ->
@@ -381,8 +466,22 @@ validGetRequest =
   , body = Http.emptyBody
   }
 
+anotherValidGetRequest : RequestParams
+anotherValidGetRequest =
+  { method = "GET"
+  , headers = []
+  , url = anotherValidGetUrl
+  , query = ""
+  , body = Http.emptyBody
+  }
+
+
 validGetUrl =
   "http://fake-api.com/my/messages/27"
+
+
+anotherValidGetUrl =
+  "http://another-api.com/api/words/18"
 
 
 validQuery =
@@ -442,11 +541,13 @@ selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
     "validateOpenApi_v2" ->
-      Just <| openAPISpecScenarios "OpenApi v2" <| Contract.openApiV2 "./fixtures/test-open-api-v2-spec.yaml"
+      Just <| openAPISpecScenarios "OpenApi v2" <| Stub.openApiContractAt "./fixtures/test-open-api-v2-spec.yaml"
     "validateOpenApi_v3" ->
-      Just <| openAPISpecScenarios "OpenApi v3" <| Contract.openApiV3 "./fixtures/test-open-api-v3-spec.yaml"
+      Just <| openAPISpecScenarios "OpenApi v3" <| Stub.openApiContractAt "./fixtures/test-open-api-v3-spec.yaml"
     "openApiErrors" ->
       Just openApiErrorSpec
+    "multipleContracts" ->
+      Just multipleContractsSpec
     _ -> Nothing
 
 

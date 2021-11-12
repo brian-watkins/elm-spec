@@ -8,12 +8,28 @@ const schemaValidators = {
   '3': new OpenAPISchemaValidator({ version: 3 })
 }
 
-module.exports = class OpenApiValidator {
-  static validateSchema(path, schema, version) {
-    const errors = schemaValidators[version].validate(schema)
+function getVersion(doc) {
+  if (doc.swagger === '2.0') {
+    return '2'
+  } else if (doc.openapi) {
+    return '3'
+  } else {
+    return null
+  }
+}
+
+module.exports = class OpenApiContract {
+  static validateContract(path, doc) {
+    const version = getVersion(doc)
+
+    if (!version) {
+      return schemaErrorReport(path, [{ instancePath: '', message: "Unable to determine OpenApi version" }])
+    }
+
+    const errors = schemaValidators[version].validate(doc)
     if (errors.errors.length > 0) {
       return schemaErrorReport(path, errors.errors)
-    }
+    }  
 
     return null
   }

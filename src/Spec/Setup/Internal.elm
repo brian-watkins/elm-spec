@@ -8,6 +8,7 @@ module Spec.Setup.Internal exposing
   , configurationCommand
   , configurationRequest
   , Configuration(..)
+  , Command(..)
   )
 
 import Spec.Message exposing (Message)
@@ -38,7 +39,11 @@ type alias Subject model msg =
 
 type Configuration
   = ConfigCommand Message
-  | ConfigRequest Message
+  | ConfigRequest Message (Message -> Command)
+
+
+type Command
+  = SendMessage Message
 
 
 type alias NavigationConfig msg =
@@ -58,10 +63,10 @@ configurationCommand message =
     { subject | configurations = ConfigCommand message :: subject.configurations }
 
 
-configurationRequest : Message -> Setup model msg -> Setup model msg
-configurationRequest message =
+configurationRequest : Message -> (Message -> Command) -> Setup model msg -> Setup model msg
+configurationRequest message handler =
   mapSubject <| \subject ->
-    { subject | configurations = ConfigRequest message :: subject.configurations }
+    { subject | configurations = ConfigRequest message handler :: subject.configurations }
 
 
 mapSubject : (Subject model msg -> Subject model msg) -> Setup model msg -> Setup model msg
