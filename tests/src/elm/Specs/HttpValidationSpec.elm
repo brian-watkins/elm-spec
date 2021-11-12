@@ -158,6 +158,25 @@ openAPISpecScenarios label openApiContract =
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "A request that expects text (not json) is sent" (
+      given (
+        validTextRequest
+          |> testSetup
+          |> Stub.serve [ validTextResponse "{blah => yikes!}" |> Stub.satisfies openApiContract ]
+      )
+      |> whenAGetRequestIsSent
+      |> observeThat
+        [ it "recorded the request" (
+            Spec.Http.observeRequests (get validTextUrl)
+              |> expect (isListWithLength 1)
+          )
+        , it "handles the response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "{blah => yikes!}")
+          )
+        ]
+    )
   ]
 
 
@@ -303,7 +322,7 @@ whenAnotherGetRequestIsSent =
 
 whenAPostRequestIsSent =
   when "a post request is sent"
-    [ Markup.target << by [ id "create-message-button" ]
+    [ Markup.target << by [ id "request-message-button" ]
     , Event.click
     ]
 
@@ -323,6 +342,10 @@ anotherValidGetResponse message =
       , ("message", Encode.string message)
       ]
     )
+
+validTextResponse message =
+  Stub.for (get "http://fake-api.com/my/text")
+    |> Stub.withBody (Stub.withText message)
 
 unknownGetResponse =
   Stub.for (route "GET" <| Matching "http://fake-api.com/some/unknown/path")
@@ -373,7 +396,6 @@ defaultModel requestParams anotherRequestParams =
 type Msg
   = RequestMessage
   | RequestAnotherMessage
-  | CreateMessage
   | GotMessage (Result Http.Error String)
   | GotAnotherMessage (Result Http.Error String)
   | CreatedMessage (Result () String)
@@ -385,7 +407,6 @@ testView model =
   [ Html.button [ Attr.id "request-message-button", Events.onClick RequestMessage ] [ Html.text "Request message!" ]
   , Html.div [ Attr.id "response" ]
     [ Html.text model.message ]
-  , Html.button [ Attr.id "create-message-button", Events.onClick CreateMessage ] [ Html.text "Create message!" ]
   , Html.div [ Attr.id "post-response" ]
     [ Html.text model.location ]
   , Html.button [ Attr.id "another-request-button", Events.onClick RequestAnotherMessage ] [ Html.text "Request another message!" ]
@@ -404,7 +425,7 @@ testUpdate msg model =
           , headers =  model.request.headers
           , url = model.request.url ++ model.request.query
           , body = model.request.body
-          , expect = Http.expectJson GotMessage responseDecoder
+          , expect = model.request.expect
           , timeout = Nothing
           , tracker = Nothing
           }
@@ -416,19 +437,7 @@ testUpdate msg model =
           , headers =  model.anotherRequest.headers
           , url = model.anotherRequest.url ++ model.anotherRequest.query
           , body = model.anotherRequest.body
-          , expect = Http.expectJson GotAnotherMessage responseDecoder
-          , timeout = Nothing
-          , tracker = Nothing
-          }
-      )
-    CreateMessage ->
-      ( model
-      , Http.request
-          { method = model.request.method
-          , headers =  model.request.headers
-          , url = model.request.url ++ model.request.query
-          , body = model.request.body
-          , expect = Http.expectStringResponse CreatedMessage getLocationHeader
+          , expect = model.anotherRequest.expect
           , timeout = Nothing
           , tracker = Nothing
           }
@@ -470,6 +479,7 @@ type alias RequestParams =
   , url: String
   , query: String
   , body: Http.Body
+  , expect: Http.Expect Msg
   }
 
 unknownGetRequest : RequestParams
@@ -479,6 +489,7 @@ unknownGetRequest =
   , url = "http://fake-api.com/some/unknown/path"
   , query = ""
   , body = Http.emptyBody
+  , expect = Http.expectJson GotMessage responseDecoder
   }
 
 unknownMethodRequest : RequestParams
@@ -488,6 +499,7 @@ unknownMethodRequest =
   , url = "http://fake-api.com/my/messages/18"
   , query = ""
   , body = Http.emptyBody
+  , expect = Http.expectJson GotMessage responseDecoder
   }
 
 validGetRequest : RequestParams
@@ -497,7 +509,21 @@ validGetRequest =
   , url = validGetUrl
   , query = validQuery
   , body = Http.emptyBody
+  , expect = Http.expectJson GotMessage responseDecoder
   }
+
+validTextRequest : RequestParams
+validTextRequest =
+  { method = "GET"
+  , headers = []
+  , url = validTextUrl
+  , query = ""
+  , body = Http.emptyBody
+  , expect = Http.expectString GotMessage
+  }
+
+validTextUrl =
+  "http://fake-api.com/my/text"
 
 anotherValidGetRequest : RequestParams
 anotherValidGetRequest =
@@ -506,6 +532,7 @@ anotherValidGetRequest =
   , url = anotherValidGetUrl
   , query = ""
   , body = Http.emptyBody
+  , expect = Http.expectJson GotAnotherMessage responseDecoder
   }
 
 
@@ -528,6 +555,7 @@ validPostRequest =
   , url = validPostUrl
   , query = ""
   , body = validPostBody
+  , expect = Http.expectStringResponse CreatedMessage getLocationHeader
   }
 
 

@@ -98,6 +98,23 @@
           }
         ]
       }
+    },
+    "/my/text": {
+      "get": {
+        "summary": "Get text",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            },
+            "headers": {}
+          }
+        },
+        "operationId": "get-my-text",
+        "description": "get all the text I could need"
+      }
     }
   },
   "definitions": {

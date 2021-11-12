@@ -185,7 +185,11 @@ module.exports = class HttpPlugin {
     this.server.addHandler(stub.route.method, uriDescriptor, (xhr) => {
 
       if (contract) {
-        contract.validateRequest(xhr, abort)
+        try {
+          contract.validateRequest(xhr, abort)
+        } catch (err) {
+          console.log("Error validating request", xhr.url, err)
+        }
       }
 
       if (stub.error === "network") {
@@ -225,7 +229,7 @@ module.exports = class HttpPlugin {
                   try {
                     contract.validateResponse(xhr, stub.status, stub.headers, body, abort)
                   } catch (err) {
-                    console.log(err)
+                    console.log("Error validating response for", xhr.url, err)
                   }
                 }
 

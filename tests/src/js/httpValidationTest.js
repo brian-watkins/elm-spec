@@ -117,5 +117,7 @@ const openApiScenarios = (observations) => {
     reportLine("An invalid request was made", "PATCH http://fake-api.com/my/messages/18"),
     reportLine("The OpenAPI document contains no matching operation for this request.")
   ])
+  expectAccepted(observations[14])
+  expectAccepted(observations[15])
 }
 

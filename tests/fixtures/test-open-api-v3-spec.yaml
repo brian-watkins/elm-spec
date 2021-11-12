@@ -73,6 +73,19 @@ paths:
             schema:
               $ref: '#/components/schemas/MessageRequest'
         description: Message
+  /my/text:
+    get:
+      summary: Get Text
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      operationId: get-my-text
+      description: get all the text that you need
 components:
   schemas:
     Message:
