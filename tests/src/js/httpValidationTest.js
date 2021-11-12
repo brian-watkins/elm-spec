@@ -46,7 +46,7 @@ describe("validate http requests", () => {
       expect(observations[1].report[1].statement).to.not.be.null
 
       expect(observations[2].report[0].statement).to.equal("Unable to parse OpenApi document at")
-      expect(observations[2].report[0].detail).to.contain("fixtures/specWithBadJson.json")
+      expect(observations[2].report[0].detail).to.contain("fixtures/specWithBadJson.txt")
       expect(observations[2].report[1].statement).to.not.be.null
 
       expect(observations[3].report[0].statement).to.equal("Invalid OpenApi document")

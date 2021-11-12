@@ -232,7 +232,7 @@ openApiErrorSpec =
           |> testSetup
           |> Stub.serve
             [ validGetResponse "hello"
-                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/specWithBadJson.json")
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/specWithBadJson.txt")
             ]
       )
       |> itShouldHaveFailedAlready
