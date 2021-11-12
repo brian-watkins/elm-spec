@@ -2,13 +2,23 @@ const { expect } = require("chai")
 const { expectSpec, expectAccepted, reportLine, expectRejected } = require("./helpers/SpecHelpers")
 
 describe("validate http requests", () => {
-  it("validates requests and responses for OpenApi v2", (done) => {
-    expectSpec("HttpValidationSpec", "validateOpenApi_v2", done, (observations) => {
+  it("validates requests and responses for OpenApi v2 in YAML", (done) => {
+    expectSpec("HttpValidationSpec", "validateOpenApi_v2_yaml", done, (observations) => {
       openApiScenarios(observations)
     })
   })
-  it("validates requests and responses for OpenApi v3", (done) => {
-    expectSpec("HttpValidationSpec", "validateOpenApi_v3", done, (observations) => {
+  it("validates requests and responses for OpenApi v2 in JSON", (done) => {
+    expectSpec("HttpValidationSpec", "validateOpenApi_v2_json", done, (observations) => {
+      openApiScenarios(observations)
+    })
+  })
+  it("validates requests and responses for OpenApi v3 in YAML", (done) => {
+    expectSpec("HttpValidationSpec", "validateOpenApi_v3_yaml", done, (observations) => {
+      openApiScenarios(observations)
+    })
+  })
+  it("validates requests and responses for OpenApi v3 in JSON", (done) => {
+    expectSpec("HttpValidationSpec", "validateOpenApi_v3_json", done, (observations) => {
       openApiScenarios(observations)
     })
   })
@@ -33,17 +43,20 @@ describe("validate http requests", () => {
 
       expect(observations[1].report[0].statement).to.equal("Unable to parse OpenApi document at")
       expect(observations[1].report[0].detail).to.contain("fixtures/specWithBadYaml.yaml")
-      expect(observations[1].report[1].statement).to.equal("YAML is invalid")
-      expect(observations[1].report[1].detail).to.not.be.null
+      expect(observations[1].report[1].statement).to.not.be.null
 
-      expect(observations[2].report[0].statement).to.equal("Invalid OpenApi document")
-      expect(observations[2].report[0].detail).to.contain("fixtures/badOpenApiSpec.yaml")
-      expect(observations[2].report[1].statement).to.equal("must have required property 'info'")
-      expect(observations[2].report[2].statement).to.equal("/paths must be object")
+      expect(observations[2].report[0].statement).to.equal("Unable to parse OpenApi document at")
+      expect(observations[2].report[0].detail).to.contain("fixtures/specWithBadJson.json")
+      expect(observations[2].report[1].statement).to.not.be.null
 
       expect(observations[3].report[0].statement).to.equal("Invalid OpenApi document")
-      expect(observations[3].report[0].detail).to.contain("fixtures/unknownVersionOpenApiSpec.yaml")
-      expect(observations[3].report[1].statement).to.equal("Unable to determine OpenApi version")
+      expect(observations[3].report[0].detail).to.contain("fixtures/badOpenApiSpec.yaml")
+      expect(observations[3].report[1].statement).to.equal("must have required property 'info'")
+      expect(observations[3].report[2].statement).to.equal("/paths must be object")
+
+      expect(observations[4].report[0].statement).to.equal("Invalid OpenApi document")
+      expect(observations[4].report[0].detail).to.contain("fixtures/unknownVersionOpenApiSpec.yaml")
+      expect(observations[4].report[1].statement).to.equal("Unable to determine OpenApi version")
     })
   })
 })

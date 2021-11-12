@@ -1,0 +1,133 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "test open api v2 spec",
+    "version": "1.0"
+  },
+  "host": "fake-api.com",
+  "schemes": [
+    "http"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "paths": {
+    "/my/messages/{messageId}": {
+      "parameters": [
+        {
+          "type": "number",
+          "name": "messageId",
+          "in": "path",
+          "required": true,
+          "description": "Id of the message"
+        }
+      ],
+      "get": {
+        "summary": "Get Message",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "User Found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            },
+            "examples": {}
+          },
+          "404": {
+            "description": "User Not Found",
+            "schema": {
+              "type": "null"
+            },
+            "examples": {}
+          }
+        },
+        "operationId": "get-message",
+        "description": "Retrieve the message with the matching id",
+        "parameters": [
+          {
+            "type": "integer",
+            "in": "header",
+            "name": "X-Fun-Times",
+            "description": "How many times to have fun?",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "in": "query",
+            "name": "someValue",
+            "description": "Some value",
+            "required": true,
+            "minimum": 10,
+            "maximum": 20
+          }
+        ]
+      }
+    },
+    "/my/messages": {
+      "post": {
+        "summary": "",
+        "operationId": "post-my-messages",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "URL for created message",
+                "minLength": 5
+              },
+              "X-Fun-Times": {
+                "type": "integer",
+                "description": "Number of fun times"
+              }
+            }
+          }
+        },
+        "description": "Create a message",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/MessageRequest"
+            },
+            "description": "Message"
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Message": {
+      "title": "Message",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "message"
+      ]
+    },
+    "MessageRequest": {
+      "title": "MessageRequest",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    }
+  }
+}

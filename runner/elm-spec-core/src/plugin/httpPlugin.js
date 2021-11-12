@@ -252,7 +252,7 @@ module.exports = class HttpPlugin {
           return {
             error: report(
               line("Unable to parse OpenApi document at", openApiDoc.path),
-              line("YAML is invalid", err.message)
+              line(err.message)
             )
           }
         }

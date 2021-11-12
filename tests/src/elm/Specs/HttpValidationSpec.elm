@@ -226,6 +226,17 @@ openApiErrorSpec =
       )
       |> itShouldHaveFailedAlready
     )
+  , scenario "Bad JSON in OpenApi spec file" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve
+            [ validGetResponse "hello"
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/specWithBadJson.json")
+            ]
+      )
+      |> itShouldHaveFailedAlready
+    )
   , scenario "Invalid OpenApi document" (
       given (
         validGetRequest
@@ -540,10 +551,14 @@ responseDecoder =
 selectSpec : String -> Maybe (Spec Model Msg)
 selectSpec name =
   case name of
-    "validateOpenApi_v2" ->
+    "validateOpenApi_v2_yaml" ->
       Just <| openAPISpecScenarios "OpenApi v2" <| Stub.openApiContractAt "./fixtures/test-open-api-v2-spec.yaml"
-    "validateOpenApi_v3" ->
+    "validateOpenApi_v3_yaml" ->
       Just <| openAPISpecScenarios "OpenApi v3" <| Stub.openApiContractAt "./fixtures/test-open-api-v3-spec.yaml"
+    "validateOpenApi_v2_json" ->
+      Just <| openAPISpecScenarios "OpenApi v2" <| Stub.openApiContractAt "./fixtures/test-open-api-v2-spec.json"
+    "validateOpenApi_v3_json" ->
+      Just <| openAPISpecScenarios "OpenApi v3" <| Stub.openApiContractAt "./fixtures/test-open-api-v3-spec.json"
     "openApiErrors" ->
       Just openApiErrorSpec
     "multipleContracts" ->
