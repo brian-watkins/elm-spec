@@ -82,12 +82,13 @@ module.exports = class HttpPlugin {
         this.resetStubs()
 
         for (const stub of specMessage.body) {
-          try {
-            this.setupStub(stub, this.uriDescriptor(stub), out, abort)
-          } catch (err) {
-            abort(err.report)
+          const descriptorResult = this.uriDescriptor(stub)
+          if (descriptorResult.error) {
+            abort(descriptorResult.error)
             break
           }
+
+          this.setupStub(stub, descriptorResult.descriptor, abort)
         }
 
         break
@@ -156,23 +157,27 @@ module.exports = class HttpPlugin {
   uriDescriptor(stub) {
     switch (stub.route.uri.type) {
       case "EXACT": {
-        return stub.route.uri.value
+        return {
+          descriptor: stub.route.uri.value,
+          error: null
+        }
       }
       case "REGEXP": {
         try {
-          return new RegExp(stub.route.uri.value)
+          return {
+            descriptor: new RegExp(stub.route.uri.value),
+            error: null
+          }
         } catch (err) {
-          const error = new Error()
-          error.report = report(
-            line("Unable to parse regular expression for stubbed route", `/${stub.route.uri.value}/`)
-          )
-          throw error
+          return {
+            error: report(line("Unable to parse regular expression for stubbed route", `/${stub.route.uri.value}/`))
+          }
         }
       }
     }
   }
 
-  async setupStub(stub, uriDescriptor, out, abort) {
+  async setupStub(stub, uriDescriptor, abort) {
     let contract = null
     if (stub.contract) {
       contract = this.contracts[stub.contract.path]
