@@ -45,6 +45,27 @@ elm-spec will respond with a `404` status code.
 # Stub Errors
 @docs withNetworkError, withTimeout
 
+# Work with API Contracts
+
+When you create stubs as part of a spec, you are simluating an HTTP API and thus making
+assumptions about the shape of that API -- what paths it defines, what response
+bodies should look like, what headers are required, etc. Without some external
+validation, it's easy to imagine that the assumptions made in your specs could fall
+out of sync with reality.
+
+An API contract, like an OpenApi document, can help you avoid this situation. An
+API contract describes the shape of an API in a format that can be shared by all
+parties interested in that API, so that each party -- the server, a mobile client,
+a web client, etc -- can check their own assumptions about that API against the very
+same description.
+
+Use the functions below to create and associate an API contract with a stub so that all
+requests matching that stub and all responses returned by that stub are validated
+against that contract. By following this pattern, you can be confident that your stubs
+accurately describe the API integration they are simulating.
+
+@docs Contract, satisfies, openApiContractAt
+
 -}
 
 import Spec.Setup as Setup exposing (Setup)
@@ -208,7 +229,7 @@ withStatus status  =
     { response | status = status }
 
 
-{-| Supple a header (key, value) for the stubbed response.
+{-| Supply a header (key, value) for the stubbed response.
 -}
 withHeader : (String, String) -> HttpResponseStub -> HttpResponseStub
 withHeader ( name, value ) =
@@ -329,18 +350,45 @@ nowServe stubs =
     Command.sendMessage <| httpStubMessage stubs
 
 
+{-| Specify a contract that should be used to validate requests that match this
+stub as well as the response returned.
+
+Consider creating a function that makes it easy to write stubs that should satisfy
+a particular contract:
+
+    funApiStubFor : HttpRoute -> HttpResponseStub
+    funApiStubFor route =
+      Stub.for route
+        |> Stub.satisfies funApiContract
+
+Then you can use `funApiStubFor` anywhere you would use `Spec.Http.Stub.for` to define
+a stub.
+
+-}
 satisfies : Contract -> HttpResponseStub -> HttpResponseStub
 satisfies contract (HttpResponseStub stub) =
   HttpResponseStub
     { stub | contract = Just contract }
 
 
+{-| Represents a contract with repsect to which HTTP requests and responses
+can be validated.
+-}
 type Contract =
   Contract
     { path: String
     }
 
 
+{-| Create a Contract from an OpenApi document at the given path.
+
+[OpenApi version 2.0 (Swagger)](https://swagger.io/specification/v2/)
+and [OpenApi version 3.0](https://swagger.io/specification/) are supported.
+The document can be in YAML or JSON format.
+
+The path is typically relative to the current working directory of the elm-spec
+runner (but check the docs for the runner you are using).
+-}
 openApiContractAt : String -> Contract
 openApiContractAt path =
   Contract
