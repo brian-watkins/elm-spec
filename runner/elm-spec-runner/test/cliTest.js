@@ -73,8 +73,8 @@ describe('elm-spec-runner', () => {
             setTimeout(() => {
               expect(runner.exitCode).to.be.null
               runner.kill()
-            }, 2000)
-          }, 2000)
+            }, 1000)
+          }, 3000)
         })
 
         expect(runnerOutput).to.contain("Watching Files")
