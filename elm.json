@@ -5,7 +5,6 @@
     "license": "MIT",
     "version": "3.1.0",
     "exposed-modules": [
-        "Harness",
         "Spec",
         "Spec.Claim",
         "Spec.Command",

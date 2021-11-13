@@ -187,14 +187,3 @@ equals =
 
 Then, you can import the `equals` function from this module without having to write out
 `Claim.isEqual Debug.toString` every time.
-
-
-## Creating a Harness
-
-Some Elm programs need to interact with Javascript through ports, and sometimes you might want to
-write a test that allows you to exercise *both* your Elm code *and* any Javascript on the other side
-of a port. In those cases, you can write an elm-spec test harness that exposes elements of a Spec
-(like the Setup, a list of Steps, or Expectations) and allows them to be triggered from your
-Javascript tests.
-
-See the `elm-spec-harness` package for more details.
