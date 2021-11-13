@@ -45,3 +45,48 @@ $ npm test
 9. Check out develop; rebase master; push.
 
 
+## Prerelease local testing of Node packages
+
+You can use [verdaccio](https://verdaccio.org) as a local npm registry. Install it globally:
+
+```
+$ npm install -g verdaccio
+```
+
+For packages you want to test out, consider adding them to the config file explicitly and
+disabling proxying to NPM. The config file is at `~/.config/verdaccio/config.yaml`. For elm-spec-runner
+you would add:
+
+```
+packages:
+  'elm-spec-core':
+    access: $all
+    publish: $all
+    unpublish: $authenticated
+    # proxy: npmjs
+
+  'elm-spec-runner':
+    access: $all
+    publish: $all
+    unpublish: $authenticated
+    # proxy: npmjs
+```
+
+This will allow anyone to publish and will just use whatever is published to this registry.
+
+Also, if trying to access verdaccio from inside a Docker container, it seems that adding this
+line to the config helps:
+
+```
+listen: 0.0.0.0:4873
+```
+
+when you try to access verdaccio from inside the container at `http://host.docker.internal:4873`.
+
+To publish to verdaccio:
+
+1. Commit the code (no need to push, could be on a branch)
+2. `npx lerna publish --canary --registry http://localhost:4873/`
+- Publishes the latest code with a special tag indicating the latest commit to the verdaccio registry
+3. To install: `npm install --save-dev elm-spec-runner@canary --registry http://localhost:4873/`
+
