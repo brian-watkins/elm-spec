@@ -45,7 +45,7 @@ module.exports = class ResponseValidator {
       }
 
       if (errors.length > 0) {
-        return invalid(errorReport(request, errors))
+        return invalid(errorReport(request, statusCode, headers, body, errors))
       } else {
         return valid()
       }
@@ -122,8 +122,16 @@ const toOpenApiHeaderError = (ajvError) => {
   }
 }
 
-const errorReport = (request, errors) => {
-  let lines = [ line("An invalid response was returned for", `${request.method} ${request.url}`) ]
+const errorReport = (request, statusCode, headers, body, errors) => {
+  let lines = [
+    line("An invalid response was returned for", `${request.method} ${request.url}`),
+    line(
+      "Response",
+      `Status: ${statusCode}\n` +
+      `Headers: ${JSON.stringify(headers)}\n` +
+      `Body: ${body || "<empty>"}`
+    ),
+  ]
 
   for (const error of errors) {
     switch (error.location) {
@@ -134,8 +142,9 @@ const errorReport = (request, errors) => {
         break
       default:
         if (error.path) {
+          const message = `${error.path === "response" ? "" : error.path } ${error.message}`.trim()
           lines = lines.concat([
-            line("Problem with body", `${error.path} ${error.message}`)
+            line("Problem with body", message)
           ])  
         } else {
           lines = lines.concat([

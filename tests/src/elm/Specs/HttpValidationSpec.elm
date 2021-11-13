@@ -177,6 +177,25 @@ openAPISpecScenarios label openApiContract =
           )
         ]
     )
+  , scenario "a request that has the wrong body type (array instead of object)" (
+      given (
+        validPostRequest
+          |> withBody (Http.jsonBody <| Encode.list identity [])
+          |> testSetup
+          |> Stub.serve [ validPostResponse |> Stub.satisfies openApiContract ]
+      )
+      |> whenAPostRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
+  , scenario "a response that has the wrong body type (array instead of object)" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve [ arrayGetResponse |> Stub.satisfies openApiContract ]
+      )
+      |> whenAGetRequestIsSent
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
@@ -361,6 +380,9 @@ invalidGetResponse =
       ]
     )
 
+arrayGetResponse =
+  Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
+    |> Stub.withBody (Stub.withJson <| Encode.list identity [])
 
 validPostResponse =
   Stub.for (post "http://fake-api.com/my/messages")

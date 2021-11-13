@@ -62,7 +62,7 @@ describe("validate http requests", () => {
   it("registers contracts when stubs are reset during a spec", (done) => {
     expectSpec("HttpValidationSpec", "resetStubs", done, (observations) => {
       expectRejected(observations[0], [
-        reportLine("An invalid request was made", "POST http://fake-api.com/my/messages"),
+        reportLine("An invalid request was made", "POST http://fake-api.com/my/messages\nHeaders: {\"content-type\":\"application/json\"}\nBody: {\"blerg\":17}"),
         reportLine("Problem with body", "must have required property 'message'")
       ])
     })
@@ -73,40 +73,43 @@ const openApiScenarios = (observations) => {
   expectAccepted(observations[0])
   expectAccepted(observations[1])
   expectRejected(observations[2], [
-    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/bad?someValue=12"),
+    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/bad?someValue=12\nHeaders: {\"x-fun-times\":\"31\"}\nBody: <empty>"),
     reportLine("Problem with path parameter", "messageId must be number")
   ])
   expectRejected(observations[3], [
-    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=12"),
+    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=12\nHeaders: {\"x-fun-times\":\"blah\"}\nBody: <empty>"),
     reportLine("Problem with headers", "x-fun-times must be integer"),
   ])
   expectRejected(observations[4], [
-    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=39"),
+    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=39\nHeaders: {\"x-fun-times\":\"31\"}\nBody: <empty>"),
     reportLine("Problem with query", "someValue must be <= 20"),
   ])
   expectRejected(observations[5], [
-    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=6"),
+    reportLine("An invalid request was made", "GET http://fake-api.com/my/messages/27?someValue=6\nHeaders: {\"x-cool-times\":\"blah\"}\nBody: <empty>"),
     reportLine("Problem with headers", "must have required property 'x-fun-times'"),
     reportLine("Problem with query", "someValue must be >= 10"),
   ])
   expectRejected(observations[6], [
     reportLine("An invalid response was returned for", "GET http://fake-api.com/my/messages/27?someValue=12"),
-    reportLine("Problem with body", "response must have required property 'message'"),
-    reportLine("Problem with body", "id must be integer"),
+    reportLine("Response", "Status: 200\nHeaders: {}\nBody: {\"id\":\"should be a number\",\"blerg\":\"\"}"),
+    reportLine("Problem with body", "must have required property 'message'"),
+    reportLine("Problem with body", "id must be integer")
   ])
   expectAccepted(observations[7])
   expectAccepted(observations[8])
   expectRejected(observations[9], [
-    reportLine("An invalid request was made", "POST http://fake-api.com/my/messages"),
+    reportLine("An invalid request was made", "POST http://fake-api.com/my/messages\nHeaders: {\"content-type\":\"application/json\"}\nBody: {\"blerg\":17}"),
     reportLine("Problem with body", "must have required property 'message'")
   ])
   expectRejected(observations[10], [
     reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
+    reportLine("Response", "Status: 201\nHeaders: {\"Location\":\"\",\"X-Fun-Times\":\"blerg\"}\nBody: <empty>"),
     reportLine("Problem with headers", "location must NOT have fewer than 5 characters"),
     reportLine("Problem with headers", "x-fun-times must be integer")
   ])
   expectRejected(observations[11], [
     reportLine("An invalid response was returned for", "POST http://fake-api.com/my/messages"),
+    reportLine("Response", "Status: 500\nHeaders: {\"Location\":\"http://fake-api.com/my/messages/2\",\"X-Fun-Times\":\"27\"}\nBody: <empty>"),
     reportLine("An unknown status code was used and no default was provided.")
   ])
   expectRejected(observations[12], [
@@ -119,5 +122,14 @@ const openApiScenarios = (observations) => {
   ])
   expectAccepted(observations[14])
   expectAccepted(observations[15])
+  expectRejected(observations[16], [
+    reportLine("An invalid request was made", "POST http://fake-api.com/my/messages\nHeaders: {\"content-type\":\"application/json\"}\nBody: []"),
+    reportLine("Problem with body", "must be object")
+  ])
+  expectRejected(observations[17], [
+    reportLine("An invalid response was returned for", "GET http://fake-api.com/my/messages/27?someValue=12"),
+    reportLine("Response", "Status: 200\nHeaders: {}\nBody: []"),
+    reportLine("Problem with body", "must be object")
+  ])
 }
 

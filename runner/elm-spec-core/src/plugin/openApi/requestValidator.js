@@ -90,10 +90,12 @@ module.exports = class RequestValidator {
 }
 
 const errorReport = (request, errors) => {
-  let lines = [ invalidRequestLine(request) ]
+  let lines = [
+    invalidRequestLine(request)
+  ]
 
   for (const error of errors) {
-    let message = `${error.path} ${error.message}`
+    let message = `${error.path || ''} ${error.message}`.trim()
     if (error.errorCode === "required.openapi.requestValidation") {
       message = error.message
     }
@@ -116,7 +118,7 @@ const errorReport = (request, errors) => {
         break
       case 'body':
         lines = lines.concat([
-          line("Problem with body", message)
+          line("Problem with body", message),
         ])
         break
     }
@@ -133,5 +135,10 @@ const missingOperationError = (request) => {
 }
 
 const invalidRequestLine = (request) => {
-  return line("An invalid request was made", `${request.method} ${request.url}`)
+  return line(
+    "An invalid request was made",
+    `${request.method} ${request.url}\n` +
+    `Headers: ${JSON.stringify(request.requestHeaders.getHash())}\n` +
+    `Body: ${request.body || "<empty>"}`
+  )
 }
