@@ -43,31 +43,30 @@ module.exports = class OpenApiContract {
     })
   }
 
-  validateRequest(request, abort) {
-    this.validate(this.requestValidators, { request }, abort)
+  validateRequest(request) {
+    return this.validate(this.requestValidators, { request })
   }
 
-  validateResponse(request, statusCode, headers, body, abort) {
-    this.validate(this.responseValidators, { request, statusCode, headers, body }, abort)
+  validateResponse(request, statusCode, headers, body) {
+    return this.validate(this.responseValidators, { request, statusCode, headers, body })
   }
 
-  validate(validators, details, abort) {
+  validate(validators, details) {
     for (const validator of validators) {
       const result = validator.validate(details)
       switch (result.type) {
         case 'valid':
-          return
+          return null
         case 'invalid':
-          abort(result.errorReport)
-          return
+          return result.errorReport
         case 'no-match':
       }
     }
 
-    abort(report(
+    return report(
       line("An invalid request was made", `${details.request.method} ${details.request.url}`),
       line("The OpenAPI document contains no path that matches this request.")
-    ))
+    )
   }
 }
 

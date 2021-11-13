@@ -97,7 +97,8 @@ update exerciseModel actions msg =
     ProgramMsg programMsg ->
       case exerciseModel.abortWith of
         Just _ ->
-          ( exercise exerciseModel, Cmd.none )
+          Step.SendCommand Cmd.none
+            |> handleStepCommand actions exerciseModel
         Nothing ->
           let
             ( updatedExerciseModel, nextCommand ) =

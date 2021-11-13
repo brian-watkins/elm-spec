@@ -117,7 +117,7 @@ const openApiScenarios = (observations) => {
     reportLine("The OpenAPI document contains no path that matches this request.")
   ])
   expectRejected(observations[13], [
-    reportLine("An invalid request was made", "PATCH http://fake-api.com/my/messages/18"),
+    reportLine("An invalid request was made", "PATCH http://fake-api.com/my/messages/18\nHeaders: {}\nBody: <empty>"),
     reportLine("The OpenAPI document contains no matching operation for this request.")
   ])
   expectAccepted(observations[14])
@@ -130,6 +130,12 @@ const openApiScenarios = (observations) => {
     reportLine("An invalid response was returned for", "GET http://fake-api.com/my/messages/27?someValue=12"),
     reportLine("Response", "Status: 200\nHeaders: {}\nBody: []"),
     reportLine("Problem with body", "must be object")
+  ])
+  expectRejected(observations[18], [
+    reportLine("An invalid response was returned for", "GET http://fake-api.com/my/messages/27?someValue=12"),
+    reportLine("Response", "Status: 200\nHeaders: {}\nBody: {\"id\":\"should be a number\",\"blerg\":\"\"}"),
+    reportLine("Problem with body", "must have required property 'message'"),
+    reportLine("Problem with body", "id must be integer")
   ])
 }
 

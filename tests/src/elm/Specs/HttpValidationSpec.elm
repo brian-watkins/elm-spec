@@ -16,8 +16,10 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as Json
 import Json.Encode as Encode
+import Task
 import Dict
 import Runner
+import Browser.Dom
 
 
 openAPISpecScenarios : String -> Contract -> Spec Model Msg
@@ -196,6 +198,15 @@ openAPISpecScenarios label openApiContract =
       |> whenAGetRequestIsSent
       |> itShouldHaveFailedAlready
     )
+  , scenario "a response that fails while another command waiting on browser update is processing" (
+      given (
+        validGetRequest
+          |> testSetup
+          |> Stub.serve [ invalidGetResponse |> Stub.satisfies openApiContract ]
+      )
+      |> whenRequestAndScroll
+      |> itShouldHaveFailedAlready
+    )
   ]
 
 
@@ -333,6 +344,12 @@ whenAGetRequestIsSent =
     , Event.click
     ]
 
+whenRequestAndScroll =
+  when "a get request is sent AND the browser scrolls"
+    [ Markup.target << by [ id "request-and-scroll" ]
+    , Event.click
+    ]
+
 whenAnotherGetRequestIsSent =
   when "another get request is sent"
     [ Markup.target << by [ id "another-request-button" ]
@@ -417,16 +434,21 @@ defaultModel requestParams anotherRequestParams =
 
 type Msg
   = RequestMessage
+  | RequestAndScroll
   | RequestAnotherMessage
   | GotMessage (Result Http.Error String)
   | GotAnotherMessage (Result Http.Error String)
   | CreatedMessage (Result () String)
+  | DoNothing
 
 
 testView : Model -> Html Msg
 testView model =
   Html.div []
-  [ Html.button [ Attr.id "request-message-button", Events.onClick RequestMessage ] [ Html.text "Request message!" ]
+  [ Html.button [ Attr.id "request-message-button", Events.onClick RequestMessage ]
+      [ Html.text "Request message!" ]
+  , Html.button [ Attr.id "request-and-scroll", Events.onClick RequestAndScroll ]
+      [ Html.text "Request and Scroll!" ]
   , Html.div [ Attr.id "response" ]
     [ Html.text model.message ]
   , Html.div [ Attr.id "post-response" ]
@@ -442,27 +464,19 @@ testUpdate msg model =
   case msg of
     RequestMessage ->
       ( model
-      , Http.request
-          { method = model.request.method
-          , headers =  model.request.headers
-          , url = model.request.url ++ model.request.query
-          , body = model.request.body
-          , expect = model.request.expect
-          , timeout = Nothing
-          , tracker = Nothing
-          }
+      , makeRequest model.request
       )
     RequestAnotherMessage ->
       ( model
-      , Http.request
-          { method = model.anotherRequest.method
-          , headers =  model.anotherRequest.headers
-          , url = model.anotherRequest.url ++ model.anotherRequest.query
-          , body = model.anotherRequest.body
-          , expect = model.anotherRequest.expect
-          , timeout = Nothing
-          , tracker = Nothing
-          }
+      , makeRequest model.anotherRequest
+      )
+    RequestAndScroll ->
+      ( model
+      , Cmd.batch
+        [ makeRequest model.request
+        , Browser.Dom.setViewport 0 0
+            |> Task.perform (always DoNothing)
+        ]
       )
     GotMessage result ->
       case result of
@@ -482,7 +496,20 @@ testUpdate msg model =
           ( { model | location = location }, Cmd.none )
         Err _ ->
           ( { model | location = "ERROR" }, Cmd.none )
+    DoNothing ->
+      ( model, Cmd.none )
 
+makeRequest : RequestParams -> Cmd Msg
+makeRequest params =
+  Http.request
+    { method = params.method
+    , headers =  params.headers
+    , url = params.url ++ params.query
+    , body = params.body
+    , expect = params.expect
+    , timeout = Nothing
+    , tracker = Nothing
+    }
 
 getLocationHeader : Http.Response String -> Result () String
 getLocationHeader response =

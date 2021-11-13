@@ -186,7 +186,12 @@ module.exports = class HttpPlugin {
 
       if (contract) {
         try {
-          contract.validateRequest(xhr, abort)
+          const errorReport = contract.validateRequest(xhr)
+          if (errorReport) {
+            abort(errorReport)
+            this.context.timer.releaseHold()
+            return
+          }
         } catch (err) {
           console.log("Error validating request", xhr.url, err)
         }
@@ -227,7 +232,12 @@ module.exports = class HttpPlugin {
 
                 if (contract) {
                   try {
-                    contract.validateResponse(xhr, stub.status, stub.headers, body, abort)
+                    const errorReport = contract.validateResponse(xhr, stub.status, stub.headers, body)
+                    if (errorReport) {
+                      abort(errorReport)
+                      this.context.timer.releaseHold()
+                      return
+                    }
                   } catch (err) {
                     console.log("Error validating response for", xhr.url, err)
                   }
