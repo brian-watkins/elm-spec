@@ -28,6 +28,10 @@ describe("validate http requests", () => {
       expectAccepted(observations[1])
       expectAccepted(observations[2])
       expectAccepted(observations[3])
+      expectAccepted(observations[4])
+      expectAccepted(observations[5])
+      expectAccepted(observations[6])
+      expectAccepted(observations[7])
     })
   })
   it("reports on errors with the open api spec file", (done) => {

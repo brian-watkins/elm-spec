@@ -78,6 +78,7 @@ import Dict exposing (Dict)
 import Json.Encode as Encode
 import Bytes exposing (Bytes)
 import Spec.Binary as Binary
+import Dict
 
 
 {-| Represents the stubbed response for a particular HTTP request.
@@ -299,8 +300,11 @@ serve stubs =
 
 
 contractsFor : List HttpResponseStub -> List Contract
-contractsFor =
-  List.filterMap (\(HttpResponseStub stub) -> stub.contract)
+contractsFor stubs =
+  List.filterMap (\(HttpResponseStub stub) -> stub.contract) stubs
+    |> List.map (\(Contract contract) -> ( contract.path, Contract contract ))
+    |> Dict.fromList
+    |> Dict.values
 
 
 registerContracts : List Contract -> Message

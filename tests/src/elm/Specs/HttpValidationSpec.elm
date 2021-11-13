@@ -234,7 +234,7 @@ resetStubsSpec =
 
 multipleContractsSpec : Spec Model Msg
 multipleContractsSpec =
-  describe "Multiple contracts"
+  describe "Multiple stubs"
   [ scenario "Requests to different endpoints each with their own contract" (
       given (
         Setup.initWithModel (defaultModel validGetRequest anotherValidGetRequest)
@@ -267,6 +267,61 @@ multipleContractsSpec =
             Markup.observeElement
               |> Markup.query << by [ id "another-response" ]
               |> expect (isSomethingWhere <| Markup.text <| equals "Totally awesome!")
+          )
+        ]
+    )
+  , scenario "Requests to different endpoints each with the same contract" (
+      given (
+        Setup.initWithModel (defaultModel
+          (validGetRequest
+            |> withUrl "http://fake-api.com/my/messages/88"
+            |> withQuery "?someValue=16"
+          )
+          (anotherValidGetRequest
+            |> withUrl "http://fake-api.com/my/messages/99"
+            |> withQuery "?someValue=14"
+            |> withHeaders [ Http.header "X-Fun-Times" "2" ]
+          )
+        )
+          |> Setup.withView testView
+          |> Setup.withUpdate testUpdate
+          |> Stub.serve
+            [ Stub.for (get "http://fake-api.com/my/messages/88?someValue=16")
+                |> Stub.withBody (Stub.withJson <| Encode.object
+                  [ ("id", Encode.int 88)
+                  , ("message", Encode.string "Very cool!")
+                  ]
+                )
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/test-open-api-v2-spec.yaml")
+            , Stub.for (get "http://fake-api.com/my/messages/99?someValue=14")
+                |> Stub.withBody (Stub.withJson <| Encode.object
+                  [ ("id", Encode.int 99)
+                  , ("message", Encode.string "Quite happy!")
+                  ]
+                )
+                |> Stub.satisfies (Stub.openApiContractAt "./fixtures/test-open-api-v2-spec.yaml")
+            ]
+      )
+      |> whenAGetRequestIsSent
+      |> whenAnotherGetRequestIsSent
+      |> observeThat
+        [ it "recorded the request" (
+            Spec.Http.observeRequests (get "http://fake-api.com/my/messages/88?someValue=16")
+              |> expect (isListWithLength 1)
+          )
+        , it "recorded the other request" (
+            Spec.Http.observeRequests (get "http://fake-api.com/my/messages/99?someValue=14")
+              |> expect (isListWithLength 1)
+          )
+        , it "handles the response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "Very cool!")
+          )
+        , it "handles the other response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "another-response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "Quite happy!")
           )
         ]
     )
