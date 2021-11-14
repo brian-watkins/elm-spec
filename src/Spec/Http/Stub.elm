@@ -53,7 +53,7 @@ bodies should look like, what headers are required, etc. Without some external
 validation, it's easy to imagine that the assumptions made in your specs could fall
 out of sync with reality.
 
-An API contract, like an OpenApi document, can help you avoid this situation. An
+An API contract, like an OpenAPI document, can help you avoid this situation. An
 API contract describes the shape of an API in a format that can be shared by all
 parties interested in that API, so that each party -- the server, a mobile client,
 a web client, etc -- can check their own assumptions about that API against the very
@@ -386,10 +386,10 @@ type Contract =
     }
 
 
-{-| Create a Contract from an OpenApi document at the given path.
+{-| Create a Contract from an OpenAPI document at the given path.
 
-[OpenApi version 2.0 (Swagger)](https://swagger.io/specification/v2/)
-and [OpenApi version 3.0](https://swagger.io/specification/) are supported.
+[OpenAPI version 2.0 (Swagger)](https://swagger.io/specification/v2/)
+and [OpenAPI version 3.0](https://swagger.io/specification/) are supported.
 The document can be in YAML or JSON format.
 
 The path is typically relative to the current working directory of the elm-spec
