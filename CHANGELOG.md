@@ -1,5 +1,14 @@
 # Changelog
 
+## 11.13.2021
+- elm-spec-core 8.0.0
+- elm-spec-runner 2.3.0
+- karma-elm-spec-framework 1.7.0
+
+### Added
+- Validate that stubbed requests and responses conform to a given OpenApi contract
+
+
 ## 5.30.2021
 - elm-spec-core 7.2.0
 - elm-spec-runner 2.2.0
