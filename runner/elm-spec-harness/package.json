@@ -1,5 +1,6 @@
 {
   "name": "elm-spec-harness",
+  "private": "true",
   "version": "1.0.0",
   "description": "Control and observe an elm program",
   "author": "Brian Watkins <brian.watkins@gmail.com>",
