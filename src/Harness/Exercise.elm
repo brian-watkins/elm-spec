@@ -139,6 +139,10 @@ handleStepCommand actions model command =
       )
     Step.RecordCondition _ ->
       ( model, Cmd.none )
+    Step.Halt report ->
+      ( model
+      , actions.sendToSelf <| Error report
+      )
 
 
 handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )

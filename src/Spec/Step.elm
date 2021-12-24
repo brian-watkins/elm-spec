@@ -3,6 +3,7 @@ module Spec.Step exposing
   , Context
   , Command
   , model
+  , halt
   , log
   )
 
@@ -19,7 +20,7 @@ See `Spec.Command`, `Spec.File`, `Spec.Navigator`, `Spec.Http`, `Spec.Markup`,
 @docs model
 
 # Basic Commands
-@docs log
+@docs halt, log
 
 -}
 
@@ -51,6 +52,13 @@ type alias Command msg =
 model : Context model -> model
 model =
   Context.model
+
+
+{-| The spec runner will halt the scenario and print the given report.
+-}
+halt : Report -> Command msg
+halt =
+  Command.halt
 
 
 {-| The spec runner will log the given report to the console.

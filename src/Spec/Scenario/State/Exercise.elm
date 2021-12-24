@@ -231,3 +231,5 @@ handleStepCommand actions exerciseModel command =
       )
     Step.RecordCondition condition ->
       update { exerciseModel | conditionsApplied = exerciseModel.conditionsApplied ++ [ condition ] } actions Continue
+    Step.Halt report ->
+      update exerciseModel actions (Abort report)

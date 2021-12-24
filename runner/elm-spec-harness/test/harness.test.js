@@ -54,6 +54,7 @@ runTests((testOutput) => {
     expectPassingTest(t, testOutput, "it rejects the observe config json with an error", "scenario.observe rejects if the config cannot be decoded")
     expectPassingTest(t, testOutput, "it explains that the setup failed", "harness.startScenario emits a rejected expectation if a setup aborts")
     expectPassingTest(t, testOutput, "it explains that the step failed", "scenario.runSteps emits a rejected expectation if a step aborts")
+    expectPassingTest(t, testOutput, "it explains that the scenario halted", "scenario.runSteps emits a rejected expectation if a step halts")
     expectPassingTest(t, testOutput, "it emits an observation that the step request failed", "scenario.runSteps emits a rejected expectation if a step request aborts")
     expectPassingTest(t, testOutput, "it explains that the observer failed", "scenario.observe emits a rejected expectation if an observer inquiry aborts")
     t.end()

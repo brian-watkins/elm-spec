@@ -2,7 +2,7 @@ module Basic.Harness exposing (..)
 
 import Harness exposing (Expectation, expect)
 import Spec.Setup as Setup exposing (Setup)
-import Spec.Step exposing (Step)
+import Spec.Step as Step exposing (Step)
 import Spec.Claim exposing (isSomethingWhere, isStringContaining, isListWithLength)
 import Spec.Observer as Observer
 import Spec.Markup as Markup
@@ -11,6 +11,7 @@ import Spec.Markup.Event as Event
 import Spec.Http
 import Spec.Http.Route exposing (get, route, UrlDescriptor(..))
 import Spec.Http.Stub as Stub
+import Spec.Report as Report
 import Extra exposing (equals)
 import Runner
 import Dict
@@ -136,12 +137,19 @@ badSteps =
   , Event.click
   ]
 
+
+haltScenario =
+  [ \_ -> Step.halt <| Report.note "You told me to stop!"
+  ]
+
+
 stepsToExpose =
   [ Harness.assign "inform" inform
   , Harness.define "click" Json.int clickMultiple
   , Harness.assign "requestStuff" requestStuff
   , Harness.assign "logTitle" logTitle
   , Harness.assign "badSteps" badSteps
+  , Harness.assign "halt" haltScenario
   ]
 
 

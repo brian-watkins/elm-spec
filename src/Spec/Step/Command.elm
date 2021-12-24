@@ -6,12 +6,13 @@ module Spec.Step.Command exposing
   , recordCondition
   , nothing
   , log
+  , halt
   , programCommand
   )
 
-import Spec.Message exposing (Message)
+import Spec.Message as Message exposing (Message)
+import Spec.Step.Message as Message
 import Spec.Report as Report exposing (Report)
-import Spec.Message as Message
 
 
 type Command msg
@@ -19,6 +20,7 @@ type Command msg
   | SendRequest Message (Message -> Command msg)
   | SendCommand (Cmd msg)
   | RecordCondition String
+  | Halt Report
 
 
 sendToProgram : Cmd msg -> Command msg
@@ -29,6 +31,11 @@ sendToProgram cmd =
 sendMessage : Message -> Command msg
 sendMessage =
   SendMessage
+
+
+halt : Report -> Command msg
+halt =
+  Halt
 
 
 recordCondition : String -> Command msg

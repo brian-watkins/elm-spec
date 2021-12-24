@@ -1,5 +1,6 @@
 module Spec.Port exposing
   ( send
+  , respond
   , observe
   )
 
@@ -55,13 +56,18 @@ could write a scenario like so:
 # Simulate Subscription Ports
 @docs send
 
+# Simulate Request/Response Scenarios
+@docs respond
+
 -}
 
 import Spec.Step as Step
 import Spec.Step.Command as Command
+import Spec.Step.Context as Context
 import Spec.Observer as Observer exposing (Observer)
 import Spec.Observer.Internal as Observer
 import Spec.Message as Message exposing (Message)
+import Spec.Observer.Message as Message
 import Spec.Report as Report exposing (Report)
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -101,6 +107,53 @@ type alias PortRecord =
   { name: String
   , value: Json.Value
   }
+
+
+{-| Use this step to respond to the last message received on the given port.
+
+Provide the name of the port (the function name) and a JSON decoder that can decode
+messages sent out over the port. Then, provide a function that generates a `Step`
+based on the last message received. If no messages have been received from that
+port, the step will fail.
+
+Use this function to simulate request/response style communication via ports, when
+the response depends on some aspect of the request that you may not know at the time
+of writing the scenario.
+
+    Spec.when "a response is sent to the request"
+    [ Spec.Port.respond "myPortCommand" Json.string <| \lastMessage ->
+        Json.Encode.string ("You sent: " ++ lastMessage)
+          |> Spec.Port.send "myPortSubscription"
+    ]
+
+-}
+respond : String -> Json.Decoder a -> (a -> Step.Step model msg) -> Step.Step model msg
+respond name decoder generator =
+  \context ->
+    case lastMessage context name decoder of
+      Ok maybeMessage ->
+        case maybeMessage of
+          Just message ->
+            generator message context
+          Nothing ->
+            Command.halt <| Report.batch
+              [ Report.fact "Unable to respond to the last message received from port" name
+              , Report.note "No messages have been sent via that port"
+              ]
+      Err report ->
+        Command.halt <| Report.batch
+          [ Report.fact "An error occurred fetching values for port" name
+          , report
+          ]
+
+
+lastMessage : Step.Context model -> String -> Json.Decoder a -> Result Report (Maybe a)
+lastMessage context name decoder =
+  Context.effects context
+    |> recordsForPort name
+    |> recordedValues decoder
+    |> Result.map List.reverse
+    |> Result.map List.head
 
 
 {-| Observe messages sent out via a command port.

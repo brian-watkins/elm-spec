@@ -1,3 +1,4 @@
+const { expect } = require('chai')
 const {
   expectPassingSpec,
   expectSpec,
@@ -32,6 +33,23 @@ describe("port commands", () => {
     describe("when multiple messages are sent out via the expected port", () => {
       it("records all the messages sent", (done) => {
         expectPassingSpec("PortCommandSpec", "many", done)
+      })
+    })
+  })
+
+  describe("when port messages are used during a step", () => {
+    it("handles the step as expected", (done) => {
+      expectSpec("PortCommandSpec", "observe", done, (observations) => {
+        expectRejected(observations[0], [
+          reportLine("Unable to respond to the last message received from port", "sendTestMessageOut"),
+          reportLine("No messages have been sent via that port")
+        ])
+        expectAccepted(observations[1])
+        expectRejected(observations[2], [
+          reportLine("An error occurred fetching values for port", "sendTestMessageOut"),
+          reportLine("Unable to decode value sent through port", "Problem with the given value:\n\n\"One\"\n\nExpecting an INT")
+        ])
+        expect(observations.length).to.equal(3)
       })
     })
   })

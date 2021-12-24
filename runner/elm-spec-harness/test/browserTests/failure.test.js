@@ -69,6 +69,16 @@ harnessTest("a step aborts", async function(harness, t) {
   t.equal(observations[0].report[0].statement, "No match for selector", "it explains that the step failed")
 })
 
+harnessTest("the scenario halts", async function(harness, t) {
+  const observations = await captureObservations(async () => {
+    const scenario = await harness.startScenario("default")
+    await scenario.runSteps("halt")
+  })
+
+  t.equal(observations.length, 1, "it emits a rejected expectation")
+  t.equal(observations[0].report[0].statement, "You told me to stop!", "it explains that the scenario halted")
+})
+
 harnessTest("an observer aborts", async function(harness, t) {
   const observations = await captureObservations(async () => {
     const scenario = await harness.startScenario("withStub", { thing: "apples", count: 4 })
