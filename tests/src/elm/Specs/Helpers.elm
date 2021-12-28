@@ -1,6 +1,7 @@
 module Specs.Helpers exposing
   ( stringify
   , equals
+  , isListWhereSomeItem
   , itShouldHaveFailedAlready
   )
 
@@ -24,3 +25,19 @@ itShouldHaveFailedAlready =
     Observer.observeModel (\_ -> ())
       |> expect (\_ -> Claim.Reject <| Report.note "Should have failed already!")
   )
+
+
+isListWhereSomeItem : Claim a -> Claim (List a)
+isListWhereSomeItem claim =
+  \actual ->
+    List.map claim actual
+      |> List.filter (\verdict -> verdict == Claim.Accept)
+      |> List.length
+      |> \acceptedClaims ->
+        if acceptedClaims > 0 then
+          Claim.Accept
+        else
+          Claim.Reject <| Report.batch
+            [ Report.fact "No item in the list" <| stringify actual
+            , Report.note "matched the expected claim"
+            ]

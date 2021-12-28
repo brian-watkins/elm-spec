@@ -53,6 +53,16 @@ harnessTest("a message is sent in response to a message that is received", async
   await observe(t, scenario, "name", "Dr. Cool", "it finds the name updated after the message is received")
 })
 
+harnessTest("a response is sent to a port command request", async function(harness, t) {
+  const scenario = await harness.startScenario("default")
+  await scenario.runSteps("inform")
+  await scenario.runSteps("respond", "Funny Response")
+  await observe(t, scenario, "name", "Funny Response: awesome - cool - fun", "it responds to the first message")
+  await scenario.runSteps("inform")
+  await scenario.runSteps("respond", "Another Response")
+  await observe(t, scenario, "name", "Another Response: awesome - cool - fun", "it responds to the second message")
+})
+
 harnessTest("the setup configures the context to stub an HTTP request", async function(harness, t) {
   const scenario = await harness.startScenario("withStub", { thing: "trees", count: 17 })
   await scenario.runSteps("requestStuff")

@@ -41,15 +41,16 @@ describe("port commands", () => {
     it("handles the step as expected", (done) => {
       expectSpec("PortCommandSpec", "observe", done, (observations) => {
         expectRejected(observations[0], [
-          reportLine("Unable to respond to the last message received from port", "sendTestMessageOut"),
-          reportLine("No messages have been sent via that port")
+          reportLine("Unable to respond to messages received from port", "sendTestMessageOut"),
+          reportLine("No new messages have been sent via that port")
         ])
         expectAccepted(observations[1])
-        expectRejected(observations[2], [
-          reportLine("An error occurred fetching values for port", "sendTestMessageOut"),
+        expectAccepted(observations[2])
+        expectRejected(observations[3], [
+          reportLine("An error occurred responding to messages from port", "sendTestMessageOut"),
           reportLine("Unable to decode value sent through port", "Problem with the given value:\n\n\"One\"\n\nExpecting an INT")
         ])
-        expect(observations.length).to.equal(3)
+        expect(observations.length).to.equal(4)
       })
     })
   })

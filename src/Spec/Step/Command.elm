@@ -7,6 +7,8 @@ module Spec.Step.Command exposing
   , nothing
   , log
   , halt
+  , batch
+  , recordEffect
   , programCommand
   )
 
@@ -21,6 +23,8 @@ type Command msg
   | SendCommand (Cmd msg)
   | RecordCondition String
   | Halt Report
+  | Batch (List (Command msg))
+  | RecordEffect Message
 
 
 sendToProgram : Cmd msg -> Command msg
@@ -36,6 +40,16 @@ sendMessage =
 halt : Report -> Command msg
 halt =
   Halt
+
+
+batch : List (Command msg) -> Command msg
+batch =
+  Batch
+
+
+recordEffect : Message -> Command msg
+recordEffect =
+  RecordEffect
 
 
 recordCondition : String -> Command msg

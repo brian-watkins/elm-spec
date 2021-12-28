@@ -125,6 +125,10 @@ update actions context msg model =
 handleStepCommand : Actions msg programMsg -> Model model programMsg -> Step.Command programMsg -> ( Model model programMsg, Cmd msg)
 handleStepCommand actions model command =
   case command of
+    Step.Batch commands ->
+      ( { model | stepsToRun = List.append (List.map makeStep commands) model.stepsToRun }
+      , actions.send Message.stepComplete
+      )
     Step.SendMessage message ->
       ( model
       , actions.send <| Message.stepMessage message
@@ -139,10 +143,22 @@ handleStepCommand actions model command =
       )
     Step.RecordCondition _ ->
       ( model, Cmd.none )
+    Step.RecordEffect effect ->
+      ( model
+      , Cmd.batch
+        [ actions.storeEffect effect
+        , actions.send Message.stepComplete
+        ]
+      )
     Step.Halt report ->
       ( model
       , actions.sendToSelf <| Error report
       )
+
+
+makeStep : Step.Command programMsg -> Step model programMsg
+makeStep command =
+  \_ -> command
 
 
 handleStepResponse : Actions msg programMsg -> Model model programMsg -> Message -> ( Model model programMsg, Cmd msg )

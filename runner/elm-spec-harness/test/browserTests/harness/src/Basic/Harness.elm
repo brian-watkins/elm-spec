@@ -12,6 +12,7 @@ import Spec.Http
 import Spec.Http.Route exposing (get, route, UrlDescriptor(..))
 import Spec.Http.Stub as Stub
 import Spec.Report as Report
+import Spec.Port as Port
 import Extra exposing (equals)
 import Runner
 import Dict
@@ -121,6 +122,15 @@ inform =
   ]
 
 
+respond : String -> List (Step model msg)
+respond header =
+  [ Port.respond "inform" (Json.field "attributes" <| Json.list Json.string) <| \values ->
+      Port.send "triggerStuff" <| Encode.object
+        [ ("name", Encode.string <| header ++ ": " ++ String.join " - " values)
+        ]
+  ]
+
+
 requestStuff =
   [ Markup.target << by [ id "send-request" ]
   , Event.click
@@ -150,6 +160,7 @@ stepsToExpose =
   , Harness.assign "logTitle" logTitle
   , Harness.assign "badSteps" badSteps
   , Harness.assign "halt" haltScenario
+  , Harness.define "respond" Json.string respond
   ]
 
 

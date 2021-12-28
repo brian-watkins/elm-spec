@@ -56,7 +56,7 @@ could write a scenario like so:
 # Simulate Subscription Ports
 @docs send
 
-# Simulate Request/Response Scenarios
+# Respond to a Command Port
 @docs respond
 
 -}
@@ -109,20 +109,21 @@ type alias PortRecord =
   }
 
 
-{-| Use this step to respond to the last message received on the given port.
+{-| Use this step to respond to values sent out over the given command port.
 
 Provide the name of the port (the function name) and a JSON decoder that can decode
-messages sent out over the port. Then, provide a function that generates a `Step`
-based on the last message received. If no messages have been received from that
-port, the step will fail.
+values sent out over the port. Then, provide a function that generates a `Step`
+given a value sent out over the port. The function will be applied to values that
+have been sent *since the last time `respond` was called*. If no values have been
+sent out over that port since the last time `respond` was called, the step will fail.
 
 Use this function to simulate request/response style communication via ports, when
 the response depends on some aspect of the request that you may not know at the time
 of writing the scenario.
 
     Spec.when "a response is sent to the request"
-    [ Spec.Port.respond "myPortCommand" Json.string <| \lastMessage ->
-        Json.Encode.string ("You sent: " ++ lastMessage)
+    [ Spec.Port.respond "myPortCommand" Json.string <| \message ->
+        Json.Encode.string ("You sent: " ++ message)
           |> Spec.Port.send "myPortSubscription"
     ]
 
@@ -130,30 +131,48 @@ of writing the scenario.
 respond : String -> Json.Decoder a -> (a -> Step.Step model msg) -> Step.Step model msg
 respond name decoder generator =
   \context ->
-    case lastMessage context name decoder of
-      Ok maybeMessage ->
-        case maybeMessage of
-          Just message ->
-            generator message context
-          Nothing ->
-            Command.halt <| Report.batch
-              [ Report.fact "Unable to respond to the last message received from port" name
-              , Report.note "No messages have been sent via that port"
-              ]
+    case messagesToRespondTo context name decoder of
+      Ok messages ->
+        if List.length messages == 0 then
+          Command.halt <| Report.batch
+            [ Report.fact "Unable to respond to messages received from port" name
+            , Report.note "No new messages have been sent via that port"
+            ]
+        else
+          Command.batch
+            [ List.map (\message -> generator message context) messages
+                |> Command.batch
+            , Command.recordEffect <| messagesRespondedTo messages
+            ]
       Err report ->
         Command.halt <| Report.batch
-          [ Report.fact "An error occurred fetching values for port" name
+          [ Report.fact "An error occurred responding to messages from port" name
           , report
           ]
 
+messagesRespondedTo : List a -> Message
+messagesRespondedTo messages =
+  Message.for "_port" "responded"
+    |> Message.withBody (
+      List.length messages
+        |> Encode.int
+    )
 
-lastMessage : Step.Context model -> String -> Json.Decoder a -> Result Report (Maybe a)
-lastMessage context name decoder =
+
+messagesToRespondTo : Step.Context model -> String -> Json.Decoder a -> Result Report (List a)
+messagesToRespondTo context name decoder =
   Context.effects context
     |> recordsForPort name
     |> recordedValues decoder
-    |> Result.map List.reverse
-    |> Result.map List.head
+    |> Result.map (List.drop <| messagesAlreadyRespondedTo context)
+
+
+messagesAlreadyRespondedTo : Step.Context model -> Int
+messagesAlreadyRespondedTo context =
+  Context.effects context
+    |> List.filter (Message.is "_port" "responded")
+    |> List.map (\message -> Message.decode Json.int message |> Result.withDefault 0)
+    |> List.sum
 
 
 {-| Observe messages sent out via a command port.

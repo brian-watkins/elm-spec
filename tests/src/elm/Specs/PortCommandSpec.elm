@@ -101,9 +101,9 @@ witnessMultiplePortCommandsFromInitSpec =
   ]
 
 
-usePortCommandMessages : Spec Model Msg
-usePortCommandMessages =
-  Spec.describe "using port command messages in a step"
+respondToPortMessages : Spec Model Msg
+respondToPortMessages =
+  Spec.describe "responding to port messages in a step"
   [ scenario "no port command messages have been sent" (
       given (
         Setup.initWithModel testModel
@@ -116,7 +116,7 @@ usePortCommandMessages =
         ]
       |> itShouldHaveFailedAlready
     )
-  , scenario "port messages are decoded" (
+  , scenario "several port messages have been sent" (
       given (
         Setup.initWithModel testModel
           |> Setup.withUpdate testUpdate
@@ -127,14 +127,56 @@ usePortCommandMessages =
         , Command.send <| sendTestMessageOut "Two"
         , Command.send <| sendTestMessageOut "Three"
         ]
-      |> when "a response is sent"
+      |> when "a response is sent for each message"
         [ Port.respond "sendTestMessageOut" Json.string <| \message ->
             Encode.string ("Response: " ++ message)
               |> Port.send "receiveTestMessage"
         ]
       |> it "receives the response to the last message" (
         Observer.observeModel .messages
-          |> expect (equals [ "Response: Three" ])
+          |> expect (Claim.satisfying
+            [ Claim.isListWithLength 3
+            , isListWhereSomeItem <| equals "Response: Three"
+            , isListWhereSomeItem <| equals "Response: Two"
+            , isListWhereSomeItem <| equals "Response: One" 
+            ])
+      )
+    )
+  , scenario "different responses" (
+      given (
+        Setup.initWithModel testModel
+          |> Setup.withUpdate testUpdate
+          |> Setup.withSubscriptions testSubscriptions
+      )
+      |> when "port messages are sent"
+        [ Command.send <| sendTestMessageOut "One"
+        , Command.send <| sendTestMessageOut "Two"
+        , Command.send <| sendTestMessageOut "Three"
+        ]
+      |> when "a response is sent for each message"
+        [ Port.respond "sendTestMessageOut" Json.string <| \message ->
+            Encode.string ("Response: " ++ message)
+              |> Port.send "receiveTestMessage"
+        ]
+      |> when "more port messages are sent"
+        [ Command.send <| sendTestMessageOut "Four"
+        , Command.send <| sendTestMessageOut "Five"
+        ]
+      |> when "a different response is sent for each new message"
+        [ Port.respond "sendTestMessageOut" Json.string <| \message ->
+            Encode.string ("Response Round 2: " ++ message)
+              |> Port.send "receiveTestMessage"
+        ]
+      |> it "receives the response to the last message" (
+        Observer.observeModel .messages
+          |> expect (Claim.satisfying
+            [ Claim.isListWithLength 5
+            , isListWhereSomeItem <| equals "Response Round 2: Five"
+            , isListWhereSomeItem <| equals "Response Round 2: Four"
+            , isListWhereSomeItem <| equals "Response: Three"
+            , isListWhereSomeItem <| equals "Response: Two"
+            , isListWhereSomeItem <| equals "Response: One" 
+            ])
       )
     )
   , scenario "decoding the port messages results in an error" (
@@ -194,7 +236,7 @@ selectSpec name =
   case name of
     "one" -> Just witnessPortCommandFromInitSpec
     "many" -> Just witnessMultiplePortCommandsFromInitSpec
-    "observe" -> Just usePortCommandMessages
+    "observe" -> Just respondToPortMessages
     _ -> Nothing
 
 

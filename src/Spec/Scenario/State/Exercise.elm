@@ -213,6 +213,13 @@ handleStepResponse actions exerciseModel message =
 handleStepCommand : Actions msg programMsg -> Model model programMsg -> Step.Command programMsg -> ( State.Model msg programMsg, Cmd msg)
 handleStepCommand actions exerciseModel command =
   case command of
+    Step.Batch commands ->
+      let
+        extraSteps = List.map makeStep commands
+      in
+        ( exercise { exerciseModel | steps = List.append extraSteps exerciseModel.steps }
+        , State.continue actions
+        )
     Step.SendMessage message ->
       ( exercise exerciseModel
       , State.send actions <| Message.stepMessage message
@@ -233,3 +240,13 @@ handleStepCommand actions exerciseModel command =
       update { exerciseModel | conditionsApplied = exerciseModel.conditionsApplied ++ [ condition ] } actions Continue
     Step.Halt report ->
       update exerciseModel actions (Abort report)
+    Step.RecordEffect effect ->
+      ( exercise { exerciseModel | effects = effect :: exerciseModel.effects }
+      , State.continue actions
+      )
+
+
+makeStep : Step.Command programMsg -> Step model programMsg
+makeStep command =
+  { run = \_ -> command
+  }
