@@ -1,5 +1,20 @@
 # Changelog
 
+## 12.28.2021
+- elm-spec 3.3.1
+
+### Fixed
+- Port.respond responds to all values sent on a command port since
+the last time Port.respond was called
+
+
+## 12.24.2021
+- elm-spec 3.3.0
+
+### Added
+- Step to respond to the last value sent on a command port
+
+
 ## 11.13.2021
 - elm-spec-core 8.0.0
 - elm-spec-runner 2.3.0
