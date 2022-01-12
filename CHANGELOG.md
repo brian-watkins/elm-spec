@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.2022
+- elm-spec 3.3.2
+
+### Fixed
+- Skipped scenarios remain skipped when some scenarios are picked
+
+
 ## 12.28.2021
 - elm-spec 3.3.1
 
