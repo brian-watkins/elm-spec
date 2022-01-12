@@ -2,6 +2,7 @@ module Spec.Program exposing
   ( Msg, Model, Flags
   , init, view, update, subscriptions
   , onUrlChange, onUrlRequest
+  , skipScenarioTag, pickScenarioTag
   )
 
 import Spec.Scenario.Program as ScenarioProgram
@@ -137,12 +138,22 @@ isInSegment segment scenarioIndex =
   modBy segment.total scenarioIndex == segment.id
 
 
+skipScenarioTag : String
+skipScenarioTag =
+  "_elm_spec_skip"
+
+
+pickScenarioTag : String
+pickScenarioTag =
+  "_elm_spec_pick"
+
+
 shouldRunScenario : List String -> Internal.Scenario model msg -> Bool
 shouldRunScenario tags scenario =
   if List.isEmpty tags then
     List.isEmpty scenario.tags
   else
-    not <| List.isEmpty scenario.tags
+    List.any ((==) pickScenarioTag) scenario.tags
 
 
 tagsDecoder : Json.Decoder (List String)

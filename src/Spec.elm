@@ -344,7 +344,7 @@ Then, to pick a scenario to run, do something like this:
 -}
 pick : (() -> Cmd msg) -> Scenario model msg -> Scenario model msg
 pick _ =
-  tagged [ "_elm_spec_pick" ]
+  tagged [ Program.pickScenarioTag ]
 
 
 {-| Skip this scenario when the spec suite runs.
@@ -367,7 +367,7 @@ Then, to skip a scenario, do something like this:
 -}
 skip : Scenario model msg -> Scenario model msg
 skip =
-  tagged [ "_elm_spec_skip" ]
+  tagged [ Program.skipScenarioTag ]
 
 
 tagged : List String -> Scenario model msg -> Scenario model msg

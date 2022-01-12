@@ -99,7 +99,7 @@ class SuiteRunner extends EventEmitter {
   runApp(app, modulePath, runNextSpec) {
     new SpecRunner(app, this.context, this.options)
       .on("observation", (obs) => {
-        const observation = Object.assign(obs, { modulePath })
+        const observation = Object.assign({ modulePath }, obs)
         this.updateSummary(observation)
         this.reporter.record(observation)
       })

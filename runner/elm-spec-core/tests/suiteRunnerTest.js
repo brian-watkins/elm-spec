@@ -117,17 +117,23 @@ describe("Suite Runner", () => {
         expectOkResult(result, 2, 0, 4)
 
         expectSkipped(observations[0])
+        expectModulePath(observations[0], "WithPicked/ClickSpec.elm")
 
         expectAccepted(observations[1])
         expect(observations[1].description).to.equal("It renders the count [PICKED]")
+        expectModulePath(observations[1], "WithPicked/ClickSpec.elm")
 
         expectSkipped(observations[2])
+        expectModulePath(observations[2], "WithPicked/NavigationSpec.elm")
 
         expectAccepted(observations[3])
         expect(observations[3].description).to.equal("It renders the text on the view [PICKED]")
+        expectModulePath(observations[3], "WithPicked/InputSpec.elm")
 
         expectSkipped(observations[4])
+        expectModulePath(observations[4], "WithPicked/InputSpec.elm")
         expectSkipped(observations[5])
+        expectModulePath(observations[5], "WithPicked/InputSpec.elm")
       })
     })
   })
