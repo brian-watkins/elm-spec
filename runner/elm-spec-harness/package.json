@@ -38,6 +38,6 @@
     "tap-difflet": "^0.7.2"
   },
   "dependencies": {
-    "elm-spec-core": "^7.2.0"
+    "elm-spec-core": "^8.0.0"
   }
 }
