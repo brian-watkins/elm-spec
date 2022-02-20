@@ -10,6 +10,7 @@
     "build:runner": "npm run build --prefix runner/elm-spec-runner",
     "test:runner": "npm test --prefix runner/elm-spec-runner",
     "start:runner": "npm start --prefix runner/elm-spec-runner",
+    "start:runner:remote": "npm run start:remote --prefix runner/elm-spec-runner",
     "build:karma": "npm run build --prefix runner/karma-elm-spec-framework",
     "start:karma": "npm start --prefix runner/karma-elm-spec-framework",
     "test:karma": "npm test --prefix runner/karma-elm-spec-framework",

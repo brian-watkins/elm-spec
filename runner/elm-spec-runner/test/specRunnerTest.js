@@ -2,11 +2,13 @@ const chai = require('chai')
 const expect = chai.expect
 const JSDOMSpecRunner = require('../src/jsdomSpecRunner')
 const BrowserSpecSunner = require('../src/browserSpecRunner')
+const RobotRunner = require("./helpers/robotRunner")
 const FileLoader = require('../src/fileLoader')
 const { SuiteRunner } = require('elm-spec-core')
 const Compiler = require('elm-spec-core/compiler')
+const RemoteSpecRunner = require('../src/remoteSpecRunner')
 
-const expectBehaviorFor = (browserName, runner) => {
+const expectBehaviorFor = (browserName, runner, runnerProperties) => {
   describe(browserName, () => {
     let testRun
 
@@ -60,24 +62,26 @@ const expectBehaviorFor = (browserName, runner) => {
         testRun = await runForTest(runner, passingAndFailingSpecs, { ...testRunnerOptions, parallelSegments: 3 })
       })
 
-      it("calls start and finish for each segment", () => {
-        expect(testRun.testReporter.startCount).to.equal(3)
-        expect(testRun.testReporter.finishCount).to.equal(3)
-      })
-
       it("reports the correct number of accepted, skipped, and rejected scenarios", () => {
         expect(testRun.testReporter.accepted).to.equal(4)
         expect(testRun.testReporter.rejected).to.equal(2)
         expect(testRun.testReporter.skipped).to.equal(1)
       })
 
-      it("provides results for each segment", () => {
-        expect(testRun.results).to.deep.equal([
-          okResult(2, 2, 1),
-          okResult(2, 0, 0),
-          okResult(0, 0, 0)
-        ])
-      })
+      if (runnerProperties.supportsParallel) {
+        it("calls start and finish for each segment", () => {
+          expect(testRun.testReporter.startCount).to.equal(3)
+          expect(testRun.testReporter.finishCount).to.equal(3)
+        })
+  
+        it("provides results for each segment", () => {
+          expect(testRun.results).to.deep.equal([
+            okResult(2, 2, 1),
+            okResult(2, 0, 0),
+            okResult(0, 0, 0)
+          ])
+        })
+      }
     })
 
     context(`when the spec emits log messages in ${browserName}`, () => {
@@ -137,10 +141,11 @@ const compileCodeForTests = (compilerOptions) => {
   return compiler.compile()
 }
 
-describe("Spec Runners", () => {
+describe("Spec Runners", async () => {
   const fileLoader = new FileLoader("../elm-spec-core/tests/sample/")
-  expectBehaviorFor('JSDOM', new JSDOMSpecRunner(fileLoader))
-  expectBehaviorFor('Chromium', new BrowserSpecSunner('chromium', fileLoader))
+  expectBehaviorFor('JSDOM', new JSDOMSpecRunner(fileLoader), { supportsParallel: true })
+  expectBehaviorFor('Chromium', new BrowserSpecSunner('chromium', fileLoader), { supportsParallel: true })
+  expectBehaviorFor('Remote Browser', new RobotRunner(new RemoteSpecRunner(fileLoader)), { supportsParallel: false })
 })
 
 const testBrowserOptions = {
@@ -208,8 +213,7 @@ const TestReporter = class {
     this.finishCount = 0
   }
 
-  print() {}
-  printLine() {}
+  info() {}
 
   startSuite() {
     this.startCount += 1

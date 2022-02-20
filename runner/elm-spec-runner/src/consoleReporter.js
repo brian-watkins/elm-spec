@@ -35,6 +35,12 @@ module.exports = class ConsoleReporter {
     return value
   }
 
+  info(message) {
+    this.printLine()
+    this.printLine(message)
+    this.printLine()
+  }
+
   print(message = "") {
     this.write(message)
   }

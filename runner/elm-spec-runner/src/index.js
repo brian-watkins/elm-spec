@@ -9,6 +9,7 @@ const Compiler = require('elm-spec-core/compiler')
 const ConsoleReporter = require('./consoleReporter')
 const JSDOMSpecRunner = require('./jsdomSpecRunner')
 const BrowserSpecRunner = require('./browserSpecRunner')
+const RemoteSpecRunner = require('./remoteSpecRunner')
 const RunSpecsCommand = require('./runSpecsCommand')
 const FileWatcher = require('./fileWatcher')
 const ElmFiles = require('./elmFiles')
@@ -73,6 +74,8 @@ class RunSuite extends Command {
     switch (browser) {
       case "jsdom":
         return new JSDOMSpecRunner(fileLoader)
+      case "remote":
+        return new RemoteSpecRunner(fileLoader)
       default:
         return new BrowserSpecRunner(browser, fileLoader)
     }
@@ -108,7 +111,7 @@ RunSuite.flags = {
   endOnFailure: flags.boolean({description: 'end spec suite run on first failure'}),
   browser: flags.string({
     description: 'browser environment for specs',
-    options: ['jsdom', 'chromium', 'webkit', 'firefox'],
+    options: ['jsdom', 'chromium', 'webkit', 'firefox', 'remote'],
     default: 'jsdom'
   }),
   visible: flags.boolean({description: 'show browser while running specs (does nothing for jsdom)'}),

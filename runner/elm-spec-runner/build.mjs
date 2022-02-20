@@ -11,3 +11,14 @@ esbuild.build({
     NodeModulesPolyfillPlugin()
   ],
 })
+
+esbuild.build({
+  entryPoints: [ "./adapterSrc/remoteBrowserAdapter.js", "./adapterSrc/connect.js" ],
+  outdir: "./src/remote/",
+  bundle: true,
+  minify: true,
+  logLevel: 'info',
+  plugins: [
+    NodeModulesPolyfillPlugin()
+  ],
+})

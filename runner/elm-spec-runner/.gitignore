@@ -6,3 +6,5 @@
 /yarn.lock
 node_modules
 src/browserAdapter.js
+src/remote/connect.js
+src/remote/remoteBrowserAdapter.js

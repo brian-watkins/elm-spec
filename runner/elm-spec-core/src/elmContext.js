@@ -43,15 +43,7 @@ window._elm_spec_load_elm = (context) => {
     this.window = window
     this.timer = new FakeTimer(SinonFakeTimers.createClock())
 
-    this.decorateWindow()
-
     this.registerFakes()
-  }
-
-  decorateWindow() {
-    const base = this.window.document.createElement("base")
-    base.setAttribute("href", "http://elm-spec")
-    this.window.document.head.appendChild(base)
   }
 
   registerFakes() {

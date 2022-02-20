@@ -7,7 +7,12 @@ module.exports = class FakeLocation {
   setBase(document, url) {
     const updated = new URL(url, this.href)
     this.href = updated.href
-    const base = document.querySelector("base")
+    let base = document.querySelector("base")
+    if (!base) {
+      base = window.document.createElement("base")
+      base.setAttribute("href", window.document.location.href)
+      window.document.head.appendChild(base)
+    }
     base.href = updated.protocol + "//" + updated.host
   }
 

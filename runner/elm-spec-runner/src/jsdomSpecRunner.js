@@ -38,7 +38,7 @@ module.exports = class JSDOMSpecRunner {
 
   getDom() {
     const dom = new JSDOM(
-      "<html><head><base href='http://elm-spec'></head><body></body></html>",
+      "<html><head></head><body></body></html>",
       { pretendToBeVisual: true,
         runScripts: "dangerously",
         url: "http://elm-spec",

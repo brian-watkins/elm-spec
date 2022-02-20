@@ -10,12 +10,16 @@ module.exports = class FileLoader {
 
   async decorateWindow(decorator) {
     ElmContext.registerFileLoadingCapability(decorator, (options) => {
-      if (options.convertToText) {
-        return this.readText(options.path)
-      } else {
-        return this.readBytes(options.path)
-      }
+      return this.handleFileLoad(options)
     })
+  }
+
+  handleFileLoad(options) {
+    if (options.convertToText) {
+      return this.readText(options.path)
+    } else {
+      return this.readBytes(options.path)
+    }
   }
 
   read(file) {

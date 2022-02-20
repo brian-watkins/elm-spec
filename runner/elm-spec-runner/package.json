@@ -8,6 +8,7 @@
   },
   "bugs": "https://github.com/brian-watkins/elm-spec/issues",
   "dependencies": {
+    "@koa/router": "^10.1.1",
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "@oclif/plugin-help": "^3.2.0",
@@ -16,6 +17,11 @@
     "command-exists": "^1.2.8",
     "elm-spec-core": "^8.0.0",
     "jsdom": "^16.2.2",
+    "koa": "^2.13.4",
+    "koa-body": "^4.2.0",
+    "koa-mount": "^4.0.0",
+    "koa-static": "^5.0.0",
+    "koa-websocket": "^6.0.0",
     "playwright": "^1.11.1"
   },
   "engines": {
@@ -39,6 +45,7 @@
   "scripts": {
     "prepublish": "npm run build",
     "start": "./bin/run --specRoot ../karma-elm-spec-framework/sample --elm ../../node_modules/.bin/elm",
+    "start:remote": "./bin/run --browser remote --specRoot \"../elm-spec-core/tests/sample/\" --specs \"./specs/Passing/**/*Spec.elm\" --elm \"../../node_modules/.bin/elm\"",
     "test": "mocha --timeout 5000 \"test/**/*Test.js\"",
     "build": "node build.mjs"
   },

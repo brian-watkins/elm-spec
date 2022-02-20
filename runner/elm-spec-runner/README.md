@@ -37,14 +37,16 @@ the spec suite from running to completion.
 
 `--specs` -- Specify a glob for spec modules, relative to `specRoot`. Defaults to `./**/*Spec.elm`
 
-`--browser` -- Specify the browser environment for the specs: `jsdom`, `chromium`, `webkit`, `firefox`. Defaults to `jsdom`
+`--browser` -- Specify the browser environment for the specs: `jsdom`, `chromium`, `webkit`, `firefox`, `remote`. If `remote` is selected, a URL will be provided; visit the URL to run
+the specs. Defaults to `jsdom`.
 
-`--visible` -- Show the browser while the specs are running. Does nothing if the browser is `jsdom`.
+`--visible` -- Show the browser while the specs are running. Does nothing if the browser
+is `jsdom` or `remote`.
 
 `--watch` -- Rerun the spec when files change in directories listed in the `source-directories` of your specs' elm.json file.
 
 `--parallel` -- Run scenarios in parallel, up to the number of CPU cores. This can lower spec suite
-run time for larger spec suites.
+run time for larger spec suites. Does nothing if the browser is `remote`.
 
 `--endOnFailure` -- Stop the spec suite run on the first failure.
 
