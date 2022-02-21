@@ -14,12 +14,12 @@ socket.addEventListener('open', function () {
 
   socket.addEventListener("close", function() {
     if (!specsFinished) {
-      showSpecsFinished("Connection to elm-spec runner closed.")
+      showSpecsFinished("Lost connection with elm-spec runner!")
     }
   })
 
   socket.addEventListener("error", function() {
-    showSpecsFinished("Lost connection with elm-spec runner!")
+    showSpecsFinished("Unable to connect to elm-spec runner!")
   })
 
 });
@@ -48,9 +48,9 @@ const handleMessage = (socket, message) => {
 }
 
 const showSpecsFinished = (message) => {
-  const el = document.createElement("H1")
+  const el = document.createElement("H2")
   el.id = "specs-finished"
-  el.setAttribute("style", "position: absolute; top: 0px; left: 0px; width: 100%; text-align: center; margin: 0px; padding: 30px; background: #CCCCCC")
+  el.setAttribute("style", "position: absolute; bottom: 0px; left: 0px; width: 100%; text-align: center; margin: 0px; padding: 15px; background: #0A0066; color: #CCCCCC; font-family: sans-serif;")
   el.appendChild(document.createTextNode(message))
 
   document.body.appendChild(el)
