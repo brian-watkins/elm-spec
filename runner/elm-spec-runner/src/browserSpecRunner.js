@@ -109,4 +109,8 @@ module.exports = class BrowserSpecRunner {
 
     return page
   }
+
+  get page() {
+    return this.browser.contexts()[0].pages()[0]
+  }
 }

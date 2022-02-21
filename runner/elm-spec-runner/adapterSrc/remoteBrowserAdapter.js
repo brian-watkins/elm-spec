@@ -11,7 +11,7 @@ window._elm_spec_run = (options, reporter) => {
 }
 
 const fileLoadingCapability = async (fileRequest) => {
-  var filesURL = new URL('/files', window.location.href);
+  var filesURL = new URL('/fixture/files', window.location.href);
   const data = await fetch(filesURL.href, {
     method: "POST",
     headers: {

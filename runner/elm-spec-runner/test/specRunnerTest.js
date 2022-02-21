@@ -8,22 +8,22 @@ const { SuiteRunner } = require('elm-spec-core')
 const Compiler = require('elm-spec-core/compiler')
 const RemoteSpecRunner = require('../src/remoteSpecRunner')
 
-const expectBehaviorFor = (browserName, runner, runnerProperties) => {
-  describe(browserName, () => {
+const expectRunsSpecsBehaviorFor = (browserName, runner) => {
+  describe(`when ${browserName} runs specs`, () => {
     let testRun
 
-    afterEach(() => {
-      runner.stop()
+    afterEach(async () => {
+      await runner.stop()
     })
 
     context(`when there is an error running the specs in ${browserName}`, () => {
       beforeEach(async () => {
         testRun = await runForTest(runner, errorSpecs)
       })
-      
+
       it("reports the error", () => {
         expect(testRun.testReporter.errorCount).to.equal(1)
-        expect(testRun.results).to.deep.equal([ { status: SuiteRunner.STATUS.ERROR }])
+        expect(testRun.results).to.deep.equal([{ status: SuiteRunner.STATUS.ERROR }])
       })
     })
 
@@ -31,7 +31,7 @@ const expectBehaviorFor = (browserName, runner, runnerProperties) => {
       beforeEach(async () => {
         testRun = await runForTest(runner, allSpecs)
       })
- 
+
       it("calls start and finish", () => {
         expect(testRun.testReporter.startCount).to.equal(1)
         expect(testRun.testReporter.finishCount).to.equal(1)
@@ -39,7 +39,7 @@ const expectBehaviorFor = (browserName, runner, runnerProperties) => {
 
       it("reports all accepted", () => {
         expect(testRun.testReporter.accepted).to.equal(10)
-        expect(testRun.results).to.deep.equal([ okResult(10, 0, 0) ])
+        expect(testRun.results).to.deep.equal([okResult(10, 0, 0)])
       })
 
       context(`when the specs are executed again in ${browserName}, like in watch mode`, () => {
@@ -52,14 +52,20 @@ const expectBehaviorFor = (browserName, runner, runnerProperties) => {
 
         it("reports all are still accepted", () => {
           expect(testReporter.accepted).to.equal(10)
-          expect(results).to.deep.equal([ okResult(10, 0, 0) ])
+          expect(results).to.deep.equal([okResult(10, 0, 0)])
         })
       })
     })
 
     context(`when the scenarios are executed in parallel in ${browserName}`, () => {
       beforeEach(async () => {
-        testRun = await runForTest(runner, passingAndFailingSpecs, { ...testRunnerOptions, parallelSegments: 3 })
+        testRun = await runForTest(runner, passingAndFailingSpecs, {
+          browserOptions: testBrowserOptions,
+          runnerOptions: {
+            ...testRunnerOptions,
+            parallelSegments: 3
+          }
+        })
       })
 
       it("reports the correct number of accepted, skipped, and rejected scenarios", () => {
@@ -67,21 +73,6 @@ const expectBehaviorFor = (browserName, runner, runnerProperties) => {
         expect(testRun.testReporter.rejected).to.equal(2)
         expect(testRun.testReporter.skipped).to.equal(1)
       })
-
-      if (runnerProperties.supportsParallel) {
-        it("calls start and finish for each segment", () => {
-          expect(testRun.testReporter.startCount).to.equal(3)
-          expect(testRun.testReporter.finishCount).to.equal(3)
-        })
-  
-        it("provides results for each segment", () => {
-          expect(testRun.results).to.deep.equal([
-            okResult(2, 2, 1),
-            okResult(2, 0, 0),
-            okResult(0, 0, 0)
-          ])
-        })
-      }
     })
 
     context(`when the spec emits log messages in ${browserName}`, () => {
@@ -101,7 +92,7 @@ const expectBehaviorFor = (browserName, runner, runnerProperties) => {
 
       it(`reports the correct number of skipped observations in ${browserName}`, () => {
         expect(testRun.testReporter.skipped).to.equal(3)
-        expect(testRun.results).to.deep.equal([ okResult(3, 0, 3) ])
+        expect(testRun.results).to.deep.equal([okResult(3, 0, 3)])
       })
     })
 
@@ -112,26 +103,89 @@ const expectBehaviorFor = (browserName, runner, runnerProperties) => {
 
       it(`reports the correct number of rejections in ${browserName}`, () => {
         expect(testRun.testReporter.rejected).to.equal(2)
-        expect(testRun.results).to.deep.equal([ okResult(0, 2, 0) ])
+        expect(testRun.results).to.deep.equal([okResult(0, 2, 0)])
       })
     })
 
     context(`when end on first failure in ${browserName}`, () => {
       beforeEach(async () => {
-        testRun = await runForTest(runner, failingSpec, { ...testRunnerOptions, endOnFailure: true })
+        testRun = await runForTest(runner, failingSpec, {
+          browserOptions: testBrowserOptions,
+          runnerOptions: {
+            ...testRunnerOptions,
+            endOnFailure: true
+          }
+        })
       })
 
       it(`reports only the first failure in ${browserName}`, () => {
         expect(testRun.testReporter.rejected).to.equal(1)
-        expect(testRun.results).to.deep.equal([ okResult(0, 1, 0) ])
+        expect(testRun.results).to.deep.equal([okResult(0, 1, 0)])
       })
     })
   })
 }
 
-const runForTest = async (runner, compilerOptions, runnerOptions = testRunnerOptions) => {
+const expectParallelBehaviorFor = (runnerName, runner) => {
+  describe(`when ${runnerName} executes specs in parallel`, () => {
+    beforeEach(async () => {
+      testRun = await runForTest(runner, passingAndFailingSpecs, {
+        browserOptions: testBrowserOptions,
+        runnerOptions: {
+          ...testRunnerOptions,
+          parallelSegments: 3
+        }
+      })
+    })
+
+    afterEach(async () => {
+      await runner.stop()
+    })
+
+    it("calls start and finish for each segment", () => {
+      expect(testRun.testReporter.startCount).to.equal(3)
+      expect(testRun.testReporter.finishCount).to.equal(3)
+    })
+
+    it("provides results for each segment", () => {
+      expect(testRun.results).to.deep.equal([
+        okResult(2, 2, 1),
+        okResult(2, 0, 0),
+        okResult(0, 0, 0)
+      ])
+    })
+  })
+}
+
+const expectLoadsCSSBehaviorFor = (browserName, runner) => {
+  describe(`when css files are specified for ${browserName}`, () => {
+    beforeEach(async () => {
+      testRun = await runForTest(runner, cssSpecs, {
+        browserOptions: {
+          ...testBrowserOptions,
+          cssFiles: [
+            "../elm-spec-core/tests/sample/fun.css"
+          ]
+        },
+        runnerOptions: testRunnerOptions
+      })
+    })
+
+    afterEach(async () => {
+      await runner.stop()
+    })
+
+    it("applies the styles to the page", async () => {
+      expect(testRun.testReporter.accepted).to.equal(1)
+      const actualBackgroundColor = await runner.page.$eval("#some-styled-element", el => getComputedStyle(el).getPropertyValue("background-color"))
+      expect(actualBackgroundColor).to.equal("rgb(255, 0, 204)")
+    })
+  })
+}
+
+const runForTest = async (runner, compilerOptions, { browserOptions, runnerOptions } = { browserOptions: testBrowserOptions, runnerOptions: testRunnerOptions }) => {
   const testReporter = new TestReporter()
-  await runner.start(testBrowserOptions)
+  await runner.start(browserOptions)
   const results = await runner.run(runnerOptions, compileCodeForTests(compilerOptions), testReporter)
   return { results, testReporter }
 }
@@ -143,9 +197,19 @@ const compileCodeForTests = (compilerOptions) => {
 
 describe("Spec Runners", async () => {
   const fileLoader = new FileLoader("../elm-spec-core/tests/sample/")
-  expectBehaviorFor('JSDOM', new JSDOMSpecRunner(fileLoader), { supportsParallel: true })
-  expectBehaviorFor('Chromium', new BrowserSpecSunner('chromium', fileLoader), { supportsParallel: true })
-  expectBehaviorFor('Remote Browser', new RobotRunner(new RemoteSpecRunner(fileLoader)), { supportsParallel: false })
+  const jsdomRunner = new JSDOMSpecRunner(fileLoader)
+  const playwrightRunner = new BrowserSpecSunner('chromium', fileLoader)
+  const remoteRunner = new RobotRunner(new RemoteSpecRunner(fileLoader))
+  
+  expectRunsSpecsBehaviorFor('JSDOM', jsdomRunner)
+  expectRunsSpecsBehaviorFor('Playwright', playwrightRunner)
+  expectRunsSpecsBehaviorFor('Remote Browser', remoteRunner)
+
+  expectParallelBehaviorFor('JSDOM', jsdomRunner)
+  expectParallelBehaviorFor('Playwright', playwrightRunner)
+
+  expectLoadsCSSBehaviorFor('Playwright', playwrightRunner)
+  expectLoadsCSSBehaviorFor('Remote Browser', remoteRunner)
 })
 
 const testBrowserOptions = {
@@ -168,6 +232,13 @@ const passingAndFailingSpecs = {
 const failingSpec = {
   cwd: "../elm-spec-core/tests/sample/",
   specPath: "./specs/WithFailure/MoreSpec.elm",
+  elmPath: "../../node_modules/.bin/elm",
+  logLevel: Compiler.LOG_LEVEL.SILENT
+}
+
+const cssSpecs = {
+  cwd: "../elm-spec-core/tests/sample/",
+  specPath: "./specs/Passing/ClickSpec.elm",
   elmPath: "../../node_modules/.bin/elm",
   logLevel: Compiler.LOG_LEVEL.SILENT
 }

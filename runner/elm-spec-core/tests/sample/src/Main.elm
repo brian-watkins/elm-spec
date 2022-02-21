@@ -80,6 +80,7 @@ view model =
         |> Html.text
     ]
   , Html.button [ Attr.id "get-messages", Events.onClick GetMessages ] [ Html.text "Get Messages" ]
+  , Html.div [ Attr.id "some-styled-element" ] [ Html.text "Some styled text!" ]
   ]
 
 
