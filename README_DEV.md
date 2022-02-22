@@ -90,3 +90,16 @@ To publish to verdaccio:
 - Publishes the latest code with a special tag indicating the latest commit to the verdaccio registry
 3. To install: `npm install --save-dev elm-spec-runner@canary --registry http://localhost:4873/`
 
+
+## Analyze ESBuild bundles
+
+To analyze the esbuild bundle, first go to the `build.mjs` file and add `metafile: true`
+as an option to the `build` function. Then change the command so you wait for the result
+and write the metafile to a file like so:
+
+```
+const result = await esbuild.build({ ... })
+fs.writeFileSync("meta.json", JSON.stringify(result.metafile))
+```
+
+Then you can use [Bundle Buddy](https://www.bundle-buddy.com) to view the results.
