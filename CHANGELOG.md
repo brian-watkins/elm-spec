@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.22.2022
+- elm-spec-core 8.0.1
+- elm-spec-runner 2.4.0
+
+### Added
+- elm-spec-runner exposes a URL that clients can visit to run specs
+
+
 ## 1.11.2022
 - elm-spec 3.3.2
 
