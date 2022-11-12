@@ -57,7 +57,7 @@
     "chai-string": "^1.5.0",
     "chai-things": "^0.2.0",
     "esbuild": "^0.12.25",
-    "mocha": "^8.2.1",
+    "mocha": "^10.1.0",
     "shelljs": "^0.8.4"
   }
 }
