@@ -59,7 +59,7 @@ window._elm_spec_load_elm = (context) => {
     this.fakes.documentEventListeners = {}
     this.fakes.document = new FakeDocument(this.window, this.fakes.browser, fakeLocation)
     this.fakes.history = new FakeHistory(fakeLocation)
-    this.fakes.console = proxiedConsole()
+    this.fakes.console = proxiedConsole((message) => { this.logMessage(message) })
     this.fakes.timer = this.timer
     this.fakes.url = new FakeURL(this.fakes.blobStore)
     this.fakes.mouseEvent = fakeMouseEvent()
@@ -111,6 +111,14 @@ window._elm_spec_load_elm = (context) => {
 
   sendToProgram(msg) {
     this.app.ports.elmSpecIn.send(msg)
+  }
+
+  registerLogger(logger) {
+    this.log = logger
+  }
+
+  logMessage(message) {
+    this.log(message)
   }
 
   fileInputForOpenFileSelector() {

@@ -211,10 +211,12 @@ describe("Suite Runner", () => {
   context("when a scenario logs a message", () => {
     it("sends the message to the reporter", (done) => {
       expectScenarios("WithLogs", standardOptions, done, (result, observations, error, logs) => {
-        expectOkResult(result, 1, 0, 0)
+        expectOkResult(result, 2, 0, 0)
         expectAccepted(observations[0])
+        expectAccepted(observations[1])
         expect(logs).to.deep.equal([
-          [ reportLine("After two clicks!") ]
+          [ reportLine("After two clicks!") ],
+          [ reportLine("UPDATE: HandleClick") ]
         ])
       })
     })

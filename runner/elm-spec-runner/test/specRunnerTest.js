@@ -81,7 +81,7 @@ const expectRunsSpecsBehaviorFor = (browserName, runner) => {
       })
 
       it("reports the log message", () => {
-        expect(testRun.testReporter.logs.length).to.equal(1)
+        expect(testRun.testReporter.logs.length).to.equal(2)
       })
     })
 

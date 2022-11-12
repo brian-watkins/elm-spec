@@ -1,6 +1,6 @@
 const chai = require('chai')
 const expect = chai.expect
-const Reporter = require('../src/consoleReporter')
+const ConsoleReporter = require('../src/consoleReporter')
 
 describe("reporter", () => {
   let testHarness
@@ -11,7 +11,7 @@ describe("reporter", () => {
     reporter = testHarness.reporter
   })
 
-  context("when an action is not successfull performed", () => {
+  context("when an action is not successfully performed", () => {
     it("does not print the final text", async () => {
       const result = await reporter.performAction("start", "end", async () => {
         return { isOk: false, value: "blah" }
@@ -329,7 +329,7 @@ class TestHarness {
     this.testTimer = new TestTimer()
     this.lines = []
     this.header = ""
-    this.reporter = new Reporter(this.testTimer, {
+    this.reporter = new ConsoleReporter(this.testTimer, {
       write: (character) => { this.header += character },
       writeLine: (line) => this.lines.push(line)
     })

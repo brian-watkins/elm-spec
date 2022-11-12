@@ -54,6 +54,9 @@ module.exports = class ProgramRunner extends EventEmitter {
     this.warnOnExtraAnimationFrames = true
 
     this.context.registerApp(this.app)
+    this.context.registerLogger((message) => {
+      this.log(report(line(message)))
+    })
   }
 
   generatePlugins(context) {
@@ -155,7 +158,7 @@ module.exports = class ProgramRunner extends EventEmitter {
         this.timer.runAllAnimationFrameTasks()
         break
       case "log":
-        this.emit('log', specMessage.body)
+        this.log(specMessage.body)
         break
     }
   }
@@ -295,6 +298,10 @@ module.exports = class ProgramRunner extends EventEmitter {
 
   continue () {
     return this.scenarioStateMessage("CONTINUE")
+  }
+
+  log(message) {
+    this.emit('log', message)
   }
 
   specStateMessage (state, message = null) {

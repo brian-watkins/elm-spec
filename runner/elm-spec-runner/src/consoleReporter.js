@@ -9,8 +9,8 @@ const logMessage = chalk.cyan
 module.exports = class ConsoleReporter {
   constructor(timer, { write, writeLine, stream }) {
     this.timer = timer
-    this.write = write
-    this.writeLine = writeLine
+    this.write = (message) => { write(message); this.writing = true }
+    this.writeLine = (message) => { writeLine(message); this.writing = false }
     this.stream = stream
     this.reset()
   }
@@ -75,8 +75,9 @@ module.exports = class ConsoleReporter {
   }
 
   log(report) {
-    this.writeLine()
-    this.writeLine()
+    if (this.writing) {
+      this.writeLine()
+    }
     report.forEach(line => this.printReport(line, "", logMessage))
   }
 
@@ -85,7 +86,10 @@ module.exports = class ConsoleReporter {
 
     this.writeLine("Error running spec suite!")
     this.writeLine()
-    err.forEach(r => this.printReport(r))
+    err.forEach(r => {
+      this.printReport(r)
+      this.writeLine()
+    })
     this.hasError = true
   }
 
@@ -131,7 +135,10 @@ module.exports = class ConsoleReporter {
     this.printConditions(observation.conditions)
     this.writeLine(`    ${observation.description}`)
     this.writeLine()
-    observation.report.forEach(r => this.printReport(r))
+    observation.report.forEach(r => {
+      this.printReport(r)
+      this.writeLine()
+    })
   }
 
   printReport(report, padding = "    ", render = error) {
@@ -145,7 +152,6 @@ module.exports = class ConsoleReporter {
         this.writeLine(render(`${padding}  ${line}`))
       })
     }
-    this.writeLine()
   }
 
   printModulePath(modulePath) {
