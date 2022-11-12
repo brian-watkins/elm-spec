@@ -1,5 +1,14 @@
 # Changelog
 
+## 11.12.2022
+- elm-spec-core 8.1.0
+- elm-spec-runner 2.5.0
+- karma-elm-spec-framework 1.8.0
+
+### Added
+- Debug.log statements are handled like other elm-spec logs
+
+
 ## 2.22.2022
 - elm-spec-core 8.0.1
 - elm-spec-runner 2.4.0
