@@ -39,6 +39,6 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.1.2",
     "chai": "^4.2.0",
     "esbuild": "^0.12.25",
-    "mocha": "^8.2.1"
+    "mocha": "^10.1.0"
   }
 }
