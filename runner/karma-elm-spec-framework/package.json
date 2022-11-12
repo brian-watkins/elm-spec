@@ -1,6 +1,6 @@
 {
   "name": "karma-elm-spec-framework",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "Run elm-spec specs with Karma",
   "main": "lib/index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   ],
   "dependencies": {
     "chalk": "^3.0.0",
-    "elm-spec-core": "^8.0.1"
+    "elm-spec-core": "^8.1.0"
   },
   "devDependencies": {
     "@esbuild-plugins/node-modules-polyfill": "^0.1.2",
