@@ -1,5 +1,14 @@
 # Changelog
 
+## 11.20.2022
+- elm-spec-core 8.1.1
+- elm-spec-runner 2.5.1
+- karma-elm-spec-framework 1.8.1
+
+### Fixed
+- HTTP request validation now correctly handles paths with multiple params
+
+
 ## 11.12.2022
 - elm-spec-core 8.1.0
 - elm-spec-runner 2.5.0
