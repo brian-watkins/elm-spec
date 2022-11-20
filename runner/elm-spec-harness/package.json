@@ -34,7 +34,7 @@
     "esbuild": "^0.12.15",
     "esm": "^3.2.25",
     "fresh-tape": "^5.3.1",
-    "playwright": "^1.12.3",
+    "playwright": "^1.27.1",
     "tap-difflet": "^0.7.2"
   },
   "dependencies": {
