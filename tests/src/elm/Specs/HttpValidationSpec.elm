@@ -45,6 +45,27 @@ openAPISpecScenarios label openApiContract =
           )
         ]
     )
+  , scenario "A request with multiple path params is sent" (
+      given (
+        validGetRequest
+          |> withUrl "http://fake-api.com/api/my/feeds/feed-source-id/items/read-91/save"
+          |> withQuery ""
+          |> testSetup
+          |> Stub.serve [ multiplePathParamResponse "Awesome!" |> Stub.satisfies openApiContract ]
+      )
+      |> whenAGetRequestIsSent
+      |> observeThat
+        [ it "recorded the request" (
+            Spec.Http.observeRequests (get <| "http://fake-api.com/api/my/feeds/feed-source-id/items/read-91/save")
+              |> expect (isListWithLength 1)
+          )
+        , it "handles the response" (
+            Markup.observeElement
+              |> Markup.query << by [ id "response" ]
+              |> expect (isSomethingWhere <| Markup.text <| equals "Awesome!")
+          )
+        ]
+    )
   , scenario "A request with invalid path param is sent" (
       given (
         validGetRequest
@@ -420,6 +441,14 @@ whenAPostRequestIsSent =
 
 validGetResponse message =
   Stub.for (route "GET" <| Matching "http://fake-api.com/my/messages/.*")
+    |> Stub.withBody (Stub.withJson <| Encode.object
+      [ ("id", Encode.int 1)
+      , ("message", Encode.string message)
+      ]
+    )
+
+multiplePathParamResponse message =
+  Stub.for (route "GET" <| Matching "http://fake-api.com/api/my/feeds/.*/items/.*/save")
     |> Stub.withBody (Stub.withJson <| Encode.object
       [ ("id", Encode.int 1)
       , ("message", Encode.string message)

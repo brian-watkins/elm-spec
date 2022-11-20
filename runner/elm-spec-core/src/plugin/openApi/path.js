@@ -4,7 +4,7 @@ module.exports = class OpenApiPath {
   constructor(path, data) {
     this.data = data
     this.path = path
-    this.route = new Route(path.replace("{", ":").replace("}", ""))
+    this.route = new Route(path.replaceAll("{", ":").replaceAll("}", ""))
   }
 
   hasOperationFor(request) {

@@ -14,6 +14,52 @@
     }
   ],
   "paths": {
+    "/api/my/feeds/{feedId}/items/{feedItemId}/save": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "feedId",
+          "in": "path",
+          "required": true
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "feedItemId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get stuff",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "Stuff returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                },
+                "examples": {
+                  "Get Message": {
+                    "value": {
+                      "id": 142,
+                      "message": "Funny message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-stuff",
+        "description": "Retrieve the message"
+      }
+    },
     "/my/messages/{messageId}": {
       "parameters": [
         {

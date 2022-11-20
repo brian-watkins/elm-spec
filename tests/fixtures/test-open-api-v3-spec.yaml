@@ -8,6 +8,34 @@ info:
 servers:
   - url: 'http://my-fun-api.com'
 paths:
+  '/api/my/feeds/{feedId}/items/{feedItemId}/save':
+    get:
+      summary: Save Item
+      operationId: save-item
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                Get Message:
+                  value:
+                    id: 142
+                    message: Funny message
+      description: 'Multiple path params'
+    parameters:
+      - schema:
+          type: string
+        name: feedId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: feedItemId
+        in: path
+        required: true
   '/my/messages/{messageId}':
     parameters:
       - schema:

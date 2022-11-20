@@ -10,6 +10,29 @@ produces:
 consumes:
   - application/json
 paths:
+  '/api/my/feeds/{feedId}/items/{feedItemId}/save':
+    parameters:
+      - type: string
+        name: feedId
+        in: path
+        required: true
+        description: Id of the feed
+      - type: string
+        name: feedItemId
+        in: path
+        required: true
+        description: Id of the feed item
+    get:
+      summary: Get Stuff
+      tags: []
+      responses:
+        '200':
+          description: Stuff Found
+          schema:
+            $ref: '#/definitions/Message'
+          examples: {}
+      operationId: get-stuff
+      description: Retrieve the stuff with the matching ids
   '/my/messages/{messageId}':
     parameters:
       - type: number
