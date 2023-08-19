@@ -33,37 +33,48 @@ directory to the `source-directories` field of `elm.json`.
 
 5. Add a file called `Runner.elm` to your specs src directory. It should look something like this:
 
-```
+```elm
 port module Runner exposing
-  ( program
-  , browserProgram
-  , skip
-  , pick
-  )
+    ( browserProgram
+    , pick
+    , program
+    , skip
+    )
 
 import Spec exposing (Message)
 
+
 port elmSpecOut : Message -> Cmd msg
+
+
 port elmSpecIn : (Message -> msg) -> Sub msg
+
+
 port elmSpecPick : () -> Cmd msg
+
 
 config : Spec.Config msg
 config =
-  { send = elmSpecOut
-  , listen = elmSpecIn
-  }
+    { send = elmSpecOut
+    , listen = elmSpecIn
+    }
+
 
 pick =
-  Spec.pick elmSpecPick
+    Spec.pick elmSpecPick
+
 
 skip =
-  Spec.skip
+    Spec.skip
+
 
 program =
-  Spec.program config
+    Spec.program config
+
 
 browserProgram =
-  Spec.browserProgram config
+    Spec.browserProgram config
+
 ```
 
 You must create the `elmSpecOut` and `elmSpecIn` ports and provide them to `Spec.program` or `Spec.browserProgram` via a `Spec.Config` value.
@@ -82,50 +93,52 @@ You can also skip scenarios, if you like, by using `Spec.skip`.
 
 Here's an example spec module:
 
-```
+```elm
 module SampleSpec exposing (main)
 
-import Spec exposing (..)
-import Spec.Setup as Setup
-import Spec.Markup as Markup
-import Spec.Markup.Selector exposing (..)
-import Spec.Markup.Event as Event
-import Spec.Claim as Claim
-import Runner
 import Main as App
+import Runner
+import Spec exposing (..)
+import Spec.Claim as Claim
+import Spec.Markup as Markup
+import Spec.Markup.Event as Event
+import Spec.Markup.Selector exposing (..)
+import Spec.Setup as Setup
 
 
 clickSpec : Spec App.Model App.Msg
 clickSpec =
-  describe "an html program"
-  [ scenario "a click event" (
-      given (
-        Setup.initWithModel App.defaultModel
-          |> Setup.withUpdate App.update
-          |> Setup.withView App.view
-      )
-      |> when "the button is clicked three times"
-        [ Markup.target << by [ id "my-button" ]
-        , Event.click
-        , Event.click
-        , Event.click
+    describe "an html program"
+        [ scenario "a click event"
+            (given
+                (Setup.initWithModel App.defaultModel
+                    |> Setup.withUpdate App.update
+                    |> Setup.withView App.view
+                )
+                |> when "the button is clicked three times"
+                    [ Markup.target << by [ id "my-button" ]
+                    , Event.click
+                    , Event.click
+                    , Event.click
+                    ]
+                |> it "renders the count"
+                    (Markup.observeElement
+                        |> Markup.query
+                        << by [ id "count-results" ]
+                        |> expect
+                            (Claim.isSomethingWhere <|
+                                Markup.text <|
+                                    Claim.isStringContaining 1 "You clicked the button 3 time(s)"
+                            )
+                    )
+            )
         ]
-      |> it "renders the count" (
-        Markup.observeElement
-          |> Markup.query << by [ id "count-results" ]
-          |> expect (
-            Claim.isSomethingWhere <|
-            Markup.text <|
-            Claim.isStringContaining 1 "You clicked the button 3 time(s)"
-          )
-      )
-    )
-  ]
+
 
 main =
-  Runner.browserProgram
-    [ clickSpec
-    ]
+    Runner.browserProgram
+        [ clickSpec
+        ]
 ```
 
 ## Running Specs
@@ -136,14 +149,14 @@ To run your specs, you need to install a runner. There are currently two options
 
 You can run your specs in JSDOM or a real browser, right from the command line.
 
-```
-$ npm install --save-dev elm-spec-runner
+```sh
+npm install --save-dev elm-spec-runner
 ```
 
 Then, assuming your specs are in a directory called `./specs`, just run your spec suite like so:
 
-```
-$ npx elm-spec
+```sh
+npx elm-spec
 ```
 
 By default, elm-spec-runner will execute your specs in a [JSDOM](https://github.com/jsdom/jsdom) environment.
@@ -175,14 +188,15 @@ For a real-world test suite, see the [specs for a simple code-guessing game](htt
 
 I suggest adding one more file to your spec suite: `Spec/Extra.elm`.
 
-```
+```elm
 module Spec.Extra exposing (equals)
 
 import Spec.Claim as Claim exposing (Claim)
 
+
 equals : a -> Claim a
 equals =
-  Claim.isEqual Debug.toString
+    Claim.isEqual Debug.toString
 ```
 
 Then, you can import the `equals` function from this module without having to write out
